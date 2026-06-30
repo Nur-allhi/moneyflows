@@ -130,3 +130,21 @@
 - **Git:** initialized, first commit on `main`, switched to `dev` branch for ongoing work.
 - Build, typecheck, lint all pass.
 - Next: T-016 — Numpad + FormField + BottomSheet + Modal
+
+## Session 2026-07-01 00:10
+
+### Changes
+- Created `FormField.tsx` + `.module.css` — label + input/textarea/select/amount variants with glass styling, focus glow, error state
+- Created `Numpad.tsx` + `.module.css` — 3×4 grid glass keys, violet backspace action key, blank filler
+- Created `BottomSheet.tsx` + `.module.css` — slide-up 0.3s animation, handle bar, overlay, Escape key close
+- Created `Modal.tsx` + `.module.css` — centered fade-in 0.25s, 520px max-width, blur overlay, Cancel/Save footer
+- Updated `src/presentation/components/index.ts` — added all 8 new exports
+
+### Skill(s) Used
+- `ui-ux-pro-max` — bottom sheet/modal animations, numpad glass keys, form field styling
+- `senior-frontend` — portal-less overlay pattern, keyboard accessibility, compound components
+
+### Status
+- **T-016 complete.** Phase 1 (Shared Components) is fully done — all 6 tickets T-013 through T-018 built.
+- Build, typecheck, lint all pass.
+- **Next:** T-017 — LoanStack + ProgressBar + QuickActionCard

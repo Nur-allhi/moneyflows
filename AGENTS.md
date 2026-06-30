@@ -90,11 +90,11 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Next:** T-016 — Build `Numpad` + `FormField` + `BottomSheet` + `Modal`
+**Next:** T-017 — Build `LoanStack` + `ProgressBar` + `QuickActionCard`
 - **Phase:** 1 — Shared Components
 - **Skill:** `ui-ux-pro-max`, `senior-frontend`
-- **Design:** `DESIGN_FILES/screen-4-transaction.html` (numpad, bottom sheet, form fields), `DESIGN_FILES/screen-4-transaction-desktop.html` (modal)
-- **Acceptance:** Numpad is 3×4 grid, BDT formatting via `Intl.NumberFormat('en-IN')`, backspace. BottomSheet slide-up animation 300ms, 92vh max, handle bar. Modal fade-in 0.25s, centered 520px max-width.
+- **Design:** `DESIGN_FILES/screen-3-loans.html` (loan stack, progress bar), `DESIGN_FILES/screen-2-member-desktop.html` (quick action card)
+- **Acceptance:** LoanStack accordion single-open, chevron rotates. ProgressBar animates width on mount (600ms, ease-out), teal gradient, glossy overlay. QuickActionCard glass row with icon/title/subtitle, hover violet border.
 - **Action:** Load skill(s) with `skill` tool, then build components in `src/presentation/components/`.
 
 When this ticket is complete, update this section to the next ticket from `docs/TICKETS.md`.
