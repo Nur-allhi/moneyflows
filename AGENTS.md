@@ -102,10 +102,10 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Next:** T-024 — Build Loan Receivables screen
-- **Phase:** 2 — Screen Implementation
-- **Skill:** `ui-ux-pro-max`, `senior-frontend`
-- **Design:** `DESIGN_FILES/screen-3-loans.html`
-- **Acceptance:** Debtor summary cards, progress bars, expandable loan stacks, responsive column hiding.
+**Next:** T-029 — Implement Zustand stores (member, account, transaction, loan, recycle)
+- **Phase:** 3 — Data Integration
+- **Skill:** `senior-backend`, `senior-frontend`
+- **File(s):** `src/presentation/stores/*Store.ts`
+- **Acceptance:** Each store connects to `IDatabaseService`; `useTransactionStore.addTransaction` uses optimistic update pattern.
 
 When this ticket is complete, update this section to the next ticket from `docs/TICKETS.md`.
