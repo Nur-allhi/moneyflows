@@ -177,3 +177,20 @@
   background: oklch(65% 0.15 150 / 0.12);
   color: var(--color-income);
 }
+
+@media (max-width: 800px) {
+  .loanHeader {
+    grid-template-columns: 1fr 100px 80px;
+  }
+  .loanHeader span:nth-child(2),
+  .loanHeader span:nth-child(5) {
+    display: none;
+  }
+  .loanRow {
+    grid-template-columns: 1fr 100px 80px;
+  }
+  .loanRow .loanDate,
+  .loanRow .loanStatus {
+    display: none;
+  }
+}
