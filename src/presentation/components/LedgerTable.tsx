@@ -13,11 +13,19 @@ interface LedgerTableProps {
   rows: LedgerRow[];
   className?: string;
   onRowClick?: (row: LedgerRow, index: number) => void;
+  desktop?: boolean;
 }
 
-export function LedgerTable({ rows, className = '', onRowClick }: LedgerTableProps) {
+const tagClassMap: Record<string, string | undefined> = {
+  expense: styles.tagExpense,
+  income: styles.tagIncome,
+  transfer: styles.tagTransfer,
+};
+
+export function LedgerTable({ rows, className = '', onRowClick, desktop = false }: LedgerTableProps) {
+  const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${className}`;
   return (
-    <div className={`${styles.container} ${className}`}>
+    <div className={containerClass}>
       <div className={styles.header}>
         <span>Date</span>
         <span>Description</span>
@@ -38,7 +46,14 @@ export function LedgerTable({ rows, className = '', onRowClick }: LedgerTablePro
             tabIndex={onRowClick ? 0 : undefined}
           >
             <span className={styles.date}>{row.date}</span>
-            <span className={styles.desc}>{row.description}</span>
+            <span className={styles.desc}>
+              {row.description}
+              {row.type && desktop && (
+                <span className={`${styles.tag} ${tagClassMap[row.type] ?? ''}`}>
+                  {row.type}
+                </span>
+              )}
+            </span>
             <span className={styles.debit}>{row.debit ?? '\u2014'}</span>
             <span className={styles.credit}>{row.credit ?? '\u2014'}</span>
             <span className={styles.balance}>{row.balance}</span>
