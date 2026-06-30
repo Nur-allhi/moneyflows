@@ -1,3 +1,11 @@
+.mobileLayout {
+  display: block;
+}
+
+.desktopLayout {
+  display: none;
+}
+
 .wizard {
   position: fixed;
   inset: 0;
@@ -42,7 +50,8 @@
   flex-shrink: 0;
 }
 
-.header h2 {
+.header h2,
+.modalHeader h2 {
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 600;
@@ -80,6 +89,12 @@
   gap: 12px;
   overflow-y: auto;
   flex: 1;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .amountRow {
@@ -127,12 +142,6 @@
   opacity: 0.6;
 }
 
-.noteInput {
-  min-height: 60px;
-  resize: none;
-  font-family: var(--font-body);
-}
-
 .submitBtn {
   width: 100%;
   padding: 16px;
@@ -162,8 +171,115 @@
   background: oklch(18% 0.015 260);
 }
 
-@media (max-width: 400px) {
-  .wizard {
-    position: absolute;
+/* Desktop modal */
+.desktopOverlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.desktopModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 101;
+  width: 520px;
+  max-width: 90vw;
+  max-height: 85vh;
+  background: oklch(16% 0.015 260 / 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid oklch(100% 0 0 / 0.10);
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px oklch(62% 0.22 290 / 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 16px)) scale(0.97); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+  flex-shrink: 0;
+}
+
+.modalBody {
+  padding: 16px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  padding: 0 24px 20px;
+  flex-shrink: 0;
+}
+
+.modalActions button {
+  flex: 1;
+  padding: 13px 0;
+  border: 0;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cancelBtn {
+  background: oklch(100% 0 0 / 0.06);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.cancelBtn:hover {
+  background: oklch(100% 0 0 / 0.1);
+  color: var(--color-text);
+}
+
+.saveBtn {
+  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  color: #fff;
+}
+
+.saveBtn:hover {
+  opacity: 0.9;
+}
+
+@media (min-width: 768px) {
+  .mobileLayout {
+    display: none;
+  }
+
+  .desktopLayout {
+    display: block;
+  }
+
+  .formRow {
+    flex-direction: row;
+  }
+
+  .amountInput {
+    font-size: 24px;
   }
 }
