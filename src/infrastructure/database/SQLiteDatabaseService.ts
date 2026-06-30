@@ -58,15 +58,16 @@ function rowToGroup(r: Record<string, unknown>): AccountGroup {
 
 export class SQLiteDatabaseService implements IDatabaseService {
   private db: SqlJsDb | null = null;
+  private SQL: Awaited<ReturnType<typeof initSqlJs>> | null = null;
 
   async init(): Promise<void> {
-    const SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' });
+    this.SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' });
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const buffer = Uint8Array.from(atob(saved), (c) => c.charCodeAt(0));
-      this.db = new SQL.Database(buffer);
+      this.db = new this.SQL.Database(buffer);
     } else {
-      this.db = new SQL.Database();
+      this.db = new this.SQL.Database();
       this.db.run(SCHEMA);
       this.save();
     }
@@ -77,6 +78,41 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const data = this.db.export();
     const binary = Array.from(data).map((b) => String.fromCharCode(b)).join('');
     localStorage.setItem(STORAGE_KEY, btoa(binary));
+  }
+
+  async exportToFile(): Promise<void> {
+    if (!this.db) return;
+    const data = this.db.export();
+    const blob = new Blob([data.buffer as ArrayBuffer], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `moneyflows_${new Date().toISOString().slice(0, 10)}.db`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  async importFromFile(): Promise<void> {
+    if (!this.SQL) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.db';
+    const file = await new Promise<File | null>((resolve) => {
+      input.onchange = () => resolve(input.files?.[0] ?? null);
+      input.click();
+    });
+    if (!file) return;
+    const buffer = await file.arrayBuffer();
+    this.db = new this.SQL.Database(new Uint8Array(buffer));
+    this.save();
+    window.location.reload();
+  }
+
+  /** Reset database — clears all data and starts fresh */
+  static clearStorage(): void {
+    localStorage.removeItem(STORAGE_KEY);
   }
 
   private run(sql: string, params?: Record<string, string | number | null>): void {
@@ -170,7 +206,48 @@ export class SQLiteDatabaseService implements IDatabaseService {
     return Promise.resolve(r ? rowToTransaction(r) : null);
   }
 
+  private validateTransaction(tx: Transaction): void {
+    if (!tx.amount || !isFinite(tx.amount) || tx.amount <= 0) {
+      throw new Error('Amount must be a positive number');
+    }
+    const desc = (tx.description ?? '').trim();
+    if (desc.length < 1) throw new Error('Description is required');
+    if (desc.length > 200) throw new Error('Description must be 200 characters or less');
+
+    if (!tx.date || isNaN(Date.parse(tx.date))) throw new Error('Valid date is required');
+    if (tx.date > new Date().toISOString().slice(0, 10)) throw new Error('Date cannot be in the future');
+
+    if (!tx.memberId) throw new Error('Member is required');
+    const member = this.queryOne<Record<string, unknown>>('SELECT id FROM members WHERE id=$id AND deleted_at IS NULL', { $id: tx.memberId });
+    if (!member) throw new Error('Member not found');
+
+    if (tx.type === 'income' || tx.type === 'transfer') {
+      if (!tx.destAccount) throw new Error('Destination account is required');
+      const dst = this.queryOne<Record<string, unknown>>('SELECT id,is_active FROM accounts WHERE id=$id AND deleted_at IS NULL', { $id: tx.destAccount });
+      if (!dst) throw new Error('Destination account not found');
+      if ((dst.is_active as number) !== 1) throw new Error('Destination account is inactive');
+    }
+
+    if (tx.type === 'expense' || tx.type === 'transfer' || tx.type === 'loan_issue') {
+      if (!tx.sourceAccount) throw new Error('Source account is required');
+      const src = this.queryOne<Record<string, unknown>>('SELECT id,is_active,balance FROM accounts WHERE id=$id AND deleted_at IS NULL', { $id: tx.sourceAccount });
+      if (!src) throw new Error('Source account not found');
+      if ((src.is_active as number) !== 1) throw new Error('Source account is inactive');
+    }
+
+    if (tx.type === 'transfer') {
+      if (tx.sourceAccount === tx.destAccount) throw new Error('Source and destination must differ');
+    }
+
+    if (tx.type === 'loan_issue' || tx.type === 'loan_repayment') {
+      if (!tx.debtorId) throw new Error('Debtor is required');
+      const debtor = this.queryOne<Record<string, unknown>>('SELECT id FROM members WHERE id=$id AND deleted_at IS NULL', { $id: tx.debtorId });
+      if (!debtor) throw new Error('Debtor not found');
+    }
+  }
+
   saveTransaction(tx: Transaction): Promise<void> {
+    this.validateTransaction(tx);
     this.run(`INSERT INTO transactions (id,type,description,amount,source_account,dest_account,member_id,debtor_id,loan_ref,date,metadata,created_at,updated_at)
       VALUES ($id,$type,$desc,$amt,$src,$dst,$mid,$did,$loan,$date,$meta,$created,$updated)
       ON CONFLICT(id) DO UPDATE SET type=$type,description=$desc,amount=$amt,
@@ -179,12 +256,44 @@ export class SQLiteDatabaseService implements IDatabaseService {
       { $id: tx.id, $type: tx.type, $desc: tx.description, $amt: tx.amount, $src: tx.sourceAccount ?? null,
         $dst: tx.destAccount ?? null, $mid: tx.memberId, $did: tx.debtorId ?? null, $loan: tx.loanRef ?? null,
         $date: tx.date, $meta: JSON.stringify(tx.metadata), $created: tx.createdAt, $updated: now() });
+    this.applyBalanceChange(tx.type, tx.amount, tx.sourceAccount, tx.destAccount);
     return Promise.resolve();
   }
 
-  softDeleteTransaction(id: string): Promise<void> { this.run('UPDATE transactions SET deleted_at=$now,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); return Promise.resolve(); }
-  restoreTransaction(id: string): Promise<void> { this.run('UPDATE transactions SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); return Promise.resolve(); }
+  softDeleteTransaction(id: string): Promise<void> {
+    const tx = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id', { $id: id });
+    if (tx) {
+      const t = rowToTransaction(tx);
+      this.applyBalanceChange(t.type, -t.amount, t.sourceAccount, t.destAccount);
+    }
+    this.run('UPDATE transactions SET deleted_at=$now,updated_at=$now WHERE id=$id',{$id:id,$now:now()});
+    return Promise.resolve();
+  }
+  restoreTransaction(id: string): Promise<void> {
+    const tx = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id', { $id: id });
+    if (tx) {
+      const t = rowToTransaction(tx);
+      this.applyBalanceChange(t.type, t.amount, t.sourceAccount, t.destAccount);
+    }
+    this.run('UPDATE transactions SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()});
+    return Promise.resolve();
+  }
   purgeTransaction(id: string): Promise<void> { this.run('DELETE FROM transactions WHERE id=$id',{$id:id}); return Promise.resolve(); }
+
+  private applyBalanceChange(type: string, amount: number, sourceAccount?: string, destAccount?: string): void {
+    if (type === 'income' && destAccount) {
+      this.run('UPDATE accounts SET balance=balance+$amt,updated_at=$now WHERE id=$id',{$id:destAccount,$amt:amount,$now:now()});
+    } else if (type === 'expense' && sourceAccount) {
+      this.run('UPDATE accounts SET balance=balance-$amt,updated_at=$now WHERE id=$id',{$id:sourceAccount,$amt:amount,$now:now()});
+    } else if (type === 'transfer') {
+      if (sourceAccount) this.run('UPDATE accounts SET balance=balance-$amt,updated_at=$now WHERE id=$id',{$id:sourceAccount,$amt:amount,$now:now()});
+      if (destAccount) this.run('UPDATE accounts SET balance=balance+$amt,updated_at=$now WHERE id=$id',{$id:destAccount,$amt:amount,$now:now()});
+    } else if (type === 'loan_issue' && sourceAccount) {
+      this.run('UPDATE accounts SET balance=balance-$amt,updated_at=$now WHERE id=$id',{$id:sourceAccount,$amt:amount,$now:now()});
+    } else if (type === 'loan_repayment' && destAccount) {
+      this.run('UPDATE accounts SET balance=balance+$amt,updated_at=$now WHERE id=$id',{$id:destAccount,$amt:amount,$now:now()});
+    }
+  }
 
   async getLoanStacks(): Promise<LoanStack[]> {
     const members = await this.getMembers();
@@ -204,7 +313,8 @@ export class SQLiteDatabaseService implements IDatabaseService {
        WHERE t.debtor_id=$did AND t.type='loan_issue' AND t.deleted_at IS NULL ORDER BY t.date`,
       { $did: debtorId },
     ).map((r) => ({
-      id: r.id as string, fundingSource: (r.src_name as string) || 'Unknown',
+      id: r.id as string, loanRef: (r.loan_ref as string) ?? r.id as string,
+      fundingSource: (r.src_name as string) || 'Unknown',
       amount: r.amount as number, recovered: 0,
       status: 'active' as const, date: r.date as string,
     }));
@@ -212,7 +322,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     for (const issue of issues) {
       const repaid = this.queryOne<{ total: number }>(
         'SELECT COALESCE(SUM(amount),0) as total FROM transactions WHERE loan_ref=$ref AND type=\'loan_repayment\' AND deleted_at IS NULL',
-        { $ref: issue.id },
+        { $ref: issue.loanRef },
       );
       issue.recovered = repaid?.total ?? 0;
       if (issue.recovered >= issue.amount) (issue as { status: string }).status = 'on_track';

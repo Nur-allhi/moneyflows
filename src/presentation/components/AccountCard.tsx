@@ -1,10 +1,10 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import styles from './AccountCard.module.css';
 
 interface AccountCardProps {
   name: string;
   type: string;
-  balance: string;
+  balance: ReactNode;
   currency?: string;
   accountNumber?: string;
   gradient: string;

@@ -11,10 +11,26 @@
   overflow: hidden;
   cursor: pointer;
   transition: transform var(--transition-fast);
+  will-change: transform;
 }
 
 .card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.card:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .card::before {

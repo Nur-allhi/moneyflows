@@ -13,11 +13,7 @@ interface AvatarProps {
   onClick?: () => void;
 }
 
-const memberGradients: Record<string, string> = {
-  efty: 'linear-gradient(135deg, #6c5ce7, #a29bfe)',
-  azam: 'linear-gradient(135deg, #00b894, #55efc4)',
-  nahar: 'linear-gradient(135deg, #fd79a8, #e84393)',
-};
+const DEFAULT_GRADIENT = 'linear-gradient(135deg, #6c5ce7, #a29bfe)';
 
 const sizeClassMap: Record<AvatarSize, string> = {
   24: styles.size24 ?? '',
@@ -35,8 +31,7 @@ export function Avatar({
   className = '',
   onClick,
 }: AvatarProps) {
-  const resolvedGradient =
-    gradient ?? (name ? memberGradients[name.toLowerCase()] : undefined) ?? memberGradients.efty;
+  const resolvedGradient = gradient ?? DEFAULT_GRADIENT;
 
   const classNames = [
     styles.avatar,

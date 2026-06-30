@@ -1,81 +1,110 @@
+import React, { useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GlassPanel, MetricCard, AccountRow, TransactionRow } from '../components';
+import { useAnimatedValue } from '../hooks';
+import { useAccountStore } from '../stores/useAccountStore';
+import { useTransactionStore } from '../stores/useTransactionStore';
+import { useLoanStore } from '../stores/useLoanStore';
+import { getDatabase } from '../../infrastructure/database/getDatabase';
 import styles from './Dashboard.module.css';
 
-interface AccountData {
-  id: string;
-  name: string;
-  type: 'bank' | 'mobile_wallet' | 'cash' | 'savings' | 'business';
-  balance: string;
-  icon: string;
-  accentColor: string;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const _fmt = Intl.NumberFormat('en-IN');
+
+function fmt(n: number): string {
+  return `${_fmt.format(n)} BDT`;
 }
 
-interface TransactionData {
-  id: string;
-  description: string;
-  date: string;
-  amount: string;
-  type: 'income' | 'expense' | 'transfer';
+function shortDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-type DashboardState = 'loading' | 'error' | 'empty' | 'ready';
-
-interface DashboardProps {
-  state?: DashboardState;
-  onRetry?: () => void;
-  accounts?: AccountData[];
-  transactions?: TransactionData[];
+function txTypeForRow(t: string): 'income' | 'expense' | 'transfer' {
+  if (t === 'income' || t === 'loan_repayment') return 'income';
+  if (t === 'expense' || t === 'loan_issue') return 'expense';
+  return 'transfer';
 }
 
-const defaultAccounts: AccountData[] = [
-  { id: '1', name: 'Brac Bank (Efty)', type: 'bank', balance: '1,12,400', icon: 'B', accentColor: 'var(--color-income)' },
-  { id: '2', name: 'bKash (Efty)', type: 'mobile_wallet', balance: '24,670', icon: 'bK', accentColor: 'var(--color-cash)' },
-  { id: '3', name: 'Business Cash (Efty)', type: 'cash', balance: '52,130', icon: 'C', accentColor: 'var(--color-income)' },
-  { id: '4', name: 'Nagad (Azam)', type: 'mobile_wallet', balance: '18,900', icon: 'N', accentColor: 'var(--color-cash)' },
-  { id: '5', name: 'DBBL (Nahar)', type: 'savings', balance: '36,200', icon: 'D', accentColor: 'var(--color-income)' },
-];
+const ACCENT_MAP: Record<string, string> = {
+  bank: 'var(--color-income)',
+  mobile_wallet: 'var(--color-cash)',
+  cash: 'var(--color-teal)',
+  savings: 'var(--color-income)',
+  business: 'var(--color-purple)',
+};
 
-const defaultTransactions: TransactionData[] = [
-  { id: '1', description: 'Milk, Pawruti', date: 'Today, 09:14 AM', amount: '320', type: 'expense' },
-  { id: '2', description: 'Salary', date: 'Yesterday, 10:30 AM', amount: '85,000', type: 'income' },
-  { id: '3', description: 'Loan Repayment', date: '26 Jun, 02:15 PM', amount: '5,000', type: 'transfer' },
-  { id: '4', description: 'Electricity Bill', date: '25 Jun, 11:00 AM', amount: '2,450', type: 'expense' },
-  { id: '5', description: 'Freelance Payment', date: '24 Jun, 04:45 PM', amount: '12,000', type: 'income' },
-  { id: '6', description: 'Bazar — Weekly', date: '23 Jun, 08:30 AM', amount: '4,200', type: 'expense' },
-  { id: '7', description: 'Sent to Nahar', date: '22 Jun, 07:10 PM', amount: '10,000', type: 'transfer' },
-];
+function AnimatedFmt({ value }: { value: number }): React.ReactNode {
+  const anim = useAnimatedValue(value);
+  return fmt(anim);
+}
 
-export function Dashboard({
-  state = 'ready',
-  onRetry,
-  accounts = defaultAccounts,
-  transactions = defaultTransactions,
-}: DashboardProps) {
-  if (state === 'loading') {
+export function Dashboard() {
+  const navigate = useNavigate();
+  const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
+  const { transactions, loading: txLoading, error: txError, fetchTransactions } = useTransactionStore();
+  const { loanStacks, fetchLoanStacks } = useLoanStore();
+
+  useEffect(() => {
+    fetchAccounts();
+    fetchTransactions({ limit: 10 });
+    fetchLoanStacks();
+  }, []);
+
+  const loading = acctLoading || txLoading;
+  const error = acctError || txError;
+
+  const totalAssets = useMemo(
+    () => accounts.reduce((s, a) => s + a.balance, 0),
+    [accounts],
+  );
+
+  const cashInHand = useMemo(
+    () => accounts.filter((a) => a.type === 'cash' || a.type === 'mobile_wallet')
+      .reduce((s, a) => s + a.balance, 0),
+    [accounts],
+  );
+
+  const activeLoans = useMemo(
+    () => loanStacks.reduce((s, ls) => s + ls.totalOutstanding, 0),
+    [loanStacks],
+  );
+
+  const recentTx = useMemo(
+    () => transactions.slice(0, 7),
+    [transactions],
+  );
+
+  const animTotalAssets = useAnimatedValue(totalAssets);
+  const animCashInHand = useAnimatedValue(cashInHand);
+  const animActiveLoans = useAnimatedValue(activeLoans);
+
+  if (loading) {
     return (
       <div className={styles.dashboard}>
         <div className={styles.metrics}>
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className={styles.loadingMetric} />
+            <div key={i} className="skeleton skeleton-metric" />
           ))}
         </div>
         <div className={styles.loading}>
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className={styles.loadingRow} />
+            <div key={i} className="skeleton skeleton-row" />
           ))}
         </div>
       </div>
     );
   }
 
-  if (state === 'error') {
+  if (error) {
     return (
       <div className={styles.dashboard}>
         <GlassPanel padding="lg">
-          <div className={styles.error}>
-            <div className={styles.errorIcon}>{'\u26A0\uFE0F'}</div>
-            <p>Could not load dashboard data</p>
-            <button className={styles.retryBtn} onClick={onRetry}>Retry</button>
+          <div className="error-state">
+            <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
+            <p className="error-state-text">Could not load dashboard data</p>
+            <button className="retry-btn" onClick={() => fetchAccounts()}>Retry</button>
           </div>
         </GlassPanel>
       </div>
@@ -85,41 +114,17 @@ export function Dashboard({
   return (
     <div className={styles.dashboard}>
       <div className={styles.metrics}>
-        <MetricCard
-          label="Total Assets"
-          value="4,29,500 BDT"
-          accent="violet"
-          change="+12.4% vs last month"
-          changeDirection="up"
-        />
-        <MetricCard
-          label="Cash in Hand"
-          value="1,89,200 BDT"
-          accent="gold"
-          change="-3.1% vs last month"
-          changeDirection="down"
-        />
-        <MetricCard
-          label="Active Loans"
-          value="3,55,000 BDT"
-          accent="purple"
-          change="+1 new this month"
-          changeDirection="up"
-        />
-        <MetricCard
-          label="Family Net Worth"
-          value="2,63,700 BDT"
-          accent="teal"
-          change="+8.2% this year"
-          changeDirection="up"
-        />
+        <MetricCard label="Total Assets" value={fmt(animTotalAssets)} accent="violet" />
+        <MetricCard label="Cash in Hand" value={fmt(animCashInHand)} accent="gold" />
+        <MetricCard label="Active Loans" value={fmt(animActiveLoans)} accent="purple" />
+        <MetricCard label="Family Net Worth" value={fmt(animTotalAssets)} accent="teal" />
       </div>
 
       <div className={styles.quickActions}>
-        <button className={`${styles.qaBtn} ${styles.qaPrimary}`}>+ New Transaction</button>
-        <button className={styles.qaBtn}>Transfer</button>
-        <button className={styles.qaBtn}>Reports</button>
-        <button className={styles.qaBtn}>Settings</button>
+        <button className={`${styles.qaBtn} ${styles.qaPrimary}`} onClick={() => navigate('/transaction')}>+ New Transaction</button>
+        <button className={styles.qaBtn} onClick={() => navigate('/transaction')}>Transfer</button>
+        <button className={styles.qaBtn} onClick={() => (getDatabase() as any).exportToFile()}>Export DB</button>
+        <button className={styles.qaBtn} onClick={() => (getDatabase() as any).importFromFile()}>Import DB</button>
       </div>
 
       <div className={styles.content}>
@@ -129,10 +134,10 @@ export function Dashboard({
             <span className={styles.sectionAction}>View all &rarr;</span>
           </div>
           <div className={styles.accountList}>
-            {state === 'empty' ? (
-              <div className={styles.empty}>
-                <div className={styles.emptyIcon}>{'\u{1F4B0}'}</div>
-                <p>No accounts connected yet</p>
+            {accounts.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">{'\u{1F4B0}'}</div>
+                <p className="empty-state-text">No accounts connected yet</p>
               </div>
             ) : (
               accounts.map((acct) => (
@@ -140,9 +145,9 @@ export function Dashboard({
                   key={acct.id}
                   name={acct.name}
                   type={acct.type}
-                  balance={acct.balance}
-                  icon={acct.icon}
-                  accentColor={acct.accentColor}
+                  balance={<AnimatedFmt value={acct.balance} />}
+                  icon={acct.icon ?? acct.name.slice(0, 2).toUpperCase()}
+                  accentColor={ACCENT_MAP[acct.type]}
                 />
               ))
             )}
@@ -155,19 +160,19 @@ export function Dashboard({
             <span className={styles.sectionAction}>View all &rarr;</span>
           </div>
           <div className={styles.txList}>
-            {state === 'empty' ? (
-              <div className={styles.empty}>
-                <div className={styles.emptyIcon}>{'\u{1F4C4}'}</div>
-                <p>No recent transactions</p>
+            {recentTx.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">{'\u{1F4C4}'}</div>
+                <p className="empty-state-text">No recent transactions</p>
               </div>
             ) : (
-              transactions.map((tx) => (
+              recentTx.map((tx) => (
                 <TransactionRow
                   key={tx.id}
                   description={tx.description}
-                  date={tx.date}
-                  amount={tx.amount}
-                  type={tx.type}
+                  date={shortDate(tx.date)}
+                  amount={<AnimatedFmt value={tx.amount} />}
+                  type={txTypeForRow(tx.type)}
                 />
               ))
             )}

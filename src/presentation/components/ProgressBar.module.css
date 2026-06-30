@@ -26,6 +26,7 @@
   border-radius: 999px;
   transition: width 0.6s ease-out;
   position: relative;
+  will-change: width;
 }
 
 .fill::after {

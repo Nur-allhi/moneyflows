@@ -20,6 +20,23 @@
 
 .tab:hover:not(.active) {
   color: var(--color-text);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.tab:active {
+  background: rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+}
+
+.tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .active {

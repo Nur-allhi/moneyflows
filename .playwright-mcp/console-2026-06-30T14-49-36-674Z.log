@@ -1,0 +1,66 @@
+[      92ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[     163ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[     163ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   30399ms] [ERROR] Warning: You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it. @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:520
+[   30585ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[   30673ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   30673ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   34916ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[   36903ms] [ERROR] Seed failed: Error: Date cannot be in the future
+    at SQLiteDatabaseService.validateTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:252:82)
+    at SQLiteDatabaseService.saveTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:278:10)
+    at addAll (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831007050:55:55)
+    at genLedger (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831007050:69:3)
+    at seed (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831007050:292:3)
+    at async http://localhost:5177/src/main.tsx?t=1782831007050:36:11 @ http://localhost:5177/src/main.tsx?t=1782831007050:37
+[   36903ms] [ERROR] Seed failed: Error: Date cannot be in the future
+    at SQLiteDatabaseService.validateTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:252:82)
+    at SQLiteDatabaseService.saveTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:278:10)
+    at addAll (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831007050:55:55)
+    at genLedger (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831007050:69:3)
+    at seed (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831007050:292:3)
+    at async http://localhost:5177/src/main.tsx?t=1782831007050:36:11 @ http://localhost:5177/src/main.tsx?t=1782831007050:37
+[   36981ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   36981ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   94732ms] [ERROR] Warning: You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it. @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:520
+[   94907ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[   94974ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   94974ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   99737ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[  100956ms] [ERROR] Seed tx failed: seed-74 expense 2026-06-5 Insurance (2026-06) Error: Date cannot be in the future
+    at SQLiteDatabaseService.validateTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:252:82)
+    at SQLiteDatabaseService.saveTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:278:10)
+    at addAll (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:57:10)
+    at genLedger (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:76:3)
+    at seed (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:299:3)
+    at async http://localhost:5177/src/main.tsx?t=1782831071390:36:11 @ http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:58
+[  101781ms] [ERROR] Seed tx failed: seed-579 expense 2026-06-5 Insurance (2026-06) Error: Date cannot be in the future
+    at SQLiteDatabaseService.validateTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:252:82)
+    at SQLiteDatabaseService.saveTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:278:10)
+    at addAll (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:57:10)
+    at genLedger (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:76:3)
+    at seed (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:299:3)
+    at async http://localhost:5177/src/main.tsx?t=1782831071390:36:11 @ http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:58
+[  101782ms] [ERROR] Seed failed: Error: Date cannot be in the future
+    at SQLiteDatabaseService.validateTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:252:82)
+    at SQLiteDatabaseService.saveTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:278:10)
+    at addAll (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:57:10)
+    at genLedger (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:76:3)
+    at seed (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:299:3)
+    at async http://localhost:5177/src/main.tsx?t=1782831071390:36:11 @ http://localhost:5177/src/main.tsx?t=1782831071390:37
+[  101782ms] [ERROR] Seed failed: Error: Date cannot be in the future
+    at SQLiteDatabaseService.validateTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:252:82)
+    at SQLiteDatabaseService.saveTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts?t=1782831007050:278:10)
+    at addAll (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:57:10)
+    at genLedger (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:76:3)
+    at seed (http://localhost:5177/src/infrastructure/database/seed.ts?t=1782831071390:299:3)
+    at async http://localhost:5177/src/main.tsx?t=1782831071390:36:11 @ http://localhost:5177/src/main.tsx?t=1782831071390:37
+[  101841ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[  101841ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[  125265ms] [ERROR] Warning: You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it. @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:520
+[  125457ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[  125559ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[  125559ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[  138400ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[  162147ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[  162148ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426

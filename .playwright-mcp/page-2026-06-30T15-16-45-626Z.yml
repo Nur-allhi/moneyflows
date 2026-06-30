@@ -1,0 +1,207 @@
+- generic [ref=f4e4]:
+  - complementary [ref=f4e5]:
+    - generic [ref=f4e6]: MoneyFlows
+    - navigation [ref=f4e7]:
+      - link "🏠 Dashboard" [ref=f4e8] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f4e9]: 🏠
+        - text: Dashboard
+      - link "👥 Members" [ref=f4e10] [cursor=pointer]:
+        - /url: /member
+        - generic [ref=f4e11]: 👥
+        - text: Members
+      - link "📋 Loans" [ref=f4e12] [cursor=pointer]:
+        - /url: /loans
+        - generic [ref=f4e13]: 📋
+        - text: Loans
+      - link "+ New Transaction" [ref=f4e14] [cursor=pointer]:
+        - /url: /transaction
+        - generic [ref=f4e15]: +
+        - text: New Transaction
+      - link "🗑️ Recycle Bin" [ref=f4e16] [cursor=pointer]:
+        - /url: /recycle
+        - generic [ref=f4e17]: 🗑️
+        - text: Recycle Bin
+    - generic [ref=f4e18]:
+      - generic [ref=f4e19]: F
+      - generic [ref=f4e20]:
+        - generic [ref=f4e21]: Family
+        - generic [ref=f4e22]: 4 members
+  - generic [ref=f4e23]:
+    - banner [ref=f4e24]:
+      - generic [ref=f4e25]:
+        - link "Back" [ref=f4e86] [cursor=pointer]:
+          - /url: /
+          - text: ←
+        - generic [ref=f4e27]: Loans
+      - generic [ref=f4e28]:
+        - generic [ref=f4e29]: Tue, 30 Jun 2026
+        - button "Notifications" [ref=f4e30] [cursor=pointer]: 🔔
+    - generic [ref=f4e88]:
+      - button "← All Debtors" [ref=f4e89] [cursor=pointer]
+      - generic [ref=f4e90]:
+        - generic [ref=f4e91]:
+          - generic [ref=f4e92]:
+            - generic [ref=f4e93]: Debtor
+            - generic [ref=f4e94]: BTCIndividual
+            - generic [ref=f4e95]: 14 active loans
+          - generic [ref=f4e96]:
+            - generic [ref=f4e97]: 6,40,000 BDT
+            - generic [ref=f4e98]: Total Outstanding
+        - generic [ref=f4e100]:
+          - generic [ref=f4e101]: Repayment Progress
+          - generic [ref=f4e102]: 18% repaid • 6,40,000 BDT remaining
+      - generic [ref=f4e105]:
+        - generic [ref=f4e106]:
+          - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 20 Jan 2026 1,00,000 BDT 1 loan ▼" [expanded] [ref=f4e107] [cursor=pointer]':
+            - generic [ref=f4e108]:
+              - generic [ref=f4e109]: B
+              - generic [ref=f4e110]:
+                - generic [ref=f4e111]: Funded by Efty — Brac Bank (Business)
+                - generic [ref=f4e112]: "Source: Bank • Disbursed 20 Jan 2026"
+            - generic [ref=f4e113]:
+              - generic [ref=f4e114]: 1,00,000 BDT
+              - generic [ref=f4e115]: 1 loan
+            - generic [ref=f4e116]: ▼
+          - generic [ref=f4e117]:
+            - generic [ref=f4e118]:
+              - generic [ref=f4e119]: Date
+              - generic [ref=f4e120]: Amount
+              - generic [ref=f4e121]: Remaining
+              - generic [ref=f4e122]: Status
+            - generic [ref=f4e123] [cursor=pointer]:
+              - generic [ref=f4e124]: Brac Bank (Business)
+              - generic [ref=f4e125]: 20 Jan 2026
+              - generic [ref=f4e126]: 1,00,000 BDT
+              - generic [ref=f4e127]: 70,000 BDT
+              - generic [ref=f4e128]: Active
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 20 Jan 2026 1,00,000 BDT 1 loan ▼" [ref=f4e130] [cursor=pointer]':
+          - generic [ref=f4e131]:
+            - generic [ref=f4e132]: B
+            - generic [ref=f4e133]:
+              - generic [ref=f4e134]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e135]: "Source: Bank • Disbursed 20 Jan 2026"
+          - generic [ref=f4e136]:
+            - generic [ref=f4e137]: 1,00,000 BDT
+            - generic [ref=f4e138]: 1 loan
+          - generic [ref=f4e139]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 18 Feb 2026 80,000 BDT 1 loan ▼" [ref=f4e141] [cursor=pointer]':
+          - generic [ref=f4e142]:
+            - generic [ref=f4e143]: B
+            - generic [ref=f4e144]:
+              - generic [ref=f4e145]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e146]: "Source: Bank • Disbursed 18 Feb 2026"
+          - generic [ref=f4e147]:
+            - generic [ref=f4e148]: 80,000 BDT
+            - generic [ref=f4e149]: 1 loan
+          - generic [ref=f4e150]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 18 Feb 2026 80,000 BDT 1 loan ▼" [ref=f4e152] [cursor=pointer]':
+          - generic [ref=f4e153]:
+            - generic [ref=f4e154]: B
+            - generic [ref=f4e155]:
+              - generic [ref=f4e156]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e157]: "Source: Bank • Disbursed 18 Feb 2026"
+          - generic [ref=f4e158]:
+            - generic [ref=f4e159]: 80,000 BDT
+            - generic [ref=f4e160]: 1 loan
+          - generic [ref=f4e161]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 15 Mar 2026 75,000 BDT 1 loan ▼" [ref=f4e163] [cursor=pointer]':
+          - generic [ref=f4e164]:
+            - generic [ref=f4e165]: B
+            - generic [ref=f4e166]:
+              - generic [ref=f4e167]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e168]: "Source: Bank • Disbursed 15 Mar 2026"
+          - generic [ref=f4e169]:
+            - generic [ref=f4e170]: 75,000 BDT
+            - generic [ref=f4e171]: 1 loan
+          - generic [ref=f4e172]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 15 Mar 2026 75,000 BDT 1 loan ▼" [ref=f4e174] [cursor=pointer]':
+          - generic [ref=f4e175]:
+            - generic [ref=f4e176]: B
+            - generic [ref=f4e177]:
+              - generic [ref=f4e178]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e179]: "Source: Bank • Disbursed 15 Mar 2026"
+          - generic [ref=f4e180]:
+            - generic [ref=f4e181]: 75,000 BDT
+            - generic [ref=f4e182]: 1 loan
+          - generic [ref=f4e183]: ▼
+        - 'button "S Funded by Efty — Standard Bank (Business) Source: Bank • Disbursed 22 Apr 2026 60,000 BDT 1 loan ▼" [ref=f4e185] [cursor=pointer]':
+          - generic [ref=f4e186]:
+            - generic [ref=f4e187]: S
+            - generic [ref=f4e188]:
+              - generic [ref=f4e189]: Funded by Efty — Standard Bank (Business)
+              - generic [ref=f4e190]: "Source: Bank • Disbursed 22 Apr 2026"
+          - generic [ref=f4e191]:
+            - generic [ref=f4e192]: 60,000 BDT
+            - generic [ref=f4e193]: 1 loan
+          - generic [ref=f4e194]: ▼
+        - 'button "S Funded by Efty — Standard Bank (Business) Source: Bank • Disbursed 22 Apr 2026 60,000 BDT 1 loan ▼" [ref=f4e196] [cursor=pointer]':
+          - generic [ref=f4e197]:
+            - generic [ref=f4e198]: S
+            - generic [ref=f4e199]:
+              - generic [ref=f4e200]: Funded by Efty — Standard Bank (Business)
+              - generic [ref=f4e201]: "Source: Bank • Disbursed 22 Apr 2026"
+          - generic [ref=f4e202]:
+            - generic [ref=f4e203]: 60,000 BDT
+            - generic [ref=f4e204]: 1 loan
+          - generic [ref=f4e205]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 10 May 2026 40,000 BDT 1 loan ▼" [ref=f4e207] [cursor=pointer]':
+          - generic [ref=f4e208]:
+            - generic [ref=f4e209]: B
+            - generic [ref=f4e210]:
+              - generic [ref=f4e211]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e212]: "Source: Bank • Disbursed 10 May 2026"
+          - generic [ref=f4e213]:
+            - generic [ref=f4e214]: 40,000 BDT
+            - generic [ref=f4e215]: 1 loan
+          - generic [ref=f4e216]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 10 May 2026 40,000 BDT 1 loan ▼" [ref=f4e218] [cursor=pointer]':
+          - generic [ref=f4e219]:
+            - generic [ref=f4e220]: B
+            - generic [ref=f4e221]:
+              - generic [ref=f4e222]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e223]: "Source: Bank • Disbursed 10 May 2026"
+          - generic [ref=f4e224]:
+            - generic [ref=f4e225]: 40,000 BDT
+            - generic [ref=f4e226]: 1 loan
+          - generic [ref=f4e227]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 5 Jun 2026 20,000 BDT 1 loan ▼" [ref=f4e229] [cursor=pointer]':
+          - generic [ref=f4e230]:
+            - generic [ref=f4e231]: B
+            - generic [ref=f4e232]:
+              - generic [ref=f4e233]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e234]: "Source: Bank • Disbursed 5 Jun 2026"
+          - generic [ref=f4e235]:
+            - generic [ref=f4e236]: 20,000 BDT
+            - generic [ref=f4e237]: 1 loan
+          - generic [ref=f4e238]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 5 Jun 2026 20,000 BDT 1 loan ▼" [ref=f4e240] [cursor=pointer]':
+          - generic [ref=f4e241]:
+            - generic [ref=f4e242]: B
+            - generic [ref=f4e243]:
+              - generic [ref=f4e244]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e245]: "Source: Bank • Disbursed 5 Jun 2026"
+          - generic [ref=f4e246]:
+            - generic [ref=f4e247]: 20,000 BDT
+            - generic [ref=f4e248]: 1 loan
+          - generic [ref=f4e249]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 20 Jun 2026 15,000 BDT 1 loan ▼" [ref=f4e251] [cursor=pointer]':
+          - generic [ref=f4e252]:
+            - generic [ref=f4e253]: B
+            - generic [ref=f4e254]:
+              - generic [ref=f4e255]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e256]: "Source: Bank • Disbursed 20 Jun 2026"
+          - generic [ref=f4e257]:
+            - generic [ref=f4e258]: 15,000 BDT
+            - generic [ref=f4e259]: 1 loan
+          - generic [ref=f4e260]: ▼
+        - 'button "B Funded by Efty — Brac Bank (Business) Source: Bank • Disbursed 20 Jun 2026 15,000 BDT 1 loan ▼" [ref=f4e262] [cursor=pointer]':
+          - generic [ref=f4e263]:
+            - generic [ref=f4e264]: B
+            - generic [ref=f4e265]:
+              - generic [ref=f4e266]: Funded by Efty — Brac Bank (Business)
+              - generic [ref=f4e267]: "Source: Bank • Disbursed 20 Jun 2026"
+          - generic [ref=f4e268]:
+            - generic [ref=f4e269]: 15,000 BDT
+            - generic [ref=f4e270]: 1 loan
+          - generic [ref=f4e271]: ▼

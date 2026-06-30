@@ -10,7 +10,23 @@
 }
 
 .row:hover {
+  box-shadow: 0 0 20px var(--color-primary-glow);
   background: oklch(100% 0 0 / 0.04);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.row:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.row:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .icon {
@@ -88,6 +104,21 @@
 .restore:hover {
   background: oklch(65% 0.15 150 / 0.1);
   border-color: var(--color-income);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.restore:focus-visible, .delete:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.restore:active, .delete:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.restore:disabled, .delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .delete {
@@ -97,6 +128,7 @@
 .delete:hover {
   background: oklch(62% 0.18 30 / 0.1);
   border-color: var(--color-expense);
+  box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
 @media (max-width: 800px) {

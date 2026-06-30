@@ -1,98 +1,165 @@
+import { useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ProgressBar, LoanStack, GlassPanel } from '../components';
 import type { LoanStackData } from '../components';
+import { useLoanStore } from '../stores/useLoanStore';
+import { useAccountStore } from '../stores/useAccountStore';
+import type { LoanStack as LoanStackType } from '../../core/domain/Loan';
+import type { Account } from '../../core/domain/Account';
 import styles from './Loans.module.css';
 
-interface DebtorSummary {
-  name: string;
-  badge: string;
-  registered: string;
-  totalOutstanding: string;
-  repaidPercent: number;
-  repaidDetail: string;
+const _fmt = Intl.NumberFormat('en-IN');
+function fmt(n: number): string {
+  return `${_fmt.format(n)} BDT`;
 }
 
-type LoansState = 'loading' | 'error' | 'empty' | 'ready';
-
-interface LoansProps {
-  state?: LoansState;
-  onRetry?: () => void;
-  debtor?: DebtorSummary;
-  stacks?: LoanStackData[];
-}
-
-const defaultDebtor: DebtorSummary = {
-  name: 'BTC',
-  badge: 'Individual',
-  registered: 'Registered: 12 Jan 2024 \u2022 3 active loans',
-  totalOutstanding: '3,55,000 BDT',
-  repaidPercent: 38,
-  repaidDetail: '38% repaid \u2022 2,18,000 BDT remaining',
-};
-
-const defaultStacks: LoanStackData[] = [
-  {
-    icon: 'B',
-    iconGradient: 'linear-gradient(135deg,#1a237e,#283593)',
-    fundSource: 'Funded by Efty \u2014 Brac Bank',
-    sourceMeta: 'Source: Savings Account \u2022 Disbursed Apr 2024',
-    totalAmount: '1,90,000 BDT',
-    totalColor: 'var(--color-expense)',
-    loanCount: 3,
-    loans: [
-      { description: 'Personal Loan \u2014 BTC', date: '12 Apr 2024', amount: '80,000 BDT', remaining: '45,000 BDT', remainingColor: 'var(--color-expense)', status: 'active' },
-      { description: 'Business Capital', date: '03 Jul 2024', amount: '60,000 BDT', remaining: '22,000 BDT', remainingColor: 'var(--color-income)', status: 'on_track' },
-      { description: 'Emergency Fund', date: '19 Nov 2024', amount: '50,000 BDT', remaining: '38,000 BDT', remainingColor: 'var(--color-expense)', status: 'active' },
-    ],
-  },
-  {
-    icon: 'K',
-    iconGradient: 'linear-gradient(135deg,#d81b60,#e91e63)',
-    fundSource: 'Funded by Efty \u2014 bKash',
-    sourceMeta: 'Source: Mobile Wallet \u2022 Disbursed Sep 2024',
-    totalAmount: '95,000 BDT',
-    totalColor: 'var(--color-expense)',
-    loanCount: 2,
-    loans: [],
-  },
-  {
-    icon: 'C',
-    iconGradient: 'linear-gradient(135deg,#37474f,#546e7a)',
-    fundSource: 'Funded by Efty \u2014 Business Cash',
-    sourceMeta: 'Source: Current Account \u2022 Disbursed Jan 2025',
-    totalAmount: '70,000 BDT',
-    totalColor: 'var(--color-income)',
-    loanCount: 1,
-    loans: [],
-  },
+const GRADIENTS = [
+  'linear-gradient(135deg,#1a237e,#283593)',
+  'linear-gradient(135deg,#d81b60,#e91e63)',
+  'linear-gradient(135deg,#37474f,#546e7a)',
+  'linear-gradient(135deg,#004d40,#00695c)',
+  'linear-gradient(135deg,#4a148c,#6a1b9a)',
 ];
 
-export function Loans({
-  state = 'ready',
-  onRetry,
-  debtor = defaultDebtor,
-  stacks = defaultStacks,
-}: LoansProps) {
-  if (state === 'loading') {
+function shortDate(iso: string): string {
+  const d = new Date(iso);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: Account[] }) {
+  const navigate = useNavigate();
+
+  const debtorSummary = (() => {
+    const total = stack.totalOutstanding;
+    const recovered = stack.totalRecovered;
+    const issued = total + recovered;
+    const pct = issued > 0 ? Math.round((recovered / issued) * 100) : 0;
+    return {
+      name: stack.debtorName,
+      badge: 'Individual',
+      registered: `${stack.loans.length} active loan${stack.loans.length !== 1 ? 's' : ''}`,
+      totalOutstanding: fmt(total),
+      repaidPercent: pct,
+      repaidDetail: `${pct}% repaid \u2022 ${fmt(total)} remaining`,
+    };
+  })();
+
+  const stackData: LoanStackData[] = stack.loans.map((loan, i) => {
+    const acct = accounts.find((a) => a.id === loan.fundingSource);
+    const name = acct?.name ?? loan.fundingSource;
+    const type = acct?.type ?? 'bank';
+    const gradient = GRADIENTS[i % GRADIENTS.length]!;
+    const icon = name.slice(0, 1).toUpperCase();
+    const recovered = loan.recovered;
+    const outstanding = loan.amount - recovered;
+    return {
+      icon,
+      iconGradient: gradient,
+      fundSource: `Funded by Efty \u2014 ${name}`,
+      sourceMeta: `Source: ${type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} \u2022 Disbursed ${shortDate(loan.date)}`,
+      totalAmount: fmt(loan.amount),
+      totalColor: 'var(--color-expense)' as const,
+      loanCount: 1,
+      loans: [{
+        description: loan.fundingSource,
+        date: shortDate(loan.date),
+        amount: fmt(loan.amount),
+        remaining: fmt(outstanding),
+        remainingColor: outstanding > 0 ? 'var(--color-expense)' as const : 'var(--color-income)' as const,
+        status: loan.status,
+      }],
+    };
+  });
+
+  return (
+    <div className={styles.loans}>
+      <button className={styles.backBtn} onClick={() => navigate('/loans')}>
+        {'\u2190'} All Debtors
+      </button>
+
+      <div className={styles.summary}>
+        <div className={styles.summaryTop}>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryLabel}>Debtor</span>
+            <div className={styles.summaryDebtor}>
+              {debtorSummary.name}
+              <span className={styles.badge}>{debtorSummary.badge}</span>
+            </div>
+            <span className={styles.summaryRegistered}>{debtorSummary.registered}</span>
+          </div>
+          <div className={styles.summaryAmount}>
+            <div className={styles.summaryValue}>{debtorSummary.totalOutstanding}</div>
+            <div className={styles.summaryAmountLabel}>Total Outstanding</div>
+          </div>
+        </div>
+        <ProgressBar
+          percent={debtorSummary.repaidPercent}
+          label="Repayment Progress"
+          sublabel={debtorSummary.repaidDetail}
+        />
+      </div>
+
+      <LoanStack stacks={stackData} />
+    </div>
+  );
+}
+
+export function Loans() {
+  const { debtorId: routeDebtorId } = useParams<{ debtorId: string }>();
+  const navigate = useNavigate();
+  const { loanStacks, loading, error, fetchLoanStacks } = useLoanStore();
+  const { accounts, fetchAccounts } = useAccountStore();
+
+  useEffect(() => {
+    fetchLoanStacks();
+    fetchAccounts();
+  }, []);
+
+  const selectedStack = useMemo(() => {
+    if (!routeDebtorId || loanStacks.length === 0) return null;
+    return loanStacks.find((s) => s.debtorId === routeDebtorId) ?? null;
+  }, [loanStacks, routeDebtorId]);
+
+  if (loading) {
     return (
       <div className={styles.loans}>
-        <div className={styles.loadingSummary} />
+        <div className="skeleton skeleton-summary" />
         <div className={styles.loadingStacks}>
           {[1, 2, 3].map((i) => (
-            <div key={i} className={styles.loadingStack} />
+            <div key={i} className="skeleton skeleton-stack" />
           ))}
         </div>
       </div>
     );
   }
 
-  if (state === 'error') {
+  if (error) {
     return (
       <div className={styles.loans}>
         <GlassPanel padding="lg">
-          <div className={styles.error}>
-            <div className={styles.errorIcon}>{'\u26A0\uFE0F'}</div>
-            <p>Could not load loan data</p>
-            <button className={styles.retryBtn} onClick={onRetry}>Retry</button>
+          <div className="error-state">
+            <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
+            <p className="error-state-text">Could not load loan data</p>
+            <button className="retry-btn" onClick={fetchLoanStacks}>Retry</button>
+          </div>
+        </GlassPanel>
+      </div>
+    );
+  }
+
+  if (routeDebtorId && selectedStack) {
+    return <LoanDetailView stack={selectedStack} accounts={accounts} />;
+  }
+
+  if (routeDebtorId && !selectedStack) {
+    return (
+      <div className={styles.loans}>
+        <GlassPanel padding="lg">
+          <div className="empty-state">
+            <div className="empty-state-icon">{'\u{1F50D}'}</div>
+            <p className="empty-state-text">Debtor not found</p>
+            <button className="retry-btn" onClick={() => navigate('/loans')}>View all debtors</button>
           </div>
         </GlassPanel>
       </div>
@@ -101,29 +168,47 @@ export function Loans({
 
   return (
     <div className={styles.loans}>
-      <div className={styles.summary}>
-        <div className={styles.summaryTop}>
-          <div className={styles.summaryInfo}>
-            <span className={styles.summaryLabel}>Debtor</span>
-            <div className={styles.summaryDebtor}>
-              {debtor.name}
-              <span className={styles.badge}>{debtor.badge}</span>
-            </div>
-            <span className={styles.summaryRegistered}>{debtor.registered}</span>
-          </div>
-          <div className={styles.summaryAmount}>
-            <div className={styles.summaryValue}>{debtor.totalOutstanding}</div>
-            <div className={styles.summaryAmountLabel}>Total Outstanding</div>
-          </div>
-        </div>
-        <ProgressBar
-          percent={debtor.repaidPercent}
-          label="Repayment Progress"
-          sublabel={debtor.repaidDetail}
-        />
+      <div className={styles.listHeader}>
+        <h2 className={styles.listTitle}>Loan Receivables</h2>
+        <span className={styles.listCount}>{loanStacks.length} debtor{loanStacks.length !== 1 ? 's' : ''}</span>
       </div>
 
-      <LoanStack stacks={stacks} />
+      {loanStacks.length === 0 ? (
+        <GlassPanel padding="lg">
+          <div className="empty-state">
+            <div className="empty-state-icon">{'\u{1F4B5}'}</div>
+            <p className="empty-state-text">No active loans</p>
+          </div>
+        </GlassPanel>
+      ) : (
+        <div className={styles.debtorGrid}>
+          {loanStacks.map((stack, i) => {
+            const total = stack.totalOutstanding;
+            const recovered = stack.totalRecovered;
+            const issued = total + recovered;
+            const pct = issued > 0 ? Math.round((recovered / issued) * 100) : 0;
+            return (
+              <button
+                key={stack.debtorId}
+                className={styles.debtorCard}
+                onClick={() => navigate(`/loans/${stack.debtorId}`)}
+              >
+                <div className={styles.debtorCardTop}>
+                  <div className={styles.debtorIcon} style={{ background: GRADIENTS[i % GRADIENTS.length] }}>
+                    {stack.debtorName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className={styles.debtorCardInfo}>
+                    <span className={styles.debtorName}>{stack.debtorName}</span>
+                    <span className={styles.debtorCount}>{stack.loans.length} loan{stack.loans.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  <span className={styles.debtorAmount}>{fmt(total)}</span>
+                </div>
+                <ProgressBar percent={pct} label="" sublabel={`${pct}% repaid`} />
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

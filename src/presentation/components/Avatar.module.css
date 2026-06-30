@@ -16,6 +16,20 @@
   box-shadow: 0 0 0 2px var(--color-primary);
 }
 
+.avatar:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.avatar:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.avatar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .active::after {
   content: '';
   position: absolute;

@@ -1,108 +1,38 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
-import { Avatar, AccountCard, LedgerTable, SegmentedTabs, QuickActionCard, GlassPanel } from '../components';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
+import { Avatar, AccountCard, LedgerTable, SegmentedTabs, QuickActionCard, GlassPanel, Modal, FormInput, FormSelect, AmountInput } from '../components';
 import type { LedgerRow } from '../components';
+import { useAnimatedValue } from '../hooks';
+import { useMemberStore } from '../stores/useMemberStore';
+import { useAccountStore } from '../stores/useAccountStore';
+import { useTransactionStore } from '../stores/useTransactionStore';
+import { Account } from '../../core/domain/Account';
+import type { AccountType } from '../../core/domain/Account';
 import styles from './MemberProfile.module.css';
 
-interface AccountData {
-  id: string;
-  name: string;
-  type: string;
-  balance: string;
-  accountNumber?: string;
-  gradient: string;
-  showChip?: boolean;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const CARD_WIDTH = 280;
+const CARD_GAP = 12;
+
+const _fmt = Intl.NumberFormat('en-IN');
+
+function fmt(n: number): string {
+  return `${_fmt.format(n)} BDT`;
 }
 
-interface MemberData {
-  name: string;
-  initial: string;
-  tag: string;
-  avatarGradient?: string;
-  totalBalance: string;
-  totalIncome?: string;
-  totalExpenses?: string;
+function shortDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-interface SpendCategory {
-  label: string;
-  amount: string;
-  color: string;
-}
-
-interface BudgetBar {
-  label: string;
-  current: string;
-  max: string;
-  percent: number;
-  colorClass: string;
-}
-
-interface SavingsGoal {
-  icon: string;
-  title: string;
-  percent: number;
-  detail: string;
-  addition: string;
-}
-
-type ProfileState = 'loading' | 'error' | 'empty' | 'ready';
-
-interface MemberProfileProps {
-  state?: ProfileState;
-  onRetry?: () => void;
-  member?: MemberData;
-  accounts?: AccountData[];
-  ledger?: LedgerRow[];
-  spending?: SpendCategory[];
-  budgets?: BudgetBar[];
-  goals?: SavingsGoal[];
-}
-
-const defaultMember: MemberData = {
-  name: 'Efty',
-  initial: 'E',
-  tag: 'Family admin \u2022 Brac Bank \u2022 bKash',
-  totalBalance: '44,671 BDT',
-  totalIncome: '1,89,000 BDT',
-  totalExpenses: '1,44,329 BDT',
+const ACCOUNT_GRADIENTS: Record<string, string> = {
+  bank: 'linear-gradient(135deg, #1a237e, #283593 50%, #3f51b5)',
+  savings: 'linear-gradient(135deg, #004d40, #00695c 50%, #00897b)',
+  mobile_wallet: 'linear-gradient(135deg, #d81b60, #e91e63 50%, #f06292)',
+  cash: 'linear-gradient(135deg, #37474f, #455a64 50%, #546e7a)',
+  business: 'linear-gradient(135deg, #263238, #37474f 50%, #546e7a)',
 };
-
-const defaultAccounts: AccountData[] = [
-  { id: '1', name: 'bKash Wallet', type: 'Mobile Wallet', balance: '24,670 BDT', accountNumber: '4821', gradient: 'linear-gradient(135deg, #d81b60, #e91e63 50%, #f06292)', showChip: true },
-  { id: '2', name: 'Brac Bank', type: 'Savings Account', balance: '1,12,400 BDT', accountNumber: '3390', gradient: 'linear-gradient(135deg, #1a237e, #283593 50%, #3f51b5)', showChip: true },
-  { id: '3', name: 'Business Cash', type: 'Current Account', balance: '52,130 BDT', accountNumber: '7712', gradient: 'linear-gradient(135deg, #263238, #37474f 50%, #546e7a)', showChip: false },
-];
-
-const defaultLedger: LedgerRow[] = [
-  { date: '29 Jun', description: 'Milk, Pawruti', debit: '320', credit: '\u2014', balance: '44,671', type: 'expense' },
-  { date: '28 Jun', description: 'Salary Deposit', debit: '\u2014', credit: '85,000', balance: '44,991', type: 'income' },
-  { date: '26 Jun', description: 'Loan Repayment', debit: '5,000', credit: '\u2014', balance: '-40,009', type: 'transfer' },
-  { date: '25 Jun', description: 'Electricity Bill', debit: '2,450', credit: '\u2014', balance: '-45,009', type: 'expense' },
-  { date: '24 Jun', description: 'Freelance Payment', debit: '\u2014', credit: '12,000', balance: '-42,559', type: 'income' },
-  { date: '23 Jun', description: 'Bazar Weekly', debit: '4,200', credit: '\u2014', balance: '-54,559', type: 'expense' },
-  { date: '22 Jun', description: 'Transfer to Nahar', debit: '10,000', credit: '\u2014', balance: '-50,359', type: 'transfer' },
-  { date: '21 Jun', description: 'bKash Cash Out', debit: '2,000', credit: '\u2014', balance: '-40,359', type: 'expense' },
-];
-
-const defaultSpending: SpendCategory[] = [
-  { label: 'Food & Grocery', amount: '8,450 BDT', color: 'var(--color-expense)' },
-  { label: 'Utilities', amount: '4,200 BDT', color: 'var(--color-primary)' },
-  { label: 'Transport', amount: '2,350 BDT', color: 'var(--color-cash)' },
-  { label: 'Savings', amount: '15,000 BDT', color: 'var(--color-income)' },
-  { label: 'Others', amount: '3,200 BDT', color: 'var(--color-text-secondary)' },
-];
-
-const defaultBudgets: BudgetBar[] = [
-  { label: 'Groceries', current: '6,500', max: '10,000', percent: 65, colorClass: 'fillCoral' },
-  { label: 'Utilities', current: '3,800', max: '5,000', percent: 76, colorClass: 'fillViolet' },
-  { label: 'Entertainment', current: '1,200', max: '3,000', percent: 40, colorClass: 'fillTeal' },
-];
-
-const defaultGoals: SavingsGoal[] = [
-  { icon: '\u{1F3E0}', title: 'Emergency Fund', percent: 42, detail: '84,000 / 2,00,000 BDT', addition: '+12K' },
-  { icon: '\u2708\uFE0F', title: 'Family Trip', percent: 28, detail: '14,000 / 50,000 BDT', addition: '+2K' },
-  { icon: '\u{1F4DA}', title: 'Study Fund (Nahar)', percent: 55, detail: '55,000 / 1,00,000 BDT', addition: '+5K' },
-];
 
 const ledgerFilters = [
   { key: 'all', label: 'All' },
@@ -111,29 +41,106 @@ const ledgerFilters = [
   { key: 'transfer', label: 'Transfer' },
 ];
 
-const CARD_WIDTH = 280;
-const CARD_GAP = 12;
-
-export function MemberProfile({
-  state = 'ready',
-  onRetry,
-  member = defaultMember,
-  accounts = defaultAccounts,
-  ledger = defaultLedger,
-  spending = defaultSpending,
-  budgets = defaultBudgets,
-  goals = defaultGoals,
-}: MemberProfileProps) {
+export function MemberProfile() {
+  const { id: memberId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [activeDot, setActiveDot] = useState(0);
   const [ledgerFilter, setLedgerFilter] = useState('all');
+
+  const {
+    members, loading: mLoading, error: mError,
+    fetchMembers,
+  } = useMemberStore();
+  const {
+    accounts, loading: aLoading, error: aError,
+    fetchAccounts, saveAccount,
+  } = useAccountStore();
+  const {
+    transactions, loading: tLoading, error: tError,
+    fetchTransactions,
+  } = useTransactionStore();
+
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [acctName, setAcctName] = useState('');
+  const [acctType, setAcctType] = useState<AccountType>('bank');
+  const [acctBalance, setAcctBalance] = useState('');
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  useEffect(() => {
+    if (memberId) {
+      fetchAccounts(memberId);
+      fetchTransactions({ memberId });
+    }
+  }, [memberId]);
+
+  const member = useMemo(
+    () => members.find((m) => m.id === memberId) ?? null,
+    [members, memberId],
+  );
+
+  const memberAccounts = useMemo(
+    () => accounts.filter((a) => a.memberId === memberId),
+    [accounts, memberId],
+  );
+
+  const totalBalance = useMemo(
+    () => memberAccounts.reduce((s, a) => s + a.balance, 0),
+    [memberAccounts],
+  );
+
+  const totalIncome = useMemo(
+    () => transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+    [transactions],
+  );
+
+  const totalExpenses = useMemo(
+    () => transactions.filter((t) => t.type === 'expense' || t.type === 'loan_issue').reduce((s, t) => s + t.amount, 0),
+    [transactions],
+  );
+
+  const sortedTxs = useMemo(
+    () => [...transactions].sort((a, b) => a.date.localeCompare(b.date)),
+    [transactions],
+  );
+
+  const ledgerRows: LedgerRow[] = useMemo(() => {
+    let running = 0;
+    return sortedTxs.map((tx) => {
+      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
+      if (isCredit) running += tx.amount;
+      else running -= tx.amount;
+
+      const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'transfer' as const : tx.type as 'income' | 'expense' | 'transfer';
+
+      return {
+        date: shortDate(tx.date),
+        description: tx.description,
+        debit: isCredit ? '\u2014' : fmt(tx.amount),
+        credit: isCredit ? fmt(tx.amount) : '\u2014',
+        balance: fmt(running),
+        type: displayType,
+      };
+    }).reverse();
+  }, [sortedTxs]);
+
+  const animTotalBalance = useAnimatedValue(totalBalance);
+  const animTotalIncome = useAnimatedValue(totalIncome);
+  const animTotalExpenses = useAnimatedValue(totalExpenses);
+
+  const filteredLedger = ledgerFilter === 'all'
+    ? ledgerRows
+    : ledgerRows.filter((row) => row.type === ledgerFilter);
 
   const handleScroll = useCallback(() => {
     const el = carouselRef.current;
     if (!el) return;
     const idx = Math.round(el.scrollLeft / (CARD_WIDTH + CARD_GAP));
-    setActiveDot(Math.min(idx, accounts.length - 1));
-  }, [accounts.length]);
+    setActiveDot(Math.min(idx, memberAccounts.length - 1));
+  }, [memberAccounts.length]);
 
   useEffect(() => {
     const el = carouselRef.current;
@@ -142,18 +149,17 @@ export function MemberProfile({
     return () => el.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  const filteredLedger = ledgerFilter === 'all'
-    ? ledger
-    : ledger.filter((row) => row.type === ledgerFilter);
+  const loading = mLoading || aLoading || tLoading;
+  const error = mError || aError || tError;
 
-  if (state === 'loading') {
+  if (loading) {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>
-          <div className={styles.loadingProfile} />
+          <div className="skeleton skeleton-profile" />
           <div className={styles.carousel}>
             {[1, 2, 3].map((i) => (
-              <div key={i} className={styles.loadingCard} />
+              <div key={i} className={`skeleton skeleton-card ${styles.loadingCard}`} />
             ))}
           </div>
         </div>
@@ -161,60 +167,65 @@ export function MemberProfile({
     );
   }
 
-  if (state === 'error') {
+  if (error || !member) {
     return (
       <div className={styles.container}>
         <GlassPanel padding="lg">
-          <div className={styles.error}>
-            <div className={styles.errorIcon}>{'\u26A0\uFE0F'}</div>
-            <p>Could not load member profile</p>
-            <button className={styles.retryBtn} onClick={onRetry}>Retry</button>
+          <div className="error-state">
+            <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
+            <p className="error-state-text">{!member ? 'Member not found' : 'Could not load member profile'}</p>
+            <button className="retry-btn" onClick={() => fetchMembers()}>Retry</button>
           </div>
         </GlassPanel>
       </div>
     );
   }
 
+  const initial = member.shortName?.[0] ?? member.name[0] ?? '?';
+
   return (
     <div className={styles.container}>
       <div className={styles.mobileOnly}>
         <div className={styles.profileCard}>
-          <Avatar
-            initial={member.initial}
-            name={member.name}
-            size={72}
-            gradient={member.avatarGradient}
-          />
+          <Avatar initial={initial} name={member.name} size={72} />
           <div className={styles.profileInfo}>
             <div className={styles.profileName}>{member.name}</div>
-            <div className={styles.profileTag}>{member.tag}</div>
+            <div className={styles.profileTag}>
+              {member.isExternal ? 'External' : 'Family'}
+            </div>
           </div>
           <div className={styles.profileBalance}>
             <div className={styles.balanceLabel}>Balance</div>
-            <div className={styles.balanceAmount}>{member.totalBalance}</div>
+            <div className={styles.balanceAmount}>{fmt(animTotalBalance)}</div>
           </div>
         </div>
 
-        <div className={styles.sectionLabel}>Accounts</div>
+        <div className={styles.sectionLabel}>
+          Accounts
+          <button className={styles.addAcctBtn} onClick={() => setShowAccountModal(true)}>+ Add</button>
+        </div>
         <div className={styles.carousel} ref={carouselRef}>
-          {accounts.length === 0 ? (
-            <div className={styles.empty}>No accounts</div>
+          {memberAccounts.length === 0 ? (
+            <div className="empty-state" style={{ padding: '40px 20px' }}>
+              <p className="empty-state-text">No accounts</p>
+              <button className={styles.emptyAddBtn} onClick={() => setShowAccountModal(true)}>+ Add Account</button>
+            </div>
           ) : (
-            accounts.map((acct) => (
+            memberAccounts.map((acct) => (
               <AccountCard
                 key={acct.id}
                 name={acct.name}
-                type={acct.type}
-                balance={acct.balance}
-                accountNumber={acct.accountNumber}
-                gradient={acct.gradient}
-                showChip={acct.showChip}
+                type={acct.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                balance={fmt(acct.balance)}
+                accountNumber={acct.id.slice(-4)}
+                gradient={ACCOUNT_GRADIENTS[acct.type]!}
+                showChip={acct.type === 'cash'}
               />
             ))
           )}
         </div>
         <div className={styles.carouselDots}>
-          {accounts.map((_, i) => (
+          {memberAccounts.map((_, i) => (
             <span
               key={i}
               className={`${styles.dot} ${i === activeDot ? styles.dotActive : ''}`}
@@ -225,75 +236,61 @@ export function MemberProfile({
 
       <div className={styles.desktopOnly}>
         <div className={styles.profileHero}>
-          <Avatar
-            initial={member.initial}
-            name={member.name}
-            size={72}
-            gradient={member.avatarGradient}
-          />
+          <Avatar initial={initial} name={member.name} size={72} />
           <div className={styles.heroDetails}>
             <div className={styles.heroName}>{member.name}</div>
             <div className={styles.heroMeta}>
-              <span>{'\u{1F3C6}'} Family admin</span>
-              <span>{'\u{1F3E6}'} Brac Bank</span>
-              <span>{'\u{1F4F1}'} bKash</span>
-              <span>{'\u{1F4B3}'} Business Cash</span>
+              {member.isExternal ? (
+                <span>{'\u{1F465}'} External</span>
+              ) : (
+                <span>{'\u{1F3C6}'} Family</span>
+              )}
+              {memberAccounts.slice(0, 3).map((a) => (
+                <span key={a.id}>{a.name}</span>
+              ))}
             </div>
           </div>
           <div className={styles.heroStats}>
             <div className={styles.statItem}>
               <div className={styles.statLabel}>Net Balance</div>
-              <div className={`${styles.statValue} ${styles.statTeal}`}>{member.totalBalance}</div>
+              <div className={`${styles.statValue} ${styles.statTeal}`}>{fmt(animTotalBalance)}</div>
             </div>
             <div className={styles.statItem}>
               <div className={styles.statLabel}>Total Income</div>
-              <div className={`${styles.statValue} ${styles.statTeal}`}>{member.totalIncome}</div>
+              <div className={`${styles.statValue} ${styles.statTeal}`}>{fmt(animTotalIncome)}</div>
             </div>
             <div className={styles.statItem}>
               <div className={styles.statLabel}>Total Expenses</div>
-              <div className={`${styles.statValue} ${styles.statCoral}`}>{member.totalExpenses}</div>
+              <div className={`${styles.statValue} ${styles.statCoral}`}>{fmt(animTotalExpenses)}</div>
             </div>
           </div>
         </div>
 
         <div className={styles.actionStrip}>
-          <QuickActionCard
-            icon={'\u2795'}
-            iconBg="violet"
-            title="Add Income"
-            subtitle="Record a new deposit"
-          />
-          <QuickActionCard
-            icon={'\u2796'}
-            iconBg="coral"
-            title="Log Expense"
-            subtitle="Track a payment"
-          />
-          <QuickActionCard
-            icon={'\u{1F504}'}
-            iconBg="teal"
-            title="Transfer Money"
-            subtitle="Between accounts"
-          />
+          <QuickActionCard icon={'\u2795'} iconBg="violet" title="Add Income" subtitle="Record a new deposit" onClick={() => navigate('/transaction')} />
+          <QuickActionCard icon={'\u2796'} iconBg="coral" title="Log Expense" subtitle="Track a payment" onClick={() => navigate('/transaction')} />
+          <QuickActionCard icon={'\u{1F504}'} iconBg="teal" title="Transfer Money" subtitle="Between accounts" onClick={() => navigate('/transaction')} />
         </div>
 
         <div className={styles.accountsSectionHeader}>
           <h2>Linked Accounts</h2>
-          <span className={styles.accountsAction}>+ Add account</span>
+          <button className={styles.accountsAction} onClick={() => setShowAccountModal(true)}>+ Add account</button>
         </div>
         <div className={styles.accountsGrid}>
-          {accounts.length === 0 ? (
-            <div className={styles.empty}>No accounts</div>
+          {memberAccounts.length === 0 ? (
+            <div className="empty-state">
+              <p className="empty-state-text">No accounts</p>
+            </div>
           ) : (
-            accounts.map((acct) => (
+            memberAccounts.map((acct) => (
               <AccountCard
                 key={acct.id}
                 name={acct.name}
-                type={acct.type}
-                balance={acct.balance}
-                accountNumber={acct.accountNumber}
-                gradient={acct.gradient}
-                showChip={acct.showChip}
+                type={acct.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                balance={fmt(acct.balance)}
+                accountNumber={acct.id.slice(-4)}
+                gradient={ACCOUNT_GRADIENTS[acct.type]!}
+                showChip={acct.type === 'cash'}
               />
             ))
           )}
@@ -312,59 +309,53 @@ export function MemberProfile({
               />
             </div>
           </div>
-          <LedgerTable
-            rows={filteredLedger}
-            desktop
-          />
-        </div>
-
-        <div className={styles.sidePanel}>
-          <div className={styles.spendCard}>
-            <h3>Spending This Month</h3>
-            {spending.map((cat) => (
-              <div key={cat.label} className={styles.spendRow}>
-                <div className={styles.spendCat}>
-                  <span className={styles.spendDot} style={{ background: cat.color }} />
-                  {cat.label}
-                </div>
-                <div className={styles.spendAmt}>{cat.amount}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className={styles.spendCard}>
-            <h3>Monthly Budget</h3>
-            {budgets.map((b) => (
-              <div key={b.label} className={styles.budgetBar}>
-                <div className={styles.budgetMeta}>
-                  <span>{b.label}</span>
-                  <span>{b.current} / {b.max} BDT</span>
-                </div>
-                <div className={styles.budgetTrack}>
-                  <div
-                    className={`${styles.budgetFill} ${styles[b.colorClass]}`}
-                    style={{ width: `${b.percent}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className={styles.spendCard}>
-            <h3>{'\u{1F3C6}'} Savings Goals</h3>
-            {goals.map((g) => (
-              <div key={g.title} className={styles.goalRow}>
-                <div className={styles.goalIcon}>{g.icon}</div>
-                <div className={styles.goalInfo}>
-                  <div className={styles.goalTitle}>{g.title}</div>
-                  <div className={styles.goalProgress}>{g.percent}% &bull; {g.detail}</div>
-                </div>
-                <div className={styles.goalAmt}>{g.addition}</div>
-              </div>
-            ))}
-          </div>
+          <LedgerTable rows={filteredLedger} desktop />
         </div>
       </div>
+
+      <Modal
+        isOpen={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+        title="Add Account"
+        saveLabel="Add Account"
+        onSave={async () => {
+          if (!acctName.trim() || !memberId) return;
+          const account = new Account(
+            uuidv4(), memberId, acctName.trim(), acctType,
+            acctBalance ? parseFloat(acctBalance) || 0 : 0,
+          );
+          await saveAccount(account);
+          setAcctName('');
+          setAcctType('bank');
+          setAcctBalance('');
+          setShowAccountModal(false);
+        }}
+      >
+        <FormInput
+          label="Account Name"
+          placeholder="e.g. bKash, Brac Bank"
+          value={acctName}
+          onChange={(e) => setAcctName(e.target.value)}
+          autoFocus
+        />
+        <FormSelect
+          label="Account Type"
+          value={acctType}
+          onChange={(e) => setAcctType(e.target.value as AccountType)}
+        >
+          <option value="bank">Bank</option>
+          <option value="mobile_wallet">Mobile Wallet</option>
+          <option value="cash">Cash</option>
+          <option value="savings">Savings</option>
+          <option value="business">Business</option>
+        </FormSelect>
+        <AmountInput
+          label="Initial Balance (optional)"
+          value={acctBalance}
+          onChange={setAcctBalance}
+          placeholder="0"
+        />
+      </Modal>
     </div>
   );
 }
