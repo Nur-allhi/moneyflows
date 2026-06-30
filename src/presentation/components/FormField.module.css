@@ -1,0 +1,123 @@
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+}
+
+.input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.textarea {
+  min-height: 60px;
+  resize: none;
+  font-family: var(--font-body);
+}
+
+.selectWrapper {
+  position: relative;
+}
+
+.selectWrapper::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 6px;
+  background: var(--color-text-secondary);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  pointer-events: none;
+}
+
+.selectWrapper select {
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.selectWrapper select option {
+  background: oklch(20% 0.015 260);
+  color: var(--color-text);
+}
+
+.amountWrap {
+  display: flex;
+  align-items: center;
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.amountWrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+}
+
+.amountCurrency {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+  padding: 14px 0 14px 16px;
+}
+
+.amountInput {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 14px 16px 14px 6px;
+  width: 100%;
+  outline: none;
+  color: var(--color-text);
+}
+
+.amountInput::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.error {
+  font-size: 11px;
+  color: var(--color-expense);
+  margin-top: 2px;
+}

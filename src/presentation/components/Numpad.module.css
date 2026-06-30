@@ -1,0 +1,45 @@
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 12px 20px 24px;
+  background: oklch(18% 0.015 260);
+  border-top: 1px solid var(--color-border);
+  margin-top: 8px;
+}
+
+.key {
+  padding: 14px 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--color-surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.key:active {
+  background: oklch(100% 0 0 / 0.1);
+}
+
+.action {
+  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  color: #fff;
+}
+
+.action:active {
+  opacity: 0.8;
+}
+
+.blank {
+  background: transparent;
+  cursor: default;
+}
