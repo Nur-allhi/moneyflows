@@ -90,11 +90,11 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Next:** T-015 — Build `LedgerTable` + `SegmentedTabs` + `TabBar`
+**Next:** T-016 — Build `Numpad` + `FormField` + `BottomSheet` + `Modal`
 - **Phase:** 1 — Shared Components
 - **Skill:** `ui-ux-pro-max`, `senior-frontend`
-- **Design:** `DESIGN_FILES/screen-2-member.html` (ledger), `DESIGN_FILES/screen-4-transaction.html` (segmented tabs), `DESIGN_FILES/screen-5-recycle.html` (tab bar)
-- **Acceptance:** LedgerTable renders filterable rows with running balance; SegmentedTabs/TabBar have active pill indicator, count badges, onChange callback.
+- **Design:** `DESIGN_FILES/screen-4-transaction.html` (numpad, bottom sheet, form fields), `DESIGN_FILES/screen-4-transaction-desktop.html` (modal)
+- **Acceptance:** Numpad is 3×4 grid, BDT formatting via `Intl.NumberFormat('en-IN')`, backspace. BottomSheet slide-up animation 300ms, 92vh max, handle bar. Modal fade-in 0.25s, centered 520px max-width.
 - **Action:** Load skill(s) with `skill` tool, then build components in `src/presentation/components/`.
 
 When this ticket is complete, update this section to the next ticket from `docs/TICKETS.md`.

@@ -4,3 +4,7 @@ export { MetricCard } from './MetricCard';
 export { AccountCard } from './AccountCard';
 export { AccountRow } from './AccountRow';
 export { TransactionRow } from './TransactionRow';
+export { SegmentedTabs } from './SegmentedTabs';
+export { TabBar } from './TabBar';
+export { LedgerTable } from './LedgerTable';
+export type { LedgerRow } from './LedgerTable';

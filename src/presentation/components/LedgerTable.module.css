@@ -1,0 +1,82 @@
+.container {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 60px 1fr 72px 72px 72px;
+  gap: 4px;
+  padding: 12px 14px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.body {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 60px 1fr 72px 72px 72px;
+  gap: 4px;
+  padding: 10px 14px;
+  font-size: 12px;
+  align-items: center;
+  border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+
+.row:hover {
+  background: oklch(100% 0 0 / 0.04);
+}
+
+.date {
+  color: var(--color-text-secondary);
+  font-size: 11px;
+}
+
+.desc {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.debit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-expense);
+}
+
+.credit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-income);
+}
+
+.balance {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
