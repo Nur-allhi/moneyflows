@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import styles from './GlassPanel.module.css';
 
 type GlowVariant = 'violet' | 'gold' | 'purple';
-type PaddingSize = 'sm' | 'md' | 'lg';
+type PaddingSize = 'none' | 'sm' | 'md' | 'lg';
 
 interface GlassPanelProps {
   children: ReactNode;
@@ -20,6 +20,7 @@ const glowClassMap: Record<GlowVariant, string> = {
 };
 
 const paddingClassMap: Record<PaddingSize, string> = {
+  none: '',
   sm: styles.padSm ?? '',
   md: styles.padMd ?? '',
   lg: styles.padLg ?? '',
