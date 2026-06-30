@@ -76,13 +76,25 @@ money_flows_v0.4/
 - React functional components with hooks.
 - Clean Architecture: UI never imports `better-sqlite3` directly.
 
-### 3.5 Session Logging
+### 3.5 Session Start Ritual
+- **At the start of EVERY session**, read `session_log.md` (last entry for current position) and this file §5 (current ticket).
+- This ensures you always know what was built, what failed, and what's next — even after a fresh start.
+
+### 3.6 Context Management
+- Monitor context usage. When context is approaching ~80%, STOP work immediately.
+- Before stopping: stage all changes, `git commit`, update `session_log.md`, update this file §5 to the next ticket.
+- This enables the user to always start a fresh session from a clean checkpoint.
+
+### 3.7 Session Logging
 - Append to `session_log.md` after every change.
 - Format: `## Session YYYY-MM-DD HH:MM` → `### Changes` → `### Skill(s) Used` → `### Status`
+- Each entry MUST clearly state what was completed and what the next ticket is.
+- This is the primary handoff mechanism for fresh sessions — make it thorough.
 
-### 3.6 AGENTS.md Management
-- Check this file at the start of every conversation — especially §5 for the current ticket.
+### 3.8 AGENTS.md Management
+- Check this file (§3 and §5) at the start of every conversation.
 - Update if new conventions or files are introduced.
+- Update §5 to the next ticket after completing each ticket.
 
 ## 4. Session Logs
 
@@ -90,10 +102,10 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Next:** T-022 — Build Member Profile screen (mobile)
+**Next:** T-024 — Build Loan Receivables screen
 - **Phase:** 2 — Screen Implementation
 - **Skill:** `ui-ux-pro-max`, `senior-frontend`
-- **Design:** `DESIGN_FILES/screen-2-member.html`
-- **Acceptance:** Profile card, account carousel with snap + dots, ledger table with filter tabs.
+- **Design:** `DESIGN_FILES/screen-3-loans.html`
+- **Acceptance:** Debtor summary cards, progress bars, expandable loan stacks, responsive column hiding.
 
 When this ticket is complete, update this section to the next ticket from `docs/TICKETS.md`.

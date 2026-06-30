@@ -206,3 +206,56 @@
 - **T-021 complete.** Dashboard screen built.
 - Build, typecheck, lint all pass.
 - **Next:** T-022 — Member Profile screen (mobile)
+
+## Session 2026-06-30 01:15
+
+### Changes
+- **T-022**: Built Member Profile screen (mobile) — `MemberProfile.tsx` + `MemberProfile.module.css`:
+  - Profile card with `Avatar` (72px), member name/tag, total balance (teal, mono font)
+  - Account carousel with `AccountCard` components, snap-scroll, dot indicators synced via scroll listener
+  - Account Ledger section with `SegmentedTabs` filter (All/Income/Expense/Transfer) + `LedgerTable`
+  - 3 states: loading (shimmer skeleton), error (retry), ready (full content)
+  - Reuses existing components: `Avatar`, `AccountCard`, `LedgerTable`, `SegmentedTabs`, `GlassPanel`
+
+### Skill(s) Used
+- `ui-ux-pro-max` — glass profile card layout, carousel snap behavior, section spacing
+- `senior-frontend` — scroll-snap dot sync, state-driven rendering, component composition
+
+### Status
+- **T-022 complete.** Member Profile screen (mobile) built.
+- Build, typecheck, lint all pass.
+- **Next:** T-023 — Member Profile screen (desktop)
+
+## Session 2026-06-30 01:15
+
+### Changes
+- **T-022**: Built Member Profile screen (mobile) — `MemberProfile.tsx` + `MemberProfile.module.css` with profile card, account carousel (snap + dots), ledger with filter tabs
+
+### Skill(s) Used
+- `ui-ux-pro-max` — glass profile card layout, carousel snap behavior, section spacing
+- `senior-frontend` — scroll-snap dot sync, state-driven rendering, component composition
+
+### Status
+- T-022 complete. Next: T-023
+
+## Session 2026-06-30 01:25
+
+### Changes
+- **T-023**: Built Member Profile screen (desktop) — enhanced `MemberProfile.tsx` + `MemberProfile.module.css`:
+  - Responsive layout via `.mobileOnly` / `.desktopOnly` CSS classes at 1024px breakpoint
+  - **Desktop hero**: Avatar (72px), name, meta badges, 3 stats (Net Balance/Income/Expenses)
+  - **Action strip**: 3-column `QuickActionCard` grid (Add Income/Log Expense/Transfer Money)
+  - **Accounts grid**: 3-column `AccountCard` grid with section header + "Add account" action
+  - **Content split**: Ledger (1fr) + Side panel (320px) via `grid-template-columns`
+  - **Side panel**: Spending breakdown (colored dots), Monthly budget (progress bars), Savings goals
+  - **LedgerTable**: Added `desktop` prop (wider columns, 13px font, type tags on rows)
+  - Retains mobile layout unchanged for < 1024px viewports
+- Updated `AGENTS.md` §5 to T-024
+
+### Skill(s) Used
+- `ui-ux-pro-max` — desktop hero layout, split panel design, budget bars, savings goals cards
+- `senior-frontend` — responsive component architecture, CSS breakpoint strategy, LedgerTable API extension
+
+### Status
+- **T-023 complete.** Build passes.
+- **Next:** T-024 — Loan Receivables screen
