@@ -44,6 +44,22 @@
 .item:hover {
   color: var(--color-text);
   background: oklch(100% 0 0 / 0.04);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.item:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .itemActive {

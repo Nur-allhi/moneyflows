@@ -1,0 +1,1 @@
+export { useAnimatedValue } from './useAnimatedValue';

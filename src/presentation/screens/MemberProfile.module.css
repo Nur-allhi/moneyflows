@@ -68,12 +68,64 @@
 
 /* ---- Section label ---- */
 .sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 20px var(--space-4) 8px;
   font-size: 13px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
+}
+
+.addAcctBtn {
+  padding: 2px 10px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-primary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.addAcctBtn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+.addAcctBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.emptyAddBtn {
+  margin-top: 12px;
+  padding: 8px 18px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.emptyAddBtn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.emptyAddBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* ---- Carousel (mobile) ---- */
@@ -105,6 +157,16 @@
   background: oklch(100% 0 0 / 0.15);
   transition: all var(--transition-fast);
   cursor: pointer;
+}
+
+.dot:hover {
+  background: var(--color-primary);
+  opacity: 0.6;
+}
+
+.dot:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .dotActive {
@@ -206,6 +268,22 @@
   color: var(--color-primary);
   cursor: pointer;
   font-weight: 500;
+  transition: opacity var(--transition-fast);
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+
+.accountsAction:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.accountsAction:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .accountsGrid {
@@ -248,136 +326,7 @@
 }
 
 .ledgerPanelFilter {
-  max-width: 340px;
-}
-
-/* ---- Side panel ---- */
-.sidePanel {
-  display: none;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.spendCard {
-  background: var(--color-surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-}
-
-.spendCard h3 {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin-bottom: 14px;
-}
-
-.spendRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid oklch(100% 0 0 / 0.04);
-}
-
-.spendRow:last-child {
-  border-bottom: 0;
-}
-
-.spendCat {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.spendDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.spendAmt {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---- Budget bars ---- */
-.budgetBar {
-  margin: 10px 0;
-}
-
-.budgetMeta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  margin-bottom: 6px;
-}
-
-.budgetTrack {
-  height: 6px;
-  background: oklch(100% 0 0 / 0.06);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.budgetFill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width var(--transition-normal);
-}
-
-.fillTeal { background: var(--color-income); }
-.fillViolet { background: var(--color-primary); }
-.fillCoral { background: var(--color-expense); }
-
-/* ---- Savings goals ---- */
-.goalRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-}
-
-.goalIcon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: oklch(75% 0.15 85 / 0.12);
-  display: grid;
-  place-items: center;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.goalInfo {
-  flex: 1;
   min-width: 0;
-}
-
-.goalTitle {
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.goalProgress {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-}
-
-.goalAmt {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-cash);
-  flex-shrink: 0;
 }
 
 /* ---- Loading ---- */
@@ -388,68 +337,9 @@
   padding: 0 var(--space-4);
 }
 
-.loadingProfile {
-  height: 92px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(90deg, var(--color-surface) 25%, rgba(255,255,255,0.08) 50%, var(--color-surface) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
 .loadingCard {
-  height: 170px;
   min-width: 280px;
-  border-radius: 14px;
-  background: linear-gradient(90deg, var(--color-surface) 25%, rgba(255,255,255,0.08) 50%, var(--color-surface) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
   flex-shrink: 0;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* ---- Error ---- */
-.error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 40px var(--space-4);
-  color: var(--color-text-secondary);
-  text-align: center;
-}
-
-.errorIcon {
-  font-size: 32px;
-  opacity: 0.5;
-}
-
-.retryBtn {
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background var(--transition-fast);
-}
-
-.retryBtn:hover {
-  background: var(--color-surface-hover);
-}
-
-/* ---- Empty ---- */
-.empty {
-  padding: 40px 20px;
-  text-align: center;
-  color: var(--color-text-secondary);
-  font-size: 13px;
 }
 
 /* ---- Responsive breakpoints ---- */
@@ -463,11 +353,13 @@
   }
 
   .contentSplit {
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: 1fr;
   }
+}
 
-  .sidePanel {
-    display: flex;
+@media (max-width: 1280px) and (min-width: 1024px) {
+  .accountsGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

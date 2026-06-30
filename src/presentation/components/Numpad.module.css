@@ -20,14 +20,29 @@
   font-size: 22px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background var(--transition-fast);
   text-align: center;
   -webkit-appearance: none;
   appearance: none;
 }
 
+.key:hover {
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.key:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 .key:active {
-  background: oklch(100% 0 0 / 0.1);
+  background: rgba(255,255,255,0.08);
+}
+
+.key:disabled, .action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .action {

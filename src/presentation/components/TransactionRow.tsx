@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import styles from './TransactionRow.module.css';
 
 type TransactionType = 'income' | 'expense' | 'transfer';
@@ -5,7 +6,7 @@ type TransactionType = 'income' | 'expense' | 'transfer';
 interface TransactionRowProps {
   description: string;
   date: string;
-  amount: string;
+  amount: ReactNode;
   type: TransactionType;
   icon?: string;
   className?: string;

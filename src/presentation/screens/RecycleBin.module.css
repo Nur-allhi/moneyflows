@@ -54,6 +54,21 @@
 
 .pillBtn:hover {
   background: var(--color-surface-hover);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.pillBtn:focus-visible, .pillDanger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.pillBtn:active, .pillDanger:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.pillBtn:disabled, .pillDanger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .pillDanger {
@@ -63,6 +78,7 @@
 
 .pillDanger:hover {
   background: oklch(62% 0.18 30 / 0.1);
+  box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
 .listPanel {
@@ -93,73 +109,10 @@
   overflow-y: auto;
 }
 
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 60px 24px;
-  color: var(--color-text-secondary);
-}
-
-.emptyIcon {
-  font-size: 40px;
-  opacity: 0.4;
-}
-
-.empty p {
-  font-size: 14px;
-}
-
 .loading {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.loadingRow {
-  height: 56px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--color-surface) 25%, rgba(255,255,255,0.08) 50%, var(--color-surface) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 40px;
-  color: var(--color-text-secondary);
-  text-align: center;
-}
-
-.errorIcon {
-  font-size: 32px;
-  opacity: 0.5;
-}
-
-.retryBtn {
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background var(--transition-fast);
-}
-
-.retryBtn:hover {
-  background: var(--color-surface-hover);
 }
 
 @media (max-width: 800px) {

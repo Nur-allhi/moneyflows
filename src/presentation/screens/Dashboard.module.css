@@ -38,6 +38,21 @@
 .qaBtn:hover {
   background: var(--color-surface-hover);
   border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.qaBtn:focus-visible, .qaPrimary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.qaBtn:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.qaBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .qaPrimary {
@@ -47,6 +62,7 @@
 
 .qaPrimary:hover {
   opacity: 0.9;
+  box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
 .content {
@@ -75,6 +91,18 @@
   color: var(--color-primary);
   cursor: pointer;
   font-weight: 500;
+  transition: opacity var(--transition-fast);
+}
+
+.sectionAction:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+.sectionAction:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .accountList {
@@ -99,68 +127,19 @@
   gap: 16px;
 }
 
-.loadingMetric {
-  height: 120px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(90deg, var(--color-surface) 25%, rgba(255,255,255,0.08) 50%, var(--color-surface) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+@media (max-width: 1200px) {
+  .metrics {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.loadingRow {
-  height: 56px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--color-surface) 25%, rgba(255,255,255,0.08) 50%, var(--color-surface) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.empty, .error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 40px 20px;
-  color: var(--color-text-secondary);
-  text-align: center;
-}
-
-.emptyIcon {
-  font-size: 40px;
-  opacity: 0.4;
-}
-
-.errorIcon {
-  font-size: 32px;
-  opacity: 0.5;
-}
-
-.retryBtn {
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background var(--transition-fast);
-}
-
-.retryBtn:hover {
-  background: var(--color-surface-hover);
-}
-
-@media (max-width: 1000px) {
+@media (max-width: 900px) {
   .metrics {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+@media (max-width: 800px) {
   .content {
     grid-template-columns: 1fr;
   }

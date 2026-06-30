@@ -1,0 +1,21 @@
+[     118ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[     184ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[     184ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   55272ms] [ERROR] Warning: You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it. @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:520
+[   57313ms] Error: Date cannot be in the future
+    at SQLiteDatabaseService.validateTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts:252:82)
+    at SQLiteDatabaseService.saveTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts:279:10)
+    at addAll (http://localhost:5177/src/infrastructure/database/seed.ts:55:55)
+    at genLedger (http://localhost:5177/src/infrastructure/database/seed.ts:69:3)
+    at seed (http://localhost:5177/src/infrastructure/database/seed.ts:292:3)
+    at async http://localhost:5177/src/main.tsx?t=1782830558651:35:9
+[   57314ms] Error: Date cannot be in the future
+    at SQLiteDatabaseService.validateTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts:252:82)
+    at SQLiteDatabaseService.saveTransaction (http://localhost:5177/src/infrastructure/database/SQLiteDatabaseService.ts:279:10)
+    at addAll (http://localhost:5177/src/infrastructure/database/seed.ts:55:55)
+    at genLedger (http://localhost:5177/src/infrastructure/database/seed.ts:69:3)
+    at seed (http://localhost:5177/src/infrastructure/database/seed.ts:292:3)
+    at async http://localhost:5177/src/main.tsx?t=1782830558651:35:9
+[   57509ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:5177/node_modules/.vite/deps/chunk-VIJJTZRL.js?v=e8bc27dc:21608
+[   57570ms] [WARNING] ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426
+[   57571ms] [WARNING] ⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath. @ http://localhost:5177/node_modules/.vite/deps/react-router-dom.js?v=e8bc27dc:4426

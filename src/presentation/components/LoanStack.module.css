@@ -24,6 +24,22 @@
 
 .header:hover {
   background: oklch(100% 0 0 / 0.06);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.header:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+.header:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.header:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .expanded .header {
@@ -126,6 +142,7 @@
   align-items: center;
   font-size: 13px;
   border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+  cursor: pointer;
   transition: background var(--transition-fast);
 }
 

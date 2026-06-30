@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import styles from './AccountRow.module.css';
 
 type AccountType = 'bank' | 'mobile_wallet' | 'cash' | 'savings' | 'business';
@@ -6,8 +6,7 @@ type AccountType = 'bank' | 'mobile_wallet' | 'cash' | 'savings' | 'business';
 interface AccountRowProps {
   name: string;
   type: AccountType | string;
-  balance: string;
-  currency?: string;
+  balance: ReactNode;
   gradient?: string;
   accentColor?: string;
   icon?: string;
@@ -27,7 +26,6 @@ export function AccountRow({
   name,
   type,
   balance,
-  currency = 'BDT',
   gradient,
   accentColor,
   icon,
@@ -53,7 +51,7 @@ export function AccountRow({
         <div className={styles.sub}>{type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
       </div>
       <div className={styles.balance} style={{ color: accentColor ?? 'var(--color-text)' }}>
-        {balance} {currency}
+        {balance}
       </div>
     </div>
   );

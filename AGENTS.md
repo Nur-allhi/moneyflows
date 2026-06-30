@@ -102,10 +102,7 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Next:** T-029 — Implement Zustand stores (member, account, transaction, loan, recycle)
-- **Phase:** 3 — Data Integration
-- **Skill:** `senior-backend`, `senior-frontend`
-- **File(s):** `src/presentation/stores/*Store.ts`
-- **Acceptance:** Each store connects to `IDatabaseService`; `useTransactionStore.addTransaction` uses optimistic update pattern.
-
-When this ticket is complete, update this section to the next ticket from `docs/TICKETS.md`.
+**Complete.** All 42 tickets across 5 phases are finished.
+- All screens, components, data layer, navigation, stores, polish, and QA are done.
+- Production build: 232.98 kB JS + 53 kB CSS (gzip ~86 kB initial).
+- Next: See `docs/ROADMAP.md` for future enhancements, or review `docs/TICKETS.md` for completed work.

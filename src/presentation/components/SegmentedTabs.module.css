@@ -1,5 +1,6 @@
 .container {
   display: flex;
+  gap: 3px;
   background: oklch(100% 0 0 / 0.05);
   border-radius: 10px;
   padding: 3px;
@@ -8,7 +9,7 @@
 .tab {
   flex: 1;
   text-align: center;
-  padding: 10px 0;
+  padding: 10px 14px;
   font-size: 13px;
   font-weight: 500;
   border-radius: 8px;
@@ -22,6 +23,23 @@
 
 .tab:hover:not(.active) {
   color: var(--color-text);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-pill);
+}
+
+.tab:active {
+  background: rgba(255,255,255,0.08);
+  border-radius: var(--radius-pill);
+}
+
+.tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .active {

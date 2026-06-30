@@ -33,6 +33,21 @@
 
 .backBtn:hover {
   background: var(--color-surface-hover);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.backBtn:focus-visible, .notifBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.backBtn:active, .notifBtn:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.backBtn:disabled, .notifBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .logo {
@@ -86,6 +101,7 @@
 
 .notifBtn:hover {
   background: var(--color-surface-hover);
+  box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
 .breadcrumb {
@@ -97,10 +113,22 @@
 .breadcrumb a {
   color: var(--color-text-secondary);
   text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
 }
 
 .breadcrumb a:hover {
   color: var(--color-text);
+}
+
+.breadcrumb a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.breadcrumb a:active {
+  opacity: 0.7;
 }
 
 .breadcrumb span:last-child {

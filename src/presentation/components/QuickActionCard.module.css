@@ -17,6 +17,20 @@
   box-shadow: 0 0 20px oklch(62% 0.22 290 / 0.12);
 }
 
+.card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.card:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .icon {
   width: 40px;
   height: 40px;

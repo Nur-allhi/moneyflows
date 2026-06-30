@@ -6,10 +6,29 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   transition: box-shadow var(--transition-normal), background var(--transition-normal);
+  will-change: box-shadow;
+}
+
+.panel:hover {
+  box-shadow: var(--shadow-glow);
 }
 
 .panel.hover:hover {
   box-shadow: var(--shadow-glow);
+}
+
+.panel:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.panel:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.panel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .glowViolet {

@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@theme inline {
+  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-background: oklch(14% 0.015 260);
+  --color-foreground: oklch(92% 0.008 260);
+  --color-card: oklch(22% 0.02 260 / 0.55);
+  --color-card-foreground: oklch(92% 0.008 260);
+  --color-popover: oklch(22% 0.02 260 / 0.95);
+  --color-popover-foreground: oklch(92% 0.008 260);
+  --color-primary: oklch(62% 0.22 290);
+  --color-primary-foreground: #fff;
+  --color-secondary: oklch(22% 0.02 260 / 0.55);
+  --color-secondary-foreground: oklch(92% 0.008 260);
+  --color-muted: oklch(100% 0 0 / 0.05);
+  --color-muted-foreground: oklch(60% 0.02 260);
+  --color-accent: oklch(62% 0.22 290 / 0.15);
+  --color-accent-foreground: oklch(92% 0.008 260);
+  --color-destructive: oklch(58% 0.18 30);
+  --color-border: oklch(100% 0 0 / 0.10);
+  --color-input: oklch(100% 0 0 / 0.06);
+  --color-ring: oklch(62% 0.22 290);
+
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+}
+
+* {
+  border-color: var(--color-border);
+  outline-color: color-mix(in oklch, var(--color-ring) 50%, transparent);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}

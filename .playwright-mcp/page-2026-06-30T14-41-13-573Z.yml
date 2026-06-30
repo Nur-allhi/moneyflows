@@ -1,0 +1,46 @@
+- generic [ref=f5e3]:
+  - complementary [ref=f5e4]:
+    - generic [ref=f5e5]: MoneyFlows
+    - navigation [ref=f5e6]:
+      - link "🏠 Dashboard" [ref=f5e7] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f5e8]: 🏠
+        - text: Dashboard
+      - link "👥 Members" [ref=f5e9] [cursor=pointer]:
+        - /url: /member/1
+        - generic [ref=f5e10]: 👥
+        - text: Members
+      - link "📋 Loans" [ref=f5e11] [cursor=pointer]:
+        - /url: /loans
+        - generic [ref=f5e12]: 📋
+        - text: Loans
+      - link "+ New Transaction" [ref=f5e13] [cursor=pointer]:
+        - /url: /transaction
+        - generic [ref=f5e14]: +
+        - text: New Transaction
+      - link "🗑️ Recycle Bin" [ref=f5e15] [cursor=pointer]:
+        - /url: /recycle
+        - generic [ref=f5e16]: 🗑️
+        - text: Recycle Bin
+    - generic [ref=f5e17]:
+      - generic [ref=f5e18]: F
+      - generic [ref=f5e19]:
+        - generic [ref=f5e20]: Family
+        - generic [ref=f5e21]: 4 members
+  - generic [ref=f5e22]:
+    - banner [ref=f5e23]:
+      - generic [ref=f5e24]:
+        - link "Back" [ref=f5e25] [cursor=pointer]:
+          - /url: /
+          - text: ←
+        - generic [ref=f5e26]:
+          - link "Members" [ref=f5e28] [cursor=pointer]:
+            - /url: /members
+          - generic [ref=f5e29]: /1
+      - generic [ref=f5e30]:
+        - generic [ref=f5e31]: Tue, 30 Jun 2026
+        - button "Notifications" [ref=f5e32] [cursor=pointer]: 🔔
+    - generic [ref=f5e37]:
+      - generic [ref=f5e38]: ⚠️
+      - paragraph [ref=f5e39]: Member not found
+      - button "Retry" [ref=f5e40] [cursor=pointer]

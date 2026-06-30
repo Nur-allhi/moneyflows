@@ -9,6 +9,7 @@
   align-items: center;
   justify-content: center;
   animation: overlayFadeIn 0.2s ease-out;
+  will-change: opacity;
 }
 
 @keyframes overlayFadeIn {
@@ -32,6 +33,7 @@
   flex-direction: column;
   overflow: hidden;
   animation: fadeIn 0.25s ease-out;
+  will-change: transform, opacity;
 }
 
 @keyframes fadeIn {
@@ -72,6 +74,21 @@
 .close:hover {
   background: oklch(100% 0 0 / 0.1);
   color: var(--color-text);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.close:focus-visible, .btnCancel:focus-visible, .btnSave:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.close:active, .btnCancel:active, .btnSave:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.close:disabled, .btnCancel:disabled, .btnSave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .body {
@@ -111,6 +128,7 @@
 .btnCancel:hover {
   background: oklch(100% 0 0 / 0.1);
   color: var(--color-text);
+  box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
 .btnSave {
@@ -120,4 +138,5 @@
 
 .btnSave:hover {
   opacity: 0.9;
+  box-shadow: 0 0 20px var(--color-primary-glow);
 }

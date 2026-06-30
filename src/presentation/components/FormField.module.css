@@ -24,14 +24,29 @@
   font-family: var(--font-body);
   font-size: 15px;
   outline: none;
+  cursor: pointer;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   -webkit-appearance: none;
   appearance: none;
 }
 
-.input:focus {
+.input:hover, .amountInput:hover, select:hover {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+}
+
+.input:focus-visible, .amountInput:focus-visible, select:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.input:active, .amountInput:active {
+  background: rgba(255,255,255,0.08);
+}
+
+.input:disabled, .amountInput:disabled, select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .input::placeholder {
@@ -109,6 +124,7 @@
   width: 100%;
   outline: none;
   color: var(--color-text);
+  cursor: pointer;
 }
 
 .amountInput::placeholder {

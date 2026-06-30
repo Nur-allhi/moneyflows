@@ -1,0 +1,36 @@
+- generic [ref=f7e3]:
+  - complementary [ref=f7e4]:
+    - generic [ref=f7e5]: MoneyFlows
+    - navigation [ref=f7e6]:
+      - link "🏠 Dashboard" [ref=f7e7] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f7e8]: 🏠
+        - text: Dashboard
+      - link "👥 Members" [ref=f7e9] [cursor=pointer]:
+        - /url: /member/1
+        - generic [ref=f7e10]: 👥
+        - text: Members
+      - link "📋 Loans" [ref=f7e11] [cursor=pointer]:
+        - /url: /loans
+        - generic [ref=f7e12]: 📋
+        - text: Loans
+      - link "+ New Transaction" [ref=f7e13] [cursor=pointer]:
+        - /url: /transaction
+        - generic [ref=f7e14]: +
+        - text: New Transaction
+      - link "🗑️ Recycle Bin" [ref=f7e15] [cursor=pointer]:
+        - /url: /recycle
+        - generic [ref=f7e16]: 🗑️
+        - text: Recycle Bin
+    - generic [ref=f7e17]:
+      - generic [ref=f7e18]: F
+      - generic [ref=f7e19]:
+        - generic [ref=f7e20]: Family
+        - generic [ref=f7e21]: 4 members
+  - banner [ref=f7e23]:
+    - generic [ref=f7e24]:
+      - generic [ref=f7e25]: MoneyFlows
+      - generic [ref=f7e26]: Loans
+    - generic [ref=f7e27]:
+      - generic [ref=f7e28]: Tue, 30 Jun 2026
+      - button "Notifications" [ref=f7e29] [cursor=pointer]: 🔔

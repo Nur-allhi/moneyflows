@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { GlassPanel } from './GlassPanel';
 import styles from './MetricCard.module.css';
 
@@ -6,7 +7,7 @@ type ChangeDirection = 'up' | 'down';
 
 interface MetricCardProps {
   label: string;
-  value: string;
+  value: ReactNode;
   change?: string;
   changeDirection?: ChangeDirection;
   accent?: AccentColor;
