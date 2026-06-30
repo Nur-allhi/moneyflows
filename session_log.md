@@ -166,3 +166,21 @@
 - **T-017 + T-018 complete.** Phase 1 (Shared Components) fully done — 8 components across 6 tickets.
 - Build, typecheck, lint all pass.
 - **Next:** T-019 — Routing + Sidebar + Bottom Nav (Phase 1.2)
+
+## Session 2026-07-01 00:40
+
+### Changes
+- Created `Sidebar.tsx` + `.module.css` — 220px desktop nav with NavLink active states, violet left border indicator, logo, footer with avatar
+- Created `BottomNav.tsx` + `.module.css` — fixed bottom tab bar (Home/Members/Loans/Recycle), active violet color
+- Created `Header.tsx` + `.module.css` — glass header with back button, logo, title, date, notifications, breadcrumb support
+- Created `App.tsx` + `App.module.css` — BrowserRouter layout shell with sidebar (≥1024px) / bottom nav (≤768px), content padding toggle
+- Created placeholder screens: Dashboard, MemberProfile, Loans, TransactionWizard, RecycleBin
+- Added barrel exports for all nav components
+
+### Skill(s) Used
+- `senior-frontend` — React Router v6 nested routes, responsive layout shell, CSS Modules layout
+
+### Status
+- **Phase 1.2 complete.** T-019 + T-020 done. Routing + sidebar + bottom nav + header all wired.
+- Build, typecheck, lint all pass.
+- **Next:** T-021 — Dashboard screen (Phase 2 begins)
