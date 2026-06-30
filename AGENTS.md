@@ -90,11 +90,11 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Next:** T-017 — Build `LoanStack` + `ProgressBar` + `QuickActionCard`
-- **Phase:** 1 — Shared Components
-- **Skill:** `ui-ux-pro-max`, `senior-frontend`
-- **Design:** `DESIGN_FILES/screen-3-loans.html` (loan stack, progress bar), `DESIGN_FILES/screen-2-member-desktop.html` (quick action card)
-- **Acceptance:** LoanStack accordion single-open, chevron rotates. ProgressBar animates width on mount (600ms, ease-out), teal gradient, glossy overlay. QuickActionCard glass row with icon/title/subtitle, hover violet border.
-- **Action:** Load skill(s) with `skill` tool, then build components in `src/presentation/components/`.
+**Next:** T-019 — Implement routing + desktop sidebar + mobile bottom nav
+- **Phase:** 1.2 — Navigation
+- **Skill:** `senior-frontend`
+- **Design:** `DESIGN_FILES/screen-2-member-desktop.html` (sidebar), `DESIGN_FILES/screen-2-member.html` (bottom nav)
+- **Acceptance:** Routes from FRONTEND_SPEC §2 work; sidebar visible ≥1024px, bottom nav visible ≤768px. Header shows current route title.
+- **Action:** Load skill(s) with `skill` tool, then implement routing in `App.tsx` and nav components in `src/presentation/components/`.
 
 When this ticket is complete, update this section to the next ticket from `docs/TICKETS.md`.

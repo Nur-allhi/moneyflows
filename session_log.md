@@ -148,3 +148,21 @@
 - **T-016 complete.** Phase 1 (Shared Components) is fully done — all 6 tickets T-013 through T-018 built.
 - Build, typecheck, lint all pass.
 - **Next:** T-017 — LoanStack + ProgressBar + QuickActionCard
+
+## Session 2026-07-01 00:25
+
+### Changes
+- Created `ProgressBar.tsx` + `.module.css` — teal gradient fill, IntersectionObserver mount animation (600ms), glossy overlay
+- Created `QuickActionCard.tsx` + `.module.css` — glass row with icon (violet/teal/coral bg), title, subtitle, hover violet border + glow
+- Created `LoanStack.tsx` + `.module.css` — accordion with single-open, chevron rotation, header (icon + fund source + total + count), body with loan rows + status pills (Active/On Track)
+- Created `RecycleRow.tsx` + `.module.css` — grid row with icon (warning/account), name, meta, amount, date, restore + delete buttons
+- Updated `src/presentation/components/index.ts` — added 4 new exports + LoanStack types
+
+### Skill(s) Used
+- `ui-ux-pro-max` — accordion animation, progress bar gloss effect, recycle row actions
+- `senior-frontend` — IntersectionObserver pattern, single-open accordion state, typed loan data
+
+### Status
+- **T-017 + T-018 complete.** Phase 1 (Shared Components) fully done — 8 components across 6 tickets.
+- Build, typecheck, lint all pass.
+- **Next:** T-019 — Routing + Sidebar + Bottom Nav (Phase 1.2)
