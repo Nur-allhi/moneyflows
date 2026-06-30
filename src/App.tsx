@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import { Sidebar, BottomNav, Header } from './presentation/components';
-import { Dashboard, MemberProfile, Loans, TransactionWizard, RecycleBin } from './presentation/screens';
+import { Dashboard, MemberProfile, Loans, TransactionWizard, RecycleBin, Launcher } from './presentation/screens';
 import styles from './App.module.css';
 
 const sidebarItems = [
@@ -60,6 +60,7 @@ export function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/launcher" element={<Launcher />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/member/:id" element={<MemberProfile />} />
