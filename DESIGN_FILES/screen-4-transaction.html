@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>MoneyFlows — New Transaction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: oklch(14% 0.015 260);
+      --surface: oklch(22% 0.02 260 / 0.55);
+      --fg: oklch(92% 0.008 260);
+      --muted: oklch(60% 0.02 260);
+      --border: oklch(100% 0 0 / 0.10);
+      --violet: oklch(62% 0.22 290);
+      --teal: oklch(65% 0.15 170);
+      --coral: oklch(62% 0.18 30);
+      --gold: oklch(75% 0.15 85);
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: oklch(10% 0.015 260);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .phone-frame {
+      width: 390px;
+      max-width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 20px 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Background screen content (blurred behind modal) */
+    .bg-content {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      filter: blur(2px);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    .bg-card {
+      height: 80px;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .bg-row {
+      height: 40px;
+      background: var(--surface);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    /* Bottom sheet overlay */
+    .sheet-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+    .sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 11;
+      background: var(--bg);
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      border: 1px solid var(--border);
+      border-bottom: 0;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.35s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      border-radius: 4px;
+      background: oklch(100% 0 0 / 0.15);
+      margin: 10px auto 6px;
+    }
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 20px 16px;
+    }
+    .sheet-header h2 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .sheet-close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 16px;
+    }
+
+    /* Segmented tabs */
+    .segments {
+      display: flex;
+      margin: 0 20px 16px;
+      background: oklch(100% 0 0 / 0.05);
+      border-radius: 10px;
+      padding: 3px;
+    }
+    .seg-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+    }
+    .seg-tab.active {
+      background: linear-gradient(135deg, var(--violet), oklch(55% 0.22 290));
+      color: #fff;
+    }
+    .seg-tab:hover:not(.active) { color: var(--fg); }
+
+    /* Form */
+    .form-body {
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .field-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field-input:focus {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+    }
+    .field-input::placeholder { color: var(--muted); opacity: 0.6; }
+    .field-select {
+      position: relative;
+    }
+    .field-select::after {
+      content: '\25BC';
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .field-select select {
+      padding-right: 36px;
+      cursor: pointer;
+      color: var(--fg);
+    }
+    .field-select select option {
+      background: oklch(20% 0.015 260);
+      color: var(--fg);
+    }
+
+    /* Amount input */
+    .amount-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .amount-currency {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      padding: 14px 0 14px 16px;
+    }
+    .amount-field .field-input {
+      border-left: 0;
+      padding-left: 4px;
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Note field */
+    .note-field textarea {
+      min-height: 60px;
+      resize: none;
+      font-family: var(--font-body);
+    }
+
+    /* Submit button */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--violet), oklch(55% 0.22 290));
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+    }
+    .submit-btn:hover { opacity: 0.9; }
+
+    /* Numeric keyboard */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 12px 20px 24px;
+      background: oklch(18% 0.015 260);
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .numpad-key {
+      padding: 14px 0;
+      border: 0;
+      border-radius: 8px;
+      background: var(--surface);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.1s;
+      text-align: center;
+    }
+    .numpad-key:active { background: oklch(100% 0 0 / 0.1); }
+    .numpad-key.action {
+      background: linear-gradient(135deg, var(--violet), oklch(55% 0.22 290));
+      color: #fff;
+    }
+    .numpad-key.action:active { opacity: 0.8; }
+    .numpad-key.blank { background: transparent; cursor: default; }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: oklch(100% 0 0 / 0.1); border-radius: 3px; }
+
+    @media (max-width: 400px) {
+      .phone-frame { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span>09:41</span>
+      <span>&#x1F4F6; &#x1F509; &#x26A1;</span>
+    </div>
+
+    <!-- Blurred background -->
+    <div class="bg-content">
+      <div class="bg-card"></div>
+      <div class="bg-row"></div>
+      <div class="bg-row"></div>
+      <div class="bg-card"></div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="sheet-overlay"></div>
+
+    <!-- Bottom sheet -->
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h2>New Transaction</h2>
+        <button class="sheet-close">&times;</button>
+      </div>
+
+      <!-- Segmented tabs -->
+      <div class="segments">
+        <div class="seg-tab">Income</div>
+        <div class="seg-tab">Expense</div>
+        <div class="seg-tab active">Transfer</div>
+        <div class="seg-tab">Loan</div>
+      </div>
+
+      <!-- Form -->
+      <div class="form-body">
+        <div class="field-group amount-field">
+          <span class="amount-currency">BDT</span>
+          <input class="field-input" type="text" inputmode="decimal" placeholder="0.00" value="5,000" style="flex:1;" />
+        </div>
+
+        <div class="field-group field-select">
+          <span class="field-label">Source Account</span>
+          <select class="field-input">
+            <option>Brac Bank — Savings (1,12,400 BDT)</option>
+            <option>bKash — Wallet (24,670 BDT)</option>
+            <option>Business Cash — Current (52,130 BDT)</option>
+          </select>
+        </div>
+
+        <div class="field-group field-select">
+          <span class="field-label">Destination Account</span>
+          <select class="field-input">
+            <option>Business Cash — Current (52,130 BDT)</option>
+            <option>bKash — Wallet (24,670 BDT)</option>
+            <option>Brac Bank — Savings (1,12,400 BDT)</option>
+          </select>
+        </div>
+
+        <div class="field-group note-field">
+          <span class="field-label">Note (optional)</span>
+          <textarea class="field-input" placeholder="What's this for?"></textarea>
+        </div>
+
+        <button class="submit-btn">Complete Transfer</button>
+      </div>
+
+      <!-- Numeric keypad -->
+      <div class="numpad">
+        <button class="numpad-key">1</button>
+        <button class="numpad-key">2</button>
+        <button class="numpad-key">3</button>
+        <button class="numpad-key">4</button>
+        <button class="numpad-key">5</button>
+        <button class="numpad-key">6</button>
+        <button class="numpad-key">7</button>
+        <button class="numpad-key">8</button>
+        <button class="numpad-key">9</button>
+        <button class="numpad-key blank"></button>
+        <button class="numpad-key">0</button>
+        <button class="numpad-key action">&#x232B;</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Tab switching
+      document.querySelectorAll('.seg-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.seg-tab').forEach(function(t) { t.classList.remove('active'); });
+          this.classList.add('active');
+        });
+      });
+      // Numpad input
+      var amountInput = document.querySelector('.amount-field .field-input');
+      document.querySelectorAll('.numpad-key:not(.blank):not(.action)').forEach(function(key) {
+        key.addEventListener('click', function() {
+          var val = amountInput.value.replace(/[^0-9]/g, '');
+          val += this.textContent;
+          // Format with commas
+          var num = parseInt(val, 10);
+          if (!isNaN(num)) {
+            amountInput.value = num.toLocaleString('en-IN');
+          }
+        });
+      });
+      document.querySelectorAll('.numpad-key.action').forEach(function(key) {
+        key.addEventListener('click', function() {
+          var val = amountInput.value.replace(/[^0-9]/g, '');
+          val = val.slice(0, -1);
+          if (val.length === 0) { amountInput.value = '0'; return; }
+          var num = parseInt(val, 10);
+          if (!isNaN(num)) amountInput.value = num.toLocaleString('en-IN');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

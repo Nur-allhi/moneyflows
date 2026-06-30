@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoneyFlows — Main Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: oklch(14% 0.015 260);
+      --surface: oklch(22% 0.02 260 / 0.55);
+      --fg: oklch(92% 0.008 260);
+      --muted: oklch(60% 0.02 260);
+      --border: oklch(100% 0 0 / 0.10);
+      --violet: oklch(62% 0.22 290);
+      --teal: oklch(65% 0.15 170);
+      --coral: oklch(62% 0.18 30);
+      --gold: oklch(75% 0.15 85);
+      --purple: oklch(55% 0.18 290);
+      --success: oklch(65% 0.15 150);
+      --danger: oklch(58% 0.18 30);
+      --radial-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      background-image: var(--radial-glow);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+    }
+    .dashboard {
+      width: 1440px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .glass-glow-violet { box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12); }
+    .glass-glow-gold { box-shadow: 0 0 24px oklch(75% 0.15 85 / 0.12); }
+    .glass-glow-purple { box-shadow: 0 0 24px oklch(55% 0.18 290 / 0.12); }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-link {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 16px;
+      text-decoration: none;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--violet), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo span { font-weight: 500; color: var(--muted); -webkit-text-fill-color: var(--muted); }
+    .profiles {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+      position: relative;
+    }
+    .avatar:hover { box-shadow: 0 0 0 2px var(--violet); }
+    .avatar.active::after {
+      content: ''; position: absolute; inset: -3px; border-radius: 50%;
+      border: 2px solid var(--violet);
+    }
+    .avatar-efty { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+    .avatar-azam { background: linear-gradient(135deg, #00b894, #55efc4); }
+    .avatar-nahar { background: linear-gradient(135deg, #fd79a8, #e84393); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-right .date {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .notif-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+    .notif-btn:hover { background: oklch(100% 0 0 / 0.08); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .metric-card {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .metric-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 28px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+    .metric-change {
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .up { color: var(--teal); }
+    .down { color: var(--coral); }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 16px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-header h2 {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .section-header .action {
+      font-size: 12px;
+      color: var(--violet);
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .accounts {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .account-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .account-row:hover { background: oklch(100% 0 0 / 0.04); }
+    .account-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .acct-brac { background: linear-gradient(135deg, #1a237e, #283593); }
+    .acct-bkash { background: linear-gradient(135deg, #d81b60, #e91e63); }
+    .acct-cash { background: linear-gradient(135deg, #37474f, #455a64); }
+    .acct-nagad { background: linear-gradient(135deg, #e65100, #f57c00); }
+    .acct-dbbl { background: linear-gradient(135deg, #004d40, #00695c); }
+
+    .account-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .account-name {
+      font-weight: 500;
+      font-size: 13px;
+    }
+    .account-type {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .account-balance {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .tx-list {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+    .tx-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .tx-row:hover { background: oklch(100% 0 0 / 0.04); }
+    .tx-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .tx-icon-expense { background: oklch(58% 0.18 30 / 0.15); color: var(--coral); }
+    .tx-icon-income { background: oklch(65% 0.15 150 / 0.15); color: var(--teal); }
+    .tx-icon-transfer { background: oklch(62% 0.22 290 / 0.15); color: var(--violet); }
+
+    .tx-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .tx-desc {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .tx-date {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .tx-amount {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .tx-amount.credit { color: var(--teal); }
+    .tx-amount.debit { color: var(--coral); }
+
+    .quick-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .qa-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--fg);
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .qa-btn:hover {
+      background: oklch(100% 0 0 / 0.08);
+      border-color: var(--violet);
+    }
+    .qa-btn.primary {
+      background: linear-gradient(135deg, var(--violet), oklch(55% 0.22 290));
+      border-color: transparent;
+    }
+    .qa-btn.primary:hover { opacity: 0.9; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: oklch(100% 0 0 / 0.1); border-radius: 4px; }
+
+    @media (max-width: 1000px) {
+      body { padding: 16px; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .content { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .metrics { grid-template-columns: 1fr; }
+      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .header-right { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="header glass">
+      <div class="header-left">
+        <a href="index.html" class="back-link">&larr;</a>
+        <div class="logo">MoneyFlows<span>.app</span></div>
+        <div class="profiles">
+          <div class="avatar avatar-efty active">E</div>
+          <div class="avatar avatar-azam">A</div>
+          <div class="avatar avatar-nahar">N</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="date">Mon, 29 Jun 2026</span>
+        <button class="notif-btn" aria-label="Notifications">&#x1F514;</button>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric-card glass glass-glow-violet">
+        <span class="metric-label">Total Assets</span>
+        <span class="metric-value" style="color: var(--violet);">4,29,500 BDT</span>
+        <span class="metric-change up">&#x25B2; +12.4% vs last month</span>
+      </div>
+      <div class="metric-card glass glass-glow-gold">
+        <span class="metric-label">Cash in Hand</span>
+        <span class="metric-value" style="color: var(--gold);">1,89,200 BDT</span>
+        <span class="metric-change down">&#x25BC; -3.1% vs last month</span>
+      </div>
+      <div class="metric-card glass glass-glow-purple">
+        <span class="metric-label">Active Loans</span>
+        <span class="metric-value" style="color: var(--purple);">3,55,000 BDT</span>
+        <span class="metric-change up">&#x25B2; +1 new this month</span>
+      </div>
+      <div class="metric-card glass">
+        <span class="metric-label">Family Net Worth</span>
+        <span class="metric-value" style="color: var(--teal);">2,63,700 BDT</span>
+        <span class="metric-change up">&#x25B2; +8.2% this year</span>
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <button class="qa-btn primary">+ New Transaction</button>
+      <button class="qa-btn">Transfer</button>
+      <button class="qa-btn">Reports</button>
+      <button class="qa-btn">Settings</button>
+    </div>
+
+    <div class="content">
+      <div class="glass">
+        <div class="section-header">
+          <h2>Combined Balances</h2>
+          <span class="action">View all &rarr;</span>
+        </div>
+        <div class="accounts">
+          <div class="account-row">
+            <div class="account-icon acct-brac">B</div>
+            <div class="account-info">
+              <div class="account-name">Brac Bank (Efty)</div>
+              <div class="account-type">Savings Account</div>
+            </div>
+            <div class="account-balance" style="color: var(--teal);">1,12,400 BDT</div>
+          </div>
+          <div class="account-row">
+            <div class="account-icon acct-bkash">bK</div>
+            <div class="account-info">
+              <div class="account-name">bKash (Efty)</div>
+              <div class="account-type">Mobile Wallet</div>
+            </div>
+            <div class="account-balance" style="color: var(--gold);">24,670 BDT</div>
+          </div>
+          <div class="account-row">
+            <div class="account-icon acct-cash">C</div>
+            <div class="account-info">
+              <div class="account-name">Business Cash (Efty)</div>
+              <div class="account-type">Current Account</div>
+            </div>
+            <div class="account-balance" style="color: var(--teal);">52,130 BDT</div>
+          </div>
+          <div class="account-row">
+            <div class="account-icon acct-nagad">N</div>
+            <div class="account-info">
+              <div class="account-name">Nagad (Azam)</div>
+              <div class="account-type">Mobile Wallet</div>
+            </div>
+            <div class="account-balance" style="color: var(--gold);">18,900 BDT</div>
+          </div>
+          <div class="account-row">
+            <div class="account-icon acct-dbbl">D</div>
+            <div class="account-info">
+              <div class="account-name">DBBL (Nahar)</div>
+              <div class="account-type">Savings Account</div>
+            </div>
+            <div class="account-balance" style="color: var(--teal);">36,200 BDT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass">
+        <div class="section-header">
+          <h2>Recent Transactions</h2>
+          <span class="action">View all &rarr;</span>
+        </div>
+        <div class="tx-list">
+          <div class="tx-row">
+            <div class="tx-icon tx-icon-expense">&#x1F4B8;</div>
+            <div class="tx-info">
+              <div class="tx-desc">Milk, Pawruti</div>
+              <div class="tx-date">Today, 09:14 AM</div>
+            </div>
+            <span class="tx-amount debit">-320 BDT</span>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon tx-icon-income">&#x1F4B5;</div>
+            <div class="tx-info">
+              <div class="tx-desc">Salary</div>
+              <div class="tx-date">Yesterday, 10:30 AM</div>
+            </div>
+            <span class="tx-amount credit">+85,000 BDT</span>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon tx-icon-transfer">&#x1F91D;</div>
+            <div class="tx-info">
+              <div class="tx-desc">Loan Repayment</div>
+              <div class="tx-date">26 Jun, 02:15 PM</div>
+            </div>
+            <span class="tx-amount debit">-5,000 BDT</span>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon tx-icon-expense">&#x1F4B8;</div>
+            <div class="tx-info">
+              <div class="tx-desc">Electricity Bill</div>
+              <div class="tx-date">25 Jun, 11:00 AM</div>
+            </div>
+            <span class="tx-amount debit">-2,450 BDT</span>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon tx-icon-income">&#x1F4B5;</div>
+            <div class="tx-info">
+              <div class="tx-desc">Freelance Payment</div>
+              <div class="tx-date">24 Jun, 04:45 PM</div>
+            </div>
+            <span class="tx-amount credit">+12,000 BDT</span>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon tx-icon-expense">&#x1F4B8;</div>
+            <div class="tx-info">
+              <div class="tx-desc">Bazar — Weekly</div>
+              <div class="tx-date">23 Jun, 08:30 AM</div>
+            </div>
+            <span class="tx-amount debit">-4,200 BDT</span>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon tx-icon-transfer">&#x1F91D;</div>
+            <div class="tx-info">
+              <div class="tx-desc">Sent to Nahar</div>
+              <div class="tx-date">22 Jun, 07:10 PM</div>
+            </div>
+            <span class="tx-amount debit">-10,000 BDT</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

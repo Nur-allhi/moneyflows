@@ -1,0 +1,58 @@
+:root {
+  --color-bg: oklch(14% 0.015 260);
+  --color-bg-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+  --color-surface: oklch(22% 0.02 260 / 0.55);
+  --color-surface-hover: oklch(100% 0 0 / 0.08);
+  --color-border: oklch(100% 0 0 / 0.10);
+  --color-primary: oklch(62% 0.22 290);
+  --color-primary-glow: oklch(62% 0.22 290 / 0.12);
+  --color-income: oklch(65% 0.15 170);
+  --color-expense: oklch(62% 0.18 30);
+  --color-cash: oklch(75% 0.15 85);
+  --color-purple: oklch(55% 0.18 290);
+  --color-text: oklch(92% 0.008 260);
+  --color-text-secondary: oklch(60% 0.02 260);
+  --color-success: oklch(65% 0.15 150);
+  --color-warning: oklch(75% 0.15 85);
+  --color-danger: oklch(58% 0.18 30);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 9999px;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 24px var(--color-primary-glow);
+
+  --breakpoint-xs: 360px;
+  --breakpoint-sm: 390px;
+  --breakpoint-md: 430px;
+  --breakpoint-fold: 600px;
+  --breakpoint-tablet: 820px;
+  --breakpoint-laptop: 1024px;
+  --breakpoint-desktop: 1366px;
+  --breakpoint-wide: 1440px;
+  --breakpoint-uw: 1920px;
+
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.4s ease;
+}

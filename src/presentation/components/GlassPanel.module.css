@@ -1,0 +1,37 @@
+.panel {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  transition: box-shadow var(--transition-normal), background var(--transition-normal);
+}
+
+.panel.hover:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+.glowViolet {
+  box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
+}
+
+.glowGold {
+  box-shadow: 0 0 24px oklch(75% 0.15 85 / 0.12);
+}
+
+.glowPurple {
+  box-shadow: 0 0 24px oklch(55% 0.18 290 / 0.12);
+}
+
+.padSm {
+  padding: var(--space-3);
+}
+
+.padMd {
+  padding: var(--space-4);
+}
+
+.padLg {
+  padding: var(--space-5);
+}

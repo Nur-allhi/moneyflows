@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoneyFlows — Loan Receivables</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: oklch(14% 0.015 260);
+      --surface: oklch(22% 0.02 260 / 0.55);
+      --fg: oklch(92% 0.008 260);
+      --muted: oklch(60% 0.02 260);
+      --border: oklch(100% 0 0 / 0.10);
+      --violet: oklch(62% 0.22 290);
+      --teal: oklch(65% 0.15 170);
+      --coral: oklch(62% 0.18 30);
+      --gold: oklch(75% 0.15 85);
+      --purple: oklch(55% 0.18 290);
+      --success: oklch(65% 0.15 150);
+      --danger: oklch(58% 0.18 30);
+      --radial-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      background-image: var(--radial-glow);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+    }
+    .container {
+      width: 1100px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Glass */
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .glass-glow { box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.10); }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 16px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--violet), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-right .date {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    /* Summary card */
+    .summary {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .summary-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .summary-info { display: flex; flex-direction: column; gap: 4px; }
+    .summary-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .summary-debtor {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .summary-debtor .badge {
+      font-size: 12px;
+      background: oklch(62% 0.22 290 / 0.15);
+      color: var(--violet);
+      padding: 2px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.02em;
+      font-weight: 500;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    .summary-amount {
+      text-align: right;
+    }
+    .summary-amount .value {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--coral);
+      letter-spacing: -0.01em;
+    }
+    .summary-amount .label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* Progress bar */
+    .progress-section { display: flex; flex-direction: column; gap: 6px; }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .progress-track {
+      width: 100%;
+      height: 12px;
+      background: oklch(100% 0 0 / 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), oklch(65% 0.15 150));
+      border-radius: 999px;
+      transition: width 0.6s ease;
+      width: 38%;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, oklch(100% 0 0 / 0.2));
+      border-radius: 999px;
+    }
+
+    /* Loan stacks */
+    .stacks {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stack {
+      border-radius: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .stack.expanded {
+      box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.10);
+    }
+    .stack-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+    .stack.expanded .stack-header {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      border-color: oklch(62% 0.22 290 / 0.25);
+    }
+    .stack-header:hover { background: oklch(100% 0 0 / 0.06); }
+    .stack-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .stack-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .stack-fund {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .stack-meta {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .stack-header-right {
+      text-align: right;
+    }
+    .stack-total {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .stack-count {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .stack-chevron {
+      font-size: 14px;
+      color: var(--muted);
+      margin-left: 12px;
+      transition: transform 0.2s;
+    }
+    .stack.expanded .stack-chevron { transform: rotate(180deg); }
+
+    .stack-body {
+      background: oklch(18% 0.02 260 / 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid oklch(62% 0.22 290 / 0.15);
+      border-top: 0;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      overflow: hidden;
+      display: none;
+    }
+    .stack.expanded .stack-body { display: block; }
+    .loan-row {
+      display: grid;
+      grid-template-columns: 1fr 120px 120px 120px 100px;
+      gap: 12px;
+      padding: 12px 20px;
+      align-items: center;
+      font-size: 13px;
+      border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+    }
+    .loan-row:last-child { border-bottom: 0; }
+    .loan-row:hover { background: oklch(100% 0 0 / 0.04); }
+    .loan-desc { font-weight: 500; }
+    .loan-date { color: var(--muted); font-size: 12px; }
+    .loan-amount { font-family: var(--font-mono); font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .loan-status {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      text-align: center;
+    }
+    .status-active { background: oklch(58% 0.18 30 / 0.12); color: var(--coral); }
+    .status-ontrack { background: oklch(65% 0.15 150 / 0.12); color: var(--teal); }
+
+    @media (max-width: 800px) {
+      body { padding: 16px; }
+      .summary-top { flex-direction: column; gap: 12px; }
+      .summary-amount { text-align: left; }
+      .loan-row { grid-template-columns: 1fr 100px 80px; }
+      .loan-row .loan-date, .loan-row .loan-status { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header glass">
+      <div class="header-left">
+        <button class="back-btn">&#x2190;</button>
+        <span class="logo">MoneyFlows</span>
+      </div>
+      <div class="header-right">
+        <span class="date">Mon, 29 Jun 2026</span>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary glass glass-glow">
+      <div class="summary-top">
+        <div class="summary-info">
+          <span class="summary-label">Debtor</span>
+          <div class="summary-debtor">
+            BTC <span class="badge">Individual</span>
+          </div>
+          <span style="font-size:13px;color:var(--muted);">Registered: 12 Jan 2024 &#x2022; 3 active loans</span>
+        </div>
+        <div class="summary-amount">
+          <div class="value">3,55,000 BDT</div>
+          <div class="label">Total Outstanding</div>
+        </div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>Repayment Progress</span>
+          <span>38% repaid &#x2022; 2,18,000 BDT remaining</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loan stacks -->
+    <div class="stacks">
+      <!-- Stack 1: expanded -->
+      <div class="stack expanded">
+        <div class="stack-header">
+          <div class="stack-header-left">
+            <div class="stack-icon" style="background:linear-gradient(135deg,#1a237e,#283593);">B</div>
+            <div>
+              <div class="stack-fund">Funded by Efty — Brac Bank</div>
+              <div class="stack-meta">Source: Savings Account &#x2022; Disbursed Apr 2024</div>
+            </div>
+          </div>
+          <div class="stack-header-right">
+            <div class="stack-total" style="color:var(--coral);">1,90,000 BDT</div>
+            <div class="stack-count">3 loans</div>
+          </div>
+          <span class="stack-chevron">&#x25BC;</span>
+        </div>
+        <div class="stack-body">
+          <div class="loan-row">
+            <span></span>
+            <span class="loan-date">Date</span>
+            <span class="loan-amount">Amount</span>
+            <span class="loan-amount">Remaining</span>
+            <span>Status</span>
+          </div>
+          <div class="loan-row">
+            <span class="loan-desc">Personal Loan — BTC</span>
+            <span class="loan-date">12 Apr 2024</span>
+            <span class="loan-amount">80,000 BDT</span>
+            <span class="loan-amount" style="color:var(--coral);">45,000 BDT</span>
+            <span class="loan-status status-active">Active</span>
+          </div>
+          <div class="loan-row">
+            <span class="loan-desc">Business Capital</span>
+            <span class="loan-date">03 Jul 2024</span>
+            <span class="loan-amount">60,000 BDT</span>
+            <span class="loan-amount" style="color:var(--teal);">22,000 BDT</span>
+            <span class="loan-status status-ontrack">On Track</span>
+          </div>
+          <div class="loan-row">
+            <span class="loan-desc">Emergency Fund</span>
+            <span class="loan-date">19 Nov 2024</span>
+            <span class="loan-amount">50,000 BDT</span>
+            <span class="loan-amount" style="color:var(--coral);">38,000 BDT</span>
+            <span class="loan-status status-active">Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stack 2: collapsed -->
+      <div class="stack">
+        <div class="stack-header">
+          <div class="stack-header-left">
+            <div class="stack-icon" style="background:linear-gradient(135deg,#d81b60,#e91e63);">K</div>
+            <div>
+              <div class="stack-fund">Funded by Efty — bKash</div>
+              <div class="stack-meta">Source: Mobile Wallet &#x2022; Disbursed Sep 2024</div>
+            </div>
+          </div>
+          <div class="stack-header-right">
+            <div class="stack-total" style="color:var(--coral);">95,000 BDT</div>
+            <div class="stack-count">2 loans</div>
+          </div>
+          <span class="stack-chevron">&#x25BC;</span>
+        </div>
+      </div>
+
+      <!-- Stack 3: collapsed -->
+      <div class="stack">
+        <div class="stack-header">
+          <div class="stack-header-left">
+            <div class="stack-icon" style="background:linear-gradient(135deg,#37474f,#546e7a);">C</div>
+            <div>
+              <div class="stack-fund">Funded by Efty — Business Cash</div>
+              <div class="stack-meta">Source: Current Account &#x2022; Disbursed Jan 2025</div>
+            </div>
+          </div>
+          <div class="stack-header-right">
+            <div class="stack-total" style="color:var(--teal);">70,000 BDT</div>
+            <div class="stack-count">1 loan</div>
+          </div>
+          <span class="stack-chevron">&#x25BC;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      document.querySelectorAll('.stack-header').forEach(function(h) {
+        h.addEventListener('click', function() {
+          var stack = this.closest('.stack');
+          var wasExpanded = stack.classList.contains('expanded');
+          document.querySelectorAll('.stack.expanded').forEach(function(s) {
+            s.classList.remove('expanded');
+          });
+          if (!wasExpanded) stack.classList.add('expanded');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

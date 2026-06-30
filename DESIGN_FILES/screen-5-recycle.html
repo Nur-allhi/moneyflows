@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoneyFlows — Recycle Bin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: oklch(14% 0.015 260);
+      --surface: oklch(22% 0.02 260 / 0.55);
+      --fg: oklch(92% 0.008 260);
+      --muted: oklch(60% 0.02 260);
+      --border: oklch(100% 0 0 / 0.10);
+      --violet: oklch(62% 0.22 290);
+      --teal: oklch(65% 0.15 170);
+      --coral: oklch(62% 0.18 30);
+      --gold: oklch(75% 0.15 85);
+      --purple: oklch(55% 0.18 290);
+      --success: oklch(65% 0.15 150);
+      --danger: oklch(58% 0.18 30);
+      --radial-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      background-image: var(--radial-glow);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px;
+    }
+    .container {
+      width: 1000px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 16px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--violet), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pill-btn {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      font-family: var(--font-body);
+    }
+    .pill-btn:hover { background: oklch(100% 0 0 / 0.08); }
+    .pill-btn.danger { color: var(--coral); border-color: oklch(62% 0.18 30 / 0.3); }
+    .pill-btn.danger:hover { background: oklch(62% 0.18 30 / 0.1); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      color: var(--violet);
+      border-bottom-color: var(--violet);
+    }
+    .tab:hover:not(.active) { color: var(--fg); }
+    .tab .count {
+      font-size: 11px;
+      background: oklch(100% 0 0 / 0.08);
+      padding: 1px 7px;
+      border-radius: 999px;
+      margin-left: 6px;
+    }
+    .tab.active .count { background: oklch(62% 0.22 290 / 0.15); }
+
+    /* Stats bar */
+    .stats {
+      display: flex;
+      gap: 16px;
+      padding: 0 24px;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .stat-item .num {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-item .label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* Recycle list */
+    .list-header {
+      display: grid;
+      grid-template-columns: 36px 1fr 120px 100px 180px;
+      gap: 12px;
+      padding: 12px 24px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .list-body {
+      max-height: 480px;
+      overflow-y: auto;
+    }
+    .list-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 120px 100px 180px;
+      gap: 12px;
+      padding: 14px 24px;
+      align-items: center;
+      font-size: 13px;
+      border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+      transition: background 0.15s;
+    }
+    .list-row:hover { background: oklch(100% 0 0 / 0.04); }
+    .list-icon {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 12px;
+    }
+    .icon-warning { background: oklch(62% 0.18 30 / 0.15); color: var(--coral); }
+    .icon-account { background: oklch(65% 0.15 150 / 0.12); color: var(--teal); }
+    .list-info { min-width: 0; }
+    .list-name { font-weight: 500; }
+    .list-meta { font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+    .list-amount {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+    .list-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .list-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .action-btn {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .action-btn.restore { color: var(--teal); }
+    .action-btn.restore:hover { background: oklch(65% 0.15 150 / 0.1); border-color: var(--teal); }
+    .action-btn.delete { color: var(--coral); }
+    .action-btn.delete:hover { background: oklch(62% 0.18 30 / 0.1); border-color: var(--coral); }
+    .action-btn.restore-all {
+      width: auto;
+      padding: 0 16px;
+      gap: 6px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--teal);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: oklch(100% 0 0 / 0.1); border-radius: 4px; }
+
+    /* Empty state */
+    .empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 60px 24px;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 40px; opacity: 0.4; }
+    .empty-state p { font-size: 14px; }
+
+    @media (max-width: 800px) {
+      body { padding: 16px; }
+      .list-header, .list-row {
+        grid-template-columns: 36px 1fr 100px 60px;
+      }
+      .list-header .list-amount, .list-row .list-amount { display: none; }
+      .stats { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header glass">
+      <div class="header-left">
+        <button class="back-btn">&#x2190;</button>
+        <span class="logo">MoneyFlows</span>
+        <span class="header-title">&#x1F5D1;&#xFE0F; Recycle Bin</span>
+      </div>
+      <div class="header-right">
+        <button class="pill-btn">&#x1F504; Refresh</button>
+        <button class="pill-btn danger">&#x1F5D1;&#xFE0F; Empty Bin</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-item">
+        <span class="num" style="color:var(--muted);">7</span>
+        <span class="label">Deleted Items</span>
+      </div>
+      <div class="stat-item">
+        <span class="num" style="color:var(--coral);">3,20,000 BDT</span>
+        <span class="label">Total Amount</span>
+      </div>
+      <div class="stat-item">
+        <span class="num" style="color:var(--teal);">28</span>
+        <span class="label">Days Until Auto-Purge</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active">All Items <span class="count">7</span></div>
+      <div class="tab">Transactions <span class="count">5</span></div>
+      <div class="tab">Accounts <span class="count">2</span></div>
+    </div>
+
+    <!-- Main list -->
+    <div class="glass">
+      <div class="list-header">
+        <span></span>
+        <span>Name</span>
+        <span>Amount</span>
+        <span>Deleted</span>
+        <span style="text-align:right;">Actions</span>
+      </div>
+      <div class="list-body">
+        <div class="list-row" data-id="1">
+          <div class="list-icon icon-warning">&#x26A0;</div>
+          <div class="list-info">
+            <div class="list-name">Milk, Pawruti</div>
+            <div class="list-meta">Expense &#x2022; Efty &#x2022; bKash</div>
+          </div>
+          <span class="list-amount" style="color:var(--coral);">-320 BDT</span>
+          <span class="list-date">Today, 10:32 AM</span>
+          <div class="list-actions">
+            <button class="action-btn restore" title="Restore">&#x21A9;</button>
+            <button class="action-btn delete" title="Delete permanently">&#x1F5D1;&#xFE0F;</button>
+          </div>
+        </div>
+        <div class="list-row" data-id="2">
+          <div class="list-icon icon-warning">&#x26A0;</div>
+          <div class="list-info">
+            <div class="list-name">Electricity Bill</div>
+            <div class="list-meta">Expense &#x2022; Efty &#x2022; Brac Bank</div>
+          </div>
+          <span class="list-amount" style="color:var(--coral);">-2,450 BDT</span>
+          <span class="list-date">Yesterday, 04:15 PM</span>
+          <div class="list-actions">
+            <button class="action-btn restore" title="Restore">&#x21A9;</button>
+            <button class="action-btn delete" title="Delete permanently">&#x1F5D1;&#xFE0F;</button>
+          </div>
+        </div>
+        <div class="list-row" data-id="3">
+          <div class="list-icon icon-warning">&#x26A0;</div>
+          <div class="list-info">
+            <div class="list-name">Bazar Weekly</div>
+            <div class="list-meta">Expense &#x2022; Nahar &#x2022; DBBL</div>
+          </div>
+          <span class="list-amount" style="color:var(--coral);">-4,200 BDT</span>
+          <span class="list-date">3 days ago</span>
+          <div class="list-actions">
+            <button class="action-btn restore" title="Restore">&#x21A9;</button>
+            <button class="action-btn delete" title="Delete permanently">&#x1F5D1;&#xFE0F;</button>
+          </div>
+        </div>
+        <div class="list-row" data-id="4">
+          <div class="list-icon icon-warning">&#x26A0;</div>
+          <div class="list-info">
+            <div class="list-name">Transfer to Nahar</div>
+            <div class="list-meta">Transfer &#x2022; Efty &#x2022; bKash &rarr; DBBL</div>
+          </div>
+          <span class="list-amount" style="color:var(--coral);">-10,000 BDT</span>
+          <span class="list-date">5 days ago</span>
+          <div class="list-actions">
+            <button class="action-btn restore" title="Restore">&#x21A9;</button>
+            <button class="action-btn delete" title="Delete permanently">&#x1F5D1;&#xFE0F;</button>
+          </div>
+        </div>
+        <div class="list-row" data-id="5">
+          <div class="list-icon icon-warning">&#x26A0;</div>
+          <div class="list-info">
+            <div class="list-name">bKash Cash Out</div>
+            <div class="list-meta">Expense &#x2022; Azam &#x2022; Nagad</div>
+          </div>
+          <span class="list-amount" style="color:var(--coral);">-2,000 BDT</span>
+          <span class="list-date">6 days ago</span>
+          <div class="list-actions">
+            <button class="action-btn restore" title="Restore">&#x21A9;</button>
+            <button class="action-btn delete" title="Delete permanently">&#x1F5D1;&#xFE0F;</button>
+          </div>
+        </div>
+        <div class="list-row" data-id="6">
+          <div class="list-icon icon-account">&#x1F3E6;</div>
+          <div class="list-info">
+            <div class="list-name">Rocket Wallet (Azam)</div>
+            <div class="list-meta">Account &#x2022; Deleted 12 Jun</div>
+          </div>
+          <span class="list-amount" style="color:var(--muted);">—</span>
+          <span class="list-date">12 Jun</span>
+          <div class="list-actions">
+            <button class="action-btn restore" title="Restore">&#x21A9;</button>
+            <button class="action-btn delete" title="Delete permanently">&#x1F5D1;&#xFE0F;</button>
+          </div>
+        </div>
+        <div class="list-row" data-id="7">
+          <div class="list-icon icon-account">&#x1F3E6;</div>
+          <div class="list-info">
+            <div class="list-name">UPay Wallet (Nahar)</div>
+            <div class="list-meta">Account &#x2022; Deleted 8 Jun</div>
+          </div>
+          <span class="list-amount" style="color:var(--muted);">—</span>
+          <span class="list-date">8 Jun</span>
+          <div class="list-actions">
+            <button class="action-btn restore" title="Restore">&#x21A9;</button>
+            <button class="action-btn delete" title="Delete permanently">&#x1F5D1;&#xFE0F;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Tab switching
+      document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+          this.classList.add('active');
+        });
+      });
+      // Restore action
+      document.querySelectorAll('.action-btn.restore').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var row = this.closest('.list-row');
+          var name = row.querySelector('.list-name').textContent;
+          if (confirm('Restore "' + name + '"?')) {
+            row.style.opacity = '0.3';
+            setTimeout(function() { row.remove(); }, 400);
+          }
+        });
+      });
+      // Delete action
+      document.querySelectorAll('.action-btn.delete').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var row = this.closest('.list-row');
+          var name = row.querySelector('.list-name').textContent;
+          if (confirm('Permanently delete "' + name + '"? This cannot be undone.')) {
+            row.style.opacity = '0.3';
+            setTimeout(function() { row.remove(); }, 400);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

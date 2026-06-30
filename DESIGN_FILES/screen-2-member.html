@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>MoneyFlows — Efty Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: oklch(14% 0.015 260);
+      --surface: oklch(22% 0.02 260 / 0.55);
+      --fg: oklch(92% 0.008 260);
+      --muted: oklch(60% 0.02 260);
+      --border: oklch(100% 0 0 / 0.10);
+      --violet: oklch(62% 0.22 290);
+      --teal: oklch(65% 0.15 170);
+      --coral: oklch(62% 0.18 30);
+      --gold: oklch(75% 0.15 85);
+      --radial-glow: radial-gradient(ellipse 80% 50% at 50% 10%, oklch(65% 0.04 250 / 0.3), transparent 60%);
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      background-image: var(--radial-glow);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .phone-frame {
+      width: 390px;
+      max-width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 20px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .status-bar .time { font-family: var(--font-mono); font-size: 13px; }
+
+    /* Header */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 16px 12px;
+    }
+    .profile-header .back {
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .profile-header h1 {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .profile-header .more {
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    /* Profile card */
+    .profile-card {
+      margin: 0 16px;
+      padding: 20px;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .profile-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .profile-info { flex: 1; }
+    .profile-info .name {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .profile-info .tag {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .profile-balance {
+      text-align: right;
+    }
+    .profile-balance .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .profile-balance .amount {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--teal);
+    }
+
+    /* Section header */
+    .section-label {
+      padding: 20px 16px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    /* Card carousel */
+    .carousel {
+      display: flex;
+      gap: 12px;
+      padding: 0 16px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 8px;
+    }
+    .carousel::-webkit-scrollbar { display: none; }
+    .card-item {
+      min-width: 280px;
+      height: 170px;
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-shrink: 0;
+      scroll-snap-align: start;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      pointer-events: none;
+    }
+    .card-bkash {
+      background: linear-gradient(135deg, #d81b60, #e91e63 50%, #f06292);
+      box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
+    }
+    .card-brac {
+      background: linear-gradient(135deg, #1a237e, #283593 50%, #3f51b5);
+      box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
+    }
+    .card-cash {
+      background: linear-gradient(135deg, #263238, #37474f 50%, #546e7a);
+      box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .card-type {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.8;
+    }
+    .card-balance {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+    .card-label {
+      font-size: 11px;
+      opacity: 0.7;
+      letter-spacing: 0.02em;
+    }
+    .card-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .card-number {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      opacity: 0.7;
+    }
+    .card-chip {
+      width: 36px;
+      height: 26px;
+      background: linear-gradient(135deg, #ffd700, #ffecb3);
+      border-radius: 4px;
+    }
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 0 4px;
+    }
+    .carousel-dots .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: oklch(100% 0 0 / 0.15);
+      transition: all 0.2s;
+    }
+    .carousel-dots .dot.active { background: var(--violet); width: 18px; border-radius: 3px; }
+
+    /* Ledger table */
+    .ledger {
+      margin: 8px 16px 0;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .ledger-header {
+      display: grid;
+      grid-template-columns: 60px 1fr 72px 72px 72px;
+      gap: 4px;
+      padding: 12px 14px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    .ledger-table {
+      max-height: 340px;
+      overflow-y: auto;
+    }
+    .ledger-row {
+      display: grid;
+      grid-template-columns: 60px 1fr 72px 72px 72px;
+      gap: 4px;
+      padding: 10px 14px;
+      font-size: 12px;
+      align-items: center;
+      border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+      transition: background 0.15s;
+    }
+    .ledger-row:hover { background: oklch(100% 0 0 / 0.04); }
+    .ledger-date { color: var(--muted); font-size: 11px; }
+    .ledger-desc { font-weight: 500; }
+    .ledger-debit { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--coral); }
+    .ledger-credit { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--teal); }
+    .ledger-bal { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+
+    /* Bottom nav */
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 16px 20px;
+      margin-top: auto;
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 10px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .nav-item.active { color: var(--violet); }
+    .nav-item .icon { font-size: 20px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: oklch(100% 0 0 / 0.1); border-radius: 3px; }
+
+    @media (max-width: 400px) {
+      .phone-frame { width: 100%; }
+      .card-item { min-width: calc(100vw - 44px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span>09:41</span>
+      <span>&#x1F4F6; &#x1F509; &#x26A1;</span>
+    </div>
+
+    <!-- Profile header -->
+    <div class="profile-header">
+      <div class="back">&#x2190;</div>
+      <h1>Profile</h1>
+      <div class="more">&#x22EF;</div>
+    </div>
+
+    <!-- Profile card -->
+    <div class="profile-card">
+      <div class="profile-avatar">E</div>
+      <div class="profile-info">
+        <div class="name">Efty</div>
+        <div class="tag">Family admin &#x2022; Brac Bank &#x2022; bKash</div>
+      </div>
+      <div class="profile-balance">
+        <div class="label">Balance</div>
+        <div class="amount">44,671 BDT</div>
+      </div>
+    </div>
+
+    <!-- Carousel label -->
+    <div class="section-label">Accounts</div>
+
+    <!-- Card carousel -->
+    <div class="carousel" id="carousel">
+      <div class="card-item card-bkash">
+        <div class="card-top">
+          <span class="card-type">bKash Wallet</span>
+          <span class="card-chip"></span>
+        </div>
+        <div class="card-balance">24,670 BDT</div>
+        <div class="card-label">Available Balance</div>
+        <div class="card-bottom">
+          <span class="card-number">&#x2022;&#x2022;&#x2022;&#x2022; 4821</span>
+          <span style="font-size:16px;opacity:0.6;">&#x1F4F1;</span>
+        </div>
+      </div>
+      <div class="card-item card-brac">
+        <div class="card-top">
+          <span class="card-type">Brac Bank</span>
+          <span class="card-chip"></span>
+        </div>
+        <div class="card-balance">1,12,400 BDT</div>
+        <div class="card-label">Savings Account</div>
+        <div class="card-bottom">
+          <span class="card-number">&#x2022;&#x2022;&#x2022;&#x2022; 3390</span>
+          <span style="font-size:16px;opacity:0.6;">&#x1F3E6;</span>
+        </div>
+      </div>
+      <div class="card-item card-cash">
+        <div class="card-top">
+          <span class="card-type">Business Cash</span>
+          <span class="card-chip"></span>
+        </div>
+        <div class="card-balance">52,130 BDT</div>
+        <div class="card-label">Current Account</div>
+        <div class="card-bottom">
+          <span class="card-number">&#x2022;&#x2022;&#x2022;&#x2022; 7712</span>
+          <span style="font-size:16px;opacity:0.6;">&#x1F4B3;</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dots indicator -->
+    <div class="carousel-dots">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+
+    <!-- Ledger -->
+    <div class="section-label" style="padding-top:4px;">Account Ledger</div>
+    <div class="ledger">
+      <div class="ledger-header">
+        <span>Date</span>
+        <span>Description</span>
+        <span>Debit</span>
+        <span>Credit</span>
+        <span style="text-align:right;">Balance</span>
+      </div>
+      <div class="ledger-table">
+        <div class="ledger-row">
+          <span class="ledger-date">29 Jun</span>
+          <span class="ledger-desc">Milk, Pawruti</span>
+          <span class="ledger-debit">320</span>
+          <span class="ledger-credit">—</span>
+          <span class="ledger-bal">44,671</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-date">28 Jun</span>
+          <span class="ledger-desc">Salary Deposit</span>
+          <span class="ledger-debit">—</span>
+          <span class="ledger-credit">85,000</span>
+          <span class="ledger-bal">44,991</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-date">26 Jun</span>
+          <span class="ledger-desc">Loan Repayment</span>
+          <span class="ledger-debit">5,000</span>
+          <span class="ledger-credit">—</span>
+          <span class="ledger-bal">-40,009</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-date">25 Jun</span>
+          <span class="ledger-desc">Electricity Bill</span>
+          <span class="ledger-debit">2,450</span>
+          <span class="ledger-credit">—</span>
+          <span class="ledger-bal">-45,009</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-date">24 Jun</span>
+          <span class="ledger-desc">Freelance Payment</span>
+          <span class="ledger-debit">—</span>
+          <span class="ledger-credit">12,000</span>
+          <span class="ledger-bal">-42,559</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-date">23 Jun</span>
+          <span class="ledger-desc">Bazar Weekly</span>
+          <span class="ledger-debit">4,200</span>
+          <span class="ledger-credit">—</span>
+          <span class="ledger-bal">-54,559</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-date">22 Jun</span>
+          <span class="ledger-desc">Transfer to Nahar</span>
+          <span class="ledger-debit">10,000</span>
+          <span class="ledger-credit">—</span>
+          <span class="ledger-bal">-50,359</span>
+        </div>
+        <div class="ledger-row">
+          <span class="ledger-date">21 Jun</span>
+          <span class="ledger-desc">bKash Cash Out</span>
+          <span class="ledger-debit">2,000</span>
+          <span class="ledger-credit">—</span>
+          <span class="ledger-bal">-40,359</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="bottom-nav">
+      <div class="nav-item active">
+        <span class="icon">&#x1F3E0;</span>
+        <span>Home</span>
+      </div>
+      <div class="nav-item">
+        <span class="icon">&#x1F4B0;</span>
+        <span>Accounts</span>
+      </div>
+      <div class="nav-item">
+        <span class="icon">&#x1F4C8;</span>
+        <span>Reports</span>
+      </div>
+      <div class="nav-item">
+        <span class="icon">&#x2699;&#xFE0F;</span>
+        <span>Settings</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var carousel = document.getElementById('carousel');
+      var dots = document.querySelectorAll('.dot');
+      if (!carousel || !dots.length) return;
+      carousel.addEventListener('scroll', function() {
+        var idx = Math.round(carousel.scrollLeft / (280 + 12));
+        if (idx >= dots.length) idx = dots.length - 1;
+        dots.forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+      });
+    })();
+  </script>
+</body>
+</html>

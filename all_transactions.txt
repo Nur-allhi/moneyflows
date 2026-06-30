@@ -1,0 +1,307 @@
+
+========================================================================
+SHEET: HOME EXP
+========================================================================
+
+Ledger: Home Exp
+----------------------------------------
+               Date                                                     Particulers Debit Credit Balance
+2026-06-19 00:00:00 Home | Loan Issued As of Now | For home expenses Behalf of Azam   NaN  34230   34230
+2026-06-20 00:00:00                                                 Total expenses  33325    NaN     905
+2026-06-20 00:00:00                                                  Milk , Pawruti   170    NaN     735
+2026-06-21 00:00:00                                   Chula Purpose Transportation    110    NaN     625
+2026-06-21 00:00:00                                               Chular Burner x 2   750    NaN    -125
+2026-06-21 00:00:00                                                       Milk 2ltr   200    NaN    -325
+2026-06-21 00:00:00                                             Home | Loan issued    NaN   1000     675
+2026-06-23 00:00:00                          Home | Loan Issued | For Home expenses   NaN   8000    8675
+2026-06-23 00:00:00                                 Biscuits, Dudh, Doi, Soya Sauce   980    NaN    7695
+2026-06-23 00:00:00                                                       Medicines   520    NaN    7175
+2026-06-24 00:00:00                                                         Pawruti   100    NaN    7075
+2026-06-24 00:00:00                                           Powder Dudh, Cha-Pata  1170    NaN    5905
+2026-06-26 00:00:00                                                       Murgi 1+3  1150    NaN    4755
+2026-06-26 00:00:00                                                   Shosha, Gajor   100    NaN    4655
+2026-06-26 00:00:00                                                       Medicine    200    NaN    4455
+2026-06-28 00:00:00                                           Pawruti, Sauces, Cake   710    NaN    3745
+2026-06-28 00:00:00                                             Medicine (coughing)  1220    NaN    2525
+2026-06-27 00:00:00                                                     Soft drinks    70    NaN    2455
+2026-06-27 00:00:00                                                 Transportation     70    NaN    2385
+2026-06-28 00:00:00                                                          Others    30    NaN    2355
+
+
+========================================================================
+SHEET: Efty | Personal
+========================================================================
+
+Ledger: Money Beg
+----------------------------------------
+               Date                                             Particulers Debit Credit Balance
+2026-06-20 00:00:00                                     Withdraw | From BB    NaN  10830   10830
+2026-06-20 00:00:00                                     Withdraw | From EBL   NaN    956   11786
+                NaN            City College | Raihan Payment For Attendence  1000    NaN   10786
+                NaN   Dorins Shajgoj Product, Plastic Juris, Transportation  1500    NaN    9286
+                NaN                                   Dorins | Nose Percing  1800    NaN    7486
+2026-05-24 00:00:00                                  Ammu | Gave me as gift   NaN    500    7986
+2026-06-08 00:00:00 Shajgoj Payment | Facewash Mine, Namiras Shower Gel etc  1100    NaN    6886
+2026-06-15 00:00:00         Laptop Business | Dhaka Round Trip from Cumilla  1000    NaN    5886
+2026-06-15 00:00:00                      Cumilla | Expenses To bring Dorin   2500    NaN    3386
+2026-06-08 00:00:00                   Kasba, Cumilla | Expenses to go there  3260    NaN     126
+2026-06-20 00:00:00                   Balance added After Whole calculation   NaN   1279    1405
+2026-06-20 00:00:00                             Dorins | Shelai machine Box   600    NaN     805
+2026-06-24 00:00:00                                             Ammu | Loan   NaN   2000    2805
+2026-06-25 00:00:00               Dorins | Doctor visit + 1 week medicines   2840    NaN     -35
+2026-06-26 00:00:00                               Withdraw | From Brac bank   NaN   2000    1965
+2026-06-28 00:00:00                      Dorins | Passport size photo print    80    NaN    1885
+
+
+Ledger: Bkash
+----------------------------------------
+               Date                                               Particulers Debit Credit Balance
+2026-05-17 00:00:00                                                   Balance   NaN   2677    2677
+2026-05-22 00:00:00                                  Dorins | Online Delivery   100    NaN    2577
+2026-06-09 00:00:00                                  Dorins | Online Delivery   100    NaN    2477
+2026-06-10 00:00:00                               Pobon | vabi loan repayment   NaN   5000    7477
+2026-06-10 00:00:00                                Dorins | Eid Dress Purpose  1500    NaN    5977
+2026-05-29 00:00:00                                             Telegram Lose  1000    NaN    4977
+2026-06-20 00:00:00 Expenses | Mobile Recharge and Other which has not tracks  2050    NaN    2927
+2026-06-22 00:00:00                                       Dorins | Send money    70    NaN    2857
+2026-06-23 00:00:00                                 Namiras | Mobile Recharge    20    NaN    2837
+
+
+Ledger: Standard Bank
+----------------------------------------
+No transactions.
+
+
+Ledger: Brac Bank
+----------------------------------------
+               Date                    Particulers Debit Credit Balance
+2026-05-20 00:00:00         Salary (Mar,April,May)   NaN  20000   20000
+2026-05-31 00:00:00              Transfer | To EBL 20000    NaN       0
+2026-06-10 00:00:00    Salary (June, previous Due)   NaN  26000   26000
+2026-06-10 00:00:00 Eftys Dps Repayment (May,June) 10000    NaN   16000
+2026-06-20 00:00:00        Withdraw | To Money Beg 10830    NaN    5170
+2026-06-26 00:00:00        Withdraw | To Money Beg  2000    NaN    3170
+
+
+Ledger: Eastern Bank
+----------------------------------------
+               Date                         Particulers Debit Credit Balance
+2026-05-31 00:00:00                             Balance   NaN   3625    3625
+2026-05-31 00:00:00                   Transfer | To EBL   NaN  20000   23625
+2026-05-31 00:00:00 Eftys Dps Repayment (Feb,Mar,April) 15000    NaN    8625
+2026-05-31 00:00:00              Transfer | To Moneybeg  4200    NaN    4425
+2026-06-17 00:00:00                Debit Card Anual Fee   690    NaN    3735
+2026-06-20 00:00:00             Withdraw | To Money Beg   956    NaN    2779
+
+
+Ledger: Prime Savings
+----------------------------------------
+               Date Particulers Debit Credit Balance
+2026-05-21 00:00:00     Balance   NaN  32000   32000
+2026-05-21 00:00:00    Abbu May   NaN   1000   33000
+2026-06-12 00:00:00   Abbu June   NaN   1000   34000
+
+
+========================================================================
+SHEET: Efty | Business Fund
+========================================================================
+
+Ledger: Master Ledger
+----------------------------------------
+No transactions.
+
+
+Ledger: Business Cash
+----------------------------------------
+               Date                                                     Particulers Debit Credit Balance
+2026-05-14 00:00:00                                   Withdraw | From Standard Bank   NaN  79500   79500
+2026-06-19 00:00:00 Home | Loan Issued As of Now | For home expenses Behalf of Azam 34230    NaN   45270
+2026-05-18 00:00:00          Azam | Loan Issued | Ammu took for Toki behalf of abbu  1000    NaN   44270
+2026-05-29 00:00:00                  Azam | Loan Issued | Vhangti Takar Note 100 tk  2000    NaN   42270
+2026-06-10 00:00:00                                         Transfer | To Brac Bank 41270    NaN    1000
+2026-06-21 00:00:00                                             Home | Loan issued   1000    NaN       0
+2026-06-26 00:00:00                                       Withdraw | From Brac Bank   NaN   5000    5000
+
+
+Ledger: Brac Bank
+----------------------------------------
+               Date                                                               Particulers  Debit Credit Balance
+2026-04-30 00:00:00                                                                   Balance    NaN 394300  394300
+2026-04-30 00:00:00                                                      Sharif | Loan issued 150000    NaN  244300
+2026-05-04 00:00:00                                                   Sharif | Loan Repayment    NaN  50000  294300
+2026-05-18 00:00:00                                 BTC | Loan issued | Gave to ghaws trading  50000    NaN  244300
+2026-05-19 00:00:00                                                      BTC | Loan Repayment    NaN  50000  294300
+2026-05-21 00:00:00                                 Mostafa | Loan issued | Goru kina purpose 100000    NaN  194300
+2026-05-22 00:00:00                  Pavel | Loan issued | Send to Sohel mama Qurbani Purpose 120000    NaN   74300
+2026-05-22 00:00:00          Azam | Loan issued | Send to Sohel Mama on Behalf of Sadikunnher  10000    NaN   64300
+2026-05-23 00:00:00 Azam | Loan Issued | Send to Hasan Kaka _ Barir Fridge Purchased Purpose   35010    NaN   29290
+2026-06-10 00:00:00                                             Transfer | From Business Cash    NaN  41270   70560
+2026-06-11 00:00:00     Azam | Loan Issued | AIBL Dps which has been missed earlier from depo  10000    NaN   60560
+2026-05-31 00:00:00                                                       Transfer | from SBL    NaN   8750   69310
+2026-06-23 00:00:00                                    Home | Loan Issued | For Home expenses   8000    NaN   61310
+2026-06-26 00:00:00                                               Withdraw | To business cash   5000    NaN   56310
+
+
+Ledger: Standard Bank
+----------------------------------------
+               Date                                  Particulers Debit Credit Balance
+2026-05-13 00:00:00                                      Balance   NaN 200000  200000
+2026-05-14 00:00:00                  Withdraw | To Business Cash 79500    NaN  120500
+2026-05-25 00:00:00 BTC | Loan issued | Nobinogor Jaiga Purposed 50000    NaN   70500
+2026-06-01 00:00:00                          BTC | Loan issued | 10000    NaN   60500
+2026-05-31 00:00:00                        Transfer | Brac Bank   8750    NaN   51750
+
+
+========================================================================
+SHEET: MD IQBAL AZAM
+========================================================================
+
+Ledger: Cash
+----------------------------------------
+No transactions.
+
+
+Ledger: Bkash
+----------------------------------------
+               Date                               Particulers Debit Credit Balance
+2026-05-25 00:00:00                                   Balance   NaN   2500    2500
+2026-06-29 00:00:00 Efty | Train ticket paharika kasba to ctg   300    NaN    2200
+2026-06-10 00:00:00                   Internet Bill June 2026   800    NaN    1400
+
+
+Ledger: Standard Bank
+----------------------------------------
+               Date                                              Particulers  Debit Credit Balance
+2026-05-13 00:00:00                                                  Balance    NaN    980     980
+2026-06-01 00:00:00            National Savings | From 3lac National Savings    NaN   7866    8846
+2026-06-04 00:00:00            National Savings | From 2lac National Savings    NaN   5244   14090
+2026-05-31 00:00:00                        Ammur FDR taka After all expenses    NaN   8750   22840
+2026-05-14 00:00:00                                      Meju Khala May 2026  10000    NaN   12840
+2026-05-14 00:00:00                                              Alico _abbu   1885    NaN   10955
+2026-06-02 00:00:00 National Savings | Previous 3lca saving has been matured    NaN 300000  310955
+2026-06-09 00:00:00     Transfer | To EBL | To purchase New National Savings 300000    NaN   10955
+
+
+Ledger: Brac Bank
+----------------------------------------
+               Date                                                               Particulers  Debit  Credit Balance
+2026-04-02 00:00:00                                                                   Balance    NaN  201645  201645
+2026-04-02 00:00:00                                           Defence Tower 3 | Send to Didar 160010     NaN   41635
+2026-04-12 00:00:00                                                     Meju Khala april 2026  10010     NaN   31625
+2026-05-29 00:00:00                      Gave to Btc | Behalf of abbu | Defence Tower Purpose  20000     NaN   11625
+2026-05-16 00:00:00                                                B baria Shomiti april 2026  10000     NaN    1625
+2026-06-19 00:00:00                                                        Balance Adjustment    NaN     224    1849
+2026-05-31 00:00:00                                       Eftys Dps Repayment (Feb,Mar,April)    NaN   15000   16849
+2026-06-03 00:00:00                                                  B baria Shomiti May 2026  10000     NaN    6849
+2026-06-08 00:00:00                                                Mainul | Buffalo Repayment    NaN 1500000 1506849
+2026-06-10 00:00:00                         Transfer | To EBL | To Purchased National savings 300000     NaN 1206849
+2026-06-10 00:00:00                                                      Meju Khala June 2026  10000     NaN 1196849
+2026-06-10 00:00:00                                            Eftys Dps Repayment (May,June)    NaN   10000 1206849
+2026-06-17 00:00:00            Mainul | Loan issued | From Azam Brac | Asked for loan to abbu 100000     NaN 1106849
+2026-06-21 00:00:00                    BTC | Loan Issued | From Azam Brac | Send to Ghaws Sbl 100000     NaN 1006849
+2026-06-21 00:00:00                                            Sohan | Aibl | Loan Repayment     NaN   40000 1046849
+2026-06-22 00:00:00 BTC | Loan issued | From AIBL | From Azam Brac | Send to Azam Trading SBL  40000     NaN 1006849
+2026-06-29 00:00:00                         BTC | Loan Issued | From Azam Brac | To Ghaws SBL  55000     NaN  951849
+
+
+Ledger: Eastern Bank
+----------------------------------------
+               Date                                            Particulers  Debit Credit Balance
+2026-06-09 00:00:00 Transfer | From SBL | To purchase New National Savings    NaN 300000  300000
+2026-06-09 00:00:00       National Savings | Purchase New Savings of 3lacs 300000    NaN       0
+2026-06-10 00:00:00      Transfer | To EBL | To Purchased National savings    NaN 300000  300000
+2026-06-10 00:00:00       National Savings | Purchase New Savings of 3lacs 300000    NaN       0
+
+
+========================================================================
+SHEET: SADIKUNNHER
+========================================================================
+
+Ledger: Cash
+----------------------------------------
+No transactions.
+
+
+Ledger: Standard Bank (Her Personal)
+----------------------------------------
+               Date                                        Particulers Debit Credit Balance
+2026-04-27 00:00:00                                            Balance   NaN   6238    6238
+2026-05-03 00:00:00  DPS (Eftys_May) | This payment is paid to Azam BB  5000    NaN    1238
+2026-05-07 00:00:00    National Savings | From 10 lac national Savings   NaN   8640    9878
+2026-05-19 00:00:00                                     Alico May 2026  2805    NaN    7073
+2026-06-01 00:00:00 DPS (Eftys_June) | This payment is paid to Azam BB  5000    NaN    2073
+2026-06-01 00:00:00     National Savings | From 5 lac national Savings   NaN   4320    6393
+2026-06-07 00:00:00    National Savings | From 10 lac national Savings   NaN   8640   15033
+
+
+========================================================================
+SHEET: LOANS
+========================================================================
+
+Ledger: Master Ledger
+----------------------------------------
+               Date                                                               Particulers  Debit Credit Balance
+2026-04-30 00:00:00                                                      Sharif | Loan issued 150000    NaN -150000
+2026-05-04 00:00:00                                                   Sharif | Loan Repayment    NaN  50000 -100000
+2026-05-18 00:00:00                                 BTC | Loan issued | Gave to ghaws trading  50000    NaN -150000
+2026-05-19 00:00:00                                                      BTC | Loan Repayment    NaN  50000 -100000
+2026-05-21 00:00:00                                 Mostafa | Loan issued | Goru kina purpose 100000    NaN -200000
+2026-05-22 00:00:00                  Pavel | Loan issued | Send to Sohel mama Qurbani Purpose 120000    NaN -320000
+2026-05-22 00:00:00          Azam | Loan issued | Send to Sohel Mama on Behalf of Sadikunnher  10000    NaN -330000
+2026-05-23 00:00:00 Azam | Loan Issued | Send to Hasan Kaka _ Barir Fridge Purchased Purpose   35010    NaN -365010
+2026-06-11 00:00:00     Azam | Loan Issued | AIBL Dps which has been missed earlier from depo  10000    NaN -375010
+2026-06-19 00:00:00           Home | Loan Issued As of Now | For home expenses Behalf of Azam  34230    NaN -409240
+2026-05-18 00:00:00                    Azam | Loan Issued | Ammu took for Toki behalf of abbu   1000    NaN -410240
+2026-05-29 00:00:00                            Azam | Loan Issued | Vhangti Takar Note 100 tk   2000    NaN -412240
+2026-05-25 00:00:00                              BTC | Loan issued | Nobinogor Jaiga Purposed  50000    NaN -462240
+2026-06-01 00:00:00                                                       BTC | Loan issued |  10000    NaN -472240
+2026-06-17 00:00:00            Mainul | Loan issued | From Azam Brac | Asked for loan to abbu 100000    NaN -572240
+2026-06-21 00:00:00                                                       Home | Loan issued    1000    NaN -573240
+2026-06-21 00:00:00                    BTC | Loan Issued | From Azam Brac | Send to Ghaws Sbl 100000    NaN -673240
+2026-06-22 00:00:00 BTC | Loan issued | From AIBL | From Azam Brac | Send to Azam Trading SBL  40000    NaN -713240
+2026-06-23 00:00:00                                    Home | Loan Issued | For Home expenses   5000    NaN -718240
+2026-06-29 00:00:00                         BTC | Loan Issued | From Azam Brac | To Ghaws SBL  55000    NaN -773240
+
+
+Ledger: Azam
+----------------------------------------
+               Date                                                               Particulers Debit Credit Balance
+2026-05-22 00:00:00          Azam | Loan issued | Send to Sohel Mama on Behalf of Sadikunnher 10000    NaN  -10000
+2026-05-23 00:00:00 Azam | Loan Issued | Send to Hasan Kaka _ Barir Fridge Purchased Purpose  35010    NaN  -45010
+2026-06-11 00:00:00     Azam | Loan Issued | AIBL Dps which has been missed earlier from depo 10000    NaN  -55010
+2026-06-19 00:00:00           Home | Loan Issued As of Now | For home expenses Behalf of Azam 34230    NaN  -89240
+2026-05-18 00:00:00                    Azam | Loan Issued | Ammu took for Toki behalf of abbu  1000    NaN  -90240
+2026-05-29 00:00:00                            Azam | Loan Issued | Vhangti Takar Note 100 tk  2000    NaN  -92240
+2026-06-21 00:00:00                                                       Home | Loan issued   1000    NaN  -93240
+2026-06-23 00:00:00                                    Home | Loan Issued | For Home expenses  8000    NaN -101240
+
+
+Ledger: BTC
+----------------------------------------
+               Date                                                               Particulers  Debit Credit Balance
+2026-05-25 00:00:00                              BTC | Loan issued | Nobinogor Jaiga Purposed  50000    NaN  -50000
+2026-06-01 00:00:00                                                       BTC | Loan issued |  10000    NaN  -60000
+2026-05-21 00:00:00                                 Mostafa | Loan issued | Goru kina purpose 100000    NaN -160000
+2026-06-21 00:00:00                    BTC | Loan Issued | From Azam Brac | Send to Ghaws Sbl 100000    NaN -260000
+2026-06-22 00:00:00 BTC | Loan issued | From AIBL | From Azam Brac | Send to Azam Trading SBL  40000    NaN -300000
+2026-06-29 00:00:00                         BTC | Loan Issued | From Azam Brac | To Ghaws SBL  55000    NaN -355000
+
+
+Ledger: Pavel
+----------------------------------------
+               Date                                              Particulers  Debit Credit Balance
+2026-05-22 00:00:00 Pavel | Loan issued | Send to Sohel mama Qurbani Purpose 120000    NaN -120000
+
+
+Ledger: Sharif
+----------------------------------------
+               Date             Particulers  Debit Credit Balance
+2026-04-30 00:00:00    Sharif | Loan issued 150000    NaN -150000
+2026-05-04 00:00:00 Sharif | Loan Repayment    NaN  50000 -100000
+
+
+Ledger: Mainul
+----------------------------------------
+               Date                                                    Particulers  Debit Credit Balance
+2026-06-17 00:00:00 Mainul | Loan issued | From Azam Brac | Asked for loan to abbu 100000    NaN -100000
+

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoneyFlows — Family Finance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: oklch(14% 0.015 260);
+      --surface: oklch(22% 0.02 260 / 0.55);
+      --fg: oklch(92% 0.008 260);
+      --muted: oklch(60% 0.02 260);
+      --border: oklch(100% 0 0 / 0.10);
+      --violet: oklch(62% 0.22 290);
+      --teal: oklch(65% 0.15 170);
+      --coral: oklch(62% 0.18 30);
+      --gold: oklch(75% 0.15 85);
+      --purple: oklch(55% 0.18 290);
+      --radial-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      background-image: var(--radial-glow);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    .launcher {
+      width: 1200px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    .hero {
+      text-align: center;
+    }
+    .hero .logo {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--violet), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero .logo span { font-weight: 400; -webkit-text-fill-color: var(--muted); color: var(--muted); }
+    .hero p {
+      color: var(--muted);
+      font-size: 15px;
+      margin-top: 6px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: var(--fg);
+    }
+    .glass:hover {
+      border-color: var(--violet);
+      box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
+    }
+    .glass .icon {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+    .glass .title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .glass .desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .glass .badge {
+      align-self: flex-start;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .badge-desktop { background: oklch(62% 0.22 290 / 0.12); color: var(--violet); }
+    .badge-mobile { background: oklch(65% 0.15 170 / 0.12); color: var(--teal); }
+    .badge-overlay { background: oklch(62% 0.18 30 / 0.12); color: var(--coral); }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 500px) {
+      .grid { grid-template-columns: 1fr; }
+      body { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="launcher">
+    <div class="hero">
+      <div class="logo">MoneyFlows<span>.app</span></div>
+      <p>Family personal finance — dark glassmorphism, BDT</p>
+    </div>
+
+    <div class="grid">
+      <a href="screen-1-dashboard.html" class="glass">
+        <div class="icon">&#x1F4CA;</div>
+        <div class="title">Main Dashboard</div>
+        <div class="desc">Family overview with total assets, cash, loans, combined balances, and recent transactions</div>
+        <span class="badge badge-desktop">Desktop &middot; 16:9</span>
+      </a>
+
+      <a href="screen-2-member.html" class="glass">
+        <div class="icon">&#x1F464;</div>
+        <div class="title">Member Profile</div>
+        <div class="desc">Efty's profile with account cards carousel (bKash, Brac Bank, Business Cash) and account ledger</div>
+        <span class="badge badge-mobile">Mobile &middot; 9:16</span>
+      </a>
+
+      <a href="screen-3-loans.html" class="glass">
+        <div class="icon">&#x1F4B3;</div>
+        <div class="title">Loan Receivables</div>
+        <div class="desc">BTC's loan stacks by funding source with progress bar, amounts, and repayment status</div>
+        <span class="badge badge-desktop">Desktop &middot; 16:9</span>
+      </a>
+
+      <a href="screen-4-transaction.html" class="glass">
+        <div class="icon">&#x1F4B8;</div>
+        <div class="title">Transaction Wizard</div>
+        <div class="desc">Bottom-sheet modal with segmented tabs, account pickers, and numeric keypad for transfers</div>
+        <span class="badge badge-overlay">Mobile overlay &middot; 9:16</span>
+      </a>
+
+      <a href="screen-5-recycle.html" class="glass">
+        <div class="icon">&#x1F5D1;&#xFE0F;</div>
+        <div class="title">Recycle Bin</div>
+        <div class="desc">Soft-deleted items with restore and permanent delete, tabbed by type</div>
+        <span class="badge badge-desktop">Desktop &middot; 16:9</span>
+      </a>
+
+      <div class="glass" style="cursor:default;opacity:0.5;">
+        <div class="icon">&#x1F3E0;</div>
+        <div class="title">brand-spec.md</div>
+        <div class="desc">Design tokens and glassmorphism system reference for MoneyFlows</div>
+        <span class="badge badge-desktop">Token spec</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      MoneyFlows &middot; Family Finance &middot; BDT &middot; Dark Glassmorphism
+    </div>
+  </div>
+</body>
+</html>

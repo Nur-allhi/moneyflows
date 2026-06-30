@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoneyFlows — New Transaction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: oklch(14% 0.015 260);
+      --surface: oklch(22% 0.02 260 / 0.55);
+      --fg: oklch(92% 0.008 260);
+      --muted: oklch(60% 0.02 260);
+      --border: oklch(100% 0 0 / 0.10);
+      --violet: oklch(62% 0.22 290);
+      --teal: oklch(65% 0.15 170);
+      --coral: oklch(62% 0.18 30);
+      --gold: oklch(75% 0.15 85);
+      --success: oklch(65% 0.15 150);
+      --danger: oklch(58% 0.18 30);
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: oklch(100% 0 0 / 0.1); border-radius: 4px; }
+
+    /* Desktop app chrome */
+    .sidebar {
+      width: 240px;
+      background: oklch(12% 0.015 260);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      gap: 24px;
+    }
+    .sidebar-logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-logo .logo-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--violet), oklch(55% 0.22 290));
+      display: grid; place-items: center;
+      font-size: 16px;
+    }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .nav-item:hover { background: oklch(100% 0 0 / 0.04); color: var(--fg); }
+    .nav-item.active {
+      background: oklch(100% 0 0 / 0.06);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .nav-item .nav-icon { width: 18px; text-align: center; }
+
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      border-bottom: 1px solid var(--border);
+      background: oklch(12% 0.015 260);
+    }
+    .topbar h1 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .topbar-actions .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet), var(--teal));
+      display: grid; place-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Content area with blurred background */
+    .content-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .bg-blur-layer {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, oklch(62% 0.22 290 / 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, oklch(65% 0.15 170 / 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, oklch(62% 0.18 30 / 0.05) 0%, transparent 50%);
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    /* Background mock content (blurred behind modal) */
+    .bg-content {
+      position: absolute;
+      inset: 0;
+      padding: 32px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      filter: blur(3px);
+      opacity: 0.25;
+      pointer-events: none;
+    }
+    .bg-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      height: 120px;
+    }
+    .bg-card.tall { height: 200px; }
+    .bg-card.wide { grid-column: 1 / -1; height: 80px; }
+
+    /* Overlay backdrop */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: oklch(0% 0 0 / 0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 10;
+    }
+
+    /* Centered modal */
+    .modal {
+      position: relative;
+      z-index: 11;
+      width: 520px;
+      max-width: 90vw;
+      max-height: 85vh;
+      background: oklch(16% 0.015 260 / 0.75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid oklch(100% 0 0 / 0.10);
+      border-radius: 20px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px oklch(62% 0.22 290 / 0.06);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: fadeIn 0.25s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 0;
+    }
+    .modal-header h2 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .modal-close {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: oklch(100% 0 0 / 0.04);
+      color: var(--muted);
+      cursor: pointer;
+      display: grid; place-items: center;
+      font-size: 16px;
+      transition: all 0.15s;
+    }
+    .modal-close:hover { background: oklch(100% 0 0 / 0.1); color: var(--fg); }
+
+    .modal-body {
+      padding: 16px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    /* Segmented tabs */
+    .segments {
+      display: flex;
+      background: oklch(100% 0 0 / 0.04);
+      border-radius: 10px;
+      padding: 3px;
+    }
+    .seg-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+    }
+    .seg-tab.active {
+      background: linear-gradient(135deg, var(--violet), oklch(55% 0.22 290));
+      color: #fff;
+    }
+    .seg-tab:hover:not(.active) { color: var(--fg); }
+
+    /* Form rows */
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    .form-row .field-group { flex: 1; }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .field-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: oklch(100% 0 0 / 0.05);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field-input:focus {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+    }
+    .field-input::placeholder { color: var(--muted); opacity: 0.5; }
+
+    .field-select select {
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      padding-right: 32px;
+    }
+    .select-wrapper {
+      position: relative;
+    }
+    .select-wrapper::after {
+      content: '';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px; height: 6px;
+      background: var(--muted);
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      pointer-events: none;
+    }
+    .select-wrapper select option {
+      background: oklch(18% 0.015 260);
+      color: var(--fg);
+    }
+
+    /* Amount input */
+    .amount-wrap {
+      display: flex;
+      align-items: center;
+      background: oklch(100% 0 0 / 0.05);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .amount-wrap:focus-within {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+    }
+    .amount-currency {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      padding: 12px 0 12px 14px;
+    }
+    .amount-wrap .field-input {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      padding-left: 6px;
+    }
+    .amount-wrap .field-input:focus {
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    /* Note textarea */
+    .note-field textarea {
+      min-height: 56px;
+      resize: vertical;
+      font-family: var(--font-body);
+    }
+
+    /* Action buttons */
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      padding-top: 4px;
+    }
+    .modal-actions button {
+      flex: 1;
+      padding: 13px 0;
+      border: 0;
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-cancel {
+      background: oklch(100% 0 0 / 0.06);
+      color: var(--muted);
+      border: 1px solid var(--border) !important;
+    }
+    .btn-cancel:hover { background: oklch(100% 0 0 / 0.1); color: var(--fg); }
+    .btn-save {
+      background: linear-gradient(135deg, var(--violet), oklch(55% 0.22 290));
+      color: #fff;
+    }
+    .btn-save:hover { opacity: 0.9; }
+
+    /* Desktop & mobile responsive */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .topbar { padding: 12px 16px; }
+      .modal { width: 100%; max-width: 100vw; max-height: 100vh; border-radius: 0; box-shadow: none; }
+      .modal-body { padding: 12px 16px 20px; }
+      .modal-header { padding: 16px 16px 0; }
+      .form-row { flex-direction: column; gap: 12px; }
+    }
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .sidebar { width: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">&#x25B6;</span>
+      MoneyFlows
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item"><span class="nav-icon">&#x25A0;</span> Dashboard</div>
+      <div class="nav-item"><span class="nav-icon">&#x25B6;</span> Members</div>
+      <div class="nav-item"><span class="nav-icon">&#x25A3;</span> Loans</div>
+      <div class="nav-item active"><span class="nav-icon">+</span> New Transaction</div>
+      <div class="nav-item"><span class="nav-icon">&#x267B;</span> Recycle Bin</div>
+    </nav>
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px; border-top: 1px solid var(--border);">
+      <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--teal));display:grid;place-items:center;font-size:11px;font-weight:600;">E</div>
+      <span style="font-size:13px;font-weight:500;">Efty</span>
+    </div>
+  </aside>
+
+  <!-- Main area -->
+  <div class="main-area">
+    <!-- Top bar -->
+    <header class="topbar">
+      <h1>New Transaction</h1>
+      <div class="topbar-actions">
+        <span style="font-size:12px;color:var(--muted);">Family Wallet</span>
+        <div class="avatar">E</div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content-area">
+      <div class="bg-blur-layer"></div>
+
+      <!-- Blurred background content -->
+      <div class="bg-content">
+        <div class="bg-card"></div>
+        <div class="bg-card"></div>
+        <div class="bg-card wide"></div>
+        <div class="bg-card tall"></div>
+        <div class="bg-card"></div>
+      </div>
+
+      <!-- Overlay -->
+      <div class="overlay"></div>
+
+      <!-- Centered modal -->
+      <div class="modal">
+        <div class="modal-header">
+          <h2>New Transaction</h2>
+          <button class="modal-close">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Segmented tabs -->
+          <div class="segments">
+            <div class="seg-tab">Income</div>
+            <div class="seg-tab">Expense</div>
+            <div class="seg-tab active">Transfer</div>
+            <div class="seg-tab">Loan</div>
+          </div>
+
+          <!-- Amount -->
+          <div class="field-group">
+            <span class="field-label">Amount</span>
+            <div class="amount-wrap">
+              <span class="amount-currency">BDT</span>
+              <input class="field-input" type="text" inputmode="decimal" placeholder="0.00" value="5,000" />
+            </div>
+          </div>
+
+          <!-- Source & Destination -->
+          <div class="form-row">
+            <div class="field-group">
+              <span class="field-label">Source Account</span>
+              <div class="select-wrapper">
+                <select class="field-input">
+                  <option>Brac Bank — Savings (112,400 BDT)</option>
+                  <option>bKash — Wallet (24,670 BDT)</option>
+                  <option>Business Cash — Current (52,130 BDT)</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-group">
+              <span class="field-label">Destination Account</span>
+              <div class="select-wrapper">
+                <select class="field-input">
+                  <option>Business Cash — Current (52,130 BDT)</option>
+                  <option>bKash — Wallet (24,670 BDT)</option>
+                  <option>Brac Bank — Savings (112,400 BDT)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Note -->
+          <div class="field-group note-field">
+            <span class="field-label">Note (optional)</span>
+            <textarea class="field-input" placeholder="What's this for?"></textarea>
+          </div>
+
+          <!-- Actions -->
+          <div class="modal-actions">
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-save">Save Transfer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var tabs = document.querySelectorAll('.seg-tab');
+      tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          tabs.forEach(function(t) { t.classList.remove('active'); });
+          this.classList.add('active');
+        });
+      });
+      var closeBtn = document.querySelector('.modal-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+          document.querySelector('.modal').style.opacity = '0';
+          document.querySelector('.modal').style.transform = 'scale(0.95)';
+          document.querySelector('.overlay').style.opacity = '0';
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
