@@ -90,11 +90,10 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Next:** T-019 — Implement routing + desktop sidebar + mobile bottom nav
-- **Phase:** 1.2 — Navigation
-- **Skill:** `senior-frontend`
-- **Design:** `DESIGN_FILES/screen-2-member-desktop.html` (sidebar), `DESIGN_FILES/screen-2-member.html` (bottom nav)
-- **Acceptance:** Routes from FRONTEND_SPEC §2 work; sidebar visible ≥1024px, bottom nav visible ≤768px. Header shows current route title.
-- **Action:** Load skill(s) with `skill` tool, then implement routing in `App.tsx` and nav components in `src/presentation/components/`.
+**Next:** T-021 — Build Dashboard screen
+- **Phase:** 2 — Screen Implementation
+- **Skill:** `ui-ux-pro-max`, `senior-frontend`
+- **Design:** `DESIGN_FILES/screen-1-dashboard.html`
+- **Acceptance:** 4 metric cards, avatars, quick actions, combined balances, recent transactions. All states (loading, empty, error). Responsive 4→2→1 col.
 
 When this ticket is complete, update this section to the next ticket from `docs/TICKETS.md`.
