@@ -184,3 +184,25 @@
 - **Phase 1.2 complete.** T-019 + T-020 done. Routing + sidebar + bottom nav + header all wired.
 - Build, typecheck, lint all pass.
 - **Next:** T-021 — Dashboard screen (Phase 2 begins)
+
+## Session 2026-07-01 00:55
+
+### Changes
+- Built `Dashboard.tsx` + `Dashboard.module.css` — full screen with:
+  - 4 MetricCards (Total Assets, Cash in Hand, Active Loans, Net Worth) with accent glow
+  - Quick action buttons (New Transaction primary, Transfer, Reports, Settings)
+  - Combined Balances section with AccountRows
+  - Recent Transactions section with TransactionRows (scrollable, 420px max)
+  - 3 states: loading (shimmer skeletons), error (retry button), empty (no accounts/tx message)
+  - Responsive grid: 4→2→1 col metrics, 2-col→1-col content split
+- Added `padding="none"` support to GlassPanel for section containers
+- Updated AGENTS.md §5 — next: T-022
+
+### Skill(s) Used
+- `ui-ux-pro-max` — responsive grid layout, section header styling, shimmer skeleton
+- `senior-frontend` — state-driven rendering, reusable component composition
+
+### Status
+- **T-021 complete.** Dashboard screen built.
+- Build, typecheck, lint all pass.
+- **Next:** T-022 — Member Profile screen (mobile)
