@@ -112,3 +112,21 @@
 - **T-014 complete.** All 3 components built and exported from `src/presentation/components/`.
 - Build, typecheck, lint all pass.
 - Next: T-015 — LedgerTable + SegmentedTabs + TabBar
+
+## Session 2026-06-30 23:55
+
+### Changes
+- Created `SegmentedTabs.tsx` + `.module.css` — pill-style tabs with violet gradient active state, `tabs` + `activeKey` + `onChange` props
+- Created `TabBar.tsx` + `.module.css` — underline tabs with count badges, `activeKey` + `onChange` callback
+- Created `LedgerTable.tsx` + `.module.css` — 5-column grid (date/desc/debit/credit/balance), glass container, 340px scroll, empty state, row click
+- Updated `src/presentation/components/index.ts` — added 3 new exports + `LedgerRow` type
+
+### Skill(s) Used
+- `ui-ux-pro-max` — segmented pill styling, tab interaction states, table grid layout
+- `senior-frontend` — component API design, type exports, CSS Modules
+
+### Status
+- **T-015 complete.** All 3 components built and exported from `src/presentation/components/`.
+- **Git:** initialized, first commit on `main`, switched to `dev` branch for ongoing work.
+- Build, typecheck, lint all pass.
+- Next: T-016 — Numpad + FormField + BottomSheet + Modal
