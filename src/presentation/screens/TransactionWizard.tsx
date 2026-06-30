@@ -43,6 +43,11 @@ export function TransactionWizard() {
     setRawAmount((prev) => prev.slice(0, -1) || '0');
   }, []);
 
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleaned = e.target.value.replace(/[^0-9]/g, '');
+    setRawAmount(cleaned || '0');
+  };
+
   const handleClose = () => {
     navigate(-1);
   };
@@ -57,70 +62,99 @@ export function TransactionWizard() {
     tab === 'loan' ? 'Issue Loan' :
     'Complete Transfer';
 
-  return (
-    <div className={styles.wizard}>
-      <div className={styles.sheet}>
-        <div className={styles.handle} />
-        <div className={styles.header}>
-          <h2>New Transaction</h2>
-          <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-        </div>
+  const formFields = (
+    <>
+      <div className={styles.amountRow}>
+        <span className={styles.amountCurrency}>BDT</span>
+        <input
+          className={styles.amountInput}
+          type="text"
+          inputMode="decimal"
+          placeholder="0.00"
+          value={displayAmount}
+          onChange={handleAmountChange}
+          readOnly={false}
+        />
+      </div>
 
-        <div className={styles.filterTabs}>
-          <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
-        </div>
+      <div className={styles.formRow}>
+        <FormSelect label="Source Account" value={source} onChange={(e) => setSource(e.target.value)}>
+          {accounts.map((a) => (
+            <option key={a.value} value={a.value}>{a.label}</option>
+          ))}
+        </FormSelect>
 
-        <div className={styles.formBody}>
-          <div className={styles.amountRow}>
-            <span className={styles.amountCurrency}>BDT</span>
-            <input
-              className={styles.amountInput}
-              type="text"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={displayAmount}
-              readOnly
-            />
-          </div>
-
-          <FormSelect label="Source Account" value={source} onChange={(e) => setSource(e.target.value)}>
+        {tab === 'transfer' && (
+          <FormSelect label="Destination Account" value={destination} onChange={(e) => setDestination(e.target.value)}>
             {accounts.map((a) => (
               <option key={a.value} value={a.value}>{a.label}</option>
             ))}
           </FormSelect>
+        )}
+      </div>
 
-          {tab === 'transfer' && (
-            <FormSelect label="Destination Account" value={destination} onChange={(e) => setDestination(e.target.value)}>
-              {accounts.map((a) => (
-                <option key={a.value} value={a.value}>{a.label}</option>
-              ))}
-            </FormSelect>
-          )}
+      {tab === 'loan' && (
+        <FormSelect label="Debtor" value={source} onChange={(e) => setSource(e.target.value)}>
+          <option value="btc">BTC (3,55,000 BDT outstanding)</option>
+          <option value="azam">Azam (1,20,000 BDT outstanding)</option>
+        </FormSelect>
+      )}
 
-          {tab === 'loan' && (
-            <FormSelect label="Debtor" value={source} onChange={(e) => setSource(e.target.value)}>
-              <option value="btc">BTC (3,55,000 BDT outstanding)</option>
-              <option value="azam">Azam (1,20,000 BDT outstanding)</option>
-            </FormSelect>
-          )}
+      <FormTextarea
+        label="Note (optional)"
+        placeholder="What's this for?"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+      />
+    </>
+  );
 
-          <FormTextarea
-            label="Note (optional)"
-            placeholder="What's this for?"
-            className={styles.noteInput}
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
+  return (
+    <>
+      <div className={styles.mobileLayout}>
+        <div className={styles.wizard}>
+          <div className={styles.sheet}>
+            <div className={styles.handle} />
+            <div className={styles.header}>
+              <h2>New Transaction</h2>
+              <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
+            </div>
 
-          <button className={styles.submitBtn} onClick={handleSubmit}>
-            {buttonLabel}
-          </button>
-        </div>
+            <div className={styles.filterTabs}>
+              <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
+            </div>
 
-        <div className={styles.numpadArea}>
-          <Numpad onInput={handleNumpadInput} onBackspace={handleNumpadBackspace} />
+            <div className={styles.formBody}>
+              {formFields}
+              <button className={styles.submitBtn} onClick={handleSubmit}>
+                {buttonLabel}
+              </button>
+            </div>
+
+            <div className={styles.numpadArea}>
+              <Numpad onInput={handleNumpadInput} onBackspace={handleNumpadBackspace} />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      <div className={styles.desktopLayout}>
+        <div className={styles.desktopOverlay} onClick={handleClose} />
+        <div className={styles.desktopModal}>
+          <div className={styles.modalHeader}>
+            <h2>New Transaction</h2>
+            <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
+          </div>
+          <div className={styles.modalBody}>
+            <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
+            {formFields}
+          </div>
+          <div className={styles.modalActions}>
+            <button className={styles.cancelBtn} onClick={handleClose}>Cancel</button>
+            <button className={styles.saveBtn} onClick={handleSubmit}>{buttonLabel}</button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
