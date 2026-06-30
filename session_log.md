@@ -259,3 +259,51 @@
 ### Status
 - **T-023 complete.** Build passes.
 - **Next:** T-024 — Loan Receivables screen
+
+## Session 2026-06-30 01:25
+
+### Changes
+- **T-023**: Built Member Profile screen (desktop) — responsive hero, action strip, 3-col accounts grid, split content (ledger + side panel with spending/budget/goals), LedgerTable `desktop` prop with type tags
+
+### Skill(s) Used
+- `ui-ux-pro-max` — desktop hero layout, split panel design, budget bars, savings goals cards
+- `senior-frontend` — responsive component architecture, CSS breakpoint strategy, LedgerTable API extension
+
+### Status
+- T-023 complete. Commit: `32aa520`. Next: T-024.
+
+## Session 2026-06-30 01:35
+
+### Changes
+- **T-024**: Built Loan Receivables screen — `Loans.tsx` + `Loans.module.css`:
+  - **Summary card**: Debtor name + badge pill, registered info, total outstanding (coral mono 32px), repayment `ProgressBar` with label/sublabel
+  - **Loan stacks**: Reuses existing `LoanStack` component (accordion with Brac Bank/bKash/Business Cash stacks)
+  - **Responsive column hiding**: Added ≤800px media query to `LoanStack.module.css` — hides Date and Status columns, narrower grid columns
+  - 3 states: loading (shimmer summary + stacks), error (retry), ready
+- Updated AGENTS.md §5 to T-025
+
+### Skill(s) Used
+- `ui-ux-pro-max` — summary card with glass glow, debtor badge, progress integration
+- `senior-frontend` — component composition with existing LoanStack + ProgressBar, responsive column hiding
+
+### Status
+- **T-024 complete.** Build passes. Commit: `daa1360`.
+- **Next:** T-025 — Transaction Wizard (mobile bottom sheet)
+
+## Session 2026-06-30 01:45
+
+### Changes
+- **T-025**: Transaction Wizard mobile bottom sheet — full-screen bottom sheet with 4 segmented tabs, amount with BDT prefix, source/destination selects, note textarea, submit button, Numpad with en-IN formatting
+- **T-026**: Transaction Wizard responsive desktop modal — centered 520px modal with fade-in animation, side-by-side source/destination selects, Cancel + Save buttons, responsive layout (mobile sheet ≤768px, desktop modal ≥768px)
+- **T-027**: Recycle Bin screen — stats bar (deleted items count, total amount, auto-purge days), tabbed filter (All/Transactions/Accounts), RecycleRow list with restore/delete actions, responsive column hiding at 800px
+- **T-028**: Launcher/Overview page — standalone route `/launcher`, hero with gradient logo, 3-column glass card grid linking to each screen, responsive 3→2→1 columns
+- Updated `session_log.md` and `AGENTS.md`
+
+### Skill(s) Used
+- `ui-ux-pro-max` — bottom sheet styling, modal animation, recycle bin layout, launcher glass card grid
+- `senior-frontend` — responsive component architecture, state-driven conditional rendering, route management
+
+### Status
+- **Phase 2 complete.** All 8 screen implementation tickets (T-021 through T-028) built.
+- Build passes. Commits: `b41be2f`, `3b0adf5`, `227d986`, `9222891`.
+- **Next:** T-029 — Implement Zustand stores (Phase 3 begins)
