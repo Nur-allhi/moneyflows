@@ -98,3 +98,12 @@
   background: oklch(62% 0.18 30 / 0.1);
   border-color: var(--color-expense);
 }
+
+@media (max-width: 800px) {
+  .row {
+    grid-template-columns: 36px 1fr 100px 60px;
+  }
+  .amount {
+    display: none;
+  }
+}
