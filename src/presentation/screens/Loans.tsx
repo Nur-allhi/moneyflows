@@ -4,14 +4,11 @@ import { ProgressBar, LoanStack, GlassPanel } from '../components';
 import type { LoanStackData } from '../components';
 import { useLoanStore } from '../stores/useLoanStore';
 import { useAccountStore } from '../stores/useAccountStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import type { LoanStack as LoanStackType } from '../../core/domain/Loan';
 import type { Account } from '../../core/domain/Account';
+import { formatAmount } from '../utils/format';
 import styles from './Loans.module.css';
-
-const _fmt = Intl.NumberFormat('en-IN');
-function fmt(n: number): string {
-  return `${_fmt.format(n)} BDT`;
-}
 
 const GRADIENTS = [
   'linear-gradient(135deg,#1a237e,#283593)',
@@ -29,6 +26,7 @@ function shortDate(iso: string): string {
 
 function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: Account[] }) {
   const navigate = useNavigate();
+  const { locale, currency } = useSettingsStore((s) => s.settings);
 
   const debtorSummary = (() => {
     const total = stack.totalOutstanding;
@@ -39,9 +37,9 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
       name: stack.debtorName,
       badge: 'Individual',
       registered: `${stack.loans.length} active loan${stack.loans.length !== 1 ? 's' : ''}`,
-      totalOutstanding: fmt(total),
+      totalOutstanding: formatAmount(total, locale, currency),
       repaidPercent: pct,
-      repaidDetail: `${pct}% repaid \u2022 ${fmt(total)} remaining`,
+      repaidDetail: `${pct}% repaid \u2022 ${formatAmount(total, locale, currency)} remaining`,
     };
   })();
 
@@ -58,14 +56,14 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
       iconGradient: gradient,
       fundSource: `Funded by Efty \u2014 ${name}`,
       sourceMeta: `Source: ${type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} \u2022 Disbursed ${shortDate(loan.date)}`,
-      totalAmount: fmt(loan.amount),
+      totalAmount: formatAmount(loan.amount, locale, currency),
       totalColor: 'var(--color-expense)' as const,
       loanCount: 1,
       loans: [{
         description: loan.fundingSource,
         date: shortDate(loan.date),
-        amount: fmt(loan.amount),
-        remaining: fmt(outstanding),
+        amount: formatAmount(loan.amount, locale, currency),
+        remaining: formatAmount(outstanding, locale, currency),
         remainingColor: outstanding > 0 ? 'var(--color-expense)' as const : 'var(--color-income)' as const,
         status: loan.status,
       }],
@@ -110,6 +108,7 @@ export function Loans() {
   const navigate = useNavigate();
   const { loanStacks, loading, error, fetchLoanStacks } = useLoanStore();
   const { accounts, fetchAccounts } = useAccountStore();
+  const { locale, currency } = useSettingsStore((s) => s.settings);
 
   useEffect(() => {
     fetchLoanStacks();
@@ -201,7 +200,7 @@ export function Loans() {
                     <span className={styles.debtorName}>{stack.debtorName}</span>
                     <span className={styles.debtorCount}>{stack.loans.length} loan{stack.loans.length !== 1 ? 's' : ''}</span>
                   </div>
-                  <span className={styles.debtorAmount}>{fmt(total)}</span>
+                  <span className={styles.debtorAmount}>{formatAmount(total, locale, currency)}</span>
                 </div>
                 <ProgressBar percent={pct} label="" sublabel={`${pct}% repaid`} />
               </button>

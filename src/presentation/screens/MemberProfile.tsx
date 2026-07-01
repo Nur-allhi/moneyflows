@@ -7,19 +7,15 @@ import { useAnimatedValue } from '../hooks';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import { Account } from '../../core/domain/Account';
 import type { AccountType } from '../../core/domain/Account';
+import { formatAmount } from '../utils/format';
 import styles from './MemberProfile.module.css';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const CARD_WIDTH = 280;
 const CARD_GAP = 12;
-
-const _fmt = Intl.NumberFormat('en-IN');
-
-function fmt(n: number): string {
-  return `${_fmt.format(n)} BDT`;
-}
 
 function shortDate(iso: string): string {
   const d = new Date(iso);
@@ -60,6 +56,7 @@ export function MemberProfile() {
     transactions, loading: tLoading, error: tError,
     fetchTransactions,
   } = useTransactionStore();
+  const { locale, currency } = useSettingsStore((s) => s.settings);
 
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [acctName, setAcctName] = useState('');
@@ -119,9 +116,9 @@ export function MemberProfile() {
       return {
         date: shortDate(tx.date),
         description: tx.description,
-        debit: isCredit ? '\u2014' : fmt(tx.amount),
-        credit: isCredit ? fmt(tx.amount) : '\u2014',
-        balance: fmt(running),
+        debit: isCredit ? '\u2014' : formatAmount(tx.amount, locale, currency),
+        credit: isCredit ? formatAmount(tx.amount, locale, currency) : '\u2014',
+        balance: formatAmount(running, locale, currency),
         type: displayType,
       };
     }).reverse();
@@ -196,7 +193,7 @@ export function MemberProfile() {
           </div>
           <div className={styles.profileBalance}>
             <div className={styles.balanceLabel}>Balance</div>
-            <div className={styles.balanceAmount}>{fmt(animTotalBalance)}</div>
+            <div className={styles.balanceAmount}>{formatAmount(animTotalBalance, locale, currency)}</div>
           </div>
         </div>
 
@@ -216,7 +213,7 @@ export function MemberProfile() {
                 key={acct.id}
                 name={acct.name}
                 type={acct.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                balance={fmt(acct.balance)}
+                balance={formatAmount(acct.balance, locale, currency)}
                 accountNumber={acct.id.slice(-4)}
                 gradient={ACCOUNT_GRADIENTS[acct.type]!}
                 showChip={acct.type === 'cash'}
@@ -253,15 +250,15 @@ export function MemberProfile() {
           <div className={styles.heroStats}>
             <div className={styles.statItem}>
               <div className={styles.statLabel}>Net Balance</div>
-              <div className={`${styles.statValue} ${styles.statTeal}`}>{fmt(animTotalBalance)}</div>
+              <div className={`${styles.statValue} ${styles.statTeal}`}>{formatAmount(animTotalBalance, locale, currency)}</div>
             </div>
             <div className={styles.statItem}>
               <div className={styles.statLabel}>Total Income</div>
-              <div className={`${styles.statValue} ${styles.statTeal}`}>{fmt(animTotalIncome)}</div>
+              <div className={`${styles.statValue} ${styles.statTeal}`}>{formatAmount(animTotalIncome, locale, currency)}</div>
             </div>
             <div className={styles.statItem}>
               <div className={styles.statLabel}>Total Expenses</div>
-              <div className={`${styles.statValue} ${styles.statCoral}`}>{fmt(animTotalExpenses)}</div>
+              <div className={`${styles.statValue} ${styles.statCoral}`}>{formatAmount(animTotalExpenses, locale, currency)}</div>
             </div>
           </div>
         </div>
@@ -287,7 +284,7 @@ export function MemberProfile() {
                 key={acct.id}
                 name={acct.name}
                 type={acct.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                balance={fmt(acct.balance)}
+                balance={formatAmount(acct.balance, locale, currency)}
                 accountNumber={acct.id.slice(-4)}
                 gradient={ACCOUNT_GRADIENTS[acct.type]!}
                 showChip={acct.type === 'cash'}

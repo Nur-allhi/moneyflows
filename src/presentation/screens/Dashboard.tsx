@@ -1,20 +1,16 @@
-import React, { useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GlassPanel, MetricCard, AccountRow, TransactionRow } from '../components';
+import { GlassPanel, MetricCard, AccountRow, TransactionRow, SettingsModal } from '../components';
 import { useAnimatedValue } from '../hooks';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useLoanStore } from '../stores/useLoanStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
+import { formatAmount } from '../utils/format';
 import styles from './Dashboard.module.css';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-const _fmt = Intl.NumberFormat('en-IN');
-
-function fmt(n: number): string {
-  return `${_fmt.format(n)} BDT`;
-}
 
 function shortDate(iso: string): string {
   const d = new Date(iso);
@@ -35,14 +31,11 @@ const ACCENT_MAP: Record<string, string> = {
   business: 'var(--color-purple)',
 };
 
-function AnimatedFmt({ value }: { value: number }): React.ReactNode {
-  const anim = useAnimatedValue(value);
-  return fmt(anim);
-}
-
 export function Dashboard() {
   const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
+  const { locale, currency } = useSettingsStore((s) => s.settings);
   const { transactions, loading: txLoading, error: txError, fetchTransactions } = useTransactionStore();
   const { loanStacks, fetchLoanStacks } = useLoanStore();
 
@@ -114,16 +107,16 @@ export function Dashboard() {
   return (
     <div className={styles.dashboard}>
       <div className={styles.metrics}>
-        <MetricCard label="Total Assets" value={fmt(animTotalAssets)} accent="violet" />
-        <MetricCard label="Cash in Hand" value={fmt(animCashInHand)} accent="gold" />
-        <MetricCard label="Active Loans" value={fmt(animActiveLoans)} accent="purple" />
-        <MetricCard label="Family Net Worth" value={fmt(animTotalAssets)} accent="teal" />
+        <MetricCard label="Total Assets" value={formatAmount(animTotalAssets, locale, currency)} accent="violet" />
+        <MetricCard label="Cash in Hand" value={formatAmount(animCashInHand, locale, currency)} accent="gold" />
+        <MetricCard label="Active Loans" value={formatAmount(animActiveLoans, locale, currency)} accent="purple" />
+        <MetricCard label="Family Net Worth" value={formatAmount(animTotalAssets, locale, currency)} accent="teal" />
       </div>
 
       <div className={styles.quickActions}>
         <button className={`${styles.qaBtn} ${styles.qaPrimary}`} onClick={() => navigate('/transaction')}>+ New Transaction</button>
         <button className={styles.qaBtn} onClick={() => navigate('/transaction')}>Transfer</button>
-        <button className={styles.qaBtn} onClick={() => (getDatabase() as any).exportToFile()}>Export DB</button>
+        <button className={styles.qaBtn} onClick={() => setSettingsOpen(true)}>Settings</button>
         <button className={styles.qaBtn} onClick={() => (getDatabase() as any).importFromFile()}>Import DB</button>
       </div>
 
@@ -145,7 +138,7 @@ export function Dashboard() {
                   key={acct.id}
                   name={acct.name}
                   type={acct.type}
-                  balance={<AnimatedFmt value={acct.balance} />}
+                  balance={<AnimatedAmount value={acct.balance} />}
                   icon={acct.icon ?? acct.name.slice(0, 2).toUpperCase()}
                   accentColor={ACCENT_MAP[acct.type]}
                 />
@@ -171,7 +164,7 @@ export function Dashboard() {
                   key={tx.id}
                   description={tx.description}
                   date={shortDate(tx.date)}
-                  amount={<AnimatedFmt value={tx.amount} />}
+                  amount={<AnimatedAmount value={tx.amount} />}
                   type={txTypeForRow(tx.type)}
                 />
               ))
@@ -179,6 +172,14 @@ export function Dashboard() {
           </div>
         </GlassPanel>
       </div>
+
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
+}
+
+function AnimatedAmount({ value }: { value: number }) {
+  const anim = useAnimatedValue(value);
+  const { locale, currency } = useSettingsStore((s) => s.settings);
+  return formatAmount(anim, locale, currency);
 }
