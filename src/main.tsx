@@ -18,15 +18,7 @@ function Root() {
   }, []);
 
   if (!ready) {
-    return (
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', background: '#0b0a1a', color: '#8b7cf7',
-        fontFamily: 'Outfit, sans-serif', fontSize: '18px',
-      }}>
-        Loading…
-      </div>
-    );
+    return <div className="loading-screen">Loading\u2026</div>;
   }
 
   return <App />;

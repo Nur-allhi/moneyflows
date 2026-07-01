@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useMemo } from 'react';
+import { ROW_HEIGHT, DESKTOP_ROW_HEIGHT, OVERSCAN } from '../constants/config';
 import styles from './LedgerTable.module.css';
 
 export interface LedgerRow {
@@ -22,10 +23,6 @@ const tagClassMap: Record<string, string | undefined> = {
   income: styles.tagIncome,
   transfer: styles.tagTransfer,
 };
-
-const ROW_HEIGHT = 48;
-const DESKTOP_ROW_HEIGHT = 52;
-const OVERSCAN = 3;
 
 export function LedgerTable({ rows, className = '', onRowClick, desktop = false }: LedgerTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,25 +52,24 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false 
         <span>Description</span>
         <span>Debit</span>
         <span>Credit</span>
-        <span style={{ textAlign: 'right' }}>Balance</span>
+        <span className={styles.balanceLabel}>Balance</span>
       </div>
       <div
         ref={containerRef}
         className={styles.body}
-        style={{ maxHeight: rows.length === 0 ? 'auto' : containerHeight, overflowY: 'auto' }}
+        style={{ '--body-max-height': rows.length === 0 ? 'auto' : `${containerHeight}px` } as React.CSSProperties}
         onScroll={rows.length > 0 ? handleScroll : undefined}
       >
         {rows.length === 0 ? (
           <div className={styles.empty}>No entries found</div>
         ) : (
-          <div style={{ height: totalHeight, position: 'relative' }}>
+          <div className={styles.virtualContainer} style={{ '--total-height': `${totalHeight}px` } as React.CSSProperties}>
             {rows.slice(visibleRange.start, visibleRange.end).map((row, i) => {
               const actualIndex = visibleRange.start + i;
               return (
                 <div
                   key={`${row.date}-${row.description}-${actualIndex}`}
-                  className={styles.row}
-                  style={{ position: 'absolute', top: offsetY + i * itemHeight, left: 0, right: 0, height: itemHeight }}
+                  className={`${styles.row} ${styles.virtualRow}`} style={{ '--row-top': `${offsetY + i * itemHeight}px`, '--row-height': `${itemHeight}px` } as React.CSSProperties}
                   onClick={() => onRowClick?.(row, actualIndex)}
                   role={onRowClick ? 'button' : undefined}
                   tabIndex={onRowClick ? 0 : undefined}

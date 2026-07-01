@@ -11,24 +11,10 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { Account } from '../../core/domain/Account';
 import type { AccountType } from '../../core/domain/Account';
 import { formatAmount } from '../utils/format';
+import { shortDate } from '../constants/dates';
+import { ACCOUNT_TYPE_GRADIENT_THREE, ACCOUNT_TYPE_OPTIONS, displayType } from '../constants/labels';
+import { ACCOUNT_CARD_WIDTH, CARD_GAP } from '../constants/config';
 import styles from './MemberProfile.module.css';
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const CARD_WIDTH = 280;
-const CARD_GAP = 12;
-
-function shortDate(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-const ACCOUNT_GRADIENTS: Record<string, string> = {
-  bank: 'linear-gradient(135deg, #1a237e, #283593 50%, #3f51b5)',
-  savings: 'linear-gradient(135deg, #004d40, #00695c 50%, #00897b)',
-  mobile_wallet: 'linear-gradient(135deg, #d81b60, #e91e63 50%, #f06292)',
-  cash: 'linear-gradient(135deg, #37474f, #455a64 50%, #546e7a)',
-  business: 'linear-gradient(135deg, #263238, #37474f 50%, #546e7a)',
-};
 
 const ledgerFilters = [
   { key: 'all', label: 'All' },
@@ -70,7 +56,7 @@ export function MemberProfile() {
   useEffect(() => {
     if (memberId) {
       fetchAccounts(memberId);
-      fetchTransactions({ memberId });
+      fetchTransactions();
     }
   }, [memberId]);
 
@@ -89,19 +75,29 @@ export function MemberProfile() {
     [memberAccounts],
   );
 
+  const memberTxs = useMemo(
+    () => {
+      const acctIds = new Set(memberAccounts.map((a) => a.id));
+      return transactions.filter(
+        (t) => acctIds.has(t.sourceAccount ?? '') || acctIds.has(t.destAccount ?? ''),
+      );
+    },
+    [transactions, memberAccounts],
+  );
+
   const totalIncome = useMemo(
-    () => transactions.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0),
-    [transactions],
+    () => memberTxs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+    [memberTxs],
   );
 
   const totalExpenses = useMemo(
-    () => transactions.filter((t) => t.type === 'expense' || t.type === 'loan_issue').reduce((s, t) => s + t.amount, 0),
-    [transactions],
+    () => memberTxs.filter((t) => t.type === 'expense' || t.type === 'loan_issue').reduce((s, t) => s + t.amount, 0),
+    [memberTxs],
   );
 
   const sortedTxs = useMemo(
-    () => [...transactions].sort((a, b) => a.date.localeCompare(b.date)),
-    [transactions],
+    () => [...memberTxs].sort((a, b) => a.date.localeCompare(b.date)),
+    [memberTxs],
   );
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
@@ -114,7 +110,7 @@ export function MemberProfile() {
       const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'transfer' as const : tx.type as 'income' | 'expense' | 'transfer';
 
       return {
-        date: shortDate(tx.date),
+        date: shortDate(tx.date, locale),
         description: tx.description,
         debit: isCredit ? '\u2014' : formatAmount(tx.amount, locale, currency),
         credit: isCredit ? formatAmount(tx.amount, locale, currency) : '\u2014',
@@ -122,7 +118,7 @@ export function MemberProfile() {
         type: displayType,
       };
     }).reverse();
-  }, [sortedTxs]);
+  }, [sortedTxs, locale]);
 
   const animTotalBalance = useAnimatedValue(totalBalance);
   const animTotalIncome = useAnimatedValue(totalIncome);
@@ -135,7 +131,7 @@ export function MemberProfile() {
   const handleScroll = useCallback(() => {
     const el = carouselRef.current;
     if (!el) return;
-    const idx = Math.round(el.scrollLeft / (CARD_WIDTH + CARD_GAP));
+    const idx = Math.round(el.scrollLeft / (ACCOUNT_CARD_WIDTH + CARD_GAP));
     setActiveDot(Math.min(idx, memberAccounts.length - 1));
   }, [memberAccounts.length]);
 
@@ -203,7 +199,7 @@ export function MemberProfile() {
         </div>
         <div className={styles.carousel} ref={carouselRef}>
           {memberAccounts.length === 0 ? (
-            <div className="empty-state" style={{ padding: '40px 20px' }}>
+            <div className={styles.emptyState}>
               <p className="empty-state-text">No accounts</p>
               <button className={styles.emptyAddBtn} onClick={() => setShowAccountModal(true)}>+ Add Account</button>
             </div>
@@ -212,10 +208,10 @@ export function MemberProfile() {
               <AccountCard
                 key={acct.id}
                 name={acct.name}
-                type={acct.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                type={displayType(acct.type)}
                 balance={formatAmount(acct.balance, locale, currency)}
                 accountNumber={acct.id.slice(-4)}
-                gradient={ACCOUNT_GRADIENTS[acct.type]!}
+                gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
                 showChip={acct.type === 'cash'}
               />
             ))
@@ -283,10 +279,10 @@ export function MemberProfile() {
               <AccountCard
                 key={acct.id}
                 name={acct.name}
-                type={acct.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                type={displayType(acct.type)}
                 balance={formatAmount(acct.balance, locale, currency)}
                 accountNumber={acct.id.slice(-4)}
-                gradient={ACCOUNT_GRADIENTS[acct.type]!}
+                gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
                 showChip={acct.type === 'cash'}
               />
             ))
@@ -340,11 +336,9 @@ export function MemberProfile() {
           value={acctType}
           onChange={(e) => setAcctType(e.target.value as AccountType)}
         >
-          <option value="bank">Bank</option>
-          <option value="mobile_wallet">Mobile Wallet</option>
-          <option value="cash">Cash</option>
-          <option value="savings">Savings</option>
-          <option value="business">Business</option>
+          {ACCOUNT_TYPE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </FormSelect>
         <AmountInput
           label="Initial Balance (optional)"

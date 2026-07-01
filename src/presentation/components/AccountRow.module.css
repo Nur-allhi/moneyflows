@@ -38,6 +38,7 @@
   font-weight: 600;
   color: #fff;
   flex-shrink: 0;
+  background: var(--icon-bg);
 }
 
 .info {
@@ -66,4 +67,5 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
+  color: var(--accent);
 }

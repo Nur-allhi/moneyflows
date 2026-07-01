@@ -8,28 +8,17 @@ import { useLoanStore } from '../stores/useLoanStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { formatAmount } from '../utils/format';
+import { shortDate } from '../constants/dates';
+import { ACCOUNT_TYPE_ACCENT } from '../constants/labels';
+import { DASHBOARD_TX_FETCH_LIMIT, DASHBOARD_TX_DISPLAY_LIMIT } from '../constants/config';
+import type { AccountType } from '../../core/domain/Account';
 import styles from './Dashboard.module.css';
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function shortDate(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-}
 
 function txTypeForRow(t: string): 'income' | 'expense' | 'transfer' {
   if (t === 'income' || t === 'loan_repayment') return 'income';
   if (t === 'expense' || t === 'loan_issue') return 'expense';
   return 'transfer';
 }
-
-const ACCENT_MAP: Record<string, string> = {
-  bank: 'var(--color-income)',
-  mobile_wallet: 'var(--color-cash)',
-  cash: 'var(--color-teal)',
-  savings: 'var(--color-income)',
-  business: 'var(--color-purple)',
-};
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -41,7 +30,7 @@ export function Dashboard() {
 
   useEffect(() => {
     fetchAccounts();
-    fetchTransactions({ limit: 10 });
+    fetchTransactions({ limit: DASHBOARD_TX_FETCH_LIMIT });
     fetchLoanStacks();
   }, []);
 
@@ -65,7 +54,7 @@ export function Dashboard() {
   );
 
   const recentTx = useMemo(
-    () => transactions.slice(0, 7),
+    () => transactions.slice(0, DASHBOARD_TX_DISPLAY_LIMIT),
     [transactions],
   );
 
@@ -140,7 +129,7 @@ export function Dashboard() {
                   type={acct.type}
                   balance={<AnimatedAmount value={acct.balance} />}
                   icon={acct.icon ?? acct.name.slice(0, 2).toUpperCase()}
-                  accentColor={ACCENT_MAP[acct.type]}
+                  accentColor={ACCOUNT_TYPE_ACCENT[acct.type as AccountType]}
                 />
               ))
             )}
@@ -163,7 +152,7 @@ export function Dashboard() {
                 <TransactionRow
                   key={tx.id}
                   description={tx.description}
-                  date={shortDate(tx.date)}
+                  date={shortDate(tx.date, locale)}
                   amount={<AnimatedAmount value={tx.amount} />}
                   type={txTypeForRow(tx.type)}
                 />

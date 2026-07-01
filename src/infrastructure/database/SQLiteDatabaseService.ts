@@ -5,6 +5,7 @@ import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { LoanStack } from '../../core/domain/Loan';
 import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance } from '../../core/ports/IDatabaseService';
+import { STORAGE_KEY, EXPORT_FILENAME_PREFIX } from '../../presentation/constants/config';
 
 const SCHEMA = [
   "CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY,name TEXT NOT NULL,short_name TEXT,email TEXT,phone TEXT,avatar_url TEXT,is_external INTEGER NOT NULL DEFAULT 0,metadata TEXT DEFAULT '{}',created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT);",
@@ -25,7 +26,7 @@ const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS account_group_mappings (id TEXT PRIMARY KEY,account_group_id TEXT NOT NULL REFERENCES account_groups(id),account_id TEXT NOT NULL REFERENCES accounts(id),UNIQUE(account_group_id,account_id));',
 ].join('\n');
 
-const STORAGE_KEY = 'moneyflows_db';
+
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -87,7 +88,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `moneyflows_${new Date().toISOString().slice(0, 10)}.db`;
+    a.download = `${EXPORT_FILENAME_PREFIX}${new Date().toISOString().slice(0, 10)}.db`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

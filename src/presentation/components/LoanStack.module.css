@@ -56,14 +56,20 @@
 }
 
 .icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   display: grid;
   place-items: center;
   font-size: 16px;
   color: #fff;
   flex-shrink: 0;
+  font-weight: 600;
+  background: var(--icon-bg);
+}
+
+.headerMeta {
+  min-width: 0;
 }
 
 .fundSource {
@@ -90,6 +96,7 @@
   font-size: 15px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  color: var(--total-color);
 }
 
 .loanCount {
@@ -170,6 +177,7 @@
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 500;
+  color: var(--loan-color);
   font-variant-numeric: tabular-nums;
 }
 

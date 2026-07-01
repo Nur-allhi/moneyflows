@@ -7,6 +7,10 @@
   overflow: hidden;
 }
 
+.balanceLabel {
+  text-align: right;
+}
+
 .header {
   display: grid;
   grid-template-columns: 60px 1fr 72px 72px 72px;
@@ -28,10 +32,24 @@
 .body {
   max-height: 340px;
   overflow-y: auto;
+  max-height: var(--body-max-height, 340px);
 }
 
 .desktop .body {
   max-height: 360px;
+}
+
+.virtualContainer {
+  height: var(--total-height);
+  position: relative;
+}
+
+.virtualRow {
+  position: absolute;
+  top: var(--row-top);
+  left: 0;
+  right: 0;
+  height: var(--row-height, 48px);
 }
 
 .row {

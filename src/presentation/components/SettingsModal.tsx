@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useMemberStore } from '../stores/useMemberStore';
+import {
+  DESCRIPTION_MAX_LENGTH_MIN,
+  DESCRIPTION_MAX_LENGTH_MAX,
+  NUMPAD_MAX_DIGITS_MIN,
+  NUMPAD_MAX_DIGITS_MAX,
+  DASHBOARD_TX_LIMIT_MIN,
+  DASHBOARD_TX_LIMIT_MAX,
+} from '../constants/config';
 import styles from './Modal.module.css';
 
 interface SettingsModalProps {
@@ -88,8 +96,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <input
           className={styles.fieldInput}
           type="number"
-          min={50}
-          max={500}
+          min={DESCRIPTION_MAX_LENGTH_MIN}
+          max={DESCRIPTION_MAX_LENGTH_MAX}
           value={descriptionMaxLength}
           onChange={(e) => setDescriptionMaxLength(Number(e.target.value))}
         />
@@ -100,8 +108,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <input
           className={styles.fieldInput}
           type="number"
-          min={5}
-          max={15}
+          min={NUMPAD_MAX_DIGITS_MIN}
+          max={NUMPAD_MAX_DIGITS_MAX}
           value={numpadMaxDigits}
           onChange={(e) => setNumpadMaxDigits(Number(e.target.value))}
         />
@@ -112,8 +120,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <input
           className={styles.fieldInput}
           type="number"
-          min={5}
-          max={50}
+          min={DASHBOARD_TX_LIMIT_MIN}
+          max={DASHBOARD_TX_LIMIT_MAX}
           value={dashboardTxLimit}
           onChange={(e) => setDashboardTxLimit(Number(e.target.value))}
         />

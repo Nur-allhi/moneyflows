@@ -40,7 +40,7 @@ export function RecycleRow({
         <div className={styles.name}>{name}</div>
         <div className={styles.meta}>{meta}</div>
       </div>
-      <span className={styles.amount} style={{ color: amountColor ?? 'var(--color-text)' }}>{amount}</span>
+      <span className={styles.amount} style={{ '--amount-color': amountColor ?? 'var(--color-text)' } as React.CSSProperties}>{amount}</span>
       <span className={styles.date}>{date}</span>
       <div className={styles.actions}>
         <button className={`${styles.actionBtn} ${styles.restore}`} onClick={onRestore} title="Restore" aria-label="Restore">

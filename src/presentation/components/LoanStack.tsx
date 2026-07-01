@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import type { CSSProperties } from 'react';
 import styles from './LoanStack.module.css';
 
 export interface LoanStackLoan {
@@ -57,16 +56,16 @@ export function LoanStack({ stacks, className = '' }: LoanStackProps) {
               aria-expanded={isExpanded}
             >
               <div className={styles.headerLeft}>
-                <div className={styles.icon} style={{ background: stack.iconGradient as CSSProperties['background'] }}>
+                <div className={styles.icon} style={{ '--icon-bg': stack.iconGradient } as React.CSSProperties}>
                   {stack.icon}
                 </div>
-                <div style={{ minWidth: 0 }}>
+                <div className={styles.headerMeta}>
                   <div className={styles.fundSource}>{stack.fundSource}</div>
                   <div className={styles.meta}>{stack.sourceMeta}</div>
                 </div>
               </div>
               <div className={styles.headerRight}>
-                <div className={styles.total} style={{ color: stack.totalColor ?? 'var(--color-text)' }}>
+                <div className={styles.total} style={{ '--total-color': stack.totalColor ?? 'var(--color-text)' } as React.CSSProperties}>
                   {stack.totalAmount}
                 </div>
                 <div className={styles.loanCount}>{stack.loanCount} {stack.loanCount === 1 ? 'loan' : 'loans'}</div>
@@ -87,7 +86,7 @@ export function LoanStack({ stacks, className = '' }: LoanStackProps) {
                     <span className={styles.loanDesc}>{loan.description}</span>
                     <span className={styles.loanDate}>{loan.date}</span>
                     <span className={styles.loanAmount}>{loan.amount}</span>
-                    <span className={styles.loanAmount} style={{ color: loan.remainingColor ?? 'var(--color-text)' }}>
+                    <span className={styles.loanAmount} style={{ '--loan-color': loan.remainingColor ?? 'var(--color-text)' } as React.CSSProperties}>
                       {loan.remaining}
                     </span>
                     <span className={`${styles.loanStatus} ${statusClassMap[loan.status] ?? ''}`}>

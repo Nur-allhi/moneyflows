@@ -1,25 +1,20 @@
 import type { ReactNode } from 'react';
+import { TX_TYPE_ICON } from '../constants/labels';
 import styles from './TransactionRow.module.css';
 
-type TransactionType = 'income' | 'expense' | 'transfer';
+type DisplayType = 'income' | 'expense' | 'transfer';
 
 interface TransactionRowProps {
   description: string;
   date: string;
   amount: ReactNode;
-  type: TransactionType;
+  type: DisplayType;
   icon?: string;
   className?: string;
   onClick?: () => void;
 }
 
-const typeIconMap: Record<TransactionType, string> = {
-  expense: '\u{1F4B8}',
-  income: '\u{1F4B5}',
-  transfer: '\u{1F91D}',
-};
-
-const typeIconClassMap: Record<TransactionType, string> = {
+const typeIconClassMap: Record<DisplayType, string> = {
   expense: styles.iconExpense ?? '',
   income: styles.iconIncome ?? '',
   transfer: styles.iconTransfer ?? '',
@@ -44,7 +39,7 @@ export function TransactionRow({
       tabIndex={onClick ? 0 : undefined}
     >
       <div className={`${styles.icon} ${typeIconClassMap[type]}`}>
-        {icon ?? typeIconMap[type]}
+        {icon ?? TX_TYPE_ICON[type]}
       </div>
       <div className={styles.info}>
         <div className={styles.description}>{description}</div>

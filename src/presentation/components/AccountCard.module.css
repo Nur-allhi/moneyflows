@@ -12,6 +12,12 @@
   cursor: pointer;
   transition: transform var(--transition-fast);
   will-change: transform;
+  background: var(--card-bg);
+}
+
+.cardIcon {
+  font-size: 16px;
+  opacity: 0.6;
 }
 
 .card:hover {

@@ -72,15 +72,15 @@ export function RecycleBin() {
     <div className={styles.recycle}>
       <div className={styles.stats}>
         <div className={styles.statItem}>
-          <span className={styles.statNum} style={{ color: 'var(--color-text-secondary)' }}>{deletedItems.length}</span>
+          <span className={styles.statNum}>{deletedItems.length}</span>
           <span className={styles.statLabel}>Deleted Items</span>
         </div>
         <div className={styles.statItem}>
-          <span className={styles.statNum} style={{ color: 'var(--color-expense)' }}>{formatAmount(totalAmount, locale, currency)}</span>
+          <span className={`${styles.statNum} ${styles.statExpense}`}>{formatAmount(totalAmount, locale, currency)}</span>
           <span className={styles.statLabel}>Total Amount</span>
         </div>
         <div className={styles.statItem}>
-          <span className={styles.statNum} style={{ color: 'var(--color-income)' }}>30</span>
+          <span className={`${styles.statNum} ${styles.statIncome}`}>30</span>
           <span className={styles.statLabel}>Days Until Auto-Purge</span>
         </div>
         <div className={styles.actionBar}>
@@ -89,34 +89,18 @@ export function RecycleBin() {
       </div>
 
       <div className={styles.listPanel}>
-        <div style={{ display: 'flex', gap: 0, padding: '0 24px', borderBottom: '1px solid var(--color-border)' }}>
+        <div className={styles.tabBar}>
           {['all', 'transactions', 'accounts'].map((key) => {
             const labels: Record<string, string> = { all: 'All Items', transactions: 'Transactions', accounts: 'Accounts' };
+            const isActive = activeTab === key;
             return (
               <button
                 key={key}
+                className={`${styles.tabBtn} ${isActive ? styles.tabActive : ''}`}
                 onClick={() => setActiveTab(key)}
-                style={{
-                  padding: '12px 20px',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: activeTab === key ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                  border: 'none',
-                  background: 'none',
-                  cursor: 'pointer',
-                  borderBottom: activeTab === key ? '2px solid var(--color-primary)' : '2px solid transparent',
-                  fontFamily: 'inherit',
-                  transition: 'all 0.2s',
-                }}
               >
                 {labels[key] ?? key}
-                <span style={{
-                  fontSize: 11,
-                  background: activeTab === key ? 'oklch(62% 0.22 290 / 0.15)' : 'oklch(100% 0 0 / 0.08)',
-                  padding: '1px 7px',
-                  borderRadius: 999,
-                  marginLeft: 6,
-                }}>
+                <span className={`${styles.tabBadge} ${isActive ? styles.tabBadgeActive : ''}`}>
                   {tabCount(key)}
                 </span>
               </button>
@@ -129,12 +113,12 @@ export function RecycleBin() {
           <span>Name</span>
           <span>Amount</span>
           <span>Deleted</span>
-          <span style={{ textAlign: 'right' }}>Actions</span>
+          <span className={styles.actionsLabel}>Actions</span>
         </div>
 
         <div className={styles.listBody}>
           {filteredItems.length === 0 ? (
-            <div className="empty-state" style={{ padding: '60px 24px' }}>
+            <div className="empty-state">
               <div className="empty-state-icon">{'\uD83D\uDDD1\uFE0F'}</div>
               <p className="empty-state-text">No deleted items</p>
             </div>

@@ -3,6 +3,10 @@
   flex-direction: column;
 }
 
+.emptyState {
+  padding: 40px 20px;
+}
+
 .mobileOnly {
   display: block;
 }

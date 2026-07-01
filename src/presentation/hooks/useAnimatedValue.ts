@@ -1,10 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
+import { ANIMATION_DURATION } from '../constants/config';
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-export function useAnimatedValue(target: number, duration = 600): number {
+export function useAnimatedValue(target: number, duration = ANIMATION_DURATION): number {
   const prevTargetRef = useRef(target);
   const startTimeRef = useRef(0);
   const startValueRef = useRef(0);

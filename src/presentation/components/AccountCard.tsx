@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import styles from './AccountCard.module.css';
 
 interface AccountCardProps {
@@ -29,7 +29,7 @@ export function AccountCard({
   return (
     <div
       className={`${styles.card} ${className}`}
-      style={{ background: gradient as CSSProperties['background'] }}
+      style={{ '--card-bg': gradient } as React.CSSProperties}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -47,7 +47,7 @@ export function AccountCard({
         <span className={styles.number}>
           {accountNumber ? `•••• ${accountNumber}` : '•••• ••••'}
         </span>
-        {icon && <span style={{ fontSize: 16, opacity: 0.6 }}>{icon}</span>}
+        {icon && <span className={styles.cardIcon}>{icon}</span>}
       </div>
     </div>
   );
