@@ -44,6 +44,7 @@ export function MemberProfile() {
   } = useTransactionStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
 
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [acctName, setAcctName] = useState('');
   const [acctType, setAcctType] = useState<AccountType>('bank');
@@ -85,6 +86,16 @@ export function MemberProfile() {
     [transactions, memberAccounts],
   );
 
+  const accountTxs = useMemo(
+    () => {
+      if (!selectedAccountId) return memberTxs;
+      return memberTxs.filter(
+        (t) => t.sourceAccount === selectedAccountId || t.destAccount === selectedAccountId,
+      );
+    },
+    [memberTxs, selectedAccountId],
+  );
+
   const totalIncome = useMemo(
     () => memberTxs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0),
     [memberTxs],
@@ -96,13 +107,35 @@ export function MemberProfile() {
   );
 
   const sortedTxs = useMemo(
-    () => [...memberTxs].sort((a, b) => a.date.localeCompare(b.date)),
-    [memberTxs],
+    () => [...accountTxs].sort((a, b) => a.date.localeCompare(b.date)),
+    [accountTxs],
   );
 
+  const showBalance = selectedAccountId !== null;
+
   const ledgerRows: LedgerRow[] = useMemo(() => {
-    let running = 0;
-    return sortedTxs.map((tx) => {
+    if (!showBalance) {
+      return [...sortedTxs].reverse().map((tx) => {
+        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
+        const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'transfer' as const : tx.type as 'income' | 'expense' | 'transfer';
+        return {
+          date: shortDate(tx.date, locale),
+          description: tx.description,
+          debit: isCredit ? '\u2014' : formatAmount(tx.amount, locale, currency),
+          credit: isCredit ? formatAmount(tx.amount, locale, currency) : '\u2014',
+          type: displayType,
+        };
+      });
+    }
+    const selectedAcct = memberAccounts.find((a) => a.id === selectedAccountId);
+    const accountBalance = selectedAcct?.balance ?? 0;
+    const netChange = sortedTxs.reduce((sum, tx) => {
+      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
+      return isCredit ? sum + tx.amount : sum - tx.amount;
+    }, 0);
+    const startBalance = accountBalance - netChange;
+    let running = startBalance;
+    const rows = sortedTxs.map((tx) => {
       const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
       if (isCredit) running += tx.amount;
       else running -= tx.amount;
@@ -117,16 +150,29 @@ export function MemberProfile() {
         balance: formatAmount(running, locale, currency),
         type: displayType,
       };
-    }).reverse();
-  }, [sortedTxs, locale]);
-
-  const animTotalBalance = useAnimatedValue(totalBalance);
-  const animTotalIncome = useAnimatedValue(totalIncome);
-  const animTotalExpenses = useAnimatedValue(totalExpenses);
+    });
+    rows.unshift({
+      date: shortDate(selectedAcct?.createdAt ?? '', locale),
+      description: 'Opening Balance',
+      debit: '\u2014',
+      credit: formatAmount(startBalance, locale, currency),
+      balance: formatAmount(startBalance, locale, currency),
+      type: 'income' as const,
+    });
+    return rows.reverse();
+  }, [sortedTxs, locale, showBalance, memberAccounts, selectedAccountId]);
 
   const filteredLedger = ledgerFilter === 'all'
     ? ledgerRows
     : ledgerRows.filter((row) => row.type === ledgerFilter);
+
+  const handleAccountClick = useCallback((acctId: string) => {
+    setSelectedAccountId((prev) => prev === acctId ? null : acctId);
+  }, []);
+
+  const animTotalBalance = useAnimatedValue(totalBalance);
+  const animTotalIncome = useAnimatedValue(totalIncome);
+  const animTotalExpenses = useAnimatedValue(totalExpenses);
 
   const handleScroll = useCallback(() => {
     const el = carouselRef.current;
@@ -144,6 +190,11 @@ export function MemberProfile() {
 
   const loading = mLoading || aLoading || tLoading;
   const error = mError || aError || tError;
+
+  const selectedAcct = selectedAccountId ? memberAccounts.find((a) => a.id === selectedAccountId) : undefined;
+  const ledgerTitle = selectedAcct
+    ? `${selectedAcct.name} — ${formatAmount(selectedAcct.balance, locale, currency)}`
+    : 'All Accounts Ledger';
 
   if (loading) {
     return (
@@ -213,6 +264,8 @@ export function MemberProfile() {
                 accountNumber={acct.id.slice(-4)}
                 gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
                 showChip={acct.type === 'cash'}
+                onClick={() => handleAccountClick(acct.id)}
+                selected={selectedAccountId === acct.id}
               />
             ))
           )}
@@ -284,6 +337,8 @@ export function MemberProfile() {
                 accountNumber={acct.id.slice(-4)}
                 gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
                 showChip={acct.type === 'cash'}
+                onClick={() => handleAccountClick(acct.id)}
+                selected={selectedAccountId === acct.id}
               />
             ))
           )}
@@ -293,16 +348,20 @@ export function MemberProfile() {
       <div className={styles.contentSplit}>
         <div className={styles.ledgerPanel}>
           <div className={styles.ledgerPanelHead}>
-            <h3>Account Ledger</h3>
+            <h3>{ledgerTitle}</h3>
             <div className={styles.ledgerPanelFilter}>
-              <SegmentedTabs
-                tabs={ledgerFilters}
-                activeKey={ledgerFilter}
-                onChange={setLedgerFilter}
-              />
+              {selectedAccountId ? (
+                <button className={styles.showAllBtn} onClick={() => setSelectedAccountId(null)}>Show all</button>
+              ) : (
+                <SegmentedTabs
+                  tabs={ledgerFilters}
+                  activeKey={ledgerFilter}
+                  onChange={setLedgerFilter}
+                />
+              )}
             </div>
           </div>
-          <LedgerTable rows={filteredLedger} desktop />
+          <LedgerTable rows={filteredLedger} desktop showBalance={showBalance} />
         </div>
       </div>
 

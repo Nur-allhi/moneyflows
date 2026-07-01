@@ -12,6 +12,7 @@ interface AccountCardProps {
   icon?: string;
   className?: string;
   onClick?: () => void;
+  selected?: boolean;
 }
 
 export function AccountCard({
@@ -25,10 +26,11 @@ export function AccountCard({
   icon,
   className = '',
   onClick,
+  selected = false,
 }: AccountCardProps) {
   return (
     <div
-      className={`${styles.card} ${className}`}
+      className={`${styles.card} ${selected ? styles.selected : ''} ${className}`}
       style={{ '--card-bg': gradient } as React.CSSProperties}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
