@@ -11,6 +11,7 @@ interface TransactionState {
   fetchTransactions: (filters?: TransactionFilter) => Promise<void>;
   setFilters: (filters: TransactionFilter) => void;
   addTransaction: (tx: Transaction) => Promise<void>;
+  updateTransaction: (id: string, tx: Transaction) => Promise<void>;
   softDeleteTransaction: (id: string) => Promise<void>;
 }
 
@@ -24,7 +25,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const db = getDatabase();
-      const f = filters ?? get().filters;
+      const f = filters ?? {};
       const transactions = await db.getTransactions(f);
       set({ transactions, filters: f, loading: false });
     } catch (err) {
@@ -40,6 +41,17 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     set({ transactions: [tx, ...prev], error: null });
     try {
       await db.saveTransaction(tx);
+    } catch (err) {
+      set({ transactions: prev, error: (err as Error).message });
+    }
+  },
+
+  updateTransaction: async (id, tx) => {
+    const prev = get().transactions;
+    const db = getDatabase();
+    set({ transactions: prev.map((t) => (t.id === id ? tx : t)), error: null });
+    try {
+      await db.updateTransaction(id, tx);
     } catch (err) {
       set({ transactions: prev, error: (err as Error).message });
     }

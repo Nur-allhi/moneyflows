@@ -140,7 +140,7 @@ function SelectItem({
         "relative flex w-full cursor-default items-center gap-3 rounded-xl text-sm outline-hidden select-none transition-all hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}
-      style={{ paddingBlock: "14px", paddingRight: "48px", paddingLeft: "20px" }}
+      style={{ paddingBlock: "10px", paddingRight: "48px", paddingLeft: "20px" }}
       {...props}
     >
       <SelectPrimitive.ItemText className="flex flex-1 min-w-0 gap-3">

@@ -73,6 +73,7 @@ export function MemberList() {
             <div className={styles.cardLeft}>
               <Avatar
                 initial={m.shortName?.[0] ?? m.name[0]!}
+                seed={m.name}
                 name={m.name}
                 size={48}
               />

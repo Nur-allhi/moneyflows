@@ -33,7 +33,7 @@ const cards = [
     desc: 'Bottom-sheet modal with segmented tabs, account pickers, and numeric keypad for transfers',
     badge: 'Mobile overlay \u2022 9:16',
     badgeClass: styles.badgeOverlay,
-    to: '/transaction',
+    to: '',
   },
   {
     icon: '\uD83D\uDDD1\uFE0F',

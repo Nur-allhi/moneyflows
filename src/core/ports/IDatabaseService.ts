@@ -55,6 +55,7 @@ export interface IDatabaseService {
   getTransactions(filters?: TransactionFilter): Promise<Transaction[]>;
   getTransactionById(id: string): Promise<Transaction | null>;
   saveTransaction(tx: Transaction): Promise<void>;
+  updateTransaction(id: string, tx: Transaction): Promise<void>;
   softDeleteTransaction(id: string): Promise<void>;
   restoreTransaction(id: string): Promise<void>;
   purgeTransaction(id: string): Promise<void>;

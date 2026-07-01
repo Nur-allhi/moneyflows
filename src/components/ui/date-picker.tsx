@@ -13,7 +13,16 @@ interface DatePickerProps {
 
 export function DatePicker({ value, onChange, className }: DatePickerProps) {
   const [open, setOpen] = useState(false)
-  const date = value ? new Date(value + "T00:00:00") : undefined
+  function toLocalDate(iso: string): Date {
+    const parts = iso.split('-');
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  }
+
+  function toLocalISO(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  const date = value ? toLocalDate(value) : undefined
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -31,7 +40,7 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
           selected={date}
           onSelect={(d) => {
             if (d) {
-              onChange(d.toISOString().slice(0, 10))
+              onChange(toLocalISO(d))
               setOpen(false)
             }
           }}

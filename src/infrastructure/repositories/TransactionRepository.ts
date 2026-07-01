@@ -37,6 +37,10 @@ export class TransactionRepository {
     return this.db.saveTransaction(transaction);
   }
 
+  async update(id: string, transaction: Transaction): Promise<void> {
+    return this.db.updateTransaction(id, transaction);
+  }
+
   async softDelete(id: string): Promise<void> {
     return this.db.softDeleteTransaction(id);
   }

@@ -126,6 +126,109 @@
   color: var(--color-text-secondary);
 }
 
+.inputField {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.inputField:hover {
+  border-color: var(--color-primary);
+}
+
+.inputField:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.selectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.selectTrigger:hover {
+  border-color: var(--color-primary);
+}
+
+.selectTrigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.selectItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.selectItemName {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selectItemMeta {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.selectItemBalance {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.slideField {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--transition-normal);
+}
+
+.slideOpen {
+  grid-template-rows: 1fr;
+}
+
+.slideInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .amountRow {
   display: flex;
   align-items: center;

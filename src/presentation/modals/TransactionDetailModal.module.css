@@ -1,0 +1,123 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.type {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.amount {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.desc {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+
+.grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fieldKey {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.value {
+  font-size: 13px;
+  text-align: right;
+  font-weight: 500;
+}
+
+.member {
+  display: inline;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-left: 4px;
+}
+
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: width var(--transition-normal), border-radius var(--transition-normal), background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  padding: 0;
+}
+
+.iconBtn:hover {
+  width: 90px;
+  border-radius: 999px;
+  gap: 6px;
+  padding-left: 5px;
+}
+
+.iconBtn:hover .btnLabel {
+  opacity: 1;
+  max-width: 60px;
+}
+
+.icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btnLabel {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity var(--transition-fast), max-width var(--transition-normal);
+  font-size: 13px;
+  white-space: nowrap;
+}

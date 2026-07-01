@@ -19,11 +19,12 @@
   border: none;
   background: none;
   font-family: inherit;
+  position: relative;
 }
 
 .tab:hover:not(.active) {
   color: var(--color-text);
-  box-shadow: 0 0 20px var(--color-primary-glow);
+  background: oklch(100% 0 0 / 0.06);
 }
 
 .tab:focus-visible {
@@ -45,4 +46,12 @@
 .active {
   background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
   color: #fff;
+  box-shadow: 0 0 16px var(--color-primary-glow);
+  animation: popIn 0.25s ease-out;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.92); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
 }

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import styles from './Header.module.css';
 
@@ -10,7 +10,6 @@ interface BreadcrumbItem {
 interface HeaderProps {
   title?: string;
   showBack?: boolean;
-  backTo?: string;
   showLogo?: boolean;
   showDate?: boolean;
   breadcrumb?: BreadcrumbItem[];
@@ -25,19 +24,19 @@ function formatDate(): string {
 export function Header({
   title,
   showBack = false,
-  backTo = '/',
   showLogo = true,
   showDate = true,
   breadcrumb,
   className = '',
 }: HeaderProps) {
+  const navigate = useNavigate();
   return (
     <header className={`${styles.header} ${className}`}>
       <div className={styles.left}>
         {showBack && (
-          <Link to={backTo} className={styles.backBtn} aria-label="Back">
+          <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
             {'\u2190'}
-          </Link>
+          </button>
         )}
         {breadcrumb ? (
           <div className={styles.breadcrumb}>
