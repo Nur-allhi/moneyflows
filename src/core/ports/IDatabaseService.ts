@@ -2,12 +2,13 @@ import type { Member } from '../domain/Member';
 import type { Account } from '../domain/Account';
 import type { Transaction } from '../domain/Transaction';
 import type { AccountGroup } from '../domain/AccountGroup';
-import type { LoanStack } from '../domain/Loan';
+import type { Loan, LoanStack } from '../domain/Loan';
 
 export interface TransactionFilter {
   memberId?: string;
   accountId?: string;
   type?: string;
+  loanRef?: string;
   startDate?: string;
   endDate?: string;
   limit?: number;
@@ -62,6 +63,12 @@ export interface IDatabaseService {
 
   getLoanStacks(): Promise<LoanStack[]>;
   getLoanStackByDebtor(debtorId: string): Promise<LoanStack | null>;
+
+  getLoans(direction?: string): Promise<Loan[]>;
+  getLoansByCounterparty(counterpartyId: string): Promise<Loan[]>;
+  getLoanById(id: string): Promise<Loan | null>;
+  saveLoan(loan: Loan): Promise<void>;
+  softDeleteLoan(id: string): Promise<void>;
 
   getAccountGroups(): Promise<AccountGroup[]>;
   getAccountGroupsWithMembers(): Promise<(AccountGroup & { accountIds: string[] })[]>;

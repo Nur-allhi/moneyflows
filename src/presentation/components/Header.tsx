@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
+import { useModalStore } from '../stores/useModalStore';
 import styles from './Header.module.css';
 
 interface BreadcrumbItem {
@@ -60,6 +61,11 @@ export function Header({
       </div>
       <div className={styles.right}>
         {showDate && <span className={styles.date}>{formatDate()}</span>}
+        <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form')} aria-label="New transaction">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
         <button className={styles.notifBtn} aria-label="Notifications">
           {'\uD83D\uDD14'}
         </button>

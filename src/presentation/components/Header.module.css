@@ -85,6 +85,34 @@
   letter-spacing: 0.02em;
 }
 
+.addBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.addBtn:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 16px var(--color-primary-glow);
+}
+
+.addBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.addBtn:active {
+  opacity: 0.8;
+}
+
 .notifBtn {
   width: 36px;
   height: 36px;

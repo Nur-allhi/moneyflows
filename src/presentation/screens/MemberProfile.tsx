@@ -22,6 +22,7 @@ const ledgerFilters = [
   { key: 'income', label: 'Income' },
   { key: 'expense', label: 'Expense' },
   { key: 'transfer', label: 'Transfer' },
+  { key: 'loan', label: 'Loan' },
 ];
 
 export function MemberProfile() {
@@ -164,7 +165,7 @@ export function MemberProfile() {
     if (!showBalance) {
       return [...displayedTxs].reverse().map((tx) => {
         const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
-        const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'transfer' as const : tx.type as 'income' | 'expense' | 'transfer';
+        const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
         return {
           id: tx.id,
           date: shortDate(tx.date, locale),
@@ -189,7 +190,7 @@ export function MemberProfile() {
       if (isCredit) running += tx.amount;
       else running -= tx.amount;
 
-      const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'transfer' as const : tx.type as 'income' | 'expense' | 'transfer';
+      const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
 
       return {
         id: tx.id,
@@ -299,7 +300,7 @@ export function MemberProfile() {
       ? pdfRows
       : pdfRows.filter((r) => {
           const typeKey = r.type.toLowerCase().replace(/\s+/g, '_');
-          return typeKey === ledgerFilter || (ledgerFilter === 'income' && typeKey === 'opening_balance');
+          return typeKey === ledgerFilter || (ledgerFilter === 'income' && typeKey === 'opening_balance') || (ledgerFilter === 'loan' && (typeKey === 'loan_issue' || typeKey === 'loan_repayment'));
         });
 
     if (filteredPdfRows.length === 0) return;

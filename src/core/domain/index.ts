@@ -5,4 +5,5 @@ export type { AccountType } from './Account';
 export { Transaction } from './Transaction';
 export type { TransactionType } from './Transaction';
 export { AccountGroup } from './AccountGroup';
-export type { LoanStack, LoanItem } from './Loan';
+export { Loan } from './Loan';
+export type { LoanDirection, LoanStatus, LoanStack, LoanItem } from './Loan';

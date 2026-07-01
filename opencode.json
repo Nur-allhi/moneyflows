@@ -4,6 +4,10 @@
     "playwright": {
       "type": "local",
       "command": ["C:\\Program Files\\nodejs\\node.exe", "node_modules/@playwright/mcp/cli.js"]
+    },
+    "gitnexus": {
+      "type": "local",
+      "command": ["gitnexus", "mcp"]
     }
   },
   "skills": {

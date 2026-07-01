@@ -5,7 +5,7 @@ import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
 import { formatAmount } from '../utils/format';
-import { TX_TYPE_ICON } from '../constants/labels';
+import { TX_TYPE_ICON, displayTxType } from '../constants/labels';
 import styles from './TransactionDetailModal.module.css';
 
 interface TransactionDetailModalProps {
@@ -23,7 +23,6 @@ export function TransactionDetailModal({ txId, onClose }: TransactionDetailModal
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
   const memberLookup = new Map(members.map((m) => [m.id, m]));
-  const memberMap = new Map(members.filter((m) => m.isExternal).map((m) => [m.id, m]));
 
   const handleEdit = () => {
     onClose();
@@ -59,7 +58,7 @@ export function TransactionDetailModal({ txId, onClose }: TransactionDetailModal
     >
       <div className={styles.body}>
         <div className={styles.type}>
-          {transaction.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+          {displayTxType(transaction.type)}
         </div>
         <div className={styles.amount}>{formatAmount(transaction.amount, locale, currency)}</div>
         <div className={styles.desc}>{transaction.description}</div>
@@ -75,7 +74,7 @@ export function TransactionDetailModal({ txId, onClose }: TransactionDetailModal
           </div>
           {transaction.sourceAccount && (() => {
             const acct = accountMap.get(transaction.sourceAccount!);
-            const fromMember = acct ? memberLookup.get(acct.memberId) : null;
+            const fromMember = acct && acct.memberId ? memberLookup.get(acct.memberId) : null;
             return (
               <div className={styles.field}>
                 <span className={styles.fieldKey}>From Account</span>
@@ -88,7 +87,7 @@ export function TransactionDetailModal({ txId, onClose }: TransactionDetailModal
           })()}
           {transaction.destAccount && (() => {
             const acct = accountMap.get(transaction.destAccount!);
-            const toMember = acct ? memberLookup.get(acct.memberId) : null;
+            const toMember = acct && acct.memberId ? memberLookup.get(acct.memberId) : null;
             return (
               <div className={styles.field}>
                 <span className={styles.fieldKey}>To Account</span>
@@ -99,14 +98,47 @@ export function TransactionDetailModal({ txId, onClose }: TransactionDetailModal
               </div>
             );
           })()}
-          {transaction.debtorId && (
-            <div className={styles.field}>
-              <span className={styles.fieldKey}>Debtor</span>
-              <span className={styles.value}>
-                {memberMap.get(transaction.debtorId)?.name ?? 'Unknown'}
-              </span>
-            </div>
-          )}
+          {(() => {
+            const srcAcct = transaction.sourceAccount ? accountMap.get(transaction.sourceAccount) : null;
+            const dstAcct = transaction.destAccount ? accountMap.get(transaction.destAccount) : null;
+            const cpAcct = srcAcct?.type === 'counterparty' ? srcAcct : dstAcct?.type === 'counterparty' ? dstAcct : null;
+            if (cpAcct) {
+              const cpType = (cpAcct.metadata?.counterpartyType as string) ?? 'debtor';
+              return (
+                <div className={styles.field}>
+                  <span className={styles.fieldKey}>{cpType === 'creditor' ? 'Creditor' : 'Debtor'}</span>
+                  <span className={styles.value}>{cpAcct.name}</span>
+                </div>
+              );
+            }
+            if (transaction.type === 'loan_issue' || transaction.type === 'loan_repayment') {
+              const isLoanType = transaction.type === 'loan_issue' || transaction.type === 'loan_repayment';
+              if (!isLoanType) return null;
+              if (transaction.debtorId) {
+                const debtorMember = memberLookup.get(transaction.debtorId);
+                if (debtorMember) {
+                  return (
+                    <div className={styles.field}>
+                      <span className={styles.fieldKey}>Borrower</span>
+                      <span className={styles.value}>{debtorMember.name}</span>
+                    </div>
+                  );
+                }
+              }
+              const borrowerId = transaction.type === 'loan_issue' ? transaction.destAccount : transaction.sourceAccount;
+              const borrowerAcct = borrowerId ? accountMap.get(borrowerId) : null;
+              if (borrowerAcct) {
+                const owner = borrowerAcct.memberId ? memberLookup.get(borrowerAcct.memberId) : null;
+                return (
+                  <div className={styles.field}>
+                    <span className={styles.fieldKey}>Borrower</span>
+                    <span className={styles.value}>{borrowerAcct.name}{owner ? ` \u2014 ${owner.name}` : ''}</span>
+                  </div>
+                );
+              }
+            }
+            return null;
+          })()}
           {transaction.loanRef && (
             <div className={styles.field}>
               <span className={styles.fieldKey}>Loan Reference</span>

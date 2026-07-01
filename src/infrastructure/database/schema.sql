@@ -16,9 +16,9 @@ CREATE INDEX IF NOT EXISTS idx_members_deleted ON members(deleted_at);
 
 CREATE TABLE IF NOT EXISTS accounts (
   id          TEXT PRIMARY KEY,
-  member_id   TEXT NOT NULL REFERENCES members(id),
+  member_id   TEXT REFERENCES members(id),
   name        TEXT NOT NULL,
-  type        TEXT NOT NULL CHECK(type IN ('bank', 'mobile_wallet', 'cash', 'savings', 'business')),
+  type        TEXT NOT NULL CHECK(type IN ('bank', 'mobile_wallet', 'cash', 'savings', 'business', 'counterparty')),
   balance     REAL NOT NULL DEFAULT 0,
   currency    TEXT NOT NULL DEFAULT 'BDT',
   icon        TEXT,
@@ -36,7 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_accounts_type ON accounts(type);
 
 CREATE TABLE IF NOT EXISTS transactions (
   id              TEXT PRIMARY KEY,
-  type            TEXT NOT NULL CHECK(type IN ('income', 'expense', 'transfer', 'loan_issue', 'loan_repayment')),
+  type            TEXT NOT NULL CHECK(type IN ('income', 'expense', 'transfer', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback')),
   description     TEXT NOT NULL,
   amount          REAL NOT NULL CHECK(amount > 0),
   source_account  TEXT REFERENCES accounts(id),
@@ -58,6 +58,24 @@ CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(source_accou
 CREATE INDEX IF NOT EXISTS idx_transactions_deleted ON transactions(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_transactions_debtor ON transactions(debtor_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_loan_ref ON transactions(loan_ref);
+
+CREATE TABLE IF NOT EXISTS loans (
+  id              TEXT PRIMARY KEY,
+  direction       TEXT NOT NULL CHECK(direction IN ('given', 'received')),
+  counterparty_id TEXT NOT NULL REFERENCES accounts(id),
+  amount          REAL NOT NULL CHECK(amount > 0),
+  outstanding     REAL NOT NULL DEFAULT 0,
+  status          TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'settled')),
+  description     TEXT DEFAULT '',
+  metadata        TEXT DEFAULT '{}',
+  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+  deleted_at      TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_loans_counterparty ON loans(counterparty_id);
+CREATE INDEX IF NOT EXISTS idx_loans_direction ON loans(direction);
+CREATE INDEX IF NOT EXISTS idx_loans_deleted ON loans(deleted_at);
 
 CREATE TABLE IF NOT EXISTS account_groups (
   id          TEXT PRIMARY KEY,
