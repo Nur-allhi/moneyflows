@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { DatePicker } from '../../components/ui/date-picker';
 import { SegmentedTabs, FormTextarea, Numpad, LoanFormSection } from '../components';
@@ -16,6 +16,13 @@ import styles from './TransactionFormModal.module.css';
 
 interface TransactionFormModalProps {
   onClose: () => void;
+  initialTab?: string;
+  initialLoanMode?: LoanMode;
+  initialCounterpartyId?: string;
+  initialSource?: string;
+  initialDestination?: string;
+  initialLoanTargetType?: 'external' | 'internal';
+  internalAction?: 'issue' | 'repay';
 }
 
 const tabs = [
@@ -151,20 +158,29 @@ function validateForm(
   return next;
 }
 
-export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
+export function TransactionFormModal({
+  onClose,
+  initialTab,
+  initialLoanMode,
+  initialCounterpartyId,
+  initialSource,
+  initialDestination,
+  initialLoanTargetType,
+  internalAction,
+}: TransactionFormModalProps) {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
   const { members, loading: memberLoading, fetchMembers } = useMemberStore();
   const { addTransaction, error: txError } = useTransactionStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
 
-  const [tab, setTab] = useState('transfer');
+  const [tab, setTab] = useState(initialTab ?? 'transfer');
   const [rawAmount, setRawAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [source, setSource] = useState('');
-  const [destination, setDestination] = useState('');
-  const [debtor, setDebtor] = useState('');
-  const [loanMode, setLoanMode] = useState<LoanMode>('give');
-  const [loanTargetType, setLoanTargetType] = useState<'external' | 'internal'>('external');
+  const [source, setSource] = useState(initialSource ?? '');
+  const [destination, setDestination] = useState(initialDestination ?? '');
+  const [debtor, setDebtor] = useState(initialCounterpartyId ?? '');
+  const [loanMode, setLoanMode] = useState<LoanMode>(initialLoanMode ?? 'give');
+  const [loanTargetType, setLoanTargetType] = useState<'external' | 'internal'>(initialLoanTargetType ?? 'external');
   const counterpartyType: 'debtor' | 'creditor' =
     loanMode === 'take' || loanMode === 'payback' ? 'creditor' : 'debtor';
   const counterpartyLabel = counterpartyType === 'debtor' ? 'Debtor' : 'Creditor';
@@ -183,14 +199,21 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
     fetchMembers();
   }, []);
 
+  const prevMode = useRef<LoanMode | null>(null);
+  const prevTab = useRef<string | null>(null);
+
   useEffect(() => {
+    if (prevMode.current === null && prevTab.current === null) {
+      prevMode.current = loanMode;
+      prevTab.current = tab;
+      return;
+    }
+    if (loanMode === prevMode.current && tab === prevTab.current) return;
+    prevMode.current = loanMode;
+    prevTab.current = tab;
     if (tab !== 'loan') return;
-    if (loanMode === 'take' || loanMode === 'repay') {
-      setSource('');
-    }
-    if (loanMode === 'give' || loanMode === 'payback') {
-      setDestination('');
-    }
+    if (loanMode === 'take' || loanMode === 'repay') setSource('');
+    if (loanMode === 'give' || loanMode === 'payback') setDestination('');
     setDebtor('');
   }, [loanMode, tab]);
 
@@ -287,10 +310,17 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
       const capitalizedDesc = description.trim().charAt(0).toUpperCase() + description.trim().slice(1);
       try {
         if (loanTargetType === 'internal') {
-          await createGivenLoan({
-            sourceAccount: source, destAccount: destination,
-            amount, description: capitalizedDesc, date, memberId: txMemberId,
-          });
+          if (internalAction === 'repay') {
+            await recordRepayment({
+              sourceAccount: source, destAccount: destination,
+              amount, loanRef: '', description: capitalizedDesc, date, memberId: txMemberId,
+            });
+          } else {
+            await createGivenLoan({
+              sourceAccount: source, destAccount: destination,
+              amount, description: capitalizedDesc, date, memberId: txMemberId,
+            });
+          }
         } else {
           switch (loanMode) {
             case 'give':
@@ -491,7 +521,9 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const buttonLabel =
     tab === 'income' ? 'Complete Income' :
     tab === 'expense' ? 'Complete Expense' :
-    tab === 'loan' ? (loanTargetType === 'internal' ? 'Issue Internal Loan' : LOAN_MODE_BUTTON_LABELS[loanMode]) :
+    tab === 'loan' ? (loanTargetType === 'internal'
+      ? (internalAction === 'repay' ? 'Record Repayment' : 'Issue Internal Loan')
+      : LOAN_MODE_BUTTON_LABELS[loanMode]) :
     'Complete Transfer';
 
   const formFields = (
