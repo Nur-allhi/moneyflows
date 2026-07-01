@@ -9,6 +9,7 @@ import { DatePicker } from '../../components/ui/date-picker';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import { Transaction } from '../../core/domain/Transaction';
 import type { Member } from '../../core/domain/Member';
 import type { Account } from '../../core/domain/Account';
@@ -21,14 +22,6 @@ const tabs = [
   { key: 'loan', label: 'Loan' },
 ];
 
-const fmt = (n: number) => n.toLocaleString('en-IN');
-
-function formatAmount(raw: string): string {
-  const num = parseInt(raw, 10);
-  if (isNaN(num)) return '';
-  return fmt(num);
-}
-
 type ValidationErrors = Record<string, string>;
 
 function validateForm(
@@ -40,6 +33,8 @@ function validateForm(
   debtor: string,
   accounts: Account[],
   externalMembers: Member[],
+  locale: string,
+  currency: string,
 ): ValidationErrors {
   const next: ValidationErrors = {};
   const amountNum = parseInt(rawAmount, 10);
@@ -88,7 +83,7 @@ function validateForm(
   if (source && tab !== 'income' && !isNaN(amountNum) && amountNum > 0) {
     const srcAcct = accounts.find((a) => a.id === source);
     if (srcAcct && amountNum > srcAcct.balance && tab !== 'loan') {
-      next.amount = `Insufficient balance (${fmt(srcAcct.balance)} BDT available)`;
+      next.amount = `Insufficient balance (${Intl.NumberFormat(locale).format(srcAcct.balance)} ${currency} available)`;
     }
   }
 
@@ -100,6 +95,7 @@ export function TransactionWizard() {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
   const { members, loading: memberLoading, fetchMembers } = useMemberStore();
   const { addTransaction, error: txError } = useTransactionStore();
+  const { locale, currency } = useSettingsStore((s) => s.settings);
 
   const [tab, setTab] = useState('transfer');
   const [rawAmount, setRawAmount] = useState('');
@@ -140,13 +136,13 @@ export function TransactionWizard() {
     return `${memberLookup[a.memberId]?.name ?? '?'} \u2192 ${a.name}`;
   }, [accounts, memberLookup]);
 
-  const displayAmount = formatAmount(rawAmount);
+  const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
 
   const validate = useCallback((): boolean => {
-    const next = validateForm(tab, rawAmount, description, source, destination, debtor, accounts, externalMembers);
+    const next = validateForm(tab, rawAmount, description, source, destination, debtor, accounts, externalMembers, locale, currency);
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, debtor, accounts, externalMembers]);
+  }, [tab, rawAmount, description, source, destination, debtor, accounts, externalMembers, locale, currency]);
 
   const clearError = useCallback((field: string) => {
     setErrors((prev) => {
@@ -358,7 +354,7 @@ export function TransactionWizard() {
   const formFields = (
     <>
       <div className={`${styles.amountRow} ${errors.amount ? styles.fieldError : ''}`}>
-        <span className={styles.amountCurrency}>BDT</span>
+        <span className={styles.amountCurrency}>{currency}</span>
         <input
           className={styles.amountInput}
           type="text"
@@ -396,7 +392,7 @@ export function TransactionWizard() {
                     </span>
                   </span>
                   <span className="font-mono text-xs text-muted-foreground tabular-nums shrink-0">
-                    {fmt(a.balance)} BDT
+                    {Intl.NumberFormat(locale).format(a.balance)} {currency}
                   </span>
                 </span>
               </SelectItem>
@@ -428,7 +424,7 @@ export function TransactionWizard() {
                       </span>
                     </span>
                     <span className="font-mono text-xs text-muted-foreground tabular-nums shrink-0">
-                      {fmt(a.balance)} BDT
+                      {Intl.NumberFormat(locale).format(a.balance)} {currency}
                     </span>
                   </span>
                 </SelectItem>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import styles from './Launcher.module.css';
 
 const cards = [
@@ -53,13 +54,14 @@ const cards = [
 ];
 
 export function Launcher() {
+  const currency = useSettingsStore((s) => s.settings.currency);
   return (
     <div className={styles.launcher}>
       <div className={styles.hero}>
         <div className={styles.logo}>
           MoneyFlows<span className={styles.logoSuffix}>.app</span>
         </div>
-        <p className={styles.subtitle}>Family personal finance — dark glassmorphism, BDT</p>
+        <p className={styles.subtitle}>Family personal finance — dark glassmorphism, {currency}</p>
       </div>
 
       <div className={styles.grid}>
@@ -83,7 +85,7 @@ export function Launcher() {
       </div>
 
       <div className={styles.footer}>
-        MoneyFlows &middot; Family Finance &middot; BDT &middot; Dark Glassmorphism
+        MoneyFlows &middot; Family Finance &middot; {currency} &middot; Dark Glassmorphism
       </div>
     </div>
   );

@@ -4,19 +4,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { Avatar, Modal, FormInput } from '../components';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import { Member } from '../../core/domain/Member';
+import { formatAmount } from '../utils/format';
 import styles from './MemberList.module.css';
-
-const _fmt = Intl.NumberFormat('en-IN');
-function fmt(n: number): string {
-  return `${_fmt.format(n)} BDT`;
-}
 
 
 export function MemberList() {
   const navigate = useNavigate();
   const { members, loading, error, fetchMembers, saveMember } = useMemberStore();
   const { accounts, fetchAccounts } = useAccountStore();
+  const { locale, currency } = useSettingsStore((s) => s.settings);
   const [showModal, setShowModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newShortName, setNewShortName] = useState('');
@@ -83,7 +81,7 @@ export function MemberList() {
                 <span className={styles.cardTag}>Member</span>
               </div>
             </div>
-            <span className={styles.cardBalance}>{fmt(getBalance(m.id))}</span>
+            <span className={styles.cardBalance}>{formatAmount(getBalance(m.id), locale, currency)}</span>
           </button>
         ))}
       </div>

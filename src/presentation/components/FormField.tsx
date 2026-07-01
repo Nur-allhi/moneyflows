@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ReactNode } from 'react';
+import { useSettingsStore } from '../stores/useSettingsStore';
 import styles from './FormField.module.css';
 
 interface FormFieldProps {
@@ -71,10 +72,11 @@ interface AmountInputProps {
 }
 
 export function AmountInput({ label, value, onChange, placeholder = '0.00', error, className = '' }: AmountInputProps) {
+  const currency = useSettingsStore((s) => s.settings.currency);
   return (
     <FormField label={label} error={error} className={className}>
       <div className={styles.amountWrap}>
-        <span className={styles.amountCurrency}>BDT</span>
+        <span className={styles.amountCurrency}>{currency}</span>
         <input
           className={styles.amountInput}
           type="text"

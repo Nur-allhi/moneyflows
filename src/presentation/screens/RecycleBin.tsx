@@ -1,10 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { RecycleRow, GlassPanel } from '../components';
 import { useRecycleStore } from '../stores/useRecycleStore';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { formatAmount } from '../utils/format';
 import styles from './RecycleBin.module.css';
-
-const _fmt = Intl.NumberFormat('en-IN');
-function fmt(n: number): string { return `${_fmt.format(n)} BDT`; }
 
 function timeAgo(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();
@@ -18,6 +17,7 @@ function timeAgo(iso: string): string {
 
 export function RecycleBin() {
   const { deletedItems, loading, error, fetchDeleted, restore, purge } = useRecycleStore();
+  const { locale, currency } = useSettingsStore((s) => s.settings);
 
   useEffect(() => {
     fetchDeleted();
@@ -76,7 +76,7 @@ export function RecycleBin() {
           <span className={styles.statLabel}>Deleted Items</span>
         </div>
         <div className={styles.statItem}>
-          <span className={styles.statNum} style={{ color: 'var(--color-expense)' }}>{fmt(totalAmount)}</span>
+          <span className={styles.statNum} style={{ color: 'var(--color-expense)' }}>{formatAmount(totalAmount, locale, currency)}</span>
           <span className={styles.statLabel}>Total Amount</span>
         </div>
         <div className={styles.statItem}>
@@ -146,7 +146,7 @@ export function RecycleBin() {
                 iconVariant={item.type === 'transaction' ? 'warning' : 'account'}
                 name={item.name}
                 meta={item.type === 'transaction' ? 'Transaction' : 'Account'}
-                amount={item.amount != null ? `-${fmt(item.amount)}` : '\u2014'}
+                amount={item.amount != null ? `-${formatAmount(item.amount, locale, currency)}` : '\u2014'}
                 amountColor={item.amount != null ? 'var(--color-expense)' : 'var(--color-text-secondary)'}
                 date={timeAgo(item.deletedAt)}
                 onRestore={() => restore(item.id, item.type)}
