@@ -1,0 +1,208 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modeStrip {
+  display: flex;
+  gap: 4px;
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.modeBtn {
+  flex: 1;
+  padding: 8px 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modeBtn:hover {
+  color: var(--color-text);
+}
+
+.modeActive {
+  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  color: #fff;
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+.modeActive:hover {
+  color: #fff;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}
+
+.counterpartyRow {
+  display: flex;
+  gap: 6px;
+}
+
+.pickerTrigger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.pickerTrigger:hover {
+  border-color: var(--color-primary);
+}
+
+.pickerTrigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.fieldError {
+  border-color: var(--color-expense) !important;
+}
+
+.pickerPlaceholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.pickerValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pickerArrow {
+  flex-shrink: 0;
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.addBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px dashed var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.addBtn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--color-surface);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.addInput {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.addInput:hover {
+  border-color: var(--color-primary);
+}
+
+.addInput:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.addInput::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.addSubmitBtn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.addSubmitBtn:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 12px var(--color-primary-glow);
+}
+
+.addSubmitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.errorText {
+  font-size: 12px;
+  color: var(--color-expense);
+  display: block;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+  line-height: 1.4;
+  margin: 0;
+}
