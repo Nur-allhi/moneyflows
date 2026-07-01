@@ -6,7 +6,6 @@ interface AccountCardProps {
   type: string;
   balance: ReactNode;
   currency?: string;
-  accountNumber?: string;
   gradient: string;
   showChip?: boolean;
   icon?: string;
@@ -20,7 +19,6 @@ export function AccountCard({
   type,
   balance,
   currency,
-  accountNumber,
   gradient,
   showChip = false,
   icon,
@@ -38,19 +36,17 @@ export function AccountCard({
       aria-label={`${name} — ${balance} ${currency ?? ''}`}
     >
       <div className={styles.top}>
-        <span className={styles.type}>{type}</span>
+        <div>
+          <span className={styles.name}>{name}</span>
+          <span className={styles.type}>{type}</span>
+        </div>
         {showChip && <span className={styles.chip} />}
       </div>
-      <div>
+      <div className={styles.balanceRow}>
         <div className={styles.balance}>{balance}</div>
         <div className={styles.label}>Available Balance</div>
       </div>
-      <div className={styles.bottom}>
-        <span className={styles.number}>
-          {accountNumber ? `•••• ${accountNumber}` : '•••• ••••'}
-        </span>
-        {icon && <span className={styles.cardIcon}>{icon}</span>}
-      </div>
+      {icon && <div className={styles.iconRow}>{icon}</div>}
     </div>
   );
 }

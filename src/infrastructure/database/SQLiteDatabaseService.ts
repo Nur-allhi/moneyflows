@@ -216,7 +216,6 @@ export class SQLiteDatabaseService implements IDatabaseService {
     if (desc.length > 200) throw new Error('Description must be 200 characters or less');
 
     if (!tx.date || isNaN(Date.parse(tx.date))) throw new Error('Valid date is required');
-    if (tx.date > new Date().toISOString().slice(0, 10)) throw new Error('Date cannot be in the future');
 
     if (!tx.memberId) throw new Error('Member is required');
     const member = this.queryOne<Record<string, unknown>>('SELECT id FROM members WHERE id=$id AND deleted_at IS NULL', { $id: tx.memberId });
@@ -258,6 +257,16 @@ export class SQLiteDatabaseService implements IDatabaseService {
         $dst: tx.destAccount ?? null, $mid: tx.memberId, $did: tx.debtorId ?? null, $loan: tx.loanRef ?? null,
         $date: tx.date, $meta: JSON.stringify(tx.metadata), $created: tx.createdAt, $updated: now() });
     this.applyBalanceChange(tx.type, tx.amount, tx.sourceAccount, tx.destAccount);
+    return Promise.resolve();
+  }
+
+  updateTransaction(id: string, tx: Transaction): Promise<void> {
+    const old = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id', { $id: id });
+    if (old) {
+      const oldTx = rowToTransaction(old);
+      this.applyBalanceChange(oldTx.type, -oldTx.amount, oldTx.sourceAccount, oldTx.destAccount);
+    }
+    this.saveTransaction(tx);
     return Promise.resolve();
   }
 

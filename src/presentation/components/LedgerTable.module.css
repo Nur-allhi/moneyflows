@@ -7,13 +7,20 @@
   overflow: hidden;
 }
 
-.balanceLabel {
-  text-align: right;
+.fillHeight {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.centerLabel {
+  text-align: center;
 }
 
 .header {
   display: grid;
-  grid-template-columns: 60px 1fr 72px 72px 72px;
+  grid-template-columns: 60px 56px 1fr 72px 72px 72px;
   gap: 4px;
   padding: 12px 14px;
   font-size: 10px;
@@ -25,26 +32,27 @@
 }
 
 .desktop .header {
-  grid-template-columns: 70px 1fr 90px 90px 100px;
+  grid-template-columns: 70px 64px 1fr 90px 90px 100px;
   padding: 10px 20px;
 }
 
 .noBalance .header {
-  grid-template-columns: 60px 1fr 72px 72px;
+  grid-template-columns: 60px 56px 1fr 150px 72px 72px;
 }
 
 .desktop.noBalance .header {
-  grid-template-columns: 70px 1fr 90px 90px;
+  grid-template-columns: 70px 64px 1fr 200px 90px 90px;
 }
 
 .body {
-  max-height: 340px;
   overflow-y: auto;
-  max-height: var(--body-max-height, 340px);
 }
 
-.desktop .body {
-  max-height: 360px;
+.fillHeight .body {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .virtualContainer {
@@ -60,16 +68,12 @@
   height: var(--row-height, 48px);
 }
 
-.noBalance .virtualRow {
-  height: var(--row-height, 48px);
-}
-
 .row {
   display: grid;
-  grid-template-columns: 60px 1fr 72px 72px 72px;
+  grid-template-columns: 60px 56px 1fr 72px 72px 72px;
   gap: 4px;
-  padding: 10px 14px;
-  font-size: 12px;
+  padding: 14px 14px;
+  font-size: 13px;
   align-items: center;
   border-bottom: 1px solid oklch(100% 0 0 / 0.04);
   transition: background var(--transition-fast);
@@ -77,17 +81,17 @@
 }
 
 .desktop .row {
-  grid-template-columns: 70px 1fr 90px 90px 100px;
-  padding: 10px 20px;
-  font-size: 13px;
+  grid-template-columns: 70px 64px 1fr 90px 90px 100px;
+  padding: 14px 20px;
+  font-size: 14px;
 }
 
 .noBalance .row {
-  grid-template-columns: 60px 1fr 72px 72px;
+  grid-template-columns: 60px 56px 1fr 150px 72px 72px;
 }
 
 .desktop.noBalance .row {
-  grid-template-columns: 70px 1fr 90px 90px;
+  grid-template-columns: 70px 64px 1fr 200px 90px 90px;
 }
 
 .row:hover {
@@ -112,11 +116,12 @@
 
 .date {
   color: var(--color-text-secondary);
-  font-size: 11px;
+  font-size: 12px;
+  text-align: center;
 }
 
 .desktop .date {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .desc {
@@ -124,54 +129,63 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: left;
 }
 
-.tag {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 10px;
+.typeCell {
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-left: 8px;
-  vertical-align: middle;
+  text-align: center;
 }
 
-.tagExpense {
-  background: oklch(62% 0.18 30 / 0.15);
-  color: var(--color-expense);
-}
-
-.tagIncome {
-  background: oklch(65% 0.15 170 / 0.15);
+.typeCell.income {
   color: var(--color-income);
 }
 
-.tagTransfer {
-  background: oklch(62% 0.22 290 / 0.12);
+.typeCell.expense {
+  color: var(--color-expense);
+}
+
+.typeCell.transfer {
   color: var(--color-primary);
 }
 
 .debit {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--color-expense);
+  text-align: center;
 }
 
 .credit {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
+  text-align: center;
 }
 
 .balance {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: center;
+}
+
+.account {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.desktop .account {
+  font-size: 13px;
 }
 
 .empty {

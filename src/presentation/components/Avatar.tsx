@@ -5,6 +5,7 @@ type AvatarSize = 24 | 36 | 48 | 72;
 interface AvatarProps {
   initial: string;
   name?: string;
+  seed?: string;
   size: AvatarSize;
   active?: boolean;
   gradient?: string;
@@ -21,9 +22,12 @@ const sizeClassMap: Record<AvatarSize, string> = {
   72: styles.size72 ?? '',
 };
 
+const AVATAR_BASE = 'https://api.dicebear.com/9.x/lorelei/svg';
+
 export function Avatar({
   initial,
   name,
+  seed,
   size,
   active = false,
   gradient,
@@ -36,21 +40,28 @@ export function Avatar({
     styles.avatar,
     sizeClassMap[size],
     active ? styles.active : '',
+    seed ? styles.imageAvatar : '',
     className,
   ]
     .filter(Boolean)
     .join(' ');
 
+  const avatarUrl = seed ? `${AVATAR_BASE}?seed=${encodeURIComponent(seed)}` : undefined;
+
   return (
     <div
       className={classNames}
-      style={{ '--avatar-bg': resolvedGradient } as React.CSSProperties}
+      style={{ '--avatar-bg': avatarUrl ? undefined : resolvedGradient } as React.CSSProperties}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       aria-label={name ?? initial}
     >
-      {initial.charAt(0).toUpperCase()}
+      {avatarUrl ? (
+        <img src={avatarUrl} alt={name ?? initial} className={styles.avatarImg} />
+      ) : (
+        initial.charAt(0).toUpperCase()
+      )}
     </div>
   );
 }

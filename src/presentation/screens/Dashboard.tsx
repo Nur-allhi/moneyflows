@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { GlassPanel, MetricCard, AccountRow, TransactionRow, SettingsModal } from '../components';
 import { useAnimatedValue } from '../hooks';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useLoanStore } from '../stores/useLoanStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useModalStore } from '../stores/useModalStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { formatAmount } from '../utils/format';
 import { shortDate } from '../constants/dates';
@@ -21,7 +21,7 @@ function txTypeForRow(t: string): 'income' | 'expense' | 'transfer' {
 }
 
 export function Dashboard() {
-  const navigate = useNavigate();
+  const openWizard = () => useModalStore.getState().open('transaction-form');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
@@ -103,8 +103,8 @@ export function Dashboard() {
       </div>
 
       <div className={styles.quickActions}>
-        <button className={`${styles.qaBtn} ${styles.qaPrimary}`} onClick={() => navigate('/transaction')}>+ New Transaction</button>
-        <button className={styles.qaBtn} onClick={() => navigate('/transaction')}>Transfer</button>
+        <button className={`${styles.qaBtn} ${styles.qaPrimary}`} onClick={openWizard}>+ New Transaction</button>
+        <button className={styles.qaBtn} onClick={openWizard}>Transfer</button>
         <button className={styles.qaBtn} onClick={() => setSettingsOpen(true)}>Settings</button>
         <button className={styles.qaBtn} onClick={() => (getDatabase() as any).importFromFile()}>Import DB</button>
       </div>

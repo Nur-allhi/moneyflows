@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { SegmentedTabs, FormTextarea, Numpad } from '../components';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '../../components/ui/select';
 import { DatePicker } from '../../components/ui/date-picker';
+import { SegmentedTabs, FormTextarea, Numpad } from '../components';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
@@ -14,7 +13,11 @@ import { formatAmount } from '../utils/format';
 import { Transaction } from '../../core/domain/Transaction';
 import type { Member } from '../../core/domain/Member';
 import type { Account } from '../../core/domain/Account';
-import styles from './TransactionWizard.module.css';
+import styles from './TransactionFormModal.module.css';
+
+interface TransactionFormModalProps {
+  onClose: () => void;
+}
 
 const tabs = [
   { key: 'income', label: 'Income' },
@@ -91,8 +94,7 @@ function validateForm(
   return next;
 }
 
-export function TransactionWizard() {
-  const navigate = useNavigate();
+export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
   const { members, loading: memberLoading, fetchMembers } = useMemberStore();
   const { addTransaction, error: txError } = useTransactionStore();
@@ -104,7 +106,10 @@ export function TransactionWizard() {
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [debtor, setDebtor] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [closing, setClosing] = useState(false);
 
@@ -131,10 +136,11 @@ export function TransactionWizard() {
     [externalMembers],
   );
 
-  const accountOptionLabel = useCallback((id: string) => {
+  const accountLabel = useCallback((id: string) => {
     const a = accounts.find(a => a.id === id);
     if (!a) return '';
-    return `${memberLookup[a.memberId]?.name ?? '?'} \u2192 ${a.name}`;
+    const memberName = memberLookup[a.memberId]?.name ?? '';
+    return memberName ? `${a.name} \u2014 ${memberName}` : a.name;
   }, [accounts, memberLookup]);
 
   const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
@@ -172,7 +178,7 @@ export function TransactionWizard() {
 
   const handleClose = () => {
     setClosing(true);
-    setTimeout(() => navigate(-1), 300);
+    setTimeout(() => onClose(), 300);
   };
 
   const handleSubmit = async () => {
@@ -215,13 +221,20 @@ export function TransactionWizard() {
         return;
     }
 
+    const now = new Date();
+    const [y, m, d] = date.split('-');
+    const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
+
+    const cleanDesc = description.trim();
+    const capitalizedDesc = cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1);
+
     const tx = new Transaction(
-      uuidv4(), type, description.trim(), amount, txMemberId, date, src, dst, debtorId,
+      uuidv4(), type, capitalizedDesc, amount, txMemberId, dateTime, src, dst, debtorId,
     );
 
     await addTransaction(tx);
     await fetchAccounts();
-    navigate(-1);
+    onClose();
   };
 
   const loading = acctLoading || memberLoading;
@@ -231,8 +244,8 @@ export function TransactionWizard() {
     return (
       <>
         <div className={styles.mobileLayout}>
-          <div className={styles.wizard}>
-            <div className={styles.sheet}>
+          <div className={styles.wizard} onClick={handleClose}>
+            <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
               <div className={styles.handle} />
               <div className={styles.header}>
                 <h2>New Transaction</h2>
@@ -241,7 +254,7 @@ export function TransactionWizard() {
               <div className="empty-state">
                 <div className="empty-state-icon">{'\u{1F4B0}'}</div>
                 <p className="empty-state-text">No accounts available</p>
-                <button className="retry-btn" onClick={() => navigate(-1)}>Go Back</button>
+                <button className="retry-btn" onClick={handleClose}>Go Back</button>
               </div>
             </div>
           </div>
@@ -256,7 +269,7 @@ export function TransactionWizard() {
             <div className="empty-state">
               <div className="empty-state-icon">{'\u{1F4B0}'}</div>
               <p className="empty-state-text">No accounts available</p>
-              <button className="retry-btn" onClick={() => navigate(-1)}>Go Back</button>
+              <button className="retry-btn" onClick={handleClose}>Go Back</button>
             </div>
           </div>
         </div>
@@ -268,8 +281,8 @@ export function TransactionWizard() {
     return (
       <>
         <div className={styles.mobileLayout}>
-          <div className={styles.wizard}>
-            <div className={styles.sheet}>
+          <div className={styles.wizard} onClick={handleClose}>
+            <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
               <div className={styles.handle} />
               <div className={styles.header}>
                 <h2>New Transaction</h2>
@@ -305,8 +318,8 @@ export function TransactionWizard() {
     return (
       <>
         <div className={styles.mobileLayout}>
-          <div className={styles.wizard}>
-            <div className={styles.sheet}>
+          <div className={styles.wizard} onClick={handleClose}>
+            <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
               <div className={styles.handle} />
               <div className={styles.header}>
                 <h2>New Transaction</h2>
@@ -369,95 +382,81 @@ export function TransactionWizard() {
 
       <div className={styles.fieldGroup}>
         <span className={styles.fieldLabel}>Date</span>
-        <DatePicker value={date} onChange={setDate} />
+        <DatePicker className={styles.inputField} value={date} onChange={setDate} />
       </div>
 
       <div className={styles.fieldGroup}>
         <span className={styles.fieldLabel}>Source Account</span>
         <Select value={source} onValueChange={(v) => { if (v !== null) { setSource(v); clearError('source'); } }}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select account">
-              {source ? accountOptionLabel(source) : null}
+          <SelectTrigger className={`w-full ${styles.selectTrigger}`}>
+            <SelectValue placeholder="Source Account">
+              {source ? accountLabel(source) : null}
             </SelectValue>
           </SelectTrigger>
-            <SelectContent className="min-w-[360px]">
-              {accounts.map((a) => (
-              <SelectItem key={a.id} value={a.id}>
-                <span className="flex items-center gap-3 w-full min-w-0">
-                  <span className="flex flex-col min-w-0 flex-1">
-                    <span className="text-[11px] text-muted-foreground tracking-wide truncate">
-                      {memberLookup[a.memberId]?.name ?? '?'}
-                    </span>
-                    <span className="text-sm font-medium truncate">
-                      {a.name}
-                    </span>
-                  </span>
-                  <span className="font-mono text-xs text-muted-foreground tabular-nums shrink-0">
-                    {formatAmount(a.balance, locale, currency)}
-                  </span>
-                </span>
-              </SelectItem>
-            ))}
+          <SelectContent className="min-w-[260px]">
+            {accounts.map((a) => (
+            <SelectItem key={a.id} value={a.id} className="py-1!">
+              <span className={styles.selectItem}>
+                <span className={styles.selectItemName}>{a.name}</span>
+                <span className={styles.selectItemMeta}>{memberLookup[a.memberId]?.name ?? '?'}</span>
+                <span className={styles.selectItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+              </span>
+            </SelectItem>
+          ))}
           </SelectContent>
         </Select>
         {errors.source && <span className={styles.errorText}>{errors.source}</span>}
       </div>
 
-      {tab === 'transfer' && (
-        <div className={styles.fieldGroup}>
-          <span className={styles.fieldLabel}>Destination Account</span>
-          <Select value={destination} onValueChange={(v) => { if (v !== null) { setDestination(v); clearError('destination'); } }}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select account">
-                {destination ? accountOptionLabel(destination) : null}
-              </SelectValue>
-            </SelectTrigger>
-          <SelectContent className="min-w-[360px]">
-              {accounts.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  <span className="flex items-center gap-3 w-full min-w-0">
-                    <span className="flex flex-col min-w-0 flex-1">
-                      <span className="text-[11px] text-muted-foreground tracking-wide truncate">
-                        {memberLookup[a.memberId]?.name ?? '?'}
-                      </span>
-                      <span className="text-sm font-medium truncate">
-                        {a.name}
-                      </span>
+      <div className={`${styles.slideField} ${tab === 'transfer' ? styles.slideOpen : ''}`}>
+        <div className={styles.slideInner}>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldLabel}>Destination Account</span>
+            <Select value={destination} onValueChange={(v) => { if (v !== null) { setDestination(v); clearError('destination'); } }}>
+              <SelectTrigger className={`w-full ${styles.selectTrigger}`}>
+                <SelectValue placeholder="Destination Account">
+                  {destination ? accountLabel(destination) : null}
+                </SelectValue>
+              </SelectTrigger>
+            <SelectContent className="min-w-[260px]">
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    <span className={styles.selectItem}>
+                      <span className={styles.selectItemName}>{a.name}</span>
+                      <span className={styles.selectItemMeta}>{memberLookup[a.memberId]?.name ?? '?'}</span>
+                      <span className={styles.selectItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
                     </span>
-                    <span className="font-mono text-xs text-muted-foreground tabular-nums shrink-0">
-                      {formatAmount(a.balance, locale, currency)}
-                    </span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
+          </div>
         </div>
-      )}
+      </div>
 
-      {tab === 'loan' && (
-        <div className={styles.fieldGroup}>
-          <span className={styles.fieldLabel}>Debtor</span>
-          <Select value={debtor} onValueChange={(v) => { if (v !== null) { setDebtor(v); clearError('debtor'); } }}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select debtor">
-                {debtor ? debtorOptions.find(d => d.value === debtor)?.label : null}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="min-w-[240px]">
-              {debtorOptions.map((m) => (
-                <SelectItem key={m.value} value={m.value}>
-                  <span className="flex items-center gap-2">
-                    <span className="text-sm font-medium">{m.label}</span>
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.debtor && <span className={styles.errorText}>{errors.debtor}</span>}
+      <div className={`${styles.slideField} ${tab === 'loan' ? styles.slideOpen : ''}`}>
+        <div className={styles.slideInner}>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldLabel}>Debtor</span>
+            <Select value={debtor} onValueChange={(v) => { if (v !== null) { setDebtor(v); clearError('debtor'); } }}>
+              <SelectTrigger className={`w-full ${styles.selectTrigger}`}>
+                <SelectValue placeholder="Select Debtor" />
+              </SelectTrigger>
+              <SelectContent className="min-w-[200px]">
+                {debtorOptions.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>
+                    <span className={styles.selectItem}>
+                      <span className={styles.selectItemName}>{m.label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.debtor && <span className={styles.errorText}>{errors.debtor}</span>}
+          </div>
         </div>
-      )}
+      </div>
 
       <FormTextarea
         label="Description"
@@ -474,9 +473,9 @@ export function TransactionWizard() {
 
   return (
     <>
-      <div className={`${styles.mobileLayout} ${closing ? styles.closing : ''}`}>
-        <div className={styles.wizard}>
-          <div className={styles.sheet}>
+        <div className={`${styles.mobileLayout} ${closing ? styles.closing : ''}`}>
+        <div className={styles.wizard} onClick={handleClose}>
+          <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
             <div className={styles.handle} />
             <div className={styles.header}>
               <h2>New Transaction</h2>
@@ -487,7 +486,7 @@ export function TransactionWizard() {
               <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
             </div>
 
-            <div className={styles.formBody}>
+            <div className={styles.formBody} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleSubmit(); } }}>
               {formFields}
               <button className={styles.submitBtn} onClick={handleSubmit} disabled={!rawAmount || Object.keys(errors).length > 0}>
                 {buttonLabel}
@@ -508,7 +507,7 @@ export function TransactionWizard() {
             <h2>New Transaction</h2>
             <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
           </div>
-          <div className={styles.modalBody}>
+          <div className={styles.modalBody} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleSubmit(); } }}>
             <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
             {formFields}
           </div>
