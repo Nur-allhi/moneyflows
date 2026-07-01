@@ -30,6 +30,10 @@
   outline-offset: 2px;
 }
 
+.selected {
+  box-shadow: 0 0 24px var(--color-primary-glow), inset 0 0 0 2px var(--color-primary);
+}
+
 .card:active {
   background: rgba(255,255,255,0.08);
 }

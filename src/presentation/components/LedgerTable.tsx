@@ -7,7 +7,7 @@ export interface LedgerRow {
   description: string;
   debit?: string;
   credit?: string;
-  balance: string;
+  balance?: string;
   type?: 'income' | 'expense' | 'transfer';
 }
 
@@ -16,6 +16,7 @@ interface LedgerTableProps {
   className?: string;
   onRowClick?: (row: LedgerRow, index: number) => void;
   desktop?: boolean;
+  showBalance?: boolean;
 }
 
 const tagClassMap: Record<string, string | undefined> = {
@@ -24,10 +25,10 @@ const tagClassMap: Record<string, string | undefined> = {
   transfer: styles.tagTransfer,
 };
 
-export function LedgerTable({ rows, className = '', onRowClick, desktop = false }: LedgerTableProps) {
+export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true }: LedgerTableProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${className}`;
+  const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${showBalance ? '' : styles.noBalance} ${className}`;
   const itemHeight = desktop ? DESKTOP_ROW_HEIGHT : ROW_HEIGHT;
   const containerHeight = desktop ? 360 : 340;
 
@@ -52,7 +53,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false 
         <span>Description</span>
         <span>Debit</span>
         <span>Credit</span>
-        <span className={styles.balanceLabel}>Balance</span>
+        {showBalance && <span className={styles.balanceLabel}>Balance</span>}
       </div>
       <div
         ref={containerRef}
@@ -85,7 +86,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false 
                   </span>
                   <span className={styles.debit}>{row.debit ?? '\u2014'}</span>
                   <span className={styles.credit}>{row.credit ?? '\u2014'}</span>
-                  <span className={styles.balance}>{row.balance}</span>
+                  {showBalance && <span className={styles.balance}>{row.balance ?? '\u2014'}</span>}
                 </div>
               );
             })}

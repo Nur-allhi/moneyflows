@@ -29,6 +29,14 @@
   padding: 10px 20px;
 }
 
+.noBalance .header {
+  grid-template-columns: 60px 1fr 72px 72px;
+}
+
+.desktop.noBalance .header {
+  grid-template-columns: 70px 1fr 90px 90px;
+}
+
 .body {
   max-height: 340px;
   overflow-y: auto;
@@ -52,6 +60,10 @@
   height: var(--row-height, 48px);
 }
 
+.noBalance .virtualRow {
+  height: var(--row-height, 48px);
+}
+
 .row {
   display: grid;
   grid-template-columns: 60px 1fr 72px 72px 72px;
@@ -68,6 +80,14 @@
   grid-template-columns: 70px 1fr 90px 90px 100px;
   padding: 10px 20px;
   font-size: 13px;
+}
+
+.noBalance .row {
+  grid-template-columns: 60px 1fr 72px 72px;
+}
+
+.desktop.noBalance .row {
+  grid-template-columns: 70px 1fr 90px 90px;
 }
 
 .row:hover {
