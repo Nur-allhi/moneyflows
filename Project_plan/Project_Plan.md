@@ -10,7 +10,7 @@
 - [ ] Configure build tooling & dev server
 
 ### 0.2 Design Tokens & CSS Architecture
-- [x] Extract tokens from design handoff (brand-spec.md) — DONE via DESIGN.md
+- [x] Extract tokens from design handoff (../DESIGN_FILES/brand-spec.md) — DONE via DESIGN.md
 - [ ] Create `tokens.css` with CSS custom properties
 - [ ] Create `glassmorphism.css` utility classes
 - [ ] Create `typography.css` with font imports (Outfit, JetBrains Mono)
@@ -218,7 +218,7 @@ Test and fix at all 9 viewports:
 No horizontal overflow, no layout breakage, all interactive elements reachable.
 
 ### 5.2 Visual Fidelity Check
-- [ ] Screenshot comparison against DESIGN_FILES HTML mockups
+- [ ] Screenshot comparison against ../DESIGN_FILES HTML mockups
 - [ ] Token accuracy (colors, typography, spacing, radius, shadows)
 - [ ] Glassmorphism consistency across all panels
 

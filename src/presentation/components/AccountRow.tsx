@@ -1,7 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { ACCOUNT_TYPE_GRADIENT, displayType } from '../constants/labels';
+import type { AccountType } from '../../core/domain/Account';
 import styles from './AccountRow.module.css';
-
-type AccountType = 'bank' | 'mobile_wallet' | 'cash' | 'savings' | 'business';
 
 interface AccountRowProps {
   name: string;
@@ -14,14 +14,6 @@ interface AccountRowProps {
   onClick?: () => void;
 }
 
-const accountGradients: Record<string, string> = {
-  bank: 'linear-gradient(135deg, #1a237e, #283593)',
-  savings: 'linear-gradient(135deg, #004d40, #00695c)',
-  mobile_wallet: 'linear-gradient(135deg, #d81b60, #e91e63)',
-  cash: 'linear-gradient(135deg, #37474f, #455a64)',
-  business: 'linear-gradient(135deg, #263238, #37474f)',
-};
-
 export function AccountRow({
   name,
   type,
@@ -32,7 +24,7 @@ export function AccountRow({
   className = '',
   onClick,
 }: AccountRowProps) {
-  const bgGradient = gradient ?? accountGradients[type] ?? accountGradients.bank;
+  const bgGradient = gradient ?? ACCOUNT_TYPE_GRADIENT[type as AccountType] ?? ACCOUNT_TYPE_GRADIENT.bank;
 
   return (
     <div
@@ -42,15 +34,15 @@ export function AccountRow({
       tabIndex={onClick ? 0 : undefined}
     >
       {icon && (
-        <div className={styles.icon} style={{ background: bgGradient as CSSProperties['background'] }}>
+        <div className={styles.icon} style={{ '--icon-bg': bgGradient } as React.CSSProperties}>
           {icon}
         </div>
       )}
       <div className={styles.info}>
         <div className={styles.name}>{name}</div>
-        <div className={styles.sub}>{type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
+        <div className={styles.sub}>{displayType(type)}</div>
       </div>
-      <div className={styles.balance} style={{ color: accentColor ?? 'var(--color-text)' }}>
+      <div className={styles.balance} style={{ '--accent': accentColor ?? 'var(--color-text)' } as React.CSSProperties}>
         {balance}
       </div>
     </div>

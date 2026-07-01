@@ -651,5 +651,139 @@
 - `code-reviewer` — Root cause analysis of silent save failure
 
 ### Status
-- Transaction add + balance update fixed.
-- Next: Phase 6 tickets (T-043 → T-050) in `docs/TICKETS.md` — prioritize T-043 (settings store) first.
+- Phase 6 tickets T-043 → T-050 added to TICKETS.md. Prioritize T-043 (settings store) first.
+
+## Session 2026-07-01 09:30
+
+### Changes
+- **T-043**: Created `AppSettings.ts` domain entity + `useSettingsStore.ts` Zustand store with localStorage persistence (currency, locale, primaryMemberId, descriptionMaxLength, numpadMaxDigits, dashboardTxLimit)
+- **T-043**: Created `SettingsModal.tsx` component — glass modal with fields for all settings, toggleable from Dashboard
+- **T-044**: Created `src/presentation/utils/format.ts` — `formatAmount(n, locale, currency)` utility
+- **T-044**: Replaced all hardcoded `'BDT'` string literals across all screens with `formatAmount()` reading from `useSettingsStore`
+- **T-045**: Created `useFormatNumber()` hook — reads locale/currency from `useSettingsStore`, returns `format(n)` 
+- **T-045**: Replaced all `Intl.NumberFormat('en-IN')` and raw `Intl.NumberFormat(locale)` calls in TransactionWizard with `formatAmount()`; all screens already use `formatAmount()` with locale from store
+- **T-045**: No hardcoded `'en-IN'` remains in any `.tsx` screen file
+
+### Skill(s) Used
+- `senior-frontend` — Zustand store with persist middleware, hook creation, format utility
+
+### Status
+- **T-043, T-044, T-045 complete.** Build + typecheck pass.
+- **Next:** T-046 — Remove hardcoded `'Efty'` from Loans screen
+
+## Session 2026-07-01 09:45
+
+### Changes
+- **T-046**: Removed hardcoded `'Efty'` from Loans screen:
+  - Added `useMemberStore` import + `members` fetch in the main `Loans` component
+  - Passed `members` to `LoanDetailView` component
+  - Created `memberById` + `accountById` lookup maps in `LoanDetailView`
+  - Replaced `"Funded by Efty — ${name}"` with `"Funded by ${fundingName} — ${name}"` where `fundingName` is resolved by: `loan.fundingSource` (account ID) → `account.memberId` → `member.name`
+  - No more hardcoded `'Efty'` string in Loans.tsx
+
+### Skill(s) Used
+- `senior-frontend` — Data flow wiring between stores, account→member resolution
+
+### Status
+- **T-046 complete.** Build + typecheck pass.
+- **Next:** T-047 — Extract duplicated MONTH/day arrays into a shared constant
+
+## Session 2026-07-01 09:50
+
+### Changes
+- **T-047**: Extracted duplicated MONTH/day arrays into shared constant:
+  - Created `src/presentation/constants/dates.ts` with `MONTHS`, `DAYS` arrays and locale-aware `shortDate(iso, locale?)` utility using `Intl.DateTimeFormat`
+  - **Dashboard.tsx**: Removed `MONTHS` array + inline `shortDate()`, imported shared, passes `locale` to `shortDate()`
+  - **MemberProfile.tsx**: Removed `MONTHS` array + inline `shortDate()`, imported shared, passes `locale`, added `locale` to `useMemo` deps
+  - **Loans.tsx**: Removed inline `shortDate()` (had its own `months` array), imported shared, passes `locale`
+  - **Header.tsx**: Removed inline `days` and `months` arrays in `formatDate()`, imported `DAYS` + `MONTHS` from shared constants
+  - Zero duplicate array definitions remain — only the single source in `dates.ts`
+
+### Skill(s) Used
+- `senior-frontend` — Shared constant extraction, `Intl.DateTimeFormat` locale-aware date formatting
+
+### Status
+- **T-047 complete.** Build + typecheck pass.
+- **Next:** T-048 — Extract account type / transaction type labels into a config map
+
+## Session 2026-07-01 10:15
+
+### Changes
+- **T-048**: Extracted all account/transaction type labels into `src/presentation/constants/labels.ts`:
+  - `ACCOUNT_TYPE_LABEL` — display strings (Bank, Mobile Wallet, etc.)
+  - `ACCOUNT_TYPE_GRADIENT` — 2-stop gradient map for icons
+  - `ACCOUNT_TYPE_GRADIENT_THREE` — 3-stop gradient map for cards
+  - `ACCOUNT_TYPE_ACCENT` — CSS color accent per type
+  - `ACCOUNT_TYPE_OPTIONS` — `{value, label}[]` for `<option>` rendering
+  - `TX_TYPE_ICON` — emoji icon per TransactionType (all 5 types)
+  - `displayType()` — utility function with typed lookup + fallback
+- **Replaced** hardcoded maps in: `AccountRow.tsx` (gradients+label), `TransactionRow.tsx` (icons), `Dashboard.tsx` (ACCENT_MAP), `MemberProfile.tsx` (ACCOUNT_GRADIENTS + `<option>` list + label formatting), `Loans.tsx` (label formatting + `'bank'` default)
+
+### Skill(s) Used
+- `senior-frontend` — Type-safe config map extraction, shared constants architecture
+
+### Status
+- **T-048 complete.** Build + typecheck pass.
+- **Next:** T-049 — Replace inline styles with CSS custom properties
+
+## Session 2026-07-01 10:30
+
+### Changes
+- **T-049**: Replaced all inline `style={{...}}` props with CSS module classes or CSS custom properties:
+  - **main.tsx**: Loading screen inline styles → global `.loading-screen` class in `reset.css`
+  - **TransactionWizard.tsx**: Removed all inline styles — empty-state padding, skeleton widths (used existing `skeleton-*` classes), SelectContent padding
+  - **MemberProfile.tsx**: Empty-state padding → `.emptyState` CSS class
+  - **RecycleBin.tsx**: Stats colors → `.statExpense`/`.statIncome` classes; full tab bar → `.tabBar`/`.tabBtn`/`.tabBadge` CSS module classes; empty-state padding removed (uses global)
+  - **Launcher.tsx**: Disabled card inline style → `.cardDisabled` CSS class
+  - **Avatar.tsx**: Gradient → `--avatar-bg` CSS custom property
+  - **AccountCard.tsx**: Gradient → `--card-bg` CSS prop; icon opacity → `.cardIcon` class
+  - **AccountRow.tsx**: Gradient → `--icon-bg` CSS prop; accent color → `--accent` CSS prop
+  - **LoanStack.tsx**: Gradient → `--icon-bg` CSS prop; colors → `--total-color`/`--loan-color` CSS props
+  - **ProgressBar.tsx**: Width → `--progress-width` CSS prop
+  - **LedgerTable.tsx**: Text-align → `.balanceLabel` class; virtual list sizing → `--body-max-height`/`--total-height`/`--row-top`/`--row-height` CSS props
+  - **Loans.tsx**: Debtor icon gradient → `--debtor-bg` CSS prop
+  - **RecycleRow.tsx**: Amount color → `--amount-color` CSS prop
+  - Only shadcn/ui `select.tsx` inline styles remain (third-party component)
+
+### Skill(s) Used
+- `senior-frontend`, `frontend-design` — Inline style audit, CSS custom properties pattern, CSS module class extraction
+
+### Status
+- **T-049 complete.** Build + typecheck pass.
+- **Next:** T-050 — Move all hardcoded limits/constants into a config file
+
+## Session 2026-07-01 10:45
+
+### Changes
+- **T-050**: Created `src/presentation/constants/config.ts` with named exports for all magic number constants:
+  - `DEFAULT_DESCRIPTION_MAX_LENGTH` (200), `DESCRIPTION_MAX_LENGTH_MIN` (50), `DESCRIPTION_MAX_LENGTH_MAX` (500)
+  - `DEFAULT_NUMPAD_MAX_DIGITS` (10), `NUMPAD_MAX_DIGITS_MIN` (5), `NUMPAD_MAX_DIGITS_MAX` (15)
+  - `DEFAULT_DASHBOARD_TX_LIMIT` (10), `DASHBOARD_TX_LIMIT_MIN` (5), `DASHBOARD_TX_LIMIT_MAX` (50)
+- **AppSettings.ts**: Defaults now import from `constants/config`
+- **SettingsModal.tsx**: `min`/`max` props on number inputs now reference the config constants
+
+### Skill(s) Used
+- `senior-frontend` — Shared config constant extraction
+
+### Status
+- **T-050 (first pass) complete.** Build + typecheck pass.
+- **Next task detected:** Remaining magic numbers from TICKETS.md acceptance criteria not yet extracted.
+
+## Session 2026-07-01 11:00
+
+### Changes
+- **T-050 (final pass)**: Added all remaining magic number constants to `src/presentation/constants/config.ts`:
+  - `ANIMATION_DURATION = 600` — used in `useAnimatedValue.ts`
+  - `ACCOUNT_CARD_WIDTH = 280`, `CARD_GAP = 12` — replaced module-level consts in `MemberProfile.tsx`
+  - `ROW_HEIGHT = 48`, `DESKTOP_ROW_HEIGHT = 52`, `OVERSCAN = 3` — replaced module-level consts in `LedgerTable.tsx`
+  - `STORAGE_KEY = 'moneyflows_db'`, `EXPORT_FILENAME_PREFIX = 'moneyflows_'` — replaced local const + inline literal in `SQLiteDatabaseService.ts`
+  - `DASHBOARD_TX_FETCH_LIMIT = 10`, `DASHBOARD_TX_DISPLAY_LIMIT = 7` — replaced inline args in `Dashboard.tsx`
+- All 12 magic numbers from TICKETS.md acceptance criteria now in one config file.
+- `SHORT_NAME_MAX_LENGTH = 4` does not exist in the codebase (not implemented).
+
+### Skill(s) Used
+- `senior-frontend` — Shared config extraction, cross-file import refactoring
+
+### Status
+- **T-050 complete.** Build + typecheck pass.
+- **All 50 tickets complete.** Phase 6 — Dynamic Configuration & Hardening is finished.

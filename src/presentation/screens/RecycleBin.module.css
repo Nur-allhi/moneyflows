@@ -23,6 +23,15 @@
   font-size: 20px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+
+.statExpense {
+  color: var(--color-expense);
+}
+
+.statIncome {
+  color: var(--color-income);
 }
 
 .statLabel {
@@ -79,6 +88,47 @@
 .pillDanger:hover {
   background: oklch(62% 0.18 30 / 0.1);
   box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.tabBar {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabBtn {
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.tabActive {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tabBadge {
+  font-size: 11px;
+  background: oklch(100% 0 0 / 0.08);
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
+
+.tabBadgeActive {
+  background: oklch(62% 0.22 290 / 0.15);
+}
+
+.actionsLabel {
+  text-align: right;
 }
 
 .listPanel {

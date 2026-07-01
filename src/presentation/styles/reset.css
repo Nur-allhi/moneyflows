@@ -11,6 +11,17 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #0b0a1a;
+  color: #8b7cf7;
+  font-family: Outfit, sans-serif;
+  font-size: 18px;
+}
+
 body {
   font-family: var(--font-body);
   font-size: 0.875rem;

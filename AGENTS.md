@@ -104,6 +104,16 @@ See `session_log.md` for complete session history.
 
 **All 42 original tickets done.** Now in Phase 6 — Dynamic Configuration & Hardening.
 
-**Next:** T-043 — Create app settings/config store (foundation for removing hardcoded currency, locale, member name, and constants).
+**Completed Phase 6 thus far:**
+- T-043: App settings store (`useSettingsStore.ts` + `AppSettings.ts`) with locale, currency, primary member, constants persisted to localStorage
+- T-044: Dynamic currency from settings — `formatAmount()` utility + replaced all hardcoded `'BDT'` in all screens
+- T-045: Dynamic locale from settings — `useFormatNumber()` hook + replaced all raw `Intl.NumberFormat` calls in TransactionWizard, all screens use `formatAmount()` with locale from store
+- T-046: Removed hardcoded `'Efty'` from Loans screen — reads actual lender name via account→member lookup
+- T-047: Extracted duplicated MONTH/day arrays into `src/presentation/constants/dates.ts` — `shortDate()` now locale-aware via `Intl.DateTimeFormat`, 4 duplicate definitions removed
+- T-048: Extracted account type / transaction type labels into `src/presentation/constants/labels.ts` — `ACCOUNT_TYPE_LABEL`, `ACCOUNT_TYPE_GRADIENT`, `ACCOUNT_TYPE_ACCENT`, `TX_TYPE_ICON`, `displayType()`; replaced 6+ hardcoded maps across components and screens
+- T-049: Replaced all inline `style={{...}}` with CSS module classes or CSS custom properties — 12 files updated, only shadcn/ui `select.tsx` remains
+- T-050: Extracted magic number constants into `src/presentation/constants/config.ts` — defaults and min/max bounds for descriptionMaxLength, numpadMaxDigits, dashboardTxLimit
+
+**All 50 tickets complete.** Phase 6 — Dynamic Configuration & Hardening is finished.
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.

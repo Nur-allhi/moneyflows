@@ -5,9 +5,14 @@ import type { LoanStackData } from '../components';
 import { useLoanStore } from '../stores/useLoanStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useMemberStore } from '../stores/useMemberStore';
 import type { LoanStack as LoanStackType } from '../../core/domain/Loan';
 import type { Account } from '../../core/domain/Account';
+import type { Member } from '../../core/domain/Member';
 import { formatAmount } from '../utils/format';
+import { shortDate } from '../constants/dates';
+import { displayType } from '../constants/labels';
+import type { AccountType } from '../../core/domain/Account';
 import styles from './Loans.module.css';
 
 const GRADIENTS = [
@@ -18,15 +23,12 @@ const GRADIENTS = [
   'linear-gradient(135deg,#4a148c,#6a1b9a)',
 ];
 
-function shortDate(iso: string): string {
-  const d = new Date(iso);
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: Account[] }) {
+function LoanDetailView({ stack, accounts, members }: { stack: LoanStackType; accounts: Account[]; members: Member[] }) {
   const navigate = useNavigate();
   const { locale, currency } = useSettingsStore((s) => s.settings);
+
+  const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
+  const accountById = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a])), [accounts]);
 
   const debtorSummary = (() => {
     const total = stack.totalOutstanding;
@@ -44,9 +46,11 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
   })();
 
   const stackData: LoanStackData[] = stack.loans.map((loan, i) => {
-    const acct = accounts.find((a) => a.id === loan.fundingSource);
+    const acct = accountById[loan.fundingSource];
     const name = acct?.name ?? loan.fundingSource;
-    const type = acct?.type ?? 'bank';
+    const type: AccountType = acct?.type ?? 'bank';
+    const fundingMember = acct ? memberById[acct.memberId] : null;
+    const fundingName = fundingMember?.name ?? 'Unknown';
     const gradient = GRADIENTS[i % GRADIENTS.length]!;
     const icon = name.slice(0, 1).toUpperCase();
     const recovered = loan.recovered;
@@ -54,14 +58,14 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
     return {
       icon,
       iconGradient: gradient,
-      fundSource: `Funded by Efty \u2014 ${name}`,
-      sourceMeta: `Source: ${type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} \u2022 Disbursed ${shortDate(loan.date)}`,
+      fundSource: `Funded by ${fundingName} \u2014 ${name}`,
+      sourceMeta: `Source: ${displayType(type)} \u2022 Disbursed ${shortDate(loan.date, locale)}`,
       totalAmount: formatAmount(loan.amount, locale, currency),
       totalColor: 'var(--color-expense)' as const,
       loanCount: 1,
       loans: [{
         description: loan.fundingSource,
-        date: shortDate(loan.date),
+        date: shortDate(loan.date, locale),
         amount: formatAmount(loan.amount, locale, currency),
         remaining: formatAmount(outstanding, locale, currency),
         remainingColor: outstanding > 0 ? 'var(--color-expense)' as const : 'var(--color-income)' as const,
@@ -109,10 +113,12 @@ export function Loans() {
   const { loanStacks, loading, error, fetchLoanStacks } = useLoanStore();
   const { accounts, fetchAccounts } = useAccountStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
+  const { members, fetchMembers } = useMemberStore();
 
   useEffect(() => {
     fetchLoanStacks();
     fetchAccounts();
+    fetchMembers();
   }, []);
 
   const selectedStack = useMemo(() => {
@@ -148,7 +154,7 @@ export function Loans() {
   }
 
   if (routeDebtorId && selectedStack) {
-    return <LoanDetailView stack={selectedStack} accounts={accounts} />;
+    return <LoanDetailView stack={selectedStack} accounts={accounts} members={members} />;
   }
 
   if (routeDebtorId && !selectedStack) {
@@ -193,7 +199,7 @@ export function Loans() {
                 onClick={() => navigate(`/loans/${stack.debtorId}`)}
               >
                 <div className={styles.debtorCardTop}>
-                  <div className={styles.debtorIcon} style={{ background: GRADIENTS[i % GRADIENTS.length] }}>
+                  <div className={styles.debtorIcon} style={{ '--debtor-bg': GRADIENTS[i % GRADIENTS.length] } as React.CSSProperties}>
                     {stack.debtorName.charAt(0).toUpperCase()}
                   </div>
                   <div className={styles.debtorCardInfo}>

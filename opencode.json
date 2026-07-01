@@ -3,7 +3,7 @@
   "mcp": {
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@latest"]
+      "command": ["C:\\Program Files\\nodejs\\node.exe", "node_modules/@playwright/mcp/cli.js"]
     }
   },
   "skills": {

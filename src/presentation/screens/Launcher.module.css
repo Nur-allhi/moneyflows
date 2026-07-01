@@ -65,6 +65,11 @@
   box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
 }
 
+.cardDisabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
 .cardIcon {
   font-size: 28px;
   margin-bottom: 4px;

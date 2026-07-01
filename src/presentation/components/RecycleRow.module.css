@@ -70,6 +70,7 @@
   font-size: 13px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  color: var(--amount-color);
 }
 
 .date {

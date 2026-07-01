@@ -10,6 +10,7 @@ import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { formatAmount } from '../utils/format';
 import { Transaction } from '../../core/domain/Transaction';
 import type { Member } from '../../core/domain/Member';
 import type { Account } from '../../core/domain/Account';
@@ -83,7 +84,7 @@ function validateForm(
   if (source && tab !== 'income' && !isNaN(amountNum) && amountNum > 0) {
     const srcAcct = accounts.find((a) => a.id === source);
     if (srcAcct && amountNum > srcAcct.balance && tab !== 'loan') {
-      next.amount = `Insufficient balance (${Intl.NumberFormat(locale).format(srcAcct.balance)} ${currency} available)`;
+      next.amount = `Insufficient balance (${formatAmount(srcAcct.balance, locale, currency)} available)`;
     }
   }
 
@@ -237,7 +238,7 @@ export function TransactionWizard() {
                 <h2>New Transaction</h2>
                 <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
               </div>
-              <div className="empty-state" style={{ padding: '60px 24px' }}>
+              <div className="empty-state">
                 <div className="empty-state-icon">{'\u{1F4B0}'}</div>
                 <p className="empty-state-text">No accounts available</p>
                 <button className="retry-btn" onClick={() => navigate(-1)}>Go Back</button>
@@ -312,10 +313,10 @@ export function TransactionWizard() {
                 <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
               </div>
               <div className={styles.loadingBody}>
-                <div className="skeleton skeleton-text" style={{ width: '40%' }} />
+                <div className="skeleton skeleton-text" />
                 <div className="skeleton skeleton-row" />
                 <div className="skeleton skeleton-row" />
-                <div className="skeleton skeleton-text" style={{ width: '70%' }} />
+                <div className="skeleton skeleton-text" />
                 <div className="skeleton skeleton-row" />
               </div>
             </div>
@@ -329,15 +330,15 @@ export function TransactionWizard() {
               <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
             </div>
             <div className={styles.loadingBody}>
-              <div className="skeleton skeleton-text" style={{ width: '40%' }} />
+              <div className="skeleton skeleton-text" />
               <div className="skeleton skeleton-row" />
               <div className="skeleton skeleton-row" />
-              <div className="skeleton skeleton-text" style={{ width: '70%' }} />
+              <div className="skeleton skeleton-text" />
               <div className="skeleton skeleton-row" />
             </div>
             <div className={styles.modalActions}>
-              <div className="skeleton skeleton-text" style={{ width: '120px', height: '44px', borderRadius: '10px' }} />
-              <div className="skeleton skeleton-text" style={{ width: '120px', height: '44px', borderRadius: '10px' }} />
+              <div className="skeleton skeleton-wizard" />
+              <div className="skeleton skeleton-wizard" />
             </div>
           </div>
         </div>
@@ -379,8 +380,8 @@ export function TransactionWizard() {
               {source ? accountOptionLabel(source) : null}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="min-w-[360px]" style={{ padding: '16px' }}>
-            {accounts.map((a) => (
+            <SelectContent className="min-w-[360px]">
+              {accounts.map((a) => (
               <SelectItem key={a.id} value={a.id}>
                 <span className="flex items-center gap-3 w-full min-w-0">
                   <span className="flex flex-col min-w-0 flex-1">
@@ -392,7 +393,7 @@ export function TransactionWizard() {
                     </span>
                   </span>
                   <span className="font-mono text-xs text-muted-foreground tabular-nums shrink-0">
-                    {Intl.NumberFormat(locale).format(a.balance)} {currency}
+                    {formatAmount(a.balance, locale, currency)}
                   </span>
                 </span>
               </SelectItem>
@@ -411,7 +412,7 @@ export function TransactionWizard() {
                 {destination ? accountOptionLabel(destination) : null}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="min-w-[360px]" style={{ padding: '16px' }}>
+          <SelectContent className="min-w-[360px]">
               {accounts.map((a) => (
                 <SelectItem key={a.id} value={a.id}>
                   <span className="flex items-center gap-3 w-full min-w-0">
@@ -424,7 +425,7 @@ export function TransactionWizard() {
                       </span>
                     </span>
                     <span className="font-mono text-xs text-muted-foreground tabular-nums shrink-0">
-                      {Intl.NumberFormat(locale).format(a.balance)} {currency}
+                      {formatAmount(a.balance, locale, currency)}
                     </span>
                   </span>
                 </SelectItem>
@@ -444,7 +445,7 @@ export function TransactionWizard() {
                 {debtor ? debtorOptions.find(d => d.value === debtor)?.label : null}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="min-w-[240px]" style={{ padding: '16px' }}>
+            <SelectContent className="min-w-[240px]">
               {debtorOptions.map((m) => (
                 <SelectItem key={m.value} value={m.value}>
                   <span className="flex items-center gap-2">

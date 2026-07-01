@@ -74,7 +74,7 @@ export function Launcher() {
               <span className={`${styles.badge} ${card.badgeClass}`}>{card.badge}</span>
             </Link>
           ) : (
-            <div key={card.title} className={styles.card} style={{ cursor: 'default', opacity: 0.5 }}>
+            <div key={card.title} className={`${styles.card} ${styles.cardDisabled}`}>
               <div className={styles.cardIcon}>{card.icon}</div>
               <div className={styles.cardTitle}>{card.title}</div>
               <div className={styles.cardDesc}>{card.desc}</div>

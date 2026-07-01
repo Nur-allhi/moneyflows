@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import styles from './Avatar.module.css';
 
 type AvatarSize = 24 | 36 | 48 | 72;
@@ -45,7 +44,7 @@ export function Avatar({
   return (
     <div
       className={classNames}
-      style={{ background: resolvedGradient as CSSProperties['background'] }}
+      style={{ '--avatar-bg': resolvedGradient } as React.CSSProperties}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}

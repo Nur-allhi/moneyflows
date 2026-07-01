@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { DAYS, MONTHS } from '../constants/dates';
 import styles from './Header.module.css';
 
 interface BreadcrumbItem {
@@ -18,9 +19,7 @@ interface HeaderProps {
 
 function formatDate(): string {
   const d = new Date();
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 export function Header({

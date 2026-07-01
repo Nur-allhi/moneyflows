@@ -37,7 +37,7 @@ export function ProgressBar({ percent, label, sublabel, className = '' }: Progre
         </div>
       )}
       <div className={styles.track}>
-        <div className={styles.fill} style={{ width: `${width}%` }} />
+        <div className={styles.fill} style={{ '--progress-width': `${width}%` } as React.CSSProperties} />
       </div>
     </div>
   );
