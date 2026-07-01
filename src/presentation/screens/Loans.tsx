@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ProgressBar, GlassPanel, LedgerTable } from '../components';
 import type { LedgerRow } from '../components';
@@ -19,8 +19,7 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
   const navigate = useNavigate();
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const { transactions: txns, fetchTransactions } = useTransactionStore();
-  const { recordRepayment, fetchLoanStacks, deleteLoanStack } = useLoanStore();
-  const formRef = useRef<HTMLDivElement>(null);
+  const { deleteLoanStack } = useLoanStore();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
@@ -33,83 +32,35 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
   const cpType = isInternal ? 'internal' : ((cpAcct?.metadata?.counterpartyType as string) ?? 'debtor');
   const typeLabel = isInternal ? 'Internal' : (cpType === 'creditor' ? 'Creditor' : 'Debtor');
 
-  const [showRepay, setShowRepay] = useState(false);
-  const [repayAmount, setRepayAmount] = useState('');
-  const [repaySource, setRepaySource] = useState('');
-  const [repayDest, setRepayDest] = useState('');
-  const [repayDesc, setRepayDesc] = useState('');
-  const [repayDate, setRepayDate] = useState('');
-  const [repayErr, setRepayErr] = useState('');
-  const [repaySaving, setRepaySaving] = useState(false);
-  const [pickerField, setPickerField] = useState<'source' | 'dest' | null>(null);
-
-  const borrowerMemberId = useMemo(() => {
-    if (!isInternal) return null;
-    return accountById[stack.debtorId]?.memberId ?? null;
-  }, [accountById, stack.debtorId, isInternal]);
-
-  const borrowerAccounts = useMemo(() => {
-    if (!borrowerMemberId) return [];
-    return accounts.filter((a) => a.memberId === borrowerMemberId);
-  }, [accounts, borrowerMemberId]);
-
   const lenderAccountId = useMemo(() => {
     if (!isInternal) return null;
     const issueTx = txns.find((t) => t.type === 'loan_issue' && t.destAccount === stack.debtorId);
     return issueTx?.sourceAccount ?? null;
   }, [txns, stack.debtorId, isInternal]);
 
-  const lenderMemberId = useMemo(() => {
-    if (!lenderAccountId) return null;
-    return accountById[lenderAccountId]?.memberId ?? null;
-  }, [lenderAccountId, accountById]);
-
-  const lenderAccounts = useMemo(() => {
-    if (!lenderMemberId) return [];
-    return accounts.filter((a) => a.memberId === lenderMemberId);
-  }, [accounts, lenderMemberId]);
-
   const handleOpenRepay = useCallback(() => {
-    setRepayAmount(String(stack.totalOutstanding));
-    setRepaySource(stack.debtorId);
-    setRepayDest(lenderAccountId ?? '');
-    setRepayDesc(`Repayment \u2014 ${stack.debtorName}`);
-    setRepayDate(new Date().toISOString().slice(0, 10));
-    setRepayErr('');
-    setShowRepay(true);
-  }, [stack, lenderAccountId]);
-
-  const handleRepaySubmit = useCallback(async () => {
-    const amount = parseFloat(repayAmount);
-    if (!amount || amount <= 0) { setRepayErr('Enter a valid amount'); return; }
-    if (amount > stack.totalOutstanding) {
-      setRepayErr(`Amount cannot exceed ${formatAmount(stack.totalOutstanding, locale, currency)}`);
-      return;
-    }
-    if (!repaySource) { setRepayErr('Select a source account'); return; }
-    if (!repayDest) { setRepayErr('Select a destination account'); return; }
-    setRepaySaving(true);
-    setRepayErr('');
-    try {
-      const pMember = useSettingsStore.getState().settings.primaryMemberId;
-      if (!pMember) { setRepayErr('Primary member not configured'); return; }
-      await recordRepayment({
-        sourceAccount: repaySource,
-        destAccount: repayDest,
-        amount,
-        loanRef: '',
-        description: repayDesc.trim() || `Repayment \u2014 ${stack.debtorName}`,
-        date: repayDate,
-        memberId: pMember,
+    if (isInternal) {
+      useModalStore.getState().open('transaction-form', {
+        initialTab: 'loan',
+        initialSource: stack.debtorId,
+        initialDestination: lenderAccountId ?? '',
+        initialLoanTargetType: 'internal',
+        internalAction: 'repay',
       });
-      await fetchLoanStacks();
-      setShowRepay(false);
-    } catch (e) {
-      setRepayErr((e as Error).message);
-    } finally {
-      setRepaySaving(false);
+    } else if (cpType === 'creditor') {
+      useModalStore.getState().open('transaction-form', {
+        initialTab: 'loan',
+        initialLoanMode: 'payback',
+        initialCounterpartyId: stack.debtorId,
+      });
+    } else {
+      useModalStore.getState().open('transaction-form', {
+        initialTab: 'loan',
+        initialLoanMode: 'repay',
+        initialCounterpartyId: stack.debtorId,
+      });
     }
-  }, [repayAmount, repaySource, repayDest, repayDesc, repayDate, stack, locale, currency, recordRepayment, fetchLoanStacks]);
+  }, [stack, lenderAccountId, isInternal, cpType]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -202,9 +153,9 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
           <div className={styles.summaryAmount}>
             <div className={styles.summaryValue}>{debtorSummary.totalOutstanding}</div>
             <div className={styles.summaryAmountLabel}>Total Outstanding</div>
-            {isInternal && stack.totalOutstanding > 0 && (
+            {stack.totalOutstanding > 0 && (
               <button className={styles.repayBtn} onClick={handleOpenRepay}>
-                Repay Loan
+                {cpType === 'creditor' ? 'Pay Back' : 'Repay'}
               </button>
             )}
           </div>
@@ -233,89 +184,6 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
               <div className={styles.confirmActions}>
                 <button className={styles.cancelBtn} onClick={() => setConfirmDelete(false)}>Cancel</button>
                 <button className={styles.confirmDeleteBtn} onClick={handleDelete}>Delete</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showRepay && (
-        <div className={styles.overlay} onClick={() => setShowRepay(false)}>
-          <div className={styles.repayForm} ref={formRef} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.formHeader}>
-              <h3>Repay Loan</h3>
-              <button className={styles.formClose} onClick={() => setShowRepay(false)}>&times;</button>
-            </div>
-            <div className={styles.formBody}>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>Amount</span>
-                <input className={styles.formInput} type="number" min="1" step="any" value={repayAmount} onChange={(e) => setRepayAmount(e.target.value)} placeholder="Amount" />
-              </div>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>From</span>
-                <button type="button" className={styles.pickerTrigger} onClick={() => setPickerField('source')}>
-                  {repaySource
-                    ? <><span className={styles.pickerValue}>{accountById[repaySource]?.name ?? 'Select'}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                    : <span className={styles.pickerPlaceholder}>Select account</span>}
-                </button>
-              </div>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>To</span>
-                <button type="button" className={styles.pickerTrigger} onClick={() => setPickerField('dest')}>
-                  {repayDest
-                    ? <><span className={styles.pickerValue}>{accountById[repayDest]?.name ?? 'Select'}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                    : <span className={styles.pickerPlaceholder}>Select account</span>}
-                </button>
-              </div>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>Description</span>
-                <input className={styles.formInput} value={repayDesc} onChange={(e) => setRepayDesc(e.target.value)} placeholder="Description" />
-              </div>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>Date</span>
-                <input className={styles.formInput} type="date" value={repayDate} onChange={(e) => setRepayDate(e.target.value)} />
-              </div>
-              {repayErr && <span className={styles.formError}>{repayErr}</span>}
-              <button className={styles.formSubmit} onClick={handleRepaySubmit} disabled={repaySaving}>
-                {repaySaving ? 'Recording...' : 'Confirm Repayment'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {pickerField && (
-        <div className={styles.pickerOverlay} onClick={() => setPickerField(null)}>
-          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.pickerHeader}>
-              <span className={styles.pickerTitle}>Select Account</span>
-              <button className={styles.pickerClose} onClick={() => setPickerField(null)}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            <div className={styles.pickerBody}>
-              <div className={styles.pickerList}>
-                {(pickerField === 'source' ? borrowerAccounts : lenderAccounts).length === 0 ? (
-                  <div className={styles.pickerEmpty}>No accounts available</div>
-                ) : (
-                  (pickerField === 'source' ? borrowerAccounts : lenderAccounts).map((a) => (
-                    <button
-                      key={a.id}
-                      className={styles.pickerItem}
-                      onClick={() => {
-                        if (pickerField === 'source') setRepaySource(a.id);
-                        else setRepayDest(a.id);
-                        setPickerField(null);
-                      }}
-                    >
-                      <span className={styles.pickerItemName}>{a.name}</span>
-                      <span className={styles.pickerItemMeta}>{a.type}</span>
-                      <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
-                    </button>
-                  ))
-                )}
               </div>
             </div>
           </div>
