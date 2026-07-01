@@ -113,6 +113,9 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [closing, setClosing] = useState(false);
 
+  const [pickerField, setPickerField] = useState<'source' | 'destination' | null>(null);
+  const [pickerMember, setPickerMember] = useState<string | null>(null);
+
   useEffect(() => {
     fetchAccounts();
     fetchMembers();
@@ -134,6 +137,24 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
       label: `${m.name}${m.shortName ? ` (${m.shortName})` : ''}`,
     })),
     [externalMembers],
+  );
+
+  const internalMembers = useMemo(
+    () => members.filter((m) => !m.isExternal),
+    [members],
+  );
+
+  const accountsByMember = useMemo(
+    () => {
+      const map: Record<string, Account[]> = {};
+      for (const a of accounts) {
+        const list = map[a.memberId] ?? [];
+        list.push(a);
+        map[a.memberId] = list;
+      }
+      return map;
+    },
+    [accounts],
   );
 
   const accountLabel = useCallback((id: string) => {
@@ -387,24 +408,15 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
 
       <div className={styles.fieldGroup}>
         <span className={styles.fieldLabel}>Source Account</span>
-        <Select value={source} onValueChange={(v) => { if (v !== null) { setSource(v); clearError('source'); } }}>
-          <SelectTrigger className={`w-full ${styles.selectTrigger}`}>
-            <SelectValue placeholder="Source Account">
-              {source ? accountLabel(source) : null}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent className="min-w-[260px]">
-            {accounts.map((a) => (
-            <SelectItem key={a.id} value={a.id} className="py-1!">
-              <span className={styles.selectItem}>
-                <span className={styles.selectItemName}>{a.name}</span>
-                <span className={styles.selectItemMeta}>{memberLookup[a.memberId]?.name ?? '?'}</span>
-                <span className={styles.selectItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
-              </span>
-            </SelectItem>
-          ))}
-          </SelectContent>
-        </Select>
+        <button
+          type="button"
+          className={`${styles.pickerTrigger} ${errors.source ? styles.fieldError : ''}`}
+          onClick={() => { setPickerField('source'); setPickerMember(null); }}
+        >
+          {source
+            ? <><span className={styles.pickerValue}>{accountLabel(source)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+            : <span className={styles.pickerPlaceholder}>Select account</span>}
+        </button>
         {errors.source && <span className={styles.errorText}>{errors.source}</span>}
       </div>
 
@@ -412,24 +424,15 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
         <div className={styles.slideInner}>
           <div className={styles.fieldGroup}>
             <span className={styles.fieldLabel}>Destination Account</span>
-            <Select value={destination} onValueChange={(v) => { if (v !== null) { setDestination(v); clearError('destination'); } }}>
-              <SelectTrigger className={`w-full ${styles.selectTrigger}`}>
-                <SelectValue placeholder="Destination Account">
-                  {destination ? accountLabel(destination) : null}
-                </SelectValue>
-              </SelectTrigger>
-            <SelectContent className="min-w-[260px]">
-                {accounts.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    <span className={styles.selectItem}>
-                      <span className={styles.selectItemName}>{a.name}</span>
-                      <span className={styles.selectItemMeta}>{memberLookup[a.memberId]?.name ?? '?'}</span>
-                      <span className={styles.selectItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <button
+              type="button"
+              className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`}
+              onClick={() => { setPickerField('destination'); setPickerMember(null); }}
+            >
+              {destination
+                ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                : <span className={styles.pickerPlaceholder}>Select account</span>}
+            </button>
             {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
           </div>
         </div>
@@ -486,7 +489,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
               <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
             </div>
 
-            <div className={styles.formBody} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleSubmit(); } }}>
+            <div className={styles.formBody} onKeyDown={(e) => { if (e.key === 'Enter') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); handleSubmit(); } else if (!(e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); } } }}>
               {formFields}
               <button className={styles.submitBtn} onClick={handleSubmit} disabled={!rawAmount || Object.keys(errors).length > 0}>
                 {buttonLabel}
@@ -507,7 +510,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
             <h2>New Transaction</h2>
             <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
           </div>
-          <div className={styles.modalBody} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); handleSubmit(); } }}>
+          <div className={styles.modalBody} onKeyDown={(e) => { if (e.key === 'Enter') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); handleSubmit(); } else if (!(e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); } } }}>
             <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
             {formFields}
           </div>
@@ -517,6 +520,59 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
           </div>
         </div>
       </div>
+
+      {pickerField && (
+        <div className={styles.pickerOverlay} onClick={() => { setPickerField(null); setPickerMember(null); }}>
+          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.pickerHeader}>
+              <button className={styles.pickerBack} onClick={() => setPickerMember(null)} style={{ visibility: pickerMember ? 'visible' : 'hidden' }}>{'\u25C0'}</button>
+              <span className={styles.pickerTitle}>{pickerMember ? 'Select Account' : 'Select Member'}</span>
+              <button className={styles.pickerClose} onClick={() => { setPickerField(null); setPickerMember(null); }}>&times;</button>
+            </div>
+            <div className={styles.pickerBody}>
+              {!pickerMember ? (
+                <div className={styles.pickerList}>
+                  {internalMembers.map((m) => (
+                    <button
+                      key={m.id}
+                      className={styles.pickerItem}
+                      onClick={() => setPickerMember(m.id)}
+                    >
+                      <span className={styles.pickerItemName}>{m.name}</span>
+                      {m.shortName && <span className={styles.pickerItemMeta}>{m.shortName}</span>}
+                      <span className={styles.pickerItemCount}>{accountsByMember[m.id]?.length ?? 0} accounts</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.pickerList}>
+                  {(accountsByMember[pickerMember] ?? []).length === 0 ? (
+                    <div className={styles.pickerEmpty}>No accounts for this member</div>
+                  ) : (
+                    (accountsByMember[pickerMember] ?? []).map((a) => (
+                      <button
+                        key={a.id}
+                        className={styles.pickerItem}
+                        onClick={() => {
+                          if (pickerField === 'source') setSource(a.id);
+                          else setDestination(a.id);
+                          clearError(pickerField);
+                          setPickerField(null);
+                          setPickerMember(null);
+                        }}
+                      >
+                        <span className={styles.pickerItemName}>{a.name}</span>
+                        <span className={styles.pickerItemMeta}>{a.type.replace('_', ' ')}</span>
+                        <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

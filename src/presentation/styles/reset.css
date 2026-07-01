@@ -34,6 +34,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: oklch(100% 0 0 / 0.12);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: oklch(100% 0 0 / 0.2);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(100% 0 0 / 0.12) transparent;
+}
+
 a {
   color: inherit;
   text-decoration: none;

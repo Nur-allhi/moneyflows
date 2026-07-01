@@ -4,3 +4,4 @@ dist/
 *.db-journal
 .env
 .env.local
+.playwright-mcp/
