@@ -787,3 +787,43 @@
 ### Status
 - **T-050 complete.** Build + typecheck pass.
 - **All 50 tickets complete.** Phase 6 — Dynamic Configuration & Hardening is finished.
+
+## Session 2026-07-01 20:00
+
+### Changes
+- **LedgerTable flicker fix**: Replaced ResizeObserver-based slide animation (which caused a visible flash because the observer fires async after DOM paint) with render-phase height capture + `useLayoutEffect`. Old height is read from `bodyRef.current.scrollHeight` during render (before React commits new DOM), then `useLayoutEffect` applies `max-height` synchronously before paint — eliminates the flash entirely.
+- **Scrollbar consistency**: Changed `.main` from `overflow-y: auto` to `overflow-y: scroll` so scrollbar reserved space is always present. Added global WebKit and Firefox scrollbar styling (6px, transparent track, `oklch(100% 0 0 / 0.12)` thumb, pill radius).
+- **Account picker**: Replaced shadcn Select for source/destination fields with a modal-based account picker showing internal members first, then accounts for selected member (name, type, balance).
+- **Form key handling**: Plain Enter prevented on all inputs (except textarea for newlines); Ctrl+Enter / Cmd+Enter submits form.
+- **seed_db.cjs**: Added Node.js seed script using sql.js to create test data with 3 members, 4 accounts, 30 transactions. Outputs base64 blob for `localStorage['moneyflows_db']`.
+- **.gitignore**: Added `.playwright-mcp/` to prevent log files from being committed.
+
+### Skill(s) Used
+- `senior-frontend` — useLayoutEffect pattern, render-phase ref capture, scrollbar CSS
+
+### Status
+- Commit: `098b3eb`. Build passes.
+- All changes committed. No remaining tickets.
+
+## Session 2026-07-01 22:30
+
+### Changes
+- **DB init resilience**: Wrapped `atob()` in `SQLiteDatabaseService.init()` with try-catch — if localStorage data is corrupted, clears it and starts fresh instead of crashing on "Loading…"
+- **Seed script**: Rewrote `seed_db.cjs` with full schema (all 6 tables), 2 members, 6 accounts, 124 transactions, account groups. Generates `test.db` file in project root.
+- **Debtor/Creditor modal picker**: Replaced native `<select>` in `LoanFormSection` with a trigger button that opens the same modal overlay used for source/destination — shows filtered counterparty accounts (debtors/creditors) in the picker.
+- **Transaction modal not appearing fix**: `LoanDetailView` was fetching transactions directly via `getDatabase().getTransactions()` into local state, bypassing `useTransactionStore`. Switched to `useTransactionStore.fetchTransactions()` so transactions are available when `TransactionDetailModal` looks them up.
+
+### Files Changed
+- `src/infrastructure/database/SQLiteDatabaseService.ts` — try-catch in `init()`
+- `seed_db.cjs` — full schema seed, generates `test.db`
+- `src/presentation/components/LoanFormSection.tsx` — trigger button + `onOpenPicker` prop
+- `src/presentation/components/LoanFormSection.module.css` — picker trigger styles
+- `src/presentation/modals/TransactionFormModal.tsx` — counterparty picker overlay
+- `src/presentation/screens/Loans.tsx` — `useTransactionStore` instead of direct DB call
+- `session_log.md` — this entry
+
+### Skill(s) Used
+- `senior-frontend` — Modal picker pattern, Zustand store integration, error resilience
+
+### Status
+- All changes ready for commit.

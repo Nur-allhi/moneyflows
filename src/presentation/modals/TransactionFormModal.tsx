@@ -1,17 +1,16 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '../../components/ui/select';
 import { DatePicker } from '../../components/ui/date-picker';
-import { SegmentedTabs, FormTextarea, Numpad } from '../components';
+import { SegmentedTabs, FormTextarea, Numpad, LoanFormSection } from '../components';
+import type { LoanMode } from '../components';
+import { LOAN_MODE_BUTTON_LABELS } from '../components/LoanFormSection';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
+import { useLoanStore } from '../stores/useLoanStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
 import { Transaction } from '../../core/domain/Transaction';
-import type { Member } from '../../core/domain/Member';
 import type { Account } from '../../core/domain/Account';
 import styles from './TransactionFormModal.module.css';
 
@@ -34,11 +33,12 @@ function validateForm(
   description: string,
   source: string,
   destination: string,
-  debtor: string,
+  counterpartyId: string,
   accounts: Account[],
-  externalMembers: Member[],
+  counterpartyAccounts: Account[],
   locale: string,
   currency: string,
+  loanMode?: LoanMode,
 ): ValidationErrors {
   const next: ValidationErrors = {};
   const amountNum = parseInt(rawAmount, 10);
@@ -56,38 +56,67 @@ function validateForm(
     next.description = 'Description must be 200 characters or less';
   }
 
-  if (!source) {
-    next.source = 'Select an account';
-  } else {
-    const acct = accounts.find((a) => a.id === source);
-    if (!acct) next.source = 'Account not found';
-    else if (!acct.isActive) next.source = 'Account is inactive';
-  }
-
-  if (tab === 'transfer') {
-    if (!destination) {
-      next.destination = 'Select a destination account';
-    } else if (source && destination === source) {
-      next.destination = 'Source and destination must differ';
-    } else {
-      const acct = accounts.find((a) => a.id === destination);
-      if (!acct) next.destination = 'Account not found';
-      else if (!acct.isActive) next.destination = 'Account is inactive';
-    }
-  }
-
   if (tab === 'loan') {
-    if (!debtor) {
-      next.debtor = 'Select a debtor';
-    } else if (!externalMembers.find((m) => m.id === debtor)) {
-      next.debtor = 'Debtor not found';
+    if (loanMode === 'give' || loanMode === 'payback') {
+      if (!source) {
+        next.source = 'Select an account';
+      } else {
+        const acct = accounts.find((a) => a.id === source);
+        if (!acct) next.source = 'Account not found';
+        else if (!acct.isActive) next.source = 'Account is inactive';
+      }
     }
-  }
+    if (loanMode === 'give' && source && destination && source === destination) {
+      next.destination = 'Source and destination must differ';
+    }
+    if (loanMode === 'take' || loanMode === 'repay') {
+      if (!destination) {
+        next.destination = 'Select a destination account';
+      } else {
+        const acct = accounts.find((a) => a.id === destination);
+        if (!acct) next.destination = 'Account not found';
+        else if (!acct.isActive) next.destination = 'Account is inactive';
+      }
+    }
+    if (loanMode === 'repay' && source && destination && source === destination) {
+      next.destination = 'Source and destination must differ';
+    }
+    if (loanMode === 'repay' && source) {
+      const acct = accounts.find((a) => a.id === source);
+      if (!acct) next.source = 'Account not found';
+      else if (!acct.isActive) next.source = 'Account is inactive';
+    }
+    if (!counterpartyId) {
+      next.debtor = 'Select a counterparty';
+    } else if (!counterpartyAccounts.find((a) => a.id === counterpartyId)) {
+      next.debtor = 'Counterparty not found';
+    }
+  } else {
+    if (!source) {
+      next.source = 'Select an account';
+    } else {
+      const acct = accounts.find((a) => a.id === source);
+      if (!acct) next.source = 'Account not found';
+      else if (!acct.isActive) next.source = 'Account is inactive';
+    }
 
-  if (source && tab !== 'income' && !isNaN(amountNum) && amountNum > 0) {
-    const srcAcct = accounts.find((a) => a.id === source);
-    if (srcAcct && amountNum > srcAcct.balance && tab !== 'loan') {
-      next.amount = `Insufficient balance (${formatAmount(srcAcct.balance, locale, currency)} available)`;
+    if (tab === 'transfer') {
+      if (!destination) {
+        next.destination = 'Select a destination account';
+      } else if (source && destination === source) {
+        next.destination = 'Source and destination must differ';
+      } else {
+        const acct = accounts.find((a) => a.id === destination);
+        if (!acct) next.destination = 'Account not found';
+        else if (!acct.isActive) next.destination = 'Account is inactive';
+      }
+    }
+
+    if (source && tab !== 'income' && !isNaN(amountNum) && amountNum > 0) {
+      const srcAcct = accounts.find((a) => a.id === source);
+      if (srcAcct && amountNum > srcAcct.balance && tab !== 'loan') {
+        next.amount = `Insufficient balance (${formatAmount(srcAcct.balance, locale, currency)} available)`;
+      }
     }
   }
 
@@ -106,6 +135,10 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const [source, setSource] = useState('');
   const [destination, setDestination] = useState('');
   const [debtor, setDebtor] = useState('');
+  const [loanMode, setLoanMode] = useState<LoanMode>('give');
+  const counterpartyType: 'debtor' | 'creditor' =
+    loanMode === 'take' || loanMode === 'payback' ? 'creditor' : 'debtor';
+  const counterpartyLabel = counterpartyType === 'debtor' ? 'Debtor' : 'Creditor';
   const [date, setDate] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -113,7 +146,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [closing, setClosing] = useState(false);
 
-  const [pickerField, setPickerField] = useState<'source' | 'destination' | null>(null);
+  const [pickerField, setPickerField] = useState<'source' | 'destination' | 'counterparty' | null>(null);
   const [pickerMember, setPickerMember] = useState<string | null>(null);
 
   useEffect(() => {
@@ -121,22 +154,25 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
     fetchMembers();
   }, []);
 
-  const externalMembers = useMemo(
-    () => members.filter((m) => m.isExternal),
-    [members],
+  useEffect(() => {
+    if (tab !== 'loan') return;
+    if (loanMode === 'take' || loanMode === 'repay') {
+      setSource('');
+    }
+    if (loanMode === 'give' || loanMode === 'payback') {
+      setDestination('');
+    }
+    setDebtor('');
+  }, [loanMode, tab]);
+
+  const counterpartyAccounts = useMemo(
+    () => accounts.filter((a) => a.type === 'counterparty'),
+    [accounts],
   );
 
   const memberLookup = useMemo(
     () => Object.fromEntries(members.map((m) => [m.id, m])),
     [members],
-  );
-
-  const debtorOptions = useMemo(
-    () => externalMembers.map((m) => ({
-      value: m.id,
-      label: `${m.name}${m.shortName ? ` (${m.shortName})` : ''}`,
-    })),
-    [externalMembers],
   );
 
   const internalMembers = useMemo(
@@ -148,6 +184,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
     () => {
       const map: Record<string, Account[]> = {};
       for (const a of accounts) {
+        if (!a.memberId) continue;
         const list = map[a.memberId] ?? [];
         list.push(a);
         map[a.memberId] = list;
@@ -160,6 +197,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const accountLabel = useCallback((id: string) => {
     const a = accounts.find(a => a.id === id);
     if (!a) return '';
+    if (!a.memberId) return a.name;
     const memberName = memberLookup[a.memberId]?.name ?? '';
     return memberName ? `${a.name} \u2014 ${memberName}` : a.name;
   }, [accounts, memberLookup]);
@@ -167,10 +205,10 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
 
   const validate = useCallback((): boolean => {
-    const next = validateForm(tab, rawAmount, description, source, destination, debtor, accounts, externalMembers, locale, currency);
+    const next = validateForm(tab, rawAmount, description, source, destination, debtor, accounts, counterpartyAccounts, locale, currency, loanMode);
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, debtor, accounts, externalMembers, locale, currency]);
+  }, [tab, rawAmount, description, source, destination, debtor, accounts, counterpartyAccounts, locale, currency, loanMode]);
 
   const clearError = useCallback((field: string) => {
     setErrors((prev) => {
@@ -202,6 +240,8 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
     setTimeout(() => onClose(), 300);
   };
 
+  const { createGivenLoan, createReceivedLoan, recordRepayment, recordPayback } = useLoanStore();
+
   const handleSubmit = async () => {
     if (!validate()) return;
     const amount = parseInt(rawAmount, 10);
@@ -211,6 +251,43 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
       ?? '';
     if (!txMemberId) {
       setErrors({ source: 'No family members found. Create a member first.' });
+      return;
+    }
+
+    if (tab === 'loan') {
+      const capitalizedDesc = description.trim().charAt(0).toUpperCase() + description.trim().slice(1);
+      try {
+        switch (loanMode) {
+          case 'give':
+            await createGivenLoan({
+              sourceAccount: source, destAccount: debtor,
+              amount, description: capitalizedDesc, date, memberId: txMemberId,
+            });
+            break;
+          case 'take':
+            await createReceivedLoan({
+              sourceAccount: debtor, destAccount: destination,
+              amount, description: capitalizedDesc, date, memberId: txMemberId,
+            });
+            break;
+          case 'repay':
+            await recordRepayment({
+              sourceAccount: debtor, destAccount: destination,
+              amount, loanRef: '', description: capitalizedDesc, date, memberId: txMemberId,
+            });
+            break;
+          case 'payback':
+            await recordPayback({
+              sourceAccount: source, destAccount: debtor,
+              amount, loanRef: '', description: capitalizedDesc, date, memberId: txMemberId,
+            });
+            break;
+        }
+      } catch {
+        return;
+      }
+      await fetchAccounts();
+      onClose();
       return;
     }
 
@@ -232,11 +309,6 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
         type = 'transfer';
         src = source;
         dst = destination;
-        break;
-      case 'loan':
-        type = 'loan_issue';
-        src = source;
-        debtorId = debtor;
         break;
       default:
         return;
@@ -383,7 +455,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const buttonLabel =
     tab === 'income' ? 'Complete Income' :
     tab === 'expense' ? 'Complete Expense' :
-    tab === 'loan' ? 'Issue Loan' :
+    tab === 'loan' ? LOAN_MODE_BUTTON_LABELS[loanMode] :
     'Complete Transfer';
 
   const formFields = (
@@ -406,21 +478,25 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
         <DatePicker className={styles.inputField} value={date} onChange={setDate} />
       </div>
 
-      <div className={styles.fieldGroup}>
-        <span className={styles.fieldLabel}>Source Account</span>
-        <button
-          type="button"
-          className={`${styles.pickerTrigger} ${errors.source ? styles.fieldError : ''}`}
-          onClick={() => { setPickerField('source'); setPickerMember(null); }}
-        >
-          {source
-            ? <><span className={styles.pickerValue}>{accountLabel(source)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-            : <span className={styles.pickerPlaceholder}>Select account</span>}
-        </button>
-        {errors.source && <span className={styles.errorText}>{errors.source}</span>}
+      <div className={`${styles.slideField} ${tab === 'loan' && (loanMode === 'give' || loanMode === 'payback') ? styles.slideOpen : tab !== 'loan' ? styles.slideOpen : ''}`}>
+        <div className={styles.slideInner}>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldLabel}>Source Account</span>
+            <button
+              type="button"
+              className={`${styles.pickerTrigger} ${errors.source ? styles.fieldError : ''}`}
+              onClick={() => { setPickerField('source'); setPickerMember(null); }}
+            >
+              {source
+                ? <><span className={styles.pickerValue}>{accountLabel(source)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                : <span className={styles.pickerPlaceholder}>Select account</span>}
+            </button>
+            {errors.source && <span className={styles.errorText}>{errors.source}</span>}
+          </div>
+        </div>
       </div>
 
-      <div className={`${styles.slideField} ${tab === 'transfer' ? styles.slideOpen : ''}`}>
+      <div className={`${styles.slideField} ${tab === 'transfer' ? styles.slideOpen : tab === 'loan' && (loanMode === 'take' || loanMode === 'repay') ? styles.slideOpen : ''}`}>
         <div className={styles.slideInner}>
           <div className={styles.fieldGroup}>
             <span className={styles.fieldLabel}>Destination Account</span>
@@ -438,28 +514,23 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
         </div>
       </div>
 
-      <div className={`${styles.slideField} ${tab === 'loan' ? styles.slideOpen : ''}`}>
-        <div className={styles.slideInner}>
-          <div className={styles.fieldGroup}>
-            <span className={styles.fieldLabel}>Debtor</span>
-            <Select value={debtor} onValueChange={(v) => { if (v !== null) { setDebtor(v); clearError('debtor'); } }}>
-              <SelectTrigger className={`w-full ${styles.selectTrigger}`}>
-                <SelectValue placeholder="Select Debtor" />
-              </SelectTrigger>
-              <SelectContent className="min-w-[200px]">
-                {debtorOptions.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    <span className={styles.selectItem}>
-                      <span className={styles.selectItemName}>{m.label}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.debtor && <span className={styles.errorText}>{errors.debtor}</span>}
-          </div>
-        </div>
-      </div>
+      {tab === 'loan' && (
+        <LoanFormSection
+          mode={loanMode}
+          onModeChange={setLoanMode}
+          counterpartyId={debtor}
+          onCounterpartyChange={(id) => { setDebtor(id); clearError('debtor'); }}
+          counterpartyAccounts={counterpartyAccounts}
+          onAddCounterparty={async (name, type) => {
+            const result = await useLoanStore.getState().createCounterparty(name, type);
+            await fetchAccounts();
+            return result.accountId;
+          }}
+          onOpenPicker={() => { setPickerField('counterparty'); setPickerMember(null); }}
+          error={errors.debtor}
+          onClearError={() => clearError('debtor')}
+        />
+      )}
 
       <FormTextarea
         label="Description"
@@ -525,12 +596,40 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
         <div className={styles.pickerOverlay} onClick={() => { setPickerField(null); setPickerMember(null); }}>
           <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.pickerHeader}>
-              <button className={styles.pickerBack} onClick={() => setPickerMember(null)} style={{ visibility: pickerMember ? 'visible' : 'hidden' }}>{'\u25C0'}</button>
-              <span className={styles.pickerTitle}>{pickerMember ? 'Select Account' : 'Select Member'}</span>
-              <button className={styles.pickerClose} onClick={() => { setPickerField(null); setPickerMember(null); }}>&times;</button>
+              <button className={styles.pickerBack} onClick={() => setPickerMember(null)} style={{ visibility: pickerField === 'counterparty' || !pickerMember ? 'hidden' : 'visible' }}>{'\u25C0'}</button>
+              <span className={styles.pickerTitle}>
+                {pickerField === 'counterparty' ? `Select ${counterpartyLabel}` : pickerMember ? 'Select Account' : 'Select Member'}
+              </span>
+              <button className={styles.pickerClose} onClick={() => { setPickerField(null); setPickerMember(null); }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
             </div>
             <div className={styles.pickerBody}>
-              {!pickerMember ? (
+              {pickerField === 'counterparty' ? (
+                <div className={styles.pickerList}>
+                  {counterpartyAccounts.filter((a) => (a.metadata?.counterpartyType as string) === counterpartyType).length === 0 ? (
+                    <div className={styles.pickerEmpty}>No {counterpartyLabel.toLowerCase()} accounts. Use + to add one.</div>
+                  ) : (
+                    counterpartyAccounts.filter((a) => (a.metadata?.counterpartyType as string) === counterpartyType).map((a) => (
+                      <button
+                        key={a.id}
+                        className={styles.pickerItem}
+                        onClick={() => {
+                          setDebtor(a.id);
+                          clearError('debtor');
+                          setPickerField(null);
+                          setPickerMember(null);
+                        }}
+                      >
+                        <span className={styles.pickerItemName}>{a.name}</span>
+                        <span className={styles.pickerItemMeta}>{counterpartyLabel}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : !pickerMember ? (
                 <div className={styles.pickerList}>
                   {internalMembers.map((m) => (
                     <button
