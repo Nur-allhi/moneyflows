@@ -22,3 +22,5 @@ export { BottomNav } from './BottomNav';
 export { Header } from './Header';
 export { PageTransition } from './PageTransition';
 export { SettingsModal } from './SettingsModal';
+export { LoanFormSection } from './LoanFormSection';
+export type { LoanMode } from './LoanFormSection';

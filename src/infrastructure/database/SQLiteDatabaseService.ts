@@ -386,14 +386,31 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const stacks: LoanStack[] = [];
     for (const cp of counterparties) {
       const stack = await this.getLoanStackByDebtor(cp.id);
-      stacks.push(stack);
+      if (stack) stacks.push({ ...stack, stackType: 'external' });
+    }
+
+    const loanCpIds = this.query<{ counterparty_id: string }>(
+      'SELECT DISTINCT counterparty_id FROM loans WHERE deleted_at IS NULL',
+    );
+    const handledIds = new Set(counterparties.map((c) => c.id));
+    for (const row of loanCpIds) {
+      if (handledIds.has(row.counterparty_id)) continue;
+      const account = accounts.find((a) => a.id === row.counterparty_id);
+      if (account && account.type !== 'counterparty') {
+        const stack = await this.getLoanStackByDebtor(row.counterparty_id);
+        if (stack) stacks.push({ ...stack, stackType: 'internal' });
+      }
     }
     return stacks;
   }
 
   async getLoanStackByDebtor(debtorId: string): Promise<LoanStack> {
     const account = await this.getAccountById(debtorId);
-    const name = account?.name ?? 'Unknown';
+    let name = account?.name ?? 'Unknown';
+    if (account && account.type !== 'counterparty' && account.memberId) {
+      const member = await this.getMemberById(account.memberId);
+      if (member) name = `${member.name} \u2014 ${name}`;
+    }
     const loans = this.query<Record<string, unknown>>(
       'SELECT * FROM loans WHERE counterparty_id=$cid AND deleted_at IS NULL',
       { $cid: debtorId },
@@ -415,6 +432,18 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const totalAmount = loans.reduce((s, l) => s + l.amount, 0);
     const ratio = totalAmount > 0 ? 1 / totalAmount : 0;
 
+    const allLoanIds = loans.map((l) => l.id);
+    const fundingByLoanRef = new Map<string, string>();
+    if (allLoanIds.length > 0) {
+      const quoted = allLoanIds.map((id) => `'${id}'`).join(',');
+      const raw = this.query<{ loan_ref: string; source_account: string }>(
+        `SELECT loan_ref, source_account FROM transactions WHERE loan_ref IN (${quoted}) AND type='loan_issue' AND deleted_at IS NULL`,
+      );
+      for (const r of raw) fundingByLoanRef.set(r.loan_ref, r.source_account);
+    }
+    const allAccts = await this.getAccounts();
+    const accountMap = new Map(allAccts.map((a) => [a.id, a.name]));
+
     let totalOutstanding = 0;
     const loanItems = loans.map((l) => {
       const recovered = l.direction === 'given'
@@ -422,8 +451,10 @@ export class SQLiteDatabaseService implements IDatabaseService {
         : Math.min(l.amount, totalPaidBack * l.amount * ratio);
       const outstanding = l.amount - recovered;
       totalOutstanding += outstanding;
+      const srcAccount = fundingByLoanRef.get(l.id);
+      const fundingName = srcAccount ? accountMap.get(srcAccount) : undefined;
       return {
-        id: l.id, fundingSource: debtorId,
+        id: l.id, fundingSource: fundingName ?? name,
         amount: l.amount, recovered,
         status: outstanding <= 0 ? ('on_track' as const) : ('active' as const),
         date: l.createdAt,

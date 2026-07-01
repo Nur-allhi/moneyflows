@@ -38,7 +38,7 @@ export function Dashboard() {
   const error = acctError || txError;
 
   const totalAssets = useMemo(
-    () => accounts.reduce((s, a) => s + a.balance, 0),
+    () => accounts.filter((a) => a.type !== 'counterparty').reduce((s, a) => s + a.balance, 0),
     [accounts],
   );
 
@@ -122,7 +122,7 @@ export function Dashboard() {
                 <p className="empty-state-text">No accounts connected yet</p>
               </div>
             ) : (
-              accounts.map((acct) => (
+              accounts.filter((a) => a.type !== 'counterparty').map((acct) => (
                 <AccountRow
                   key={acct.id}
                   name={acct.name}

@@ -39,6 +39,7 @@ function validateForm(
   locale: string,
   currency: string,
   loanMode?: LoanMode,
+  loanTargetType?: 'external' | 'internal',
 ): ValidationErrors {
   const next: ValidationErrors = {};
   const amountNum = parseInt(rawAmount, 10);
@@ -57,19 +58,14 @@ function validateForm(
   }
 
   if (tab === 'loan') {
-    if (loanMode === 'give' || loanMode === 'payback') {
+    if (loanTargetType === 'internal') {
       if (!source) {
-        next.source = 'Select an account';
+        next.source = 'Select a source account';
       } else {
         const acct = accounts.find((a) => a.id === source);
         if (!acct) next.source = 'Account not found';
         else if (!acct.isActive) next.source = 'Account is inactive';
       }
-    }
-    if (loanMode === 'give' && source && destination && source === destination) {
-      next.destination = 'Source and destination must differ';
-    }
-    if (loanMode === 'take' || loanMode === 'repay') {
       if (!destination) {
         next.destination = 'Select a destination account';
       } else {
@@ -77,19 +73,51 @@ function validateForm(
         if (!acct) next.destination = 'Account not found';
         else if (!acct.isActive) next.destination = 'Account is inactive';
       }
-    }
-    if (loanMode === 'repay' && source && destination && source === destination) {
-      next.destination = 'Source and destination must differ';
-    }
-    if (loanMode === 'repay' && source) {
-      const acct = accounts.find((a) => a.id === source);
-      if (!acct) next.source = 'Account not found';
-      else if (!acct.isActive) next.source = 'Account is inactive';
-    }
-    if (!counterpartyId) {
-      next.debtor = 'Select a counterparty';
-    } else if (!counterpartyAccounts.find((a) => a.id === counterpartyId)) {
-      next.debtor = 'Counterparty not found';
+      if (source && destination && source === destination) {
+        next.destination = 'Source and destination must differ';
+      }
+      if (source && destination) {
+        const srcAcct = accounts.find((a) => a.id === source);
+        const dstAcct = accounts.find((a) => a.id === destination);
+        if (srcAcct && dstAcct && srcAcct.memberId === dstAcct.memberId) {
+          next.destination = 'Source and destination must belong to different members';
+        }
+      }
+    } else {
+      if (loanMode === 'give' || loanMode === 'payback') {
+        if (!source) {
+          next.source = 'Select an account';
+        } else {
+          const acct = accounts.find((a) => a.id === source);
+          if (!acct) next.source = 'Account not found';
+          else if (!acct.isActive) next.source = 'Account is inactive';
+        }
+      }
+      if (loanMode === 'give' && source && destination && source === destination) {
+        next.destination = 'Source and destination must differ';
+      }
+      if (loanMode === 'take' || loanMode === 'repay') {
+        if (!destination) {
+          next.destination = 'Select a destination account';
+        } else {
+          const acct = accounts.find((a) => a.id === destination);
+          if (!acct) next.destination = 'Account not found';
+          else if (!acct.isActive) next.destination = 'Account is inactive';
+        }
+      }
+      if (loanMode === 'repay' && source && destination && source === destination) {
+        next.destination = 'Source and destination must differ';
+      }
+      if (loanMode === 'repay' && source) {
+        const acct = accounts.find((a) => a.id === source);
+        if (!acct) next.source = 'Account not found';
+        else if (!acct.isActive) next.source = 'Account is inactive';
+      }
+      if (!counterpartyId) {
+        next.debtor = 'Select a counterparty';
+      } else if (!counterpartyAccounts.find((a) => a.id === counterpartyId)) {
+        next.debtor = 'Counterparty not found';
+      }
     }
   } else {
     if (!source) {
@@ -136,6 +164,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const [destination, setDestination] = useState('');
   const [debtor, setDebtor] = useState('');
   const [loanMode, setLoanMode] = useState<LoanMode>('give');
+  const [loanTargetType, setLoanTargetType] = useState<'external' | 'internal'>('external');
   const counterpartyType: 'debtor' | 'creditor' =
     loanMode === 'take' || loanMode === 'payback' ? 'creditor' : 'debtor';
   const counterpartyLabel = counterpartyType === 'debtor' ? 'Debtor' : 'Creditor';
@@ -205,10 +234,10 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
 
   const validate = useCallback((): boolean => {
-    const next = validateForm(tab, rawAmount, description, source, destination, debtor, accounts, counterpartyAccounts, locale, currency, loanMode);
+    const next = validateForm(tab, rawAmount, description, source, destination, debtor, accounts, counterpartyAccounts, locale, currency, loanMode, loanTargetType);
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, debtor, accounts, counterpartyAccounts, locale, currency, loanMode]);
+  }, [tab, rawAmount, description, source, destination, debtor, accounts, counterpartyAccounts, locale, currency, loanMode, loanTargetType]);
 
   const clearError = useCallback((field: string) => {
     setErrors((prev) => {
@@ -257,31 +286,38 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
     if (tab === 'loan') {
       const capitalizedDesc = description.trim().charAt(0).toUpperCase() + description.trim().slice(1);
       try {
-        switch (loanMode) {
-          case 'give':
-            await createGivenLoan({
-              sourceAccount: source, destAccount: debtor,
-              amount, description: capitalizedDesc, date, memberId: txMemberId,
-            });
-            break;
-          case 'take':
-            await createReceivedLoan({
-              sourceAccount: debtor, destAccount: destination,
-              amount, description: capitalizedDesc, date, memberId: txMemberId,
-            });
-            break;
-          case 'repay':
-            await recordRepayment({
-              sourceAccount: debtor, destAccount: destination,
-              amount, loanRef: '', description: capitalizedDesc, date, memberId: txMemberId,
-            });
-            break;
-          case 'payback':
-            await recordPayback({
-              sourceAccount: source, destAccount: debtor,
-              amount, loanRef: '', description: capitalizedDesc, date, memberId: txMemberId,
-            });
-            break;
+        if (loanTargetType === 'internal') {
+          await createGivenLoan({
+            sourceAccount: source, destAccount: destination,
+            amount, description: capitalizedDesc, date, memberId: txMemberId,
+          });
+        } else {
+          switch (loanMode) {
+            case 'give':
+              await createGivenLoan({
+                sourceAccount: source, destAccount: debtor,
+                amount, description: capitalizedDesc, date, memberId: txMemberId,
+              });
+              break;
+            case 'take':
+              await createReceivedLoan({
+                sourceAccount: debtor, destAccount: destination,
+                amount, description: capitalizedDesc, date, memberId: txMemberId,
+              });
+              break;
+            case 'repay':
+              await recordRepayment({
+                sourceAccount: debtor, destAccount: destination,
+                amount, loanRef: '', description: capitalizedDesc, date, memberId: txMemberId,
+              });
+              break;
+            case 'payback':
+              await recordPayback({
+                sourceAccount: source, destAccount: debtor,
+                amount, loanRef: '', description: capitalizedDesc, date, memberId: txMemberId,
+              });
+              break;
+          }
         }
       } catch {
         return;
@@ -455,7 +491,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
   const buttonLabel =
     tab === 'income' ? 'Complete Income' :
     tab === 'expense' ? 'Complete Expense' :
-    tab === 'loan' ? LOAN_MODE_BUTTON_LABELS[loanMode] :
+    tab === 'loan' ? (loanTargetType === 'internal' ? 'Issue Internal Loan' : LOAN_MODE_BUTTON_LABELS[loanMode]) :
     'Complete Transfer';
 
   const formFields = (
@@ -478,7 +514,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
         <DatePicker className={styles.inputField} value={date} onChange={setDate} />
       </div>
 
-      <div className={`${styles.slideField} ${tab === 'loan' && (loanMode === 'give' || loanMode === 'payback') ? styles.slideOpen : tab !== 'loan' ? styles.slideOpen : ''}`}>
+      <div className={`${styles.slideField} ${tab !== 'loan' || (tab === 'loan' && loanTargetType !== 'internal' && (loanMode === 'give' || loanMode === 'payback')) ? styles.slideOpen : ''}`}>
         <div className={styles.slideInner}>
           <div className={styles.fieldGroup}>
             <span className={styles.fieldLabel}>Source Account</span>
@@ -496,7 +532,7 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
         </div>
       </div>
 
-      <div className={`${styles.slideField} ${tab === 'transfer' ? styles.slideOpen : tab === 'loan' && (loanMode === 'take' || loanMode === 'repay') ? styles.slideOpen : ''}`}>
+      <div className={`${styles.slideField} ${tab === 'transfer' || (tab === 'loan' && loanTargetType !== 'internal' && (loanMode === 'take' || loanMode === 'repay')) ? styles.slideOpen : ''}`}>
         <div className={styles.slideInner}>
           <div className={styles.fieldGroup}>
             <span className={styles.fieldLabel}>Destination Account</span>
@@ -515,21 +551,81 @@ export function TransactionFormModal({ onClose }: TransactionFormModalProps) {
       </div>
 
       {tab === 'loan' && (
-        <LoanFormSection
-          mode={loanMode}
-          onModeChange={setLoanMode}
-          counterpartyId={debtor}
-          onCounterpartyChange={(id) => { setDebtor(id); clearError('debtor'); }}
-          counterpartyAccounts={counterpartyAccounts}
-          onAddCounterparty={async (name, type) => {
-            const result = await useLoanStore.getState().createCounterparty(name, type);
-            await fetchAccounts();
-            return result.accountId;
-          }}
-          onOpenPicker={() => { setPickerField('counterparty'); setPickerMember(null); }}
-          error={errors.debtor}
-          onClearError={() => clearError('debtor')}
-        />
+        <>
+          <div className={styles.loanTypeStrip}>
+            <button
+              type="button"
+              className={`${styles.loanTypeBtn} ${loanTargetType === 'external' ? styles.loanTypeActive : ''}`}
+              onClick={() => { setLoanTargetType('external'); setDebtor(''); setSource(''); setDestination(''); clearError('debtor'); }}
+            >
+              External
+              <span className={styles.subLabel}>Debtors / Creditors</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.loanTypeBtn} ${loanTargetType === 'internal' ? styles.loanTypeActive : ''}`}
+              onClick={() => { setLoanTargetType('internal'); setDebtor(''); setSource(''); setDestination(''); }}
+            >
+              Internal
+              <span className={styles.subLabel}>Between members</span>
+            </button>
+          </div>
+
+          {loanTargetType === 'internal' ? (
+            <>
+              <div className={`${styles.slideField} ${styles.slideOpen}`}>
+                <div className={styles.slideInner}>
+                  <div className={styles.fieldGroup}>
+                    <span className={styles.fieldLabel}>Source (Lender)</span>
+                    <button
+                      type="button"
+                      className={`${styles.pickerTrigger} ${errors.source ? styles.fieldError : ''}`}
+                      onClick={() => { setPickerField('source'); setPickerMember(null); }}
+                    >
+                      {source
+                        ? <><span className={styles.pickerValue}>{accountLabel(source)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                        : <span className={styles.pickerPlaceholder}>Select account</span>}
+                    </button>
+                    {errors.source && <span className={styles.errorText}>{errors.source}</span>}
+                  </div>
+                </div>
+              </div>
+              <div className={`${styles.slideField} ${styles.slideOpen}`}>
+                <div className={styles.slideInner}>
+                  <div className={styles.fieldGroup}>
+                    <span className={styles.fieldLabel}>Destination (Borrower)</span>
+                    <button
+                      type="button"
+                      className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`}
+                      onClick={() => { setPickerField('destination'); setPickerMember(null); }}
+                    >
+                      {destination
+                        ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                        : <span className={styles.pickerPlaceholder}>Select account</span>}
+                    </button>
+                    {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <LoanFormSection
+              mode={loanMode}
+              onModeChange={setLoanMode}
+              counterpartyId={debtor}
+              onCounterpartyChange={(id) => { setDebtor(id); clearError('debtor'); }}
+              counterpartyAccounts={counterpartyAccounts}
+              onAddCounterparty={async (name, type) => {
+                const result = await useLoanStore.getState().createCounterparty(name, type);
+                await fetchAccounts();
+                return result.accountId;
+              }}
+              onOpenPicker={() => { setPickerField('counterparty'); setPickerMember(null); }}
+              error={errors.debtor}
+              onClearError={() => clearError('debtor')}
+            />
+          )}
+        </>
       )}
 
       <FormTextarea

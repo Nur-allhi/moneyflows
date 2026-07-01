@@ -10,7 +10,8 @@ export interface LedgerRow {
   debit?: string;
   credit?: string;
   balance?: string;
-  type?: 'income' | 'expense' | 'transfer';
+  type?: 'income' | 'expense' | 'transfer' | 'loan';
+  typeLabel?: string;
 }
 
 interface LedgerTableProps {
@@ -125,7 +126,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                   >
                     <span className={styles.date}>{row.date}</span>
                     <span className={`${styles.typeCell} ${row.type ? (typeClassMap[row.type] ?? '') : ''}`}>
-                      {row.type ?? '\u2014'}
+                      {row.typeLabel ?? row.type ?? '\u2014'}
                     </span>
                     <span className={styles.desc}>{row.description}</span>
                     {!showBalance && <span className={styles.account}>{row.account ?? '\u2014'}</span>}
@@ -150,7 +151,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
               >
                 <span className={styles.date}>{row.date}</span>
                 <span className={`${styles.typeCell} ${row.type ? (typeClassMap[row.type] ?? '') : ''}`}>
-                  {row.type ?? '\u2014'}
+                  {row.typeLabel ?? row.type ?? '\u2014'}
                 </span>
                 <span className={styles.desc}>{row.description}</span>
                 {!showBalance && <span className={styles.account}>{row.account ?? '\u2014'}</span>}
