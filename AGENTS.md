@@ -102,7 +102,8 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Complete.** All 42 tickets across 5 phases are finished.
-- All screens, components, data layer, navigation, stores, polish, and QA are done.
-- Production build: 232.98 kB JS + 53 kB CSS (gzip ~86 kB initial).
-- Next: See `docs/ROADMAP.md` for future enhancements, or review `docs/TICKETS.md` for completed work.
+**All 42 original tickets done.** Now in Phase 6 — Dynamic Configuration & Hardening.
+
+**Next:** T-043 — Create app settings/config store (foundation for removing hardcoded currency, locale, member name, and constants).
+
+**Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.

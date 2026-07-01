@@ -181,7 +181,14 @@ export function TransactionWizard() {
   const handleSubmit = async () => {
     if (!validate()) return;
     const amount = parseInt(rawAmount, 10);
-    const eftyId = members.find((m) => !m.isExternal && m.shortName === 'Efty')?.id ?? '';
+    const txMemberId = members.find((m) => !m.isExternal && m.shortName === 'Efty')?.id
+      ?? members.find((m) => !m.isExternal)?.id
+      ?? members[0]?.id
+      ?? '';
+    if (!txMemberId) {
+      setErrors({ source: 'No family members found. Create a member first.' });
+      return;
+    }
 
     let type: Transaction['type'];
     let src: string | undefined;
@@ -212,10 +219,11 @@ export function TransactionWizard() {
     }
 
     const tx = new Transaction(
-      uuidv4(), type, description.trim(), amount, eftyId, date, src, dst, debtorId,
+      uuidv4(), type, description.trim(), amount, txMemberId, date, src, dst, debtorId,
     );
 
     await addTransaction(tx);
+    await fetchAccounts();
     navigate(-1);
   };
 

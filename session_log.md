@@ -638,3 +638,18 @@
 ### Status
 - **T-042 complete.** Phase 5 (QA & Release) complete — all 42 tickets done.
 - **All phases complete.** Project is fully built and production-ready.
+
+## Session 2026-07-01 09:00
+
+### Changes
+- **Bug fix (TransactionWizard.tsx)**: Added `await fetchAccounts()` after `addTransaction(tx)` so account balances refresh on the Dashboard after a new transaction — fixes stale balance display after navigating back
+- **Bug fix (TransactionWizard.tsx)**: Replaced hardcoded `members.find(shortName === 'Efty')` lookup with a fallback chain (Efty → first non-external member → any member → validation error) — fixes silent transaction save failure when no member named "Efty" exists
+- **T-043 → T-050**: Added 8 new tickets as Phase 6 (Dynamic Configuration & Hardening) to `docs/TICKETS.md` — covers settings store, dynamic currency/locale, removing hardcoded 'Efty', extracting duplicated constants, inline styles, and magic numbers
+
+### Skill(s) Used
+- `senior-frontend` — Transaction flow debugging, Zustand store refresh pattern
+- `code-reviewer` — Root cause analysis of silent save failure
+
+### Status
+- Transaction add + balance update fixed.
+- Next: Phase 6 tickets (T-043 → T-050) in `docs/TICKETS.md` — prioritize T-043 (settings store) first.

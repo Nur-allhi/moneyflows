@@ -213,7 +213,7 @@
 **Skill:** `senior-backend`
 **Effort:** L
 **File(s):** `src/infrastructure/database/seed.ts`
-**Acceptance:** All 4 members, 15+ accounts, 500+ transactions, 5+ debtors seeded. Balances match Financial_Review.md audit.
+**Acceptance:** All 4 members, 15+ accounts, 500+ transactions, 5+ debtors seeded. Balances match Project_plan/Financial_Review.md audit.
 
 ### T-031 — Fix known spreadsheet discrepancies
 **Skill:** `senior-backend`, `code-reviewer`
@@ -282,3 +282,94 @@
 **Skill:** `code-reviewer`, `senior-frontend`
 **Effort:** M
 **Acceptance:** Bundle size optimized (code-split routes). Virtualized ledger if >100 rows. 60fps animations. Production build succeeds.
+
+---
+
+## Phase 6: Dynamic Configuration & Hardening (8 tickets)
+
+### T-043 — Create app settings/config store
+**Skill:** `senior-backend`, `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/stores/useSettingsStore.ts`, `src/core/domain/AppSettings.ts`
+**Content:** New Zustand store + domain entity holding: `currency` (default `'BDT'`), `locale` (default `'en-IN'`), `primaryMemberId` (instead of hardcoded `'Efty'`), `descriptionMaxLength`, `numpadMaxDigits`, `dashboardTxLimit`. Persisted to localStorage.
+**Acceptance:** Store initializes with defaults; UI reads currency/locale from store instead of hardcoded values; primary member is configurable in settings UI.
+
+### T-044 — Replace hardcoded `'BDT'` with dynamic currency from settings
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** All 15+ locations in screens and components
+**Content:** Create a shared `formatCurrency(amount: number, currency?: string)` utility function that reads currency from `useSettingsStore`. Replace all `'BDT'` string literals in:
+- `src/presentation/screens/Dashboard.tsx` (line 16)
+- `src/presentation/screens/MemberProfile.tsx` (line 21)
+- `src/presentation/screens/MemberList.tsx` (line 12)
+- `src/presentation/screens/Loans.tsx` (line 13)
+- `src/presentation/screens/RecycleBin.tsx` (line 7)
+- `src/presentation/screens/TransactionWizard.tsx` (lines 91, 361, 399, 431)
+- `src/presentation/components/FormField.tsx` (line 77)
+- `src/core/domain/Account.ts` (line 10 — default currency)
+- `src/infrastructure/database/SQLiteDatabaseService.ts` (line 12 — schema default)
+- `src/presentation/screens/Launcher.tsx` (lines 62, 86)
+**Acceptance:** Currency displays from settings; changing currency updates all displays without page reload.
+
+### T-045 — Replace hardcoded `'en-IN'` locale with dynamic value from settings
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** All 6 locations in screens
+**Content:** Create a shared `useFormatNumber()` hook or `fmt()` utility that reads locale from `useSettingsStore`. Replace all `Intl.NumberFormat('en-IN')` and `.toLocaleString('en-IN')` calls in:
+- `src/presentation/screens/Dashboard.tsx` (line 13)
+- `src/presentation/screens/MemberProfile.tsx` (line 18)
+- `src/presentation/screens/MemberList.tsx` (line 10)
+- `src/presentation/screens/Loans.tsx` (line 11)
+- `src/presentation/screens/RecycleBin.tsx` (line 6)
+- `src/presentation/screens/TransactionWizard.tsx` (line 24)
+**Acceptance:** Number formatting respects locale from settings; switching locale updates all displays.
+
+### T-046 — Remove hardcoded `'Efty'` from Loans screen
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/screens/Loans.tsx`
+**Content:** The `"Funded by Efty — ${name}"` label at line 59 should read the actual lender name from the member store instead of hardcoding `'Efty'`. Look up the funding member by the `memberId` on the loan transactions.
+**Acceptance:** Loan stack labels show the actual member name from the database, not the hardcoded string `'Efty'`.
+
+### T-047 — Extract duplicated MONTH/day arrays into a shared constant
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/screens/Dashboard.tsx`, `MemberProfile.tsx`, `Loans.tsx`, `src/presentation/components/Header.tsx`
+**Content:** Create `src/presentation/constants/dates.ts` with `MONTHS` and `DAYS` arrays. Also consider using `Intl.DateTimeFormat` with `month: 'short'` for true locale-aware month names instead. Delete all 4 duplicate definitions.
+**Acceptance:** Month names display correctly in all screens; no duplicate array definitions remain.
+
+### T-048 — Extract account type / transaction type labels into a config map
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/core/domain/Account.ts`, `src/core/domain/Transaction.ts`, all screens referencing type labels
+**Content:** Create a `TYPE_LABELS` map (e.g. `{ bank: 'Bank', mobile_wallet: 'Mobile Wallet', ... }`) in a shared constants file. Replace all hardcoded display labels and gradient maps. Keep the TypeScript union types for type safety but drive display strings from the map.
+**Acceptance:** Type labels are defined in one place; all screens and components read from the same map.
+
+### T-049 — Replace inline styles with CSS custom properties
+**Skill:** `frontend-design`, `senior-frontend`
+**Effort:** M
+**File(s):** All files with inline `style={{...}}` props
+**Content:** Audit and replace all inline styles in JSX with CSS module classes or CSS custom properties. Key locations:
+- `src/presentation/screens/TransactionWizard.tsx` (lines 244, 386, 418, 451)
+- `src/presentation/screens/MemberProfile.tsx` (line 209)
+- `src/presentation/screens/RecycleBin.tsx` (lines 100, 108, 113-119, 137)
+- `src/presentation/components/Avatar.tsx` (line 16 — gradient)
+- `src/main.tsx` (line 24 — loading screen)
+**Acceptance:** Zero inline `style` props in production JSX; all styling goes through CSS modules or CSS custom properties.
+
+### T-050 — Move all hardcoded limits/constants into a config file
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** New `src/core/config.ts` or similar
+**Content:** Extract these scattered magic numbers into named exports:
+- `DESCRIPTION_MAX_LENGTH = 200` (TransactionWizard.tsx:57, 469)
+- `NUMPAD_MAX_DIGITS = 10` (TransactionWizard.tsx:163)
+- `DASHBOARD_TX_FETCH_LIMIT = 10` (Dashboard.tsx:51)
+- `DASHBOARD_TX_DISPLAY_LIMIT = 7` (Dashboard.tsx:75)
+- `SHORT_NAME_MAX_LENGTH = 4` (MemberList.tsx:117)
+- `ANIMATION_DURATION = 600` (useAnimatedValue.ts:7)
+- `ACCOUNT_CARD_WIDTH = 280` + `CARD_GAP = 12` (MemberProfile.tsx:15-16)
+- `LEDGER_ROW_HEIGHT = 48` + `DESKTOP_ROW_HEIGHT = 52` + `OVERSCAN = 3` (LedgerTable.tsx:26-28)
+- `STORAGE_KEY = 'moneyflows_db'` (SQLiteDatabaseService.ts:28)
+- `EXPORT_FILENAME_PREFIX = 'moneyflows_'` (SQLiteDatabaseService.ts:90)
+**Acceptance:** All constants import from a single config file; no magic numbers remain in component/screen files.
