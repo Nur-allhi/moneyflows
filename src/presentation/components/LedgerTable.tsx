@@ -1,5 +1,5 @@
-import { useRef, useState, useCallback, useMemo, useEffect } from 'react';
-import { ROW_HEIGHT, DESKTOP_ROW_HEIGHT, OVERSCAN } from '../constants/config';
+import { useRef, useState, useCallback, useMemo, useLayoutEffect } from 'react';
+import { ROW_HEIGHT, DESKTOP_ROW_HEIGHT, OVERSCAN, ANIMATION_DURATION } from '../constants/config';
 import styles from './LedgerTable.module.css';
 
 export interface LedgerRow {
@@ -33,11 +33,15 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [bodyHeight, setBodyHeight] = useState(desktop ? 360 : 340);
+  const [animMaxH, setAnimMaxH] = useState<number | null>(null);
+  const prevRowsLenRef = useRef(rows.length);
+  const capturedHeightRef = useRef(0);
+  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${showBalance ? '' : styles.noBalance} ${fillHeight ? styles.fillHeight : ''} ${className}`;
   const itemHeight = desktop ? DESKTOP_ROW_HEIGHT : ROW_HEIGHT;
   const containerHeight = fillHeight ? bodyHeight : (desktop ? 360 : 340);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!fillHeight) return;
     const el = bodyRef.current;
     if (!el) return;
@@ -47,6 +51,24 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
     ro.observe(el);
     return () => ro.disconnect();
   }, [fillHeight]);
+
+  if (!fillHeight && bodyRef.current && rows.length !== prevRowsLenRef.current) {
+    capturedHeightRef.current = bodyRef.current.scrollHeight;
+  }
+  prevRowsLenRef.current = rows.length;
+
+  useLayoutEffect(() => {
+    const el = bodyRef.current;
+    if (fillHeight || !el) return;
+    const oldH = capturedHeightRef.current;
+    const newH = el.scrollHeight;
+    if (!oldH || oldH === newH) return;
+    if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    setAnimMaxH(oldH);
+    requestAnimationFrame(() => { setAnimMaxH(newH); });
+    animTimerRef.current = setTimeout(() => { setAnimMaxH(null); animTimerRef.current = null; }, ANIMATION_DURATION);
+    return () => { if (animTimerRef.current) { clearTimeout(animTimerRef.current); animTimerRef.current = null; } };
+  }, [rows.length, fillHeight]);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
@@ -77,7 +99,13 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
       <div
         ref={bodyRef}
         className={styles.body}
-        style={fillHeight ? { '--body-max-height': '1fr' } as React.CSSProperties : undefined}
+        style={
+          fillHeight
+            ? { '--body-max-height': '1fr' } as React.CSSProperties
+            : animMaxH !== null
+              ? { maxHeight: animMaxH, overflow: 'hidden', transition: 'max-height 0.35s ease' } as React.CSSProperties
+              : undefined
+        }
         onScroll={fillHeight && rows.length > 0 ? handleScroll : undefined}
       >
         {rows.length === 0 ? (
