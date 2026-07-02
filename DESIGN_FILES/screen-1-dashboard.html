@@ -18,9 +18,6 @@
       --teal: oklch(65% 0.15 170);
       --coral: oklch(62% 0.18 30);
       --gold: oklch(75% 0.15 85);
-      --purple: oklch(55% 0.18 290);
-      --success: oklch(65% 0.15 150);
-      --danger: oklch(58% 0.18 30);
       --radial-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
       --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
       --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -39,14 +36,14 @@
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
     }
     .dashboard {
       width: 1440px;
       max-width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
     }
     .glass {
       background: var(--surface);
@@ -55,46 +52,32 @@
       border: 1px solid var(--border);
       border-radius: 12px;
     }
-    .glass-glow-violet { box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12); }
-    .glass-glow-gold { box-shadow: 0 0 24px oklch(75% 0.15 85 / 0.12); }
-    .glass-glow-purple { box-shadow: 0 0 24px oklch(55% 0.18 290 / 0.12); }
 
+    /* ─── Header ─── */
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 24px;
+      padding: 12px 20px;
     }
     .header-left {
       display: flex;
       align-items: center;
-      gap: 12px;
-    }
-    .back-link {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--fg);
-      cursor: pointer;
-      display: grid; place-items: center;
-      font-size: 16px;
-      text-decoration: none;
+      gap: 20px;
     }
     .logo {
       font-family: var(--font-display);
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       background: linear-gradient(135deg, var(--violet), var(--teal));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .logo span { font-weight: 500; color: var(--muted); -webkit-text-fill-color: var(--muted); }
     .profiles {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .avatar {
       width: 40px; height: 40px;
@@ -108,8 +91,9 @@
       cursor: pointer;
       transition: box-shadow 0.2s;
       position: relative;
+      flex-shrink: 0;
     }
-    .avatar:hover { box-shadow: 0 0 0 2px var(--violet); }
+    .avatar:hover { box-shadow: 0 0 0 2px oklch(100% 0 0 / 0.2); }
     .avatar.active::after {
       content: ''; position: absolute; inset: -3px; border-radius: 50%;
       border: 2px solid var(--violet);
@@ -117,41 +101,41 @@
     .avatar-efty { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
     .avatar-azam { background: linear-gradient(135deg, #00b894, #55efc4); }
     .avatar-nahar { background: linear-gradient(135deg, #fd79a8, #e84393); }
-
     .header-right {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
-    .header-right .date {
+    .header-date {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
       letter-spacing: 0.02em;
     }
     .notif-btn {
       width: 36px; height: 36px;
       border-radius: 50%;
       border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--fg);
+      background: transparent;
+      color: var(--muted);
       cursor: pointer;
       display: grid;
       place-items: center;
-      font-size: 16px;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s;
     }
-    .notif-btn:hover { background: oklch(100% 0 0 / 0.08); }
+    .notif-btn:hover { background: oklch(100% 0 0 / 0.08); color: var(--fg); }
+    .notif-btn svg { width: 18px; height: 18px; }
 
+    /* ─── 3 Metric Cards ─── */
     .metrics {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
     }
     .metric-card {
       padding: 20px 24px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
     .metric-label {
       font-size: 12px;
@@ -166,152 +150,214 @@
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.01em;
+      line-height: 1.2;
     }
     .metric-change {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
     .up { color: var(--teal); }
     .down { color: var(--coral); }
+    .glow-violet { box-shadow: 0 0 28px oklch(62% 0.22 290 / 0.15); }
+    .glow-gold { box-shadow: 0 0 28px oklch(75% 0.15 85 / 0.15); }
+    .glow-coral { box-shadow: 0 0 28px oklch(62% 0.18 30 / 0.15); }
 
+    /* ─── This Month Summary ─── */
+    .month-summary {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px;
+      gap: 0;
+    }
+    .month-stat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 16px;
+    }
+    .month-stat:not(:last-child) { border-right: 1px solid var(--border); }
+    .month-stat:first-child { padding-left: 0; }
+    .month-stat:last-child { padding-right: 0; }
+    .month-stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .month-stat-value {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .month-stat-value .prefix { font-weight: 400; font-size: 14px; }
+
+    /* ─── Two-column Content ─── */
     .content {
       display: grid;
       grid-template-columns: 1.4fr 1fr;
-      gap: 16px;
+      gap: 14px;
     }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
+    .panel-header {
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border);
     }
-    .section-header h2 {
+    .panel-header h2 {
       font-family: var(--font-display);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       letter-spacing: -0.01em;
     }
-    .section-header .action {
-      font-size: 12px;
-      color: var(--violet);
-      cursor: pointer;
-      font-weight: 500;
+
+    /* ─── Where Your Money Is ─── */
+    .member-group { padding: 0; }
+    .member-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px 4px;
     }
-    .accounts {
-      padding: 8px;
+    .member-head .mini-avatar {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+    .member-head .mname {
+      font-weight: 500;
+      font-size: 13px;
+    }
+    .member-accounts {
       display: flex;
       flex-direction: column;
       gap: 4px;
+      padding: 4px 20px 12px 54px;
     }
-    .account-row {
+    .acct-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 12px;
+      gap: 10px;
+      padding: 6px 10px;
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.15s;
     }
-    .account-row:hover { background: oklch(100% 0 0 / 0.04); }
-    .account-icon {
-      width: 40px; height: 40px;
-      border-radius: 10px;
+    .acct-row:hover { background: oklch(100% 0 0 / 0.04); }
+    .acct-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
       display: grid;
       place-items: center;
-      font-size: 16px;
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 600;
       flex-shrink: 0;
     }
-    .acct-brac { background: linear-gradient(135deg, #1a237e, #283593); }
-    .acct-bkash { background: linear-gradient(135deg, #d81b60, #e91e63); }
-    .acct-cash { background: linear-gradient(135deg, #37474f, #455a64); }
-    .acct-nagad { background: linear-gradient(135deg, #e65100, #f57c00); }
-    .acct-dbbl { background: linear-gradient(135deg, #004d40, #00695c); }
-
-    .account-info {
+    .acct-brac { background: linear-gradient(135deg, #1a237e, #283593); color: #e8eaf6; }
+    .acct-bkash { background: linear-gradient(135deg, #d81b60, #e91e63); color: #fff; }
+    .acct-cash { background: linear-gradient(135deg, #37474f, #546e7a); color: #cfd8dc; }
+    .acct-nagad { background: linear-gradient(135deg, #e65100, #f57c00); color: #fff; }
+    .acct-dbbl { background: linear-gradient(135deg, #004d40, #00695c); color: #b2dfdb; }
+    .acct-name {
       flex: 1;
-      min-width: 0;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--muted);
     }
-    .account-name {
+    .acct-balance {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--fg);
+    }
+
+    /* ─── Active Loans ─── */
+    .loans-list {
+      padding: 8px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .loan-row {
+      padding: 12px;
+      border-radius: 8px;
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    .loan-row:hover { background: oklch(100% 0 0 / 0.04); }
+    .loan-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .loan-debtor {
       font-weight: 500;
       font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .account-type {
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 0.02em;
+    .loan-debtor .badge {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: oklch(62% 0.18 30 / 0.12);
+      color: var(--coral);
+      font-weight: 500;
     }
-    .account-balance {
+    .loan-amount {
       font-family: var(--font-mono);
       font-size: 14px;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
-      text-align: right;
+      color: var(--coral);
     }
-
-    .tx-list {
-      padding: 8px;
+    .loan-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: oklch(100% 0 0 / 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .loan-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--teal);
+      transition: width 0.4s;
+    }
+    .loan-meta {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
-      max-height: 420px;
-      overflow-y: auto;
-    }
-    .tx-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .tx-row:hover { background: oklch(100% 0 0 / 0.04); }
-    .tx-icon {
-      width: 36px; height: 36px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      font-size: 15px;
-      flex-shrink: 0;
-    }
-    .tx-icon-expense { background: oklch(58% 0.18 30 / 0.15); color: var(--coral); }
-    .tx-icon-income { background: oklch(65% 0.15 150 / 0.15); color: var(--teal); }
-    .tx-icon-transfer { background: oklch(62% 0.22 290 / 0.15); color: var(--violet); }
-
-    .tx-info {
-      flex: 1;
-      min-width: 0;
-    }
-    .tx-desc {
-      font-size: 13px;
-      font-weight: 500;
-    }
-    .tx-date {
-      font-size: 11px;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 10px;
       color: var(--muted);
       letter-spacing: 0.02em;
     }
-    .tx-amount {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-    }
-    .tx-amount.credit { color: var(--teal); }
-    .tx-amount.debit { color: var(--coral); }
 
-    .quick-actions {
+    /* ─── Action Bar ─── */
+    .actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
-    .qa-btn {
+    .act-btn {
       flex: 1;
-      padding: 14px;
+      padding: 12px 20px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--surface);
@@ -327,196 +373,244 @@
       justify-content: center;
       gap: 8px;
       transition: background 0.2s, border-color 0.2s;
+      letter-spacing: 0.02em;
     }
-    .qa-btn:hover {
+    .act-btn:hover {
       background: oklch(100% 0 0 / 0.08);
-      border-color: var(--violet);
+      border-color: oklch(100% 0 0 / 0.2);
     }
-    .qa-btn.primary {
+    .act-btn.primary {
       background: linear-gradient(135deg, var(--violet), oklch(55% 0.22 290));
       border-color: transparent;
+      font-weight: 600;
     }
-    .qa-btn.primary:hover { opacity: 0.9; }
+    .act-btn.primary:hover { opacity: 0.9; }
+    .act-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: oklch(100% 0 0 / 0.1); border-radius: 4px; }
-
+    /* ─── Responsive ─── */
     @media (max-width: 1000px) {
-      body { padding: 16px; }
-      .metrics { grid-template-columns: repeat(2, 1fr); }
+      body { padding: 14px; }
+      .metrics { grid-template-columns: 1fr; gap: 10px; }
       .content { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 600px) {
-      .metrics { grid-template-columns: 1fr; }
-      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .header-right { width: 100%; justify-content: space-between; }
+      .header { flex-wrap: wrap; gap: 8px; }
+      .actions { flex-direction: column; }
+      .month-summary { flex-direction: column; gap: 8px; padding: 16px; }
+      .month-stat { padding: 8px 0; border-right: none !important; }
+      .month-stat:not(:last-child) { border-bottom: 1px solid var(--border); }
     }
   </style>
 </head>
 <body>
   <div class="dashboard">
+
+    <!-- ─── Header ─── -->
     <div class="header glass">
       <div class="header-left">
-        <a href="index.html" class="back-link">&larr;</a>
-        <div class="logo">MoneyFlows<span>.app</span></div>
+        <div class="logo">MoneyFlows</div>
         <div class="profiles">
-          <div class="avatar avatar-efty active">E</div>
-          <div class="avatar avatar-azam">A</div>
-          <div class="avatar avatar-nahar">N</div>
+          <div class="avatar avatar-efty active" title="Efty">E</div>
+          <div class="avatar avatar-azam" title="Azam">A</div>
+          <div class="avatar avatar-nahar" title="Nahar">N</div>
         </div>
       </div>
       <div class="header-right">
-        <span class="date">Mon, 29 Jun 2026</span>
-        <button class="notif-btn" aria-label="Notifications">&#x1F514;</button>
+        <span class="header-date">Mon, 29 Jun 2026</span>
+        <button class="notif-btn" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
       </div>
     </div>
 
+    <!-- ─── 3 Metric Cards ─── -->
     <div class="metrics">
-      <div class="metric-card glass glass-glow-violet">
+      <div class="metric-card glass glow-violet">
         <span class="metric-label">Total Assets</span>
         <span class="metric-value" style="color: var(--violet);">4,29,500 BDT</span>
-        <span class="metric-change up">&#x25B2; +12.4% vs last month</span>
+        <span class="metric-change up">
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5v-5M1.5 4L4 1.5 6.5 4"/></svg>
+          +12.4% vs last month
+        </span>
       </div>
-      <div class="metric-card glass glass-glow-gold">
+      <div class="metric-card glass glow-gold">
         <span class="metric-label">Cash in Hand</span>
         <span class="metric-value" style="color: var(--gold);">1,89,200 BDT</span>
-        <span class="metric-change down">&#x25BC; -3.1% vs last month</span>
+        <span class="metric-change down">
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 1.5v5M1.5 4L4 6.5 6.5 4"/></svg>
+          -3.1% vs last month
+        </span>
       </div>
-      <div class="metric-card glass glass-glow-purple">
+      <div class="metric-card glass glow-coral">
         <span class="metric-label">Active Loans</span>
-        <span class="metric-value" style="color: var(--purple);">3,55,000 BDT</span>
-        <span class="metric-change up">&#x25B2; +1 new this month</span>
-      </div>
-      <div class="metric-card glass">
-        <span class="metric-label">Family Net Worth</span>
-        <span class="metric-value" style="color: var(--teal);">2,63,700 BDT</span>
-        <span class="metric-change up">&#x25B2; +8.2% this year</span>
+        <span class="metric-value" style="color: var(--coral);">3,55,000 BDT</span>
+        <span class="metric-change up">
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5v-5M1.5 4L4 1.5 6.5 4"/></svg>
+          +5.2% vs last month
+        </span>
       </div>
     </div>
 
-    <div class="quick-actions">
-      <button class="qa-btn primary">+ New Transaction</button>
-      <button class="qa-btn">Transfer</button>
-      <button class="qa-btn">Reports</button>
-      <button class="qa-btn">Settings</button>
+    <!-- ─── This Month Summary ─── -->
+    <div class="month-summary glass">
+      <div class="month-stat">
+        <span class="month-stat-label">Income</span>
+        <span class="month-stat-value" style="color: var(--teal);">1,12,000 BDT</span>
+      </div>
+      <div class="month-stat">
+        <span class="month-stat-label">Expenses</span>
+        <span class="month-stat-value" style="color: var(--coral);">67,800 BDT</span>
+      </div>
+      <div class="month-stat">
+        <span class="month-stat-label">Net</span>
+        <span class="month-stat-value" style="color: var(--teal);">
+          <span class="prefix">+</span>44,200 BDT
+        </span>
+      </div>
     </div>
 
+    <!-- ─── Two-column Content ─── -->
     <div class="content">
+
+      <!-- Left: Where Your Money Is -->
       <div class="glass">
-        <div class="section-header">
-          <h2>Combined Balances</h2>
-          <span class="action">View all &rarr;</span>
+        <div class="panel-header">
+          <h2>Where Your Money Is</h2>
         </div>
-        <div class="accounts">
-          <div class="account-row">
-            <div class="account-icon acct-brac">B</div>
-            <div class="account-info">
-              <div class="account-name">Brac Bank (Efty)</div>
-              <div class="account-type">Savings Account</div>
-            </div>
-            <div class="account-balance" style="color: var(--teal);">1,12,400 BDT</div>
+
+        <div class="member-group">
+          <div class="member-head">
+            <div class="mini-avatar" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe);">E</div>
+            <span class="mname">Efty</span>
           </div>
-          <div class="account-row">
-            <div class="account-icon acct-bkash">bK</div>
-            <div class="account-info">
-              <div class="account-name">bKash (Efty)</div>
-              <div class="account-type">Mobile Wallet</div>
+          <div class="member-accounts">
+            <div class="acct-row">
+              <div class="acct-icon acct-brac">B</div>
+              <span class="acct-name">Brac Bank</span>
+              <span class="acct-balance">1,12,400 BDT</span>
             </div>
-            <div class="account-balance" style="color: var(--gold);">24,670 BDT</div>
+            <div class="acct-row">
+              <div class="acct-icon acct-bkash">bK</div>
+              <span class="acct-name">bKash</span>
+              <span class="acct-balance">24,670 BDT</span>
+            </div>
+            <div class="acct-row">
+              <div class="acct-icon acct-cash">C</div>
+              <span class="acct-name">Business Cash</span>
+              <span class="acct-balance">52,130 BDT</span>
+            </div>
           </div>
-          <div class="account-row">
-            <div class="account-icon acct-cash">C</div>
-            <div class="account-info">
-              <div class="account-name">Business Cash (Efty)</div>
-              <div class="account-type">Current Account</div>
-            </div>
-            <div class="account-balance" style="color: var(--teal);">52,130 BDT</div>
+        </div>
+
+        <div class="member-group">
+          <div class="member-head">
+            <div class="mini-avatar" style="background:linear-gradient(135deg,#00b894,#55efc4);">A</div>
+            <span class="mname">Azam</span>
           </div>
-          <div class="account-row">
-            <div class="account-icon acct-nagad">N</div>
-            <div class="account-info">
-              <div class="account-name">Nagad (Azam)</div>
-              <div class="account-type">Mobile Wallet</div>
+          <div class="member-accounts">
+            <div class="acct-row">
+              <div class="acct-icon acct-nagad">N</div>
+              <span class="acct-name">Nagad</span>
+              <span class="acct-balance">18,900 BDT</span>
             </div>
-            <div class="account-balance" style="color: var(--gold);">18,900 BDT</div>
           </div>
-          <div class="account-row">
-            <div class="account-icon acct-dbbl">D</div>
-            <div class="account-info">
-              <div class="account-name">DBBL (Nahar)</div>
-              <div class="account-type">Savings Account</div>
+        </div>
+
+        <div class="member-group">
+          <div class="member-head">
+            <div class="mini-avatar" style="background:linear-gradient(135deg,#fd79a8,#e84393);">N</div>
+            <span class="mname">Nahar</span>
+          </div>
+          <div class="member-accounts">
+            <div class="acct-row">
+              <div class="acct-icon acct-dbbl">D</div>
+              <span class="acct-name">DBBL Savings</span>
+              <span class="acct-balance">36,200 BDT</span>
             </div>
-            <div class="account-balance" style="color: var(--teal);">36,200 BDT</div>
           </div>
         </div>
       </div>
 
+      <!-- Right: Active Loans -->
       <div class="glass">
-        <div class="section-header">
-          <h2>Recent Transactions</h2>
-          <span class="action">View all &rarr;</span>
+        <div class="panel-header">
+          <h2>Active Loans</h2>
         </div>
-        <div class="tx-list">
-          <div class="tx-row">
-            <div class="tx-icon tx-icon-expense">&#x1F4B8;</div>
-            <div class="tx-info">
-              <div class="tx-desc">Milk, Pawruti</div>
-              <div class="tx-date">Today, 09:14 AM</div>
+        <div class="loans-list">
+          <div class="loan-row">
+            <div class="loan-top">
+              <span class="loan-debtor">
+                BTC
+                <span class="badge">Overdue</span>
+              </span>
+              <span class="loan-amount">3,55,000 BDT</span>
             </div>
-            <span class="tx-amount debit">-320 BDT</span>
+            <div class="loan-bar-wrap">
+              <div class="loan-bar-fill" style="width: 38%;"></div>
+            </div>
+            <div class="loan-meta">
+              <span>38% recovered</span>
+              <span>2,20,000 BDT remaining</span>
+            </div>
           </div>
-          <div class="tx-row">
-            <div class="tx-icon tx-icon-income">&#x1F4B5;</div>
-            <div class="tx-info">
-              <div class="tx-desc">Salary</div>
-              <div class="tx-date">Yesterday, 10:30 AM</div>
+          <div class="loan-row">
+            <div class="loan-top">
+              <span class="loan-debtor">Sakib H.</span>
+              <span class="loan-amount">42,000 BDT</span>
             </div>
-            <span class="tx-amount credit">+85,000 BDT</span>
+            <div class="loan-bar-wrap">
+              <div class="loan-bar-fill" style="width: 72%;"></div>
+            </div>
+            <div class="loan-meta">
+              <span>72% recovered</span>
+              <span>11,760 BDT remaining</span>
+            </div>
           </div>
-          <div class="tx-row">
-            <div class="tx-icon tx-icon-transfer">&#x1F91D;</div>
-            <div class="tx-info">
-              <div class="tx-desc">Loan Repayment</div>
-              <div class="tx-date">26 Jun, 02:15 PM</div>
+          <div class="loan-row">
+            <div class="loan-top">
+              <span class="loan-debtor">Rahim S.</span>
+              <span class="loan-amount">18,500 BDT</span>
             </div>
-            <span class="tx-amount debit">-5,000 BDT</span>
-          </div>
-          <div class="tx-row">
-            <div class="tx-icon tx-icon-expense">&#x1F4B8;</div>
-            <div class="tx-info">
-              <div class="tx-desc">Electricity Bill</div>
-              <div class="tx-date">25 Jun, 11:00 AM</div>
+            <div class="loan-bar-wrap">
+              <div class="loan-bar-fill" style="width: 100%;"></div>
             </div>
-            <span class="tx-amount debit">-2,450 BDT</span>
-          </div>
-          <div class="tx-row">
-            <div class="tx-icon tx-icon-income">&#x1F4B5;</div>
-            <div class="tx-info">
-              <div class="tx-desc">Freelance Payment</div>
-              <div class="tx-date">24 Jun, 04:45 PM</div>
+            <div class="loan-meta">
+              <span style="color: var(--teal);">Fully recovered</span>
+              <span>0 BDT</span>
             </div>
-            <span class="tx-amount credit">+12,000 BDT</span>
-          </div>
-          <div class="tx-row">
-            <div class="tx-icon tx-icon-expense">&#x1F4B8;</div>
-            <div class="tx-info">
-              <div class="tx-desc">Bazar — Weekly</div>
-              <div class="tx-date">23 Jun, 08:30 AM</div>
-            </div>
-            <span class="tx-amount debit">-4,200 BDT</span>
-          </div>
-          <div class="tx-row">
-            <div class="tx-icon tx-icon-transfer">&#x1F91D;</div>
-            <div class="tx-info">
-              <div class="tx-desc">Sent to Nahar</div>
-              <div class="tx-date">22 Jun, 07:10 PM</div>
-            </div>
-            <span class="tx-amount debit">-10,000 BDT</span>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- ─── Action Bar ─── -->
+    <div class="actions">
+      <button class="act-btn primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        New Transaction
+      </button>
+      <button class="act-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 0 1 10 10"/>
+          <path d="M22 12a10 10 0 0 1-10 10"/>
+          <path d="M12 22A10 10 0 0 1 2 12"/>
+          <path d="M2 12A10 10 0 0 1 12 2"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+        Quick Loan
+      </button>
+      <button class="act-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Settings
+      </button>
+    </div>
+
   </div>
 </body>
 </html>
