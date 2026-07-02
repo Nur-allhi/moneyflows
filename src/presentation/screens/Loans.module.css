@@ -84,7 +84,6 @@
 }
 
 .repayBtn {
-  align-self: flex-start;
   padding: 8px 18px;
   border: 1px solid var(--color-primary);
   border-radius: 8px;
@@ -752,8 +751,7 @@
 }
 
 .deleteBtn {
-  align-self: flex-start;
-  padding: 6px 14px;
+  padding: 8px 18px;
   border: 1px solid var(--color-expense);
   border-radius: 8px;
   background: transparent;
@@ -827,6 +825,13 @@
 
 .confirmDeleteBtn:hover {
   opacity: 0.9;
+}
+
+.summaryActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
 }
 
 @media (max-width: 800px) {

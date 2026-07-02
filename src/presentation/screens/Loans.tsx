@@ -153,11 +153,6 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
           <div className={styles.summaryAmount}>
             <div className={styles.summaryValue}>{debtorSummary.totalOutstanding}</div>
             <div className={styles.summaryAmountLabel}>Total Outstanding</div>
-            {stack.totalOutstanding > 0 && (
-              <button className={styles.repayBtn} onClick={handleOpenRepay}>
-                {cpType === 'creditor' ? 'Pay Back' : 'Repay'}
-              </button>
-            )}
           </div>
         </div>
         <ProgressBar
@@ -165,9 +160,16 @@ function LoanDetailView({ stack, accounts }: { stack: LoanStackType; accounts: A
           label="Repayment Progress"
           sublabel={debtorSummary.repaidDetail}
         />
-        <button className={styles.deleteBtn} onClick={() => setConfirmDelete(true)}>
-          Delete Loan Account
-        </button>
+        <div className={styles.summaryActions}>
+          <button className={styles.deleteBtn} onClick={() => setConfirmDelete(true)}>
+            Delete Loan Account
+          </button>
+          {stack.totalOutstanding > 0 && (
+            <button className={styles.repayBtn} onClick={handleOpenRepay}>
+              {cpType === 'creditor' ? 'Pay Back' : 'Repay'}
+            </button>
+          )}
+        </div>
       </div>
 
       {confirmDelete && (
