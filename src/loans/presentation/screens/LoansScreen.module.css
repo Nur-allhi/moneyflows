@@ -8,6 +8,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .title {
@@ -16,6 +18,7 @@
   font-size: 22px;
   font-weight: 700;
   color: var(--color-text);
+  display: inline;
 }
 
 .headerActions {
@@ -45,7 +48,7 @@
 .addBtn:hover { opacity: 0.9; box-shadow: 0 0 12px var(--color-primary-glow); }
 
 .filterStrip {
-  display: flex;
+  display: inline-flex;
   gap: 4px;
   background: var(--color-surface);
   border-radius: 10px;
@@ -94,21 +97,3 @@
   .grid { grid-template-columns: 1fr 1fr; }
 }
 
-.formOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: grid;
-  place-items: center;
-  z-index: 100;
-}
-
-.formSheet {
-  width: 90%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-}

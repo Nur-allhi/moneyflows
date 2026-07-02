@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '../../core/domain/Transaction';
 import { Account } from '../../core/domain/Account';
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
-import type { Loan, LoanStack } from '../domain/types';
+import type { Loan, LoanStack, LoanReport, LoanReportFilter, LoanReportRow, LoanReportSummary } from '../domain/types';
 import { LoanDatabase } from '../infrastructure/LoanDatabase';
 import { SQLiteDatabaseService } from '../../infrastructure/database/SQLiteDatabaseService';
 
@@ -69,6 +69,7 @@ export class LoanService {
     description: string;
     date: string;
     memberId: string;
+    destinationAccountId?: string;
   }): Promise<{ tx: Transaction }> {
     if (!params.loanId) throw new Error('loanId is required for repayment');
 
@@ -81,9 +82,10 @@ export class LoanService {
     const [y, m, d] = params.date.split('-');
     const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
 
+    const dst = params.destinationAccountId ?? loan.lenderAccountId;
     const tx = new Transaction(
       uuidv4(), 'repay', params.description, params.amount,
-      params.memberId, dateTime, loan.borrowerAccountId, loan.lenderAccountId,
+      params.memberId, dateTime, loan.borrowerAccountId, dst,
       undefined, loan.id, {}, nowStr, nowStr,
     );
 
@@ -123,6 +125,22 @@ export class LoanService {
     return { accountId: account.id };
   }
 
+  async syncLoanTransaction(loanRef: string, oldAmount: number, newAmount: number, txType: string): Promise<void> {
+    const loan = await this.loanDb.getLoanById(loanRef);
+    if (!loan) return;
+    const diff = newAmount - oldAmount;
+    if (txType === 'lend') {
+      loan.principal += diff;
+      loan.outstanding += diff;
+    } else if (txType === 'repay') {
+      loan.outstanding -= diff;
+    }
+    loan.outstanding = Math.max(0, loan.outstanding);
+    loan.status = loan.outstanding <= 0 ? 'settled' : 'active';
+    loan.updatedAt = new Date().toISOString();
+    await this.loanDb.saveLoan(loan);
+  }
+
   async settleLoan(loanId: string): Promise<void> {
     const loan = await this.loanDb.getLoanById(loanId);
     if (!loan) throw new Error(`Loan ${loanId} not found`);
@@ -138,5 +156,103 @@ export class LoanService {
       await this.db.softDeleteTransaction(tx.id);
     }
     await this.loanDb.softDeleteLoan(loanId);
+  }
+
+  private _emptyReport(filter: LoanReportFilter): LoanReport {
+    return {
+      rows: [],
+      summary: { totalLent: 0, totalRepaid: 0, outstanding: 0, transactionCount: 0, lenderName: '', borrowerName: '' },
+      filter,
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  async generateReport(filter: LoanReportFilter): Promise<LoanReport> {
+    const txFilter: Record<string, string | number | undefined> = {};
+
+    if (filter.borrowerAccountId) txFilter.accountId = filter.borrowerAccountId;
+    if (filter.startDate) txFilter.startDate = filter.startDate;
+    if (filter.endDate) txFilter.endDate = filter.endDate;
+
+    if (filter.month && filter.month.includes('-')) {
+      const [y, m] = filter.month.split('-');
+      if (!y || !m) return this._emptyReport(filter);
+      const monthNum = parseInt(m, 10);
+      const start = `${y}-${String(monthNum).padStart(2, '0')}-01`;
+      const endDate = new Date(parseInt(y, 10), monthNum, 0);
+      txFilter.startDate = start;
+      txFilter.endDate = endDate.toISOString().slice(0, 10);
+    }
+
+    let txs = await this.db.getTransactions(txFilter);
+    const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback']);
+
+    txs = txs.filter((tx) => loanTypes.has(tx.type));
+
+    if (filter.type && filter.type !== 'all') {
+      if (filter.type === 'lend') {
+        txs = txs.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_received');
+      } else {
+        txs = txs.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback');
+      }
+    }
+
+    const accounts = await this.db.getAccounts();
+    const accountMap = new Map(accounts.map((a) => [a.id, a]));
+
+    const sorted = [...txs].sort((a, b) => {
+      const c = a.date.localeCompare(b.date);
+      if (c !== 0) return c;
+      return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
+    });
+
+    let running = 0;
+    let totalLent = 0;
+    let totalRepaid = 0;
+
+    const rows: LoanReportRow[] = sorted.map((tx) => {
+      const isDebit = tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_paidback';
+      const isCredit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_received';
+
+      if (isDebit) { running += tx.amount; totalLent += tx.amount; }
+      if (isCredit) { running -= tx.amount; totalRepaid += tx.amount; }
+
+      const srcAcct = tx.sourceAccount ? accountMap.get(tx.sourceAccount) : undefined;
+      const dstAcct = tx.destAccount ? accountMap.get(tx.destAccount) : undefined;
+
+      return {
+        id: tx.id,
+        date: tx.date,
+        type: (isDebit ? 'lend' : 'repay') as 'lend' | 'repay',
+        typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' :
+                   tx.type === 'loan_received' ? 'Received' :
+                   tx.type === 'repay' || tx.type === 'loan_repayment' ? 'Repayment' : 'Paid Back',
+        description: tx.description,
+        lenderAccount: srcAcct?.name ?? tx.sourceAccount ?? '',
+        borrowerAccount: dstAcct?.name ?? tx.destAccount ?? '',
+        amount: tx.amount,
+        runningBalance: running,
+      };
+    });
+
+    const borrowerAcct = filter.borrowerAccountId ? accountMap.get(filter.borrowerAccountId) : undefined;
+    const lenderAccts = [...new Set(txs.map((tx) => tx.sourceAccount ?? '').filter(Boolean))];
+    const lenderNames = lenderAccts.map((id) => accountMap.get(id)?.name ?? id);
+
+    const summary: LoanReportSummary = {
+      totalLent,
+      totalRepaid,
+      outstanding: running,
+      transactionCount: rows.length,
+      lenderName: lenderNames.join(', ') || 'All',
+      borrowerName: borrowerAcct?.name ?? 'All Accounts',
+    };
+
+    return {
+      rows,
+      summary,
+      filter,
+      generatedAt: new Date().toISOString(),
+    };
   }
 }

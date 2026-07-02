@@ -762,3 +762,99 @@
   margin-top: 2px;
   display: block;
 }
+
+.createCpBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 16px;
+}
+
+.createCpActions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.createCpActions button {
+  flex: 1;
+  max-width: 140px;
+  padding: 12px 0;
+  border: 0;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.createCpActions .cancelBtn {
+  background: oklch(100% 0 0 / 0.06);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.createCpActions .cancelBtn:hover {
+  background: oklch(100% 0 0 / 0.1);
+  color: var(--color-text);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.createCpActions .saveBtn {
+  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  color: #fff;
+}
+
+.createCpActions .saveBtn:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.createCpActions button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.createCpActions button:active {
+  opacity: 0.85;
+}
+
+.createCpActions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pickerCreateBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.pickerCreateBtn:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.pickerCreateBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.pickerCreateBtn:active {
+  opacity: 0.85;
+}

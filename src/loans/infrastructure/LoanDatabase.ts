@@ -80,16 +80,20 @@ export class LoanDatabase {
 
   async getLoanStacks(): Promise<LoanStack[]> {
     const borrowerIds = this.query<{ borrower_account_id: string }>(
-      "SELECT DISTINCT borrower_account_id FROM loans WHERE deleted_at IS NULL AND status='active'",
+      'SELECT DISTINCT borrower_account_id FROM loans WHERE deleted_at IS NULL',
     );
     const accounts = this.query<Record<string, unknown>>(
       'SELECT id, name, type, member_id FROM accounts WHERE deleted_at IS NULL',
     );
     const accountMap = new Map(accounts.map((a) => [a.id as string, a]));
+    const members = this.query<{ id: string; name: string }>(
+      'SELECT id, name FROM members WHERE deleted_at IS NULL',
+    );
+    const memberMap = new Map(members.map((m) => [m.id, m.name]));
 
     const stacks: LoanStack[] = [];
     for (const row of borrowerIds) {
-      const stack = await this._getStackForBorrower(row.borrower_account_id, accountMap);
+      const stack = await this._getStackForBorrower(row.borrower_account_id, accountMap, memberMap);
       if (stack) stacks.push(stack);
     }
     return stacks;
@@ -100,12 +104,17 @@ export class LoanDatabase {
       'SELECT id, name, type, member_id FROM accounts WHERE deleted_at IS NULL',
     );
     const accountMap = new Map(accounts.map((a) => [a.id as string, a]));
-    return this._getStackForBorrower(borrowerId, accountMap);
+    const members = this.query<{ id: string; name: string }>(
+      'SELECT id, name FROM members WHERE deleted_at IS NULL',
+    );
+    const memberMap = new Map(members.map((m) => [m.id, m.name]));
+    return this._getStackForBorrower(borrowerId, accountMap, memberMap);
   }
 
   private async _getStackForBorrower(
     borrowerId: string,
     accountMap: Map<string, Record<string, unknown>>,
+    memberMap: Map<string, string>,
   ): Promise<LoanStack | null> {
     const loans = this.query<Record<string, unknown>>(
       'SELECT * FROM loans WHERE borrower_account_id=$cid AND deleted_at IS NULL',
@@ -115,8 +124,12 @@ export class LoanDatabase {
     if (loans.length === 0) return null;
 
     const borrowerAcct = accountMap.get(borrowerId);
-    let name = borrowerAcct?.name as string ?? 'Unknown';
+    const acctName = borrowerAcct?.name as string ?? 'Unknown';
     const stackType = borrowerAcct?.type === 'counterparty' ? 'external' : 'internal';
+    const memberId = borrowerAcct?.member_id as string | undefined;
+    const name = stackType === 'internal' && memberId && memberMap.has(memberId)
+      ? `${acctName} - ${memberMap.get(memberId)}`
+      : acctName;
 
     const allAcctIds = new Set<string>();
     for (const l of loans) {

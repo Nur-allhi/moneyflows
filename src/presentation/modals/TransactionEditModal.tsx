@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Modal, AmountInput, FormInput } from '../components';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { Transaction } from '../../core/domain/Transaction';
+import { getDatabase } from '../../infrastructure/database/getDatabase';
 
 interface TransactionEditModalProps {
   txId: string;
@@ -26,7 +27,7 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
 
   if (!transaction) return null;
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     const [y, m, d] = date.split('-');
     const now = new Date();
     const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
@@ -36,8 +37,15 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
       transaction.metadata, transaction.createdAt,
     );
     await updateTransaction(transaction.id, updated);
+    if (transaction.loanRef && (transaction.type === 'lend' || transaction.type === 'repay')) {
+      try {
+        const { LoanService } = await import('../../loans/application/LoanService');
+        const service = new LoanService(getDatabase());
+        await service.syncLoanTransaction(transaction.loanRef, transaction.amount, Number(amount), transaction.type);
+      } catch { /* best-effort */ }
+    }
     onClose();
-  };
+  }, [transaction, amount, desc, date, updateTransaction]);
 
   return (
     <Modal isOpen onClose={onClose} title="Edit Transaction" saveLabel="Save" onSave={handleSave}>

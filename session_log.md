@@ -864,3 +864,57 @@
 ### Status
 - **T-051 complete.** `tsc --noEmit` passes.
 - **Next: T-052** — Rewrite loan schema + database layer.
+
+## Session 2026-07-02 22:15
+
+### Changes
+- **T-052**: Rewrote loan schema (new DDL with `lender_account_id`/`borrower_account_id`/`principal`/`outstanding`), added v3→v4 migration (drops old loans, recreates), added `'lend'`/`'repay'` to transactions CHECK, updated `applyBalanceChange`/`validateTransaction`. Created `src/loans/infrastructure/LoanDatabase.ts` (full CRUD). Added `getSqlJsDb()` to `IDatabaseService`/`SQLiteDatabaseService`. Updated domain `Transaction` type + `labels.ts` for `'lend'`/`'repay'`. Updated `MemberProfile.tsx`/`Dashboard.tsx` for new tx types.
+- **T-053**: Created `src/loans/application/LoanService.ts` — unified service: `createLoan`, `recordRepayment`, `settleLoan`, `deleteLoan`, `getLoanById`, `getLoanStacks`, `createCounterparty`. Falls back via `instanceof` to get raw DB for `LoanDatabase`.
+- **T-054**: Created `src/loans/presentation/stores/useLoanStore.ts` — Zustand store with `fetchLoanStacks`, `createLoan`, `recordRepayment`, `createCounterparty`, `settleLoan`, `deleteLoan`. Auto-refreshes after mutations. Added backward-compat methods (`deleteLoanStack`, `settleLoanStack`, `createGivenLoan`, `createReceivedLoan`, `recordPayback`). Old `src/presentation/stores/useLoanStore.ts` re-exports new store.
+- **T-055**: Built `LoanForm.tsx` + `.module.css` (lend/repay toggle, account selects, amount, description, submit) and `AddCounterparty.tsx` + `.module.css` (name input + create btn).
+- **T-056**: Built `LoanCard.tsx` (stack card), `LoanDetailView.tsx` (progress, delete confirm, ledger), `LoansScreen.tsx` (filter strip, card grid, empty/error states, detail routing) — all with CSS modules.
+- **T-057**: Updated `TransactionDetailModal.tsx` — shows Lender/Borrower for `'lend'`, Payer/Recipient for `'repay'`, fallback for old types. Simplified `TransactionFormModal.tsx` — removed loan tab, removed `LoanFormSection` import, added link-to-LoanForm button. Fixed build errors (`useRef` import, `loanTargetType`/`loanMode` refs). `tsc --noEmit` passes.
+- **T-058**: Updated `App.tsx` route import from old `Loans` to new `LoansScreen`. Build passes.
+- **T-059**: Deleted old files: `src/core/domain/Loan.ts`, `src/core/application/LoanService.ts`, `src/presentation/screens/Loans.tsx`+`.module.css`, `src/presentation/components/LoanStack.tsx`+`.module.css`, `LoanFormSection.tsx`+`.module.css`. Cleaned up exports in `src/core/domain/index.ts`, `src/presentation/components/index.ts`, `src/presentation/screens/index.ts`. Removed old loan methods (`getLoanStacks`, `getLoans`, `saveLoan`, etc.) from `IDatabaseService` and `SQLiteDatabaseService`. Build clean.
+
+### Skill(s) Used
+- `senior-backend` — DB schema design, migration strategy, SQL CRUD
+- `senior-frontend` — Zustand store, React components, routing
+
+### Status
+- **Phase 7 complete.** All 9 tickets (T-051–T-059) finished. `tsc --noEmit` passes.
+- **Next: Phase 8** — TBD (post-refactor testing / new feature work).
+
+## Session 2026-07-02
+
+### Changes
+- **Bug fixes:** Filtered counterparty accounts from lender dropdown; added `fetchAccounts` after `createCounterparty`; added `syncLoanTransaction` to `LoanService` called from `TransactionEditModal`; redesigned `LoanForm` repay mode with loan selector; removed `useEffect(fetchLoanStacks)` that caused freeze on new loan.
+- **Loan tab in TransactionFormModal:** Added `'loan'` to tabs. New lend/repay toggle strip. Lend mode shows Lender/Borrower pickers (borrower picker includes counterparty accounts + "Create New Counterparty"). Repay mode shows loan selector dropdown from `loanStacks`. `initialTab` prop preselected when opened.
+- **LoansScreen:** "+ New Loan" opens `TransactionFormModal` with `initialTab: 'loan'` via `useModalStore`. Removed `LoanForm` import, `showForm` state, form overlay JSX, and unused CSS classes.
+
+### Files Changed
+- `src/presentation/modals/TransactionFormModal.tsx` — full rewrite: added loan store, loan state, lend/repay fields, counterparty picker section, loan submit handler
+- `src/loans/presentation/screens/LoansScreen.tsx` — replaced inline form with modal store open call
+- `src/loans/presentation/screens/LoansScreen.module.css` — removed `.formOverlay` and `.formSheet` classes
+- (Earlier session fixes already committed: `LoanService.ts`, `useLoanStore.ts`, `TransactionEditModal.tsx`, `LoanForm.tsx`)
+
+### Status
+- Loan integration as a tab in `TransactionFormModal` is complete. `tsc --noEmit` passes.
+- **Next:** Test the full workflow — "+ New Loan" on LoansScreen → modal opens on loan tab → lend/repay flows.
+
+## Session 2026-07-02 22:30
+
+### Changes
+- **PDF description enhancement**: Loan ledger PDF now includes account/member context in the description column — shows `user description (MemberName / AccountName)` for each transaction (source account for lend, destination account for repay)
+- **PDF text wrapping**: Added `overflow: 'linebreak'` to autoTable styles so long descriptions wrap to multiple lines in the PDF
+- **PDF layout**: Added explicit `margin` and `tableWidth: 'auto'` for consistent table width
+
+### Files Changed
+- `src/loans/presentation/components/LoanDetailView.tsx` — added `accountById`/`memberById` lookup in `downloadPdf`, replaced bare `tx.description` with bracketed account info, added `overflow: 'linebreak'`, `margin`, `tableWidth`
+
+### Skill(s) Used
+- `senior-frontend` — jsPDF autoTable configuration, text wrapping
+
+### Status
+- PDF description includes account/member context with text wrapping. Build passes.
+- **Next:** TBD

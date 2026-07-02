@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useLoanStore } from '../stores/useLoanStore';
 import { useAccountStore } from '../../../presentation/stores/useAccountStore';
 import { useSettingsStore } from '../../../presentation/stores/useSettingsStore';
+import { useModalStore } from '../../../presentation/stores/useModalStore';
 import { formatAmount } from '../../../presentation/utils/format';
 import { GlassPanel } from '../../../presentation/components';
 import { LoanCard } from '../components/LoanCard';
 import { LoanDetailView } from '../components/LoanDetailView';
-import { LoanForm } from '../components/LoanForm';
 import styles from './LoansScreen.module.css';
 
 export function LoansScreen() {
@@ -16,7 +16,6 @@ export function LoansScreen() {
   const { loanStacks, loading, error, fetchLoanStacks } = useLoanStore();
   const { loading: acctLoading, fetchAccounts } = useAccountStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
-  const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<'active' | 'settled' | 'all'>('active');
 
   useEffect(() => {
@@ -86,22 +85,21 @@ export function LoansScreen() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h2 className={styles.title}>Your Loans</h2>
+        <div className={styles.filterStrip}>
+          <button className={`${styles.filterBtn} ${filter === 'active' ? styles.filterActive : ''}`} onClick={() => setFilter('active')}>
+            Active <span className={styles.filterAmt}>{formatAmount(totals.active, locale, currency)}</span>
+          </button>
+          <button className={`${styles.filterBtn} ${filter === 'settled' ? styles.filterActive : ''}`} onClick={() => setFilter('settled')}>
+            Settled <span className={styles.filterAmt}>{formatAmount(totals.settled, locale, currency)}</span>
+          </button>
+          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>
+            All <span className={styles.filterAmt}>{formatAmount(totals.all, locale, currency)}</span>
+          </button>
+        </div>
         <div className={styles.headerActions}>
           <span className={styles.count}>{loanStacks.length} Account{loanStacks.length !== 1 ? 's' : ''}</span>
-          <button className={styles.addBtn} onClick={() => setShowForm(true)}>+ New Loan</button>
+          <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'loan' })}>+ New Loan</button>
         </div>
-      </div>
-
-      <div className={styles.filterStrip}>
-        <button className={`${styles.filterBtn} ${filter === 'active' ? styles.filterActive : ''}`} onClick={() => setFilter('active')}>
-          Active <span className={styles.filterAmt}>{formatAmount(totals.active, locale, currency)}</span>
-        </button>
-        <button className={`${styles.filterBtn} ${filter === 'settled' ? styles.filterActive : ''}`} onClick={() => setFilter('settled')}>
-          Settled <span className={styles.filterAmt}>{formatAmount(totals.settled, locale, currency)}</span>
-        </button>
-        <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>
-          All <span className={styles.filterAmt}>{formatAmount(totals.all, locale, currency)}</span>
-        </button>
       </div>
 
       {filteredStacks.length === 0 ? (
@@ -124,8 +122,6 @@ export function LoansScreen() {
           ))}
         </div>
       )}
-
-      {showForm && <div className={styles.formOverlay}><div className={styles.formSheet}><LoanForm onClose={() => setShowForm(false)} /></div></div>}
     </div>
   );
 }

@@ -17,38 +17,63 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
   const [action, setAction] = useState<'lend' | 'repay'>(initialAction ?? 'lend');
   const [lenderAccountId, setLenderAccountId] = useState(initialLenderAccountId ?? '');
   const [borrowerAccountId, setBorrowerAccountId] = useState(initialBorrowerAccountId ?? '');
+  const [selectedLoanId, setSelectedLoanId] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const showAddCp = borrowerAccountId === '__new__';
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
   const { accounts, fetchAccounts } = useAccountStore();
-  const { createLoan, recordRepayment, fetchLoanStacks } = useLoanStore();
+  const { loanStacks, createLoan, recordRepayment, fetchLoanStacks } = useLoanStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
 
   const activeAccounts = useMemo(() => accounts.filter((a) => a.isActive), [accounts]);
+  const lenderAccounts = useMemo(() => activeAccounts.filter((a) => a.type !== 'counterparty'), [activeAccounts]);
+
+  const activeLoanOptions = useMemo(() => {
+    const options: { loanId: string; label: string }[] = [];
+    for (const stack of loanStacks) {
+      for (const loan of stack.loans) {
+        if (loan.status !== 'settled') {
+          options.push({
+            loanId: loan.id,
+            label: `${stack.debtorName} - ${formatAmount(loan.amount, locale, currency)}`,
+          });
+        }
+      }
+    }
+    return options;
+  }, [loanStacks, locale, currency]);
+
+  const showAddCp = borrowerAccountId === '__new__';
 
   const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
 
   const handleSubmit = useCallback(async () => {
     setErr('');
-    if (!lenderAccountId || !borrowerAccountId) { setErr('Select both accounts'); return; }
+    if (action === 'repay') {
+      if (!selectedLoanId) { setErr('Select a loan to repay'); return; }
+    } else {
+      if (!lenderAccountId || !borrowerAccountId) { setErr('Select both accounts'); return; }
+    }
     const amt = parseInt(amount, 10);
     if (!amt || amt <= 0) { setErr('Enter a valid amount'); return; }
     if (!description.trim()) { setErr('Enter a description'); return; }
 
     setSaving(true);
     try {
-      const txMemberId = accounts.find((a) => a.id === lenderAccountId)?.memberId ?? '';
       if (action === 'lend') {
+        const txMemberId = accounts.find((a) => a.id === lenderAccountId)?.memberId ?? '';
         await createLoan({
           lenderAccountId, borrowerAccountId, amount: amt,
           description: description.trim(), date: dateStr, memberId: txMemberId,
         });
       } else {
+        const loan = loanStacks.flatMap((s) => s.loans).find((l) => l.id === selectedLoanId);
+        const lenderAcct = loan ? accounts.find((a) => a.name === loan.fundingSource) : undefined;
+        const txMemberId = lenderAcct?.memberId ?? '';
         await recordRepayment({
-          loanId: borrowerAccountId, amount: amt,
+          loanId: selectedLoanId, amount: amt,
           description: description.trim(), date: dateStr, memberId: txMemberId,
         });
       }
@@ -60,7 +85,7 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
     } finally {
       setSaving(false);
     }
-  }, [action, lenderAccountId, borrowerAccountId, amount, description, dateStr, accounts, createLoan, recordRepayment, fetchAccounts, fetchLoanStacks, onClose]);
+  }, [action, lenderAccountId, borrowerAccountId, selectedLoanId, amount, description, dateStr, accounts, loanStacks, createLoan, recordRepayment, fetchAccounts, fetchLoanStacks, onClose]);
 
   return (
     <div className={styles.container}>
@@ -84,46 +109,66 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
         </button>
       </div>
 
-      <div className={styles.fieldGroup}>
-        <span className={styles.fieldLabel}>From Account</span>
-        <select
-          className={styles.select}
-          value={lenderAccountId}
-          onChange={(e) => setLenderAccountId(e.target.value)}
-        >
-          <option value="">Select account</option>
-          {activeAccounts.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name} - {formatAmount(a.balance, locale, currency)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className={styles.fieldGroup}>
-        <span className={styles.fieldLabel}>To Account</span>
-        <div className={styles.toRow}>
+      {action === 'repay' ? (
+        <div className={styles.fieldGroup}>
+          <span className={styles.fieldLabel}>Loan to Repay</span>
           <select
             className={styles.select}
-            value={borrowerAccountId}
-            onChange={(e) => setBorrowerAccountId(e.target.value)}
+            value={selectedLoanId}
+            onChange={(e) => setSelectedLoanId(e.target.value)}
           >
-            <option value="">Select account</option>
-            {activeAccounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name} - {formatAmount(a.balance, locale, currency)}
+            <option value="">Select loan</option>
+            {activeLoanOptions.map((opt) => (
+              <option key={opt.loanId} value={opt.loanId}>
+                {opt.label}
               </option>
             ))}
-            <option value="__new__">+ Create new counterparty</option>
           </select>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldLabel}>From Account</span>
+            <select
+              className={styles.select}
+              value={lenderAccountId}
+              onChange={(e) => setLenderAccountId(e.target.value)}
+            >
+              <option value="">Select account</option>
+              {lenderAccounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} - {formatAmount(a.balance, locale, currency)}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {showAddCp && (
-        <AddCounterparty
-          onCreated={(id) => { setBorrowerAccountId(id); }}
-          onCancel={() => setBorrowerAccountId('')}
-        />
+          <div className={styles.fieldGroup}>
+            <span className={styles.fieldLabel}>To Account</span>
+            <div className={styles.toRow}>
+              <select
+                className={styles.select}
+                value={borrowerAccountId}
+                onChange={(e) => setBorrowerAccountId(e.target.value)}
+              >
+                <option value="">Select account</option>
+                {activeAccounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} - {formatAmount(a.balance, locale, currency)}
+                  </option>
+                ))}
+                <option value="__new__">+ Create new counterparty</option>
+              </select>
+            </div>
+          </div>
+
+          {showAddCp && (
+            <AddCounterparty
+              onCreated={(id) => { setBorrowerAccountId(id); }}
+              onCancel={() => setBorrowerAccountId('')}
+            />
+          )}
+        </>
       )}
 
       <div className={styles.fieldGroup}>

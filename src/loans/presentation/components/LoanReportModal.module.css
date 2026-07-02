@@ -1,0 +1,30 @@
+.reportModal {
+  width: 900px;
+  max-width: 95vw;
+}
+
+.footerRow {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 24px 20px;
+  flex-shrink: 0;
+}
+
+.cancelBtn {
+  padding: 13px 32px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: oklch(100% 0 0 / 0.06);
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cancelBtn:hover {
+  background: oklch(100% 0 0 / 0.1);
+  color: var(--color-text);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
