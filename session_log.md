@@ -918,3 +918,29 @@
 ### Status
 - PDF description includes account/member context with text wrapping. Build passes.
 - **Next:** TBD
+
+## Session 2026-07-02 23:00
+
+### Changes
+- **Dashboard redesign** — Full rewrite matching updated `DESIGN_FILES/screen-1-dashboard.html`:
+  - **Header**: Glass panel with MoneyFlows logo, member avatar strip (Efty/Azam/Nahar with gradient circles, active ring), formatted date, notification bell icon
+  - **3 Metric Cards**: Total Assets (violet glow), Cash in Hand (gold glow), Active Loans (coral glow) — each with animated number ticker and month-over-month change indicator with ▲/▼ arrow SVG
+  - **This Month Summary**: Single glass card with Income (teal), Expenses (coral), Net (teal/coral based on sign) — divided by vertical borders
+  - **Where Your Money Is**: Accounts grouped by member — each member section has 24px mini-avatar + name header, indented account rows with type-based gradient icon, name, balance
+  - **Active Loans**: Loan stacks as compact rows with debtor name, optional Overdue/Settled badge, outstanding amount in coral mono, 4px teal progress bar, recovery percentage + remaining
+  - **Action Bar**: 3 glass buttons with SVG icons — New Transaction (violet gradient primary), Quick Loan (opens loan tab), Settings
+  - Removed: Family Net Worth metric, Combined Balances panel, Recent Transactions panel, Transfer/Import DB buttons
+- Added `--color-teal` and `--color-coral` CSS variables to `tokens.css`
+
+### Files Changed
+- `src/presentation/screens/Dashboard.tsx` — full rewrite from 174→387 LOC
+- `src/presentation/screens/Dashboard.module.css` — full rewrite from 155→360 LOC
+- `src/presentation/styles/tokens.css` — added `--color-teal`, `--color-coral`
+
+### Skill(s) Used
+- `ui-ux-pro-max` — Layout matching DESIGN_FILES spec, SVG icons, progress bars, member avatars
+- `senior-frontend` — Member grouping logic, monthly income/expense computation, loan progress calculation
+
+### Status
+- Dashboard redesigned per updated design spec. Build passes.
+- **Next:** TBD
