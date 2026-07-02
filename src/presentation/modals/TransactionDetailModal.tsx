@@ -1,3 +1,4 @@
+import type { Transaction } from '../../core/domain/Transaction';
 import { Modal } from '../components';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useMemberStore } from '../stores/useMemberStore';
@@ -9,29 +10,41 @@ import { TX_TYPE_ICON, displayTxType } from '../constants/labels';
 import styles from './TransactionDetailModal.module.css';
 
 interface TransactionDetailModalProps {
-  txId: string;
+  txId?: string;
+  transaction?: Transaction;
   onClose: () => void;
 }
 
-export function TransactionDetailModal({ txId, onClose }: TransactionDetailModalProps) {
-  const transaction = useTransactionStore((s) => s.transactions.find((t) => t.id === txId));
+export function TransactionDetailModal({ txId, transaction: txProp, onClose }: TransactionDetailModalProps) {
+  const storeTx = useTransactionStore((s) => txId ? s.transactions.find((t) => t.id === txId) : undefined);
+  const loading = useTransactionStore((s) => s.loading);
   const members = useMemberStore((s) => s.members);
   const accounts = useAccountStore((s) => s.accounts);
   const { locale, currency } = useSettingsStore((s) => s.settings);
 
-  if (!transaction) return null;
+  const transaction = txProp ?? storeTx;
+
+  if (!transaction) {
+    return (
+      <Modal isOpen onClose={onClose} title="Transaction Details">
+        <div className={styles.body}>
+          <p className={styles.empty}>{loading ? 'Loading...' : 'Transaction not found.'}</p>
+        </div>
+      </Modal>
+    );
+  }
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
   const memberLookup = new Map(members.map((m) => [m.id, m]));
 
   const handleEdit = () => {
     onClose();
-    setTimeout(() => useModalStore.getState().open('transaction-edit', { txId }), 50);
+    setTimeout(() => useModalStore.getState().open('transaction-edit', { txId: transaction.id }), 50);
   };
 
   const handleDelete = () => {
     onClose();
-    setTimeout(() => useModalStore.getState().open('delete-confirm', { txId }), 50);
+    setTimeout(() => useModalStore.getState().open('delete-confirm', { txId: transaction.id }), 50);
   };
 
   return (
@@ -98,7 +111,39 @@ export function TransactionDetailModal({ txId, onClose }: TransactionDetailModal
               </div>
             );
           })()}
-          {(() => {
+          {transaction.type === 'lend' && transaction.sourceAccount && transaction.destAccount && (() => {
+            const lenderAcct = accountMap.get(transaction.sourceAccount!);
+            const borrowerAcct = accountMap.get(transaction.destAccount!);
+            const lenderMember = lenderAcct?.memberId ? memberLookup.get(lenderAcct.memberId) : null;
+            const borrowerMember = borrowerAcct?.memberId ? memberLookup.get(borrowerAcct.memberId) : null;
+            return (<>
+              <div className={styles.field}>
+                <span className={styles.fieldKey}>Lender</span>
+                <span className={styles.value}>{lenderAcct?.name ?? 'Unknown'}{lenderMember ? ` \u2014 ${lenderMember.name}` : ''}</span>
+              </div>
+              <div className={styles.field}>
+                <span className={styles.fieldKey}>Borrower</span>
+                <span className={styles.value}>{borrowerAcct?.name ?? 'Unknown'}{borrowerMember ? ` \u2014 ${borrowerMember.name}` : ''}</span>
+              </div>
+            </>);
+          })()}
+          {transaction.type === 'repay' && transaction.sourceAccount && transaction.destAccount && (() => {
+            const payerAcct = accountMap.get(transaction.sourceAccount!);
+            const recipientAcct = accountMap.get(transaction.destAccount!);
+            const payerMember = payerAcct?.memberId ? memberLookup.get(payerAcct.memberId) : null;
+            const recipientMember = recipientAcct?.memberId ? memberLookup.get(recipientAcct.memberId) : null;
+            return (<>
+              <div className={styles.field}>
+                <span className={styles.fieldKey}>Payer</span>
+                <span className={styles.value}>{payerAcct?.name ?? 'Unknown'}{payerMember ? ` \u2014 ${payerMember.name}` : ''}</span>
+              </div>
+              <div className={styles.field}>
+                <span className={styles.fieldKey}>Recipient</span>
+                <span className={styles.value}>{recipientAcct?.name ?? 'Unknown'}{recipientMember ? ` \u2014 ${recipientMember.name}` : ''}</span>
+              </div>
+            </>);
+          })()}
+          {transaction.type !== 'lend' && transaction.type !== 'repay' && (() => {
             const srcAcct = transaction.sourceAccount ? accountMap.get(transaction.sourceAccount) : null;
             const dstAcct = transaction.destAccount ? accountMap.get(transaction.destAccount) : null;
             const cpAcct = srcAcct?.type === 'counterparty' ? srcAcct : dstAcct?.type === 'counterparty' ? dstAcct : null;
@@ -112,8 +157,6 @@ export function TransactionDetailModal({ txId, onClose }: TransactionDetailModal
               );
             }
             if (transaction.type === 'loan_issue' || transaction.type === 'loan_repayment') {
-              const isLoanType = transaction.type === 'loan_issue' || transaction.type === 'loan_repayment';
-              if (!isLoanType) return null;
               if (transaction.debtorId) {
                 const debtorMember = memberLookup.get(transaction.debtorId);
                 if (debtorMember) {

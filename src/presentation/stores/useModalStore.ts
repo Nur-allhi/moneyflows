@@ -12,6 +12,7 @@ interface ModalState {
   open: (type: string, props?: Record<string, unknown>) => string;
   close: (id: string) => void;
   closeAll: () => void;
+  closeAllImmediate: () => void;
 }
 
 let nextId = 1;
@@ -39,5 +40,8 @@ export const useModalStore = create<ModalState>((set, get) => ({
     setTimeout(() => {
       set({ modals: [], closingIds: [] });
     }, 300);
+  },
+  closeAllImmediate: () => {
+    set({ modals: [], closingIds: [] });
   },
 }));

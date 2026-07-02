@@ -1,0 +1,190 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+  transition: color var(--transition-fast);
+}
+
+.backBtn:hover { color: var(--color-primary); }
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+
+.summaryTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.summaryInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.typeLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+}
+
+.debtorName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.summaryAmount {
+  text-align: right;
+}
+
+.amountValue {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-expense);
+}
+
+.amountLabel {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.settledBadge {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: var(--color-teal);
+  color: #fff;
+}
+
+.deleteBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-expense);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-expense);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.deleteBtn:hover {
+  background: var(--color-expense);
+  color: #fff;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+}
+
+.confirmForm {
+  padding: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  max-width: 360px;
+  width: 90%;
+}
+
+.confirmForm p {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancelBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelBtn:hover { border-color: var(--color-primary); color: var(--color-text); }
+
+.confirmBtn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-expense);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirmBtn:hover { opacity: 0.9; }
+
+.ledgerSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ledgerTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}

@@ -3,7 +3,6 @@ import { Member } from '../../core/domain/Member';
 import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
-import { Loan, type LoanStack } from '../../core/domain/Loan';
 import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance } from '../../core/ports/IDatabaseService';
 import { STORAGE_KEY, EXPORT_FILENAME_PREFIX } from '../../presentation/constants/config';
 
@@ -14,7 +13,7 @@ const SCHEMA = [
   'CREATE INDEX IF NOT EXISTS idx_accounts_member ON accounts(member_id);',
   'CREATE INDEX IF NOT EXISTS idx_accounts_deleted ON accounts(deleted_at);',
   'CREATE INDEX IF NOT EXISTS idx_accounts_type ON accounts(type);',
-  "CREATE TABLE IF NOT EXISTS transactions (id TEXT PRIMARY KEY,type TEXT NOT NULL CHECK(type IN ('income','expense','transfer','loan_issue','loan_repayment','loan_received','loan_paidback')),description TEXT NOT NULL,amount REAL NOT NULL CHECK(amount > 0),source_account TEXT REFERENCES accounts(id),dest_account TEXT REFERENCES accounts(id),member_id TEXT NOT NULL REFERENCES members(id),debtor_id TEXT REFERENCES members(id),loan_ref TEXT,date TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT,metadata TEXT DEFAULT '{}');",
+  "CREATE TABLE IF NOT EXISTS transactions (id TEXT PRIMARY KEY,type TEXT NOT NULL CHECK(type IN ('income','expense','transfer','loan_issue','loan_repayment','loan_received','loan_paidback','lend','repay')),description TEXT NOT NULL,amount REAL NOT NULL CHECK(amount > 0),source_account TEXT REFERENCES accounts(id),dest_account TEXT REFERENCES accounts(id),member_id TEXT NOT NULL REFERENCES members(id),debtor_id TEXT REFERENCES members(id),loan_ref TEXT,date TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT,metadata TEXT DEFAULT '{}');",
   'CREATE INDEX IF NOT EXISTS idx_transactions_member ON transactions(member_id);',
   'CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);',
   'CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);',
@@ -22,9 +21,10 @@ const SCHEMA = [
   'CREATE INDEX IF NOT EXISTS idx_transactions_deleted ON transactions(deleted_at);',
   'CREATE INDEX IF NOT EXISTS idx_transactions_debtor ON transactions(debtor_id);',
   'CREATE INDEX IF NOT EXISTS idx_transactions_loan_ref ON transactions(loan_ref);',
-  "CREATE TABLE IF NOT EXISTS loans (id TEXT PRIMARY KEY,direction TEXT NOT NULL CHECK(direction IN ('given','received')),counterparty_id TEXT NOT NULL REFERENCES accounts(id),amount REAL NOT NULL CHECK(amount>0),outstanding REAL NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','settled')),description TEXT DEFAULT '',metadata TEXT DEFAULT '{}',created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT);",
-  'CREATE INDEX IF NOT EXISTS idx_loans_counterparty ON loans(counterparty_id);',
-  'CREATE INDEX IF NOT EXISTS idx_loans_direction ON loans(direction);',
+  "CREATE TABLE IF NOT EXISTS loans (id TEXT PRIMARY KEY,lender_account_id TEXT NOT NULL REFERENCES accounts(id),borrower_account_id TEXT NOT NULL REFERENCES accounts(id),principal REAL NOT NULL CHECK(principal > 0),outstanding REAL NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','settled')),description TEXT DEFAULT '',metadata TEXT DEFAULT '{}',created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT);",
+  'CREATE INDEX IF NOT EXISTS idx_loans_lender ON loans(lender_account_id);',
+  'CREATE INDEX IF NOT EXISTS idx_loans_borrower ON loans(borrower_account_id);',
+  'CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);',
   'CREATE INDEX IF NOT EXISTS idx_loans_deleted ON loans(deleted_at);',
   "CREATE TABLE IF NOT EXISTS account_groups (id TEXT PRIMARY KEY,name TEXT NOT NULL,sort_order INTEGER NOT NULL DEFAULT 0,metadata TEXT DEFAULT '{}',deleted_at TEXT);",
   'CREATE TABLE IF NOT EXISTS account_group_mappings (id TEXT PRIMARY KEY,account_group_id TEXT NOT NULL REFERENCES account_groups(id),account_id TEXT NOT NULL REFERENCES accounts(id),UNIQUE(account_group_id,account_id));',
@@ -61,16 +61,11 @@ function rowToGroup(r: Record<string, unknown>): AccountGroup {
     JSON.parse((r.metadata as string) || '{}'), r.deleted_at as string);
 }
 
-function rowToLoan(r: Record<string, unknown>): Loan {
-  return new Loan(r.id as string, r.direction as Loan['direction'], r.counterparty_id as string,
-    r.amount as number, r.outstanding as number, r.status as Loan['status'],
-    (r.description as string) || '', JSON.parse((r.metadata as string) || '{}'),
-    r.created_at as string, r.updated_at as string, r.deleted_at as string);
-}
-
 export class SQLiteDatabaseService implements IDatabaseService {
   private db: SqlJsDb | null = null;
   private SQL: Awaited<ReturnType<typeof initSqlJs>> | null = null;
+
+  getSqlJsDb(): SqlJsDb | null { return this.db; }
 
   async init(): Promise<void> {
     this.SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' });
@@ -144,6 +139,30 @@ export class SQLiteDatabaseService implements IDatabaseService {
       this.db.run('CREATE INDEX IF NOT EXISTS idx_loans_counterparty ON loans(counterparty_id)');
       this.db.run('CREATE INDEX IF NOT EXISTS idx_loans_direction ON loans(direction)');
       this.db.run('CREATE INDEX IF NOT EXISTS idx_loans_deleted ON loans(deleted_at)');
+    }
+    const hasOldLoans = this.db.exec("SELECT name FROM pragma_table_info('loans') WHERE name='direction'");
+    if (hasOldLoans.length > 0 && hasOldLoans[0] && hasOldLoans[0].values.length > 0) {
+      this.db.run("CREATE TABLE loans_v3 (id TEXT PRIMARY KEY,lender_account_id TEXT NOT NULL REFERENCES accounts(id),borrower_account_id TEXT NOT NULL REFERENCES accounts(id),principal REAL NOT NULL CHECK(principal > 0),outstanding REAL NOT NULL DEFAULT 0,status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','settled')),description TEXT DEFAULT '',metadata TEXT DEFAULT '{}',created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT)");
+      this.db.run('DROP TABLE IF EXISTS loans');
+      this.db.run('ALTER TABLE loans_v3 RENAME TO loans');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_loans_lender ON loans(lender_account_id)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_loans_borrower ON loans(borrower_account_id)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_loans_deleted ON loans(deleted_at)');
+    }
+    const hasLendRepay = this.db.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='transactions' AND sql LIKE '%lend%'");
+    if (hasLendRepay.length === 0 || !hasLendRepay[0] || hasLendRepay[0].values.length === 0) {
+      this.db.run("CREATE TABLE transactions_v3 (id TEXT PRIMARY KEY,type TEXT NOT NULL CHECK(type IN ('income','expense','transfer','loan_issue','loan_repayment','loan_received','loan_paidback','lend','repay')),description TEXT NOT NULL,amount REAL NOT NULL CHECK(amount>0),source_account TEXT REFERENCES accounts(id),dest_account TEXT REFERENCES accounts(id),member_id TEXT NOT NULL REFERENCES members(id),debtor_id TEXT REFERENCES members(id),loan_ref TEXT,date TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT,metadata TEXT DEFAULT '{}')");
+      this.db.run('INSERT INTO transactions_v3 SELECT * FROM transactions');
+      this.db.run('DROP TABLE transactions');
+      this.db.run('ALTER TABLE transactions_v3 RENAME TO transactions');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_member ON transactions(member_id)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(source_account)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_deleted ON transactions(deleted_at)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_debtor ON transactions(debtor_id)');
+      this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_loan_ref ON transactions(loan_ref)');
     }
   }
 
@@ -296,14 +315,14 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const member = this.queryOne<Record<string, unknown>>('SELECT id FROM members WHERE id=$id AND deleted_at IS NULL', { $id: tx.memberId });
     if (!member) throw new Error('Member not found');
 
-    if (tx.type === 'expense' || tx.type === 'transfer' || tx.type === 'loan_issue' || tx.type === 'loan_paidback') {
+    if (tx.type === 'expense' || tx.type === 'transfer' || tx.type === 'loan_issue' || tx.type === 'loan_paidback' || tx.type === 'lend' || tx.type === 'repay') {
       if (!tx.sourceAccount) throw new Error('Source account is required');
       const src = this.queryOne<Record<string, unknown>>('SELECT id,is_active,balance FROM accounts WHERE id=$id AND deleted_at IS NULL', { $id: tx.sourceAccount });
       if (!src) throw new Error('Source account not found');
       if ((src.is_active as number) !== 1) throw new Error('Source account is inactive');
     }
 
-    if (tx.type === 'income' || tx.type === 'transfer' || tx.type === 'loan_repayment' || tx.type === 'loan_received') {
+    if (tx.type === 'income' || tx.type === 'transfer' || tx.type === 'loan_repayment' || tx.type === 'loan_received' || tx.type === 'lend' || tx.type === 'repay') {
       if (!tx.destAccount) throw new Error('Destination account is required');
       const dst = this.queryOne<Record<string, unknown>>('SELECT id,is_active FROM accounts WHERE id=$id AND deleted_at IS NULL', { $id: tx.destAccount });
       if (!dst) throw new Error('Destination account not found');
@@ -319,6 +338,9 @@ export class SQLiteDatabaseService implements IDatabaseService {
     }
     if (tx.type === 'loan_repayment' && tx.sourceAccount && tx.destAccount && tx.sourceAccount === tx.destAccount) {
       throw new Error('Repayment source and destination must differ');
+    }
+    if ((tx.type === 'lend' || tx.type === 'repay') && tx.sourceAccount && tx.destAccount && tx.sourceAccount === tx.destAccount) {
+      throw new Error('Source and destination must differ for lend/repay transactions');
     }
   }
 
@@ -374,134 +396,11 @@ export class SQLiteDatabaseService implements IDatabaseService {
     } else if (type === 'transfer') {
       if (sourceAccount) this.run('UPDATE accounts SET balance=balance-$amt,updated_at=$now WHERE id=$id',{$id:sourceAccount,$amt:amount,$now:now()});
       if (destAccount) this.run('UPDATE accounts SET balance=balance+$amt,updated_at=$now WHERE id=$id',{$id:destAccount,$amt:amount,$now:now()});
-    } else if (type === 'loan_issue' || type === 'loan_repayment' || type === 'loan_received' || type === 'loan_paidback') {
+    } else if (type === 'loan_issue' || type === 'loan_repayment' || type === 'loan_received' || type === 'loan_paidback' || type === 'lend' || type === 'repay') {
       if (sourceAccount) this.run('UPDATE accounts SET balance=balance-$amt,updated_at=$now WHERE id=$id',{$id:sourceAccount,$amt:amount,$now:now()});
       if (destAccount) this.run('UPDATE accounts SET balance=balance+$amt,updated_at=$now WHERE id=$id',{$id:destAccount,$amt:amount,$now:now()});
     }
   }
-
-  async getLoanStacks(): Promise<LoanStack[]> {
-    const accounts = await this.getAccounts();
-    const counterparties = accounts.filter((a) => a.type === 'counterparty');
-    const stacks: LoanStack[] = [];
-    for (const cp of counterparties) {
-      const stack = await this.getLoanStackByDebtor(cp.id);
-      if (stack) stacks.push({ ...stack, stackType: 'external' });
-    }
-
-    const loanCpIds = this.query<{ counterparty_id: string }>(
-      'SELECT DISTINCT counterparty_id FROM loans WHERE deleted_at IS NULL',
-    );
-    const handledIds = new Set(counterparties.map((c) => c.id));
-    for (const row of loanCpIds) {
-      if (handledIds.has(row.counterparty_id)) continue;
-      const account = accounts.find((a) => a.id === row.counterparty_id);
-      if (account && account.type !== 'counterparty') {
-        const stack = await this.getLoanStackByDebtor(row.counterparty_id);
-        if (stack) stacks.push({ ...stack, stackType: 'internal' });
-      }
-    }
-    return stacks;
-  }
-
-  async getLoanStackByDebtor(debtorId: string): Promise<LoanStack> {
-    const account = await this.getAccountById(debtorId);
-    let name = account?.name ?? 'Unknown';
-    if (account && account.type !== 'counterparty' && account.memberId) {
-      const member = await this.getMemberById(account.memberId);
-      if (member) name = `${member.name} \u2014 ${name}`;
-    }
-    const loans = this.query<Record<string, unknown>>(
-      'SELECT * FROM loans WHERE counterparty_id=$cid AND deleted_at IS NULL',
-      { $cid: debtorId },
-    ).map(rowToLoan);
-
-    // Compute recovered amounts from transactions (not from stored outstanding,
-    // which may be stale for repayments/paybacks created with empty loanRef)
-    const rawRepayments = this.query<Record<string, unknown>>(
-      'SELECT amount FROM transactions WHERE (source_account=$aid OR dest_account=$aid) AND type=$type AND deleted_at IS NULL',
-      { $aid: debtorId, $type: 'loan_repayment' },
-    );
-    const rawPaybacks = this.query<Record<string, unknown>>(
-      'SELECT amount FROM transactions WHERE (source_account=$aid OR dest_account=$aid) AND type=$type AND deleted_at IS NULL',
-      { $aid: debtorId, $type: 'loan_paidback' },
-    );
-    const totalRepaid = rawRepayments.reduce((s, r) => s + (r.amount as number), 0);
-    const totalPaidBack = rawPaybacks.reduce((s, r) => s + (r.amount as number), 0);
-
-    const totalAmount = loans.reduce((s, l) => s + l.amount, 0);
-    const ratio = totalAmount > 0 ? 1 / totalAmount : 0;
-
-    const allLoanIds = loans.map((l) => l.id);
-    const fundingByLoanRef = new Map<string, string>();
-    if (allLoanIds.length > 0) {
-      const quoted = allLoanIds.map((id) => `'${id}'`).join(',');
-      const raw = this.query<{ loan_ref: string; source_account: string }>(
-        `SELECT loan_ref, source_account FROM transactions WHERE loan_ref IN (${quoted}) AND type='loan_issue' AND deleted_at IS NULL`,
-      );
-      for (const r of raw) fundingByLoanRef.set(r.loan_ref, r.source_account);
-    }
-    const allAccts = await this.getAccounts();
-    const accountMap = new Map(allAccts.map((a) => [a.id, a.name]));
-
-    let totalOutstanding = 0;
-    const loanItems = loans.map((l) => {
-      const recovered = l.direction === 'given'
-        ? Math.min(l.amount, totalRepaid * l.amount * ratio)
-        : Math.min(l.amount, totalPaidBack * l.amount * ratio);
-      const outstanding = l.amount - recovered;
-      totalOutstanding += outstanding;
-      const srcAccount = fundingByLoanRef.get(l.id);
-      const fundingName = srcAccount ? accountMap.get(srcAccount) : undefined;
-      return {
-        id: l.id, fundingSource: fundingName ?? name,
-        amount: l.amount, recovered,
-        status: outstanding <= 0 ? ('on_track' as const) : ('active' as const),
-        date: l.createdAt,
-      };
-    });
-
-    const totalRecovered = totalAmount - totalOutstanding;
-    return {
-      debtorId,
-      debtorName: name,
-      totalOutstanding,
-      totalRecovered,
-      progressPercent: totalAmount > 0 ? Math.round((totalRecovered / totalAmount) * 100) : 0,
-      loans: loanItems,
-    };
-  }
-
-  getLoans(direction?: string): Promise<Loan[]> {
-    let sql = 'SELECT * FROM loans WHERE deleted_at IS NULL';
-    const params: Record<string, string | number | null> = {};
-    if (direction) { sql += ' AND direction=$dir'; params.$dir = direction; }
-    return Promise.resolve(this.query<Record<string, unknown>>(sql, params).map(rowToLoan));
-  }
-
-  getLoansByCounterparty(counterpartyId: string): Promise<Loan[]> {
-    return Promise.resolve(
-      this.query<Record<string, unknown>>('SELECT * FROM loans WHERE counterparty_id=$cid AND deleted_at IS NULL', { $cid: counterpartyId }).map(rowToLoan),
-    );
-  }
-
-  getLoanById(id: string): Promise<Loan | null> {
-    const r = this.queryOne<Record<string, unknown>>('SELECT * FROM loans WHERE id=$id', { $id: id });
-    return Promise.resolve(r ? rowToLoan(r) : null);
-  }
-
-  saveLoan(loan: Loan): Promise<void> {
-    this.run(`INSERT INTO loans (id,direction,counterparty_id,amount,outstanding,status,description,metadata,created_at,updated_at)
-      VALUES ($id,$dir,$cp,$amt,$out,$status,$desc,$meta,$created,$updated)
-      ON CONFLICT(id) DO UPDATE SET direction=$dir,counterparty_id=$cp,amount=$amt,
-      outstanding=$out,status=$status,description=$desc,metadata=$meta,updated_at=$updated`,
-      { $id: loan.id, $dir: loan.direction, $cp: loan.counterpartyId, $amt: loan.amount,
-        $out: loan.outstanding, $status: loan.status, $desc: loan.description,
-        $meta: JSON.stringify(loan.metadata), $created: loan.createdAt, $updated: now() });
-    return Promise.resolve();
-  }
-
-  softDeleteLoan(id: string): Promise<void> { this.run('UPDATE loans SET deleted_at=$now,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); return Promise.resolve(); }
 
   getAccountGroups(): Promise<AccountGroup[]> {
     return Promise.resolve(this.query<Record<string, unknown>>('SELECT * FROM account_groups WHERE deleted_at IS NULL ORDER BY sort_order').map(rowToGroup));

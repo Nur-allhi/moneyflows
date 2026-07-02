@@ -4,13 +4,14 @@ import { Agentation } from 'agentation';
 import { Sidebar, BottomNav, Header, PageTransition } from './presentation/components';
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { useMemberStore } from './presentation/stores/useMemberStore';
+import { useModalStore } from './presentation/stores/useModalStore';
 import { getDatabase } from './infrastructure/database/getDatabase';
 import styles from './App.module.css';
 
 const Dashboard = lazy(() => import('./presentation/screens/Dashboard').then(m => ({ default: m.Dashboard })));
 const MemberList = lazy(() => import('./presentation/screens/MemberList').then(m => ({ default: m.MemberList })));
 const MemberProfile = lazy(() => import('./presentation/screens/MemberProfile').then(m => ({ default: m.MemberProfile })));
-const Loans = lazy(() => import('./presentation/screens/Loans').then(m => ({ default: m.Loans })));
+const Loans = lazy(() => import('./loans/presentation/screens/LoansScreen').then(m => ({ default: m.LoansScreen })));
 const RecycleBin = lazy(() => import('./presentation/screens/RecycleBin').then(m => ({ default: m.RecycleBin })));
 const Launcher = lazy(() => import('./presentation/screens/Launcher').then(m => ({ default: m.Launcher })));
 
@@ -45,6 +46,8 @@ function AppLayout() {
   const members = useMemberStore((s) => s.members);
   const fetchMembers = useMemberStore((s) => s.fetchMembers);
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
+
+  useEffect(() => { useModalStore.getState().closeAllImmediate(); }, [pathname]);
 
   useEffect(() => {
     const db = getDatabase();

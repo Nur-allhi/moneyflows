@@ -53,6 +53,8 @@ export const TX_TYPE_ICON: Record<TransactionType, string> = {
   loan_repayment: '\u{1F4B5}',
   loan_received: '\u{1F4B5}',
   loan_paidback: '\u{1F4B8}',
+  lend: '\u{1F4B8}',
+  repay: '\u{1F4B5}',
 };
 
 export function displayType(type: string): string {
@@ -67,6 +69,8 @@ export const TX_DISPLAY_LABEL: Record<TransactionType, string> = {
   loan_repayment: 'Repayment Received',
   loan_received: 'Loan Received',
   loan_paidback: 'Repayment Sent',
+  lend: 'Lent',
+  repay: 'Repayment',
 };
 
 export function displayTxType(type: string): string {

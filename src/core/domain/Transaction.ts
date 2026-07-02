@@ -1,4 +1,4 @@
-export type TransactionType = 'income' | 'expense' | 'transfer' | 'loan_issue' | 'loan_repayment' | 'loan_received' | 'loan_paidback';
+export type TransactionType = 'income' | 'expense' | 'transfer' | 'loan_issue' | 'loan_repayment' | 'loan_received' | 'loan_paidback' | 'lend' | 'repay';
 
 export class Transaction {
   constructor(
