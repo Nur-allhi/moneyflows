@@ -9,6 +9,8 @@
   --color-income: oklch(65% 0.15 170);
   --color-expense: oklch(62% 0.18 30);
   --color-cash: oklch(75% 0.15 85);
+  --color-teal: oklch(65% 0.15 170);
+  --color-coral: oklch(62% 0.18 30);
   --color-purple: oklch(55% 0.18 290);
   --color-text: oklch(92% 0.008 260);
   --color-text-secondary: oklch(60% 0.02 260);
