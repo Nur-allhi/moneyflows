@@ -827,3 +827,40 @@
 
 ### Status
 - All changes ready for commit.
+
+## Session 2026-07-02 16:00
+
+### Changes
+- **Bug analysis**: Identified root causes of both loan bugs — premature settlement (double-counting untagged repayments in `_recalculateLoan`) and "Unknown" From/To in TransactionDetailModal (dual rendering of account-centric + person-centric sections)
+- **Plan saved**: `Project_plan/Unified_Loan_System_Plan.md` — comprehensive revamp plan with folder restructure (vertical slice `src/loans/`), unified data model (2 tx types, explicit lender/borrower, mandatory loanRef), and 4-phase implementation
+- **Ticket file updated**: `docs/TICKETS.md` — added Phase 7 (T-051–T-059), 10 atomic tickets for the unified loan system, supersedes old loan tickets (T-017, T-024)
+- **AGENTS.md §5 updated**: Phase 7 ticket table with T-051 as next up
+
+### Skill(s) Used
+- `senior-backend` — Root cause analysis, schema design, service API design
+- `senior-frontend` — UI component architecture, modal resolution, public API design
+- `code-reviewer` — Bug root cause tracing through call graph
+
+### Status
+- Phase 7 plan complete and documented. **Next: T-051** — scaffold `src/loans/` folder + move types + create public API.
+
+## Session 2026-07-02 12:35
+
+### Changes
+- **T-051**: Scaffolded `src/loans/` folder tree:
+  - `src/loans/domain/`
+  - `src/loans/application/`
+  - `src/loans/infrastructure/`
+  - `src/loans/presentation/screens/`
+  - `src/loans/presentation/components/`
+  - `src/loans/presentation/stores/`
+- **T-051**: Created `src/loans/domain/types.ts` — new `Loan` interface (plain interface, replaces old class) with `lenderAccountId`, `borrowerAccountId`, `principal`, `outstanding`, `status`, `description`, `metadata`, timestamps. Kept `LoanStack` and `LoanItem` interfaces unchanged.
+- **T-051**: Created `src/loans/index.ts` — public API exporting `Loan`, `LoanStatus`, `LoanStack`, `LoanItem` types.
+- Old `src/core/domain/Loan.ts` left untouched (will be deleted in T-059).
+
+### Skill(s) Used
+- `senior-frontend` — Folder scaffolding, TypeScript interface design, public API barrel export
+
+### Status
+- **T-051 complete.** `tsc --noEmit` passes.
+- **Next: T-052** — Rewrite loan schema + database layer.

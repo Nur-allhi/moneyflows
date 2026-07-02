@@ -1,0 +1,161 @@
+import { useState, useMemo, useCallback } from 'react';
+import { useLoanStore } from '../stores/useLoanStore';
+import { useAccountStore } from '../../../presentation/stores/useAccountStore';
+import { useSettingsStore } from '../../../presentation/stores/useSettingsStore';
+import { formatAmount } from '../../../presentation/utils/format';
+import { AddCounterparty } from './AddCounterparty';
+import styles from './LoanForm.module.css';
+
+interface LoanFormProps {
+  initialAction?: 'lend' | 'repay';
+  initialLenderAccountId?: string;
+  initialBorrowerAccountId?: string;
+  onClose: () => void;
+}
+
+export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowerAccountId, onClose }: LoanFormProps) {
+  const [action, setAction] = useState<'lend' | 'repay'>(initialAction ?? 'lend');
+  const [lenderAccountId, setLenderAccountId] = useState(initialLenderAccountId ?? '');
+  const [borrowerAccountId, setBorrowerAccountId] = useState(initialBorrowerAccountId ?? '');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const showAddCp = borrowerAccountId === '__new__';
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState('');
+
+  const { accounts, fetchAccounts } = useAccountStore();
+  const { createLoan, recordRepayment, fetchLoanStacks } = useLoanStore();
+  const { locale, currency } = useSettingsStore((s) => s.settings);
+
+  const activeAccounts = useMemo(() => accounts.filter((a) => a.isActive), [accounts]);
+
+  const dateStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+
+  const handleSubmit = useCallback(async () => {
+    setErr('');
+    if (!lenderAccountId || !borrowerAccountId) { setErr('Select both accounts'); return; }
+    const amt = parseInt(amount, 10);
+    if (!amt || amt <= 0) { setErr('Enter a valid amount'); return; }
+    if (!description.trim()) { setErr('Enter a description'); return; }
+
+    setSaving(true);
+    try {
+      const txMemberId = accounts.find((a) => a.id === lenderAccountId)?.memberId ?? '';
+      if (action === 'lend') {
+        await createLoan({
+          lenderAccountId, borrowerAccountId, amount: amt,
+          description: description.trim(), date: dateStr, memberId: txMemberId,
+        });
+      } else {
+        await recordRepayment({
+          loanId: borrowerAccountId, amount: amt,
+          description: description.trim(), date: dateStr, memberId: txMemberId,
+        });
+      }
+      await fetchAccounts();
+      await fetchLoanStacks();
+      onClose();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }, [action, lenderAccountId, borrowerAccountId, amount, description, dateStr, accounts, createLoan, recordRepayment, fetchAccounts, fetchLoanStacks, onClose]);
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Loan Action</h2>
+        <button className={styles.closeBtn} onClick={onClose}>&times;</button>
+      </div>
+
+      <div className={styles.actionStrip}>
+        <button
+          className={`${styles.actionBtn} ${action === 'lend' ? styles.actionActive : ''}`}
+          onClick={() => setAction('lend')}
+        >
+          Lend Money
+        </button>
+        <button
+          className={`${styles.actionBtn} ${action === 'repay' ? styles.actionActive : ''}`}
+          onClick={() => setAction('repay')}
+        >
+          Record Repayment
+        </button>
+      </div>
+
+      <div className={styles.fieldGroup}>
+        <span className={styles.fieldLabel}>From Account</span>
+        <select
+          className={styles.select}
+          value={lenderAccountId}
+          onChange={(e) => setLenderAccountId(e.target.value)}
+        >
+          <option value="">Select account</option>
+          {activeAccounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name} - {formatAmount(a.balance, locale, currency)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className={styles.fieldGroup}>
+        <span className={styles.fieldLabel}>To Account</span>
+        <div className={styles.toRow}>
+          <select
+            className={styles.select}
+            value={borrowerAccountId}
+            onChange={(e) => setBorrowerAccountId(e.target.value)}
+          >
+            <option value="">Select account</option>
+            {activeAccounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name} - {formatAmount(a.balance, locale, currency)}
+              </option>
+            ))}
+            <option value="__new__">+ Create new counterparty</option>
+          </select>
+        </div>
+      </div>
+
+      {showAddCp && (
+        <AddCounterparty
+          onCreated={(id) => { setBorrowerAccountId(id); }}
+          onCancel={() => setBorrowerAccountId('')}
+        />
+      )}
+
+      <div className={styles.fieldGroup}>
+        <span className={styles.fieldLabel}>Amount</span>
+        <input
+          className={styles.input}
+          type="number"
+          placeholder="0"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
+        />
+      </div>
+
+      <div className={styles.fieldGroup}>
+        <span className={styles.fieldLabel}>Description</span>
+        <input
+          className={styles.input}
+          placeholder="What's this for?"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+
+      {err && <span className={styles.error}>{err}</span>}
+
+      <button
+        className={styles.submitBtn}
+        onClick={handleSubmit}
+        disabled={saving}
+      >
+        {saving ? 'Processing...' : action === 'lend' ? 'Confirm Loan' : 'Confirm Repayment'}
+      </button>
+    </div>
+  );
+}

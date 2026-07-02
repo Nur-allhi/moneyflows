@@ -358,6 +358,343 @@
 **Acceptance:** Zero inline `style` props in production JSX; all styling goes through CSS modules or CSS custom properties.
 
 ### T-050 — Move all hardcoded limits/constants into a config file
+
+---
+
+## Phase 7: Unified Loan System — Revamp (10 tickets)
+
+**Note:** Tickets T-017 (LoanStack component), T-024 (Loan screen), and loan-related parts of T-029 (stores) are **superseded** by this phase. The new system replaces the old 4-type / 2-direction loan model with a unified `lend`/`repay` model and co-locates all loan code under `src/loans/`.
+
+### T-051 — Scaffold `src/loans/` folder + move types + create public API
+**Skill:** `senior-frontend`, `senior-backend`
+**Effort:** M
+**File(s):**
+- NEW: `src/loans/domain/types.ts`
+- NEW: `src/loans/index.ts`
+- MOVE FROM: `src/core/domain/Loan.ts`
+**Content:**
+1. Create folder tree: `src/loans/domain/`, `src/loans/application/`, `src/loans/infrastructure/`, `src/loans/presentation/screens/`, `src/loans/presentation/components/`, `src/loans/presentation/stores/`
+2. Copy `src/core/domain/Loan.ts` → `src/loans/domain/types.ts` and rewrite `Loan` class to a plain `Loan` interface with:
+   - `lenderAccountId: string` (replaces `direction` + `counterpartyId`)
+   - `borrowerAccountId: string` (replaces `direction` + `counterpartyId`)
+   - `principal: number`
+   - `outstanding: number`
+   - `status: 'active' | 'settled'`
+   - `description`, `metadata`, timestamps
+3. Keep `LoanStack` and `LoanItem` interfaces in the same file
+4. Create `src/loans/index.ts` exporting: `Loan`, `LoanStack`, `LoanItem` types
+5. Keep old `src/core/domain/Loan.ts` for now (deleted in T-058)
+**Acceptance:** TypeScript compiles; `src/loans/index.ts` exports all loan types; old `Loan.ts` unchanged.
+
+### T-052 — Rewrite loan schema + database layer
+**Skill:** `senior-backend`
+**Effort:** L
+**File(s):**
+- NEW: `src/loans/infrastructure/LoanDatabase.ts`
+- EDIT: `src/infrastructure/database/SQLiteDatabaseService.ts` (schema + migration + `applyBalanceChange`)
+- EDIT: `src/core/ports/IDatabaseService.ts` (remove loan-specific methods)
+**Content:**
+1. **Schema change** in `SQLiteDatabaseService.ts`:
+   - Replace the old `loans` table DDL with:
+     ```sql
+     CREATE TABLE IF NOT EXISTS loans (
+       id                  TEXT PRIMARY KEY,
+       lender_account_id   TEXT NOT NULL REFERENCES accounts(id),
+       borrower_account_id TEXT NOT NULL REFERENCES accounts(id),
+       principal           REAL NOT NULL CHECK(principal > 0),
+       outstanding         REAL NOT NULL DEFAULT 0,
+       status              TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'settled')),
+       description         TEXT DEFAULT '',
+       metadata            TEXT DEFAULT '{}',
+       created_at          TEXT NOT NULL DEFAULT (datetime('now')),
+       updated_at          TEXT NOT NULL DEFAULT (datetime('now')),
+       deleted_at          TEXT
+     );
+     CREATE INDEX IF NOT EXISTS idx_loans_lender ON loans(lender_account_id);
+     CREATE INDEX IF NOT EXISTS idx_loans_borrower ON loans(borrower_account_id);
+     CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);
+     ```
+   - Add `'lend'` and `'repay'` to the `transactions.type` CHECK constraint
+   - Keep old types (`loan_issue`, `loan_repayment`, etc.) in CHECK for backward compat
+2. **Update migration** (`_migrate` method): Add a v3→v4 step that drops old `counterparty_id` + `direction` columns if they exist and creates the new schema
+3. **Update `applyBalanceChange`**: Add handling for `'lend'` (deduct source, add dest) and `'repay'` (deduct source, add dest — same as transfer behavior)
+4. **Create `src/loans/infrastructure/LoanDatabase.ts`** with methods:
+   - `saveLoan(loan: Loan): Promise<void>`
+   - `getLoanById(id: string): Promise<Loan | null>`
+   - `getLoansByBorrower(borrowerAccountId: string): Promise<Loan[]>`
+   - `getLoansByLender(lenderAccountId: string): Promise<Loan[]>`
+   - `getLoanStacks(): Promise<LoanStack[]>` — groups by `borrower_account_id`
+   - `getLoanStackByBorrower(borrowerId: string): Promise<LoanStack | null>`
+   - `softDeleteLoan(id: string): Promise<void>`
+   - Uses `getDatabase()` to access the shared SQLite instance; does NOT go through `IDatabaseService`
+5. **Remove loan-specific methods** from `IDatabaseService` port interface (`getLoanStacks`, `getLoanStackByDebtor`, `getLoans`, `getLoansByCounterparty`, `getLoanById`, `saveLoan`, `softDeleteLoan`)
+6. **Remove loan-specific methods** from `SQLiteDatabaseService` implementation
+**Acceptance:** New `loans` table created on app start; `LoanDatabase.ts` has all CRUD methods; `SQLiteDatabaseService.ts` no longer has loan-specific methods.
+
+### T-053 — Rewrite `LoanService.ts` — unified core logic
+**Skill:** `senior-backend`
+**Effort:** L
+**File(s):**
+- NEW: `src/loans/application/LoanService.ts` (replaces `src/core/application/LoanService.ts`)
+**Content:**
+Write a new `LoanService` class with these methods:
+
+```typescript
+class LoanService {
+  constructor(
+    private db: IDatabaseService,
+    private loanDb: LoanDatabase,
+  ) {}
+
+  async createLoan(params: {
+    lenderAccountId: string;    // any account in the system
+    borrowerAccountId: string;  // any account (auto-create counterparty if needed)
+    amount: number;
+    description: string;
+    date: string;
+    memberId: string;
+  }): Promise<{ loan: Loan; tx: Transaction }>
+
+  async recordRepayment(params: {
+    loanId: string;             // REQUIRED — always links to a specific loan
+    amount: number;
+    description: string;
+    date: string;
+    memberId: string;
+  }): Promise<{ tx: Transaction }>
+
+  async getLoanById(id: string): Promise<Loan | null>
+  async getLoansByBorrower(borrowerAccountId: string): Promise<Loan[]>
+  async getLoanStacks(): Promise<LoanStack[]>
+  async createCounterparty(name: string): Promise<Account>
+  async settleLoan(loanId: string): Promise<void>
+  async deleteLoan(loanId: string): Promise<void>
+}
+```
+
+**Rules enforced in `recordRepayment`:**
+- `loanId` is required (throws if empty/undefined)
+- Loads the loan, throws if not found or already `settled`
+- Creates a `'repay'` transaction with `source=borrower_account_id`, `dest=lender_account_id`, `loanRef=loan.id`
+- Updates `loan.outstanding -= amount`
+- If `outstanding <= 0`: sets to 0 and status to `'settled'`
+- Saves loan + transaction
+
+**Rules enforced in `createLoan`:**
+- Creates a `'lend'` transaction with `source=lender_account_id`, `dest=borrower_account_id`, `loanRef=loan.id`
+- Initializes `outstanding = principal`
+- If `borrowerAccountId` doesn't exist, calls `createCounterparty` first
+
+**Database calls:**
+- Uses `IDatabaseService` for generic operations (saveTransaction, saveAccount)
+- Uses `LoanDatabase` for loan-specific operations
+**Acceptance:** All 7 methods work correctly; `recordRepayment` never accepts empty `loanId`; recalculation touches exactly one loan.
+
+### T-054 — Rewrite `useLoanStore.ts` to match new service API
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):**
+- NEW: `src/loans/presentation/stores/useLoanStore.ts` (replaces `src/presentation/stores/useLoanStore.ts`)
+**Content:**
+Rewrite the Zustand store to match the new `LoanService` API:
+
+```typescript
+interface LoanState {
+  loanStacks: LoanStack[];
+  loading: boolean;
+  error: string | null;
+
+  fetchLoanStacks: () => Promise<void>;
+
+  createLoan(params: {
+    lenderAccountId: string;
+    borrowerAccountId: string;
+    amount: number;
+    description: string;
+    date: string;
+    memberId: string;
+  }): Promise<void>;
+
+  recordRepayment(params: {
+    loanId: string;
+    amount: number;
+    description: string;
+    date: string;
+    memberId: string;
+  }): Promise<void>;
+
+  createCounterparty(name: string): Promise<{ accountId: string }>;
+  settleLoan(loanId: string): Promise<void>;
+  deleteLoan(loanId: string): Promise<void>;
+}
+```
+
+After each mutation action, refresh: `loanStacks`, transactions (via `useTransactionStore`), and accounts (via `useAccountStore`).
+**Acceptance:** Store compiles and exposes all new actions; old actions (`createGivenLoan`, `createReceivedLoan`, `recordPayback`) are removed; auto-refresh works after mutations.
+
+### T-055 — Build unified `LoanForm.tsx` + `AddCounterparty.tsx` components
+**Skill:** `ui-ux-pro-max`, `senior-frontend`
+**Effort:** L
+**File(s):**
+- NEW: `src/loans/presentation/components/LoanForm.tsx`
+- NEW: `src/loans/presentation/components/LoanForm.module.css`
+- NEW: `src/loans/presentation/components/AddCounterparty.tsx`
+- NEW: `src/loans/presentation/components/AddCounterparty.module.css`
+- DELETE: `src/presentation/components/LoanFormSection.tsx`
+- DELETE: `src/presentation/components/LoanFormSection.module.css`
+**Content:**
+
+**`LoanForm.tsx`:**
+```
+┌──────────────────────────────────────┐
+│         Loan Action                  │
+├──────────────────────────────────────┤
+│  ○ Lend money   ○ Record repayment  │  ← Segmented toggle
+│                                     │
+│  From account:  [▼ Select account]  │  ← Lists ALL accounts (member + counterparty)
+│                                     │
+│  To account:    [▼ Select account]  │  ← Lists ALL accounts + "Create new..."
+│                                     │
+│  Amount:        [______________]    │  ← Numpad input
+│  Description:   [______________]    │
+│  Date:          [____-__-__]        │
+│                                     │
+│  [Confirm]                           │
+└──────────────────────────────────────┘
+```
+
+- Props: `initialAction?: 'lend' | 'repay'`, `initialLenderAccountId?: string`, `initialBorrowerAccountId?: string`, `onClose: () => void`
+- Reads all accounts from `useAccountStore`, filters active ones
+- "Create new..." option opens `AddCounterparty.tsx` inline
+- When `action === 'repay'` and borrower is selected, shows a dropdown of their active loans to pick which one to repay
+- On submit: calls `useLoanStore.createLoan()` or `useLoanStore.recordRepayment()`
+- Extracted from the loan tab of `TransactionFormModal.tsx` (which will be simplified in T-057)
+
+**`AddCounterparty.tsx`:**
+- Inline form: name input + [Create] button
+- Calls `useLoanStore.createCounterparty(name)`
+- Auto-selects the new counterparty after creation
+**Acceptance:** LoanForm creates loans/repayments correctly; "Create new" adds counterparty on the fly; UI matches the spec above.
+
+### T-056 — Rewrite `LoansScreen.tsx` + `LoanDetailView.tsx` to use unified components
+**Skill:** `ui-ux-pro-max`, `senior-frontend`
+**Effort:** L
+**File(s):**
+- NEW: `src/loans/presentation/screens/LoansScreen.tsx`
+- NEW: `src/loans/presentation/screens/LoansScreen.module.css`
+- NEW: `src/loans/presentation/components/LoanDetailView.tsx`
+- NEW: `src/loans/presentation/components/LoanDetailView.module.css`
+- NEW: `src/loans/presentation/components/LoanCard.tsx`
+- NEW: `src/loans/presentation/components/LoanCard.module.css`
+- DELETE: `src/presentation/screens/Loans.tsx`
+- DELETE: `src/presentation/screens/Loans.module.css`
+- DELETE: `src/presentation/components/LoanStack.tsx`
+- DELETE: `src/presentation/components/LoanStack.module.css`
+**Content:**
+
+**`LoansScreen.tsx`** (replaces the main Loans page):
+- Route: `/loans` — list view
+- Filter strip: Active / Settled / All / Debtors / Creditors / Internal
+- Renders `LoanCard` grid (same card UX as current, but unified for all account types)
+- "Add" button opens `LoanForm` in lend mode
+- Click card navigates to `/loans/:borrowerId`
+- Imports `useLoanStore` from `src/loans/presentation/stores/`
+- Uses `formatAmount` from shared utils, `shortDate` from constants
+
+**`LoanDetailView.tsx`** (replaces the detail section in current Loans.tsx):
+- Route: `/loans/:borrowerId`
+- Shows borrower summary: name, type badge, total outstanding, progress bar
+- Action buttons: "Lend More" / "Repay" / "Deactivate" / "Delete"
+- "Repay" opens `LoanForm` in repayment mode with borrower/lender pre-filled
+- Transaction ledger via `LedgerTable` with simplified logic:
+  - `isDebit = type === 'lend'`, `isCredit = type === 'repay'`
+  - Labels: "Lent" / "Repayment" (same for internal and external)
+- Clicking a ledger row opens `TransactionDetailModal`
+
+**`LoanCard.tsx`** (replaces the card in current Loans.tsx):
+- Same visual card as current, works for any account type
+- Shows: avatar initial, name, type badge (Debtor/Creditor/Internal), total outstanding, progress percent, active/settled counts
+- `stackType` detection: if borrower account is `type === 'counterparty'` → 'debtor' or 'creditor' (from metadata), otherwise 'internal'
+- Routing: navigates to `/loans/:borrowerId`
+
+**Unified ledger labels** — add to `src/loans/presentation/constants.ts`:
+```typescript
+export const TX_TYPE_ICON: Record<string, string> = {
+  lend: '💸',
+  repay: '💵',
+};
+export const TX_DISPLAY_LABEL: Record<string, string> = {
+  lend: 'Lent',
+  repay: 'Repayment',
+};
+```
+**Acceptance:** Loan list loads from new schema; loan detail shows correct ledger; cards, detail view, and ledger work for ALL account types (internal, debtor, creditor).
+
+### T-057 — Update `TransactionDetailModal.tsx` + simplify `TransactionFormModal.tsx`
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):**
+- EDIT: `src/presentation/modals/TransactionDetailModal.tsx`
+- EDIT: `src/presentation/modals/TransactionFormModal.tsx`
+**Content:**
+
+**`TransactionDetailModal.tsx` changes:**
+- For `'lend'` type: suppress "From Account" / "To Account" rows
+  - Show "Lender: [account name] – [member name]" (from `sourceAccount`)
+  - Show "Borrower: [account name] – [member name]" (from `destAccount`)
+  - If account is a counterparty, append "(Debtor)" or "(Creditor)" badge
+- For `'repay'` type:
+  - Show "Payer: [account name] – [member name]" (from `sourceAccount` = borrower)
+  - Show "Recipient: [account name] – [member name]" (from `destAccount` = lender)
+- For old types (`loan_issue`, `loan_repayment`, etc.): keep existing resolution logic for backward compat
+- Remove the current "Debtor" / "Creditor" section (lines 114-153) — replaced by the explicit Lender/Borrower/Payer/Recipient rows above
+- Remove the dead-code check at line 128-129 (`const isLoanType = ...; if (!isLoanType) return null;`)
+
+**`TransactionFormModal.tsx` changes:**
+- Remove the entire `loan` tab (loan-related code at lines 309-356)
+- Remove the `loanMode`, `loanTargetType`, `internalAction`, `debtor` state variables
+- Remove `LoanFormSection` import and usage
+- Replace with a single button/link: "Create or repay a loan →" that opens the new `LoanForm` modal
+- Alternatively, keep the loan tab but delegate to the new `LoanForm` component inside it
+**Acceptance:** TransactionDetailModal shows "Lender"/"Borrower" for lend and "Payer"/"Recipient" for repay; TransactionFormModal no longer has loan-specific logic (delegated to LoanForm).
+
+### T-058 — Update routing, Dashboard, MemberProfile, and cross-references
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):**
+- EDIT: `src/App.tsx` — update imports and routes
+- EDIT: `src/presentation/screens/Dashboard.tsx` — update loan import
+- EDIT: `src/presentation/screens/MemberProfile.tsx` — update loan ledger logic
+- EDIT: `src/presentation/constants/labels.ts` — remove loan-specific entries
+- EDIT: `src/presentation/stores/useTransactionStore.ts` — update loan type references
+**Content:**
+1. **`App.tsx`**: Change route imports from `./presentation/screens/Loans` to `./loans/presentation/screens/LoansScreen`. Keep route paths the same (`/loans`, `/loans/:debtorId` → now `/loans/:borrowerId`)
+2. **`Dashboard.tsx`**: Update `useLoanStore` import to `src/loans/presentation/stores/useLoanStore`. The `activeLoans` metric already reads from `loanStacks` which still works.
+3. **`MemberProfile.tsx`**: Update loan transaction type references. Old code may reference `'loan_issue'` or `'loan_repayment'` — add `'lend'` and `'repay'` alongside them for now.
+4. **`labels.ts`**: Remove `TX_TYPE_ICON` and `TX_DISPLAY_LABEL` entries for `loan_issue`, `loan_repayment`, `loan_received`, `loan_paidback`. These now live in `src/loans/presentation/constants.ts`. Keep old entries if the old transaction types still exist in the DB (for backward compat in TransactionDetailModal).
+5. **`useTransactionStore.ts`**: Update any loan-type-specific filtering to include new types.
+**Acceptance:** All imports resolve; Dashboard shows correct loan metrics; navigation to `/loans` and `/loans/:borrowerId` works; labels display correctly.
+
+### T-059 — Delete all old loan code and obsolete files
+**Skill:** `senior-frontend`, `senior-backend`
+**Effort:** S
+**File(s) to DELETE:**
+- `src/core/domain/Loan.ts` — replaced by `src/loans/domain/types.ts`
+- `src/core/application/LoanService.ts` — replaced by `src/loans/application/LoanService.ts`
+- `src/presentation/stores/useLoanStore.ts` — replaced by `src/loans/presentation/stores/useLoanStore.ts`
+- `src/presentation/screens/Loans.tsx` — replaced by `src/loans/presentation/screens/LoansScreen.tsx`
+- `src/presentation/screens/Loans.module.css` — replaced
+- `src/presentation/components/LoanStack.tsx` — replaced by LoanCard + LoanDetailView
+- `src/presentation/components/LoanStack.module.css` — replaced
+- `src/presentation/components/LoanFormSection.tsx` — replaced by LoanForm
+- `src/presentation/components/LoanFormSection.module.css` — replaced
+- Remove old loan entries from `src/presentation/constants/labels.ts` (`TX_TYPE_ICON`, `displayTxType` for loan types, `ACCOUNT_TYPE_GRADIENT_THREE.counterparty` etc.)
+**Content:**
+1. Delete each file listed above
+2. Run `npm run build` and fix any import errors
+3. Run `npm run lint` and fix any lint warnings
+4. Update `src/loans/index.ts` if any exports are missing that consumers still need
+**Acceptance:** `npm run build` succeeds; `npm run lint` passes; all loan functionality works (create, repay, list, detail, detail modal, dashboard metric).
 **Skill:** `senior-frontend`
 **Effort:** M
 **File(s):** New `src/core/config.ts` or similar

@@ -116,6 +116,22 @@ See `session_log.md` for complete session history.
 
 **All 50 tickets complete.** Phase 6 — Dynamic Configuration & Hardening is finished.
 
+**Phase 7: Unified Loan System** — 10 tickets added (T-051–T-059). See `docs/TICKETS.md` for full details.
+
+| Ticket | Description | Status |
+|--------|-------------|--------|
+| T-051 | Scaffold `src/loans/` folder + move types + public API | **Complete** |
+| T-052 | Rewrite loan schema + database layer | Pending |
+| T-053 | Rewrite `LoanService.ts` — unified core logic | Pending |
+| T-054 | Rewrite `useLoanStore.ts` | Pending |
+| T-055 | Build unified `LoanForm.tsx` + `AddCounterparty.tsx` | Pending |
+| T-056 | Rewrite `LoansScreen.tsx` + `LoanDetailView.tsx` | Pending |
+| T-057 | Update `TransactionDetailModal` + simplify `TransactionFormModal` | Pending |
+| T-058 | Update routing, Dashboard, MemberProfile, cross-references | Pending |
+| T-059 | Delete all old loan code and obsolete files | Pending |
+
+**Next: T-052** — Rewrite loan schema + database layer.
+
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 
 <!-- gitnexus:start -->

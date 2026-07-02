@@ -15,8 +15,8 @@ import type { AccountType } from '../../core/domain/Account';
 import styles from './Dashboard.module.css';
 
 function txTypeForRow(t: string): 'income' | 'expense' | 'transfer' {
-  if (t === 'income' || t === 'loan_repayment') return 'income';
-  if (t === 'expense' || t === 'loan_issue') return 'expense';
+  if (t === 'income' || t === 'loan_repayment' || t === 'repay') return 'income';
+  if (t === 'expense' || t === 'loan_issue' || t === 'lend') return 'expense';
   return 'transfer';
 }
 

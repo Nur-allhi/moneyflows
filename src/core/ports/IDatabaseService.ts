@@ -2,7 +2,6 @@ import type { Member } from '../domain/Member';
 import type { Account } from '../domain/Account';
 import type { Transaction } from '../domain/Transaction';
 import type { AccountGroup } from '../domain/AccountGroup';
-import type { Loan, LoanStack } from '../domain/Loan';
 
 export interface TransactionFilter {
   memberId?: string;
@@ -38,6 +37,7 @@ export interface GroupBalance {
 
 export interface IDatabaseService {
   init(): Promise<void>;
+  getSqlJsDb(): unknown;
 
   getMembers(includeDeleted?: boolean): Promise<Member[]>;
   getMemberById(id: string): Promise<Member | null>;
@@ -60,15 +60,6 @@ export interface IDatabaseService {
   softDeleteTransaction(id: string): Promise<void>;
   restoreTransaction(id: string): Promise<void>;
   purgeTransaction(id: string): Promise<void>;
-
-  getLoanStacks(): Promise<LoanStack[]>;
-  getLoanStackByDebtor(debtorId: string): Promise<LoanStack | null>;
-
-  getLoans(direction?: string): Promise<Loan[]>;
-  getLoansByCounterparty(counterpartyId: string): Promise<Loan[]>;
-  getLoanById(id: string): Promise<Loan | null>;
-  saveLoan(loan: Loan): Promise<void>;
-  softDeleteLoan(id: string): Promise<void>;
 
   getAccountGroups(): Promise<AccountGroup[]>;
   getAccountGroupsWithMembers(): Promise<(AccountGroup & { accountIds: string[] })[]>;

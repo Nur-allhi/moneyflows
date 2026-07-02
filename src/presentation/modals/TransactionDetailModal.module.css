@@ -121,3 +121,9 @@
   font-size: 13px;
   white-space: nowrap;
 }
+
+.empty {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  padding: 32px 0;
+}

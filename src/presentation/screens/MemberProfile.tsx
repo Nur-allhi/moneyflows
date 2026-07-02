@@ -102,7 +102,7 @@ export function MemberProfile() {
   );
 
   const totalExpenses = useMemo(
-    () => memberTxs.filter((t) => t.type === 'expense' || t.type === 'loan_issue').reduce((s, t) => s + t.amount, 0),
+    () => memberTxs.filter((t) => t.type === 'expense' || t.type === 'loan_issue' || t.type === 'lend').reduce((s, t) => s + t.amount, 0),
     [memberTxs],
   );
 
@@ -146,12 +146,14 @@ export function MemberProfile() {
         const dst = tx.destAccount ? (accountMap.get(tx.destAccount)?.name ?? '?') : '?';
         return `${src} \u2192 ${dst}`;
       }
-      case 'loan_issue': {
+      case 'loan_issue':
+      case 'lend': {
         const account = tx.sourceAccount ? (accountMap.get(tx.sourceAccount)?.name ?? '?') : '?';
         const debtor = tx.debtorId ? (memberMap.get(tx.debtorId)?.name ?? '?') : '';
         return debtor ? `${account} (\u2192 ${debtor})` : account;
       }
-      case 'loan_repayment': {
+      case 'loan_repayment':
+      case 'repay': {
         const account = tx.destAccount ? (accountMap.get(tx.destAccount)?.name ?? '?') : '?';
         const debtor = tx.debtorId ? (memberMap.get(tx.debtorId)?.name ?? '?') : '';
         return debtor ? `${account} (\u2190 ${debtor})` : account;
@@ -164,8 +166,8 @@ export function MemberProfile() {
   const ledgerRows: LedgerRow[] = useMemo(() => {
     if (!showBalance) {
       return [...displayedTxs].reverse().map((tx) => {
-        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
-        const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
+        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
+        const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' || tx.type === 'lend' || tx.type === 'repay' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
         return {
           id: tx.id,
           date: shortDate(tx.date, locale),
@@ -180,17 +182,17 @@ export function MemberProfile() {
     const selectedAcct = memberAccounts.find((a) => a.id === selectedAccountId);
     const accountBalance = selectedAcct?.balance ?? 0;
     const netChange = sortedTxs.reduce((sum, tx) => {
-      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
+      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
       return isCredit ? sum + tx.amount : sum - tx.amount;
     }, 0);
     const startBalance = accountBalance - netChange;
     let running = startBalance;
     const rows: LedgerRow[] = sortedTxs.map((tx) => {
-      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
+      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
       if (isCredit) running += tx.amount;
       else running -= tx.amount;
 
-      const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
+      const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' || tx.type === 'lend' || tx.type === 'repay' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
 
       return {
         id: tx.id,
@@ -218,8 +220,11 @@ export function MemberProfile() {
     : ledgerRows.filter((row) => row.type === ledgerFilter);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
-    if (row.id) useModalStore.getState().open('transaction-detail', { txId: row.id });
-  }, []);
+    if (row.id) {
+      const tx = transactions.find((t) => t.id === row.id);
+      useModalStore.getState().open('transaction-detail', { transaction: tx });
+    }
+  }, [transactions]);
 
   const handleAccountClick = useCallback((acctId: string) => {
     setSelectedAccountId((prev) => prev === acctId ? null : acctId);
@@ -254,7 +259,7 @@ export function MemberProfile() {
     const pdfRows: { date: string; type: string; description: string; debit: string; credit: string; balance: string }[] = [];
     if (!showBalance) {
       for (const tx of [...sortedTxs].reverse()) {
-        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
+        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
         pdfRows.push({
           date: shortDate(tx.date, locale),
           type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
@@ -268,7 +273,7 @@ export function MemberProfile() {
       const selectedAcct = memberAccounts.find((a) => a.id === selectedAccountId);
       const accountBalance = selectedAcct?.balance ?? 0;
       const netChange = sortedTxs.reduce((sum, tx) => {
-        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
+        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
         return isCredit ? sum + tx.amount : sum - tx.amount;
       }, 0);
       const startBalance = accountBalance - netChange;
@@ -282,7 +287,7 @@ export function MemberProfile() {
         balance: formatAmount(startBalance, locale, currency),
       });
       for (const tx of sortedTxs) {
-        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment';
+        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
         if (isCredit) running += tx.amount;
         else running -= tx.amount;
         pdfRows.push({
@@ -300,7 +305,7 @@ export function MemberProfile() {
       ? pdfRows
       : pdfRows.filter((r) => {
           const typeKey = r.type.toLowerCase().replace(/\s+/g, '_');
-          return typeKey === ledgerFilter || (ledgerFilter === 'income' && typeKey === 'opening_balance') || (ledgerFilter === 'loan' && (typeKey === 'loan_issue' || typeKey === 'loan_repayment'));
+          return typeKey === ledgerFilter || (ledgerFilter === 'income' && typeKey === 'opening_balance') || (ledgerFilter === 'loan' && (typeKey === 'loan_issue' || typeKey === 'loan_repayment' || typeKey === 'lend' || typeKey === 'repay'));
         });
 
     if (filteredPdfRows.length === 0) return;
