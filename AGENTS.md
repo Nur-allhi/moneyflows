@@ -116,21 +116,23 @@ See `session_log.md` for complete session history.
 
 **All 50 tickets complete.** Phase 6 — Dynamic Configuration & Hardening is finished.
 
-**Phase 7: Unified Loan System** — 10 tickets added (T-051–T-059). See `docs/TICKETS.md` for full details.
+**Phase 7: Unified Loan System** — 9 tickets (T-051–T-059). See `docs/TICKETS.md` for full details.
 
 | Ticket | Description | Status |
 |--------|-------------|--------|
 | T-051 | Scaffold `src/loans/` folder + move types + public API | **Complete** |
-| T-052 | Rewrite loan schema + database layer | Pending |
-| T-053 | Rewrite `LoanService.ts` — unified core logic | Pending |
-| T-054 | Rewrite `useLoanStore.ts` | Pending |
-| T-055 | Build unified `LoanForm.tsx` + `AddCounterparty.tsx` | Pending |
-| T-056 | Rewrite `LoansScreen.tsx` + `LoanDetailView.tsx` | Pending |
-| T-057 | Update `TransactionDetailModal` + simplify `TransactionFormModal` | Pending |
-| T-058 | Update routing, Dashboard, MemberProfile, cross-references | Pending |
-| T-059 | Delete all old loan code and obsolete files | Pending |
+| T-052 | Rewrite loan schema + database layer | **Complete** |
+| T-053 | Rewrite `LoanService.ts` — unified core logic | **Complete** |
+| T-054 | Rewrite `useLoanStore.ts` | **Complete** |
+| T-055 | Build unified `LoanForm.tsx` + `AddCounterparty.tsx` | **Complete** |
+| T-056 | Rewrite `LoansScreen.tsx` + `LoanDetailView.tsx` | **Complete** |
+| T-057 | Update `TransactionDetailModal` + simplify `TransactionFormModal` | **Complete** |
+| T-058 | Update routing, Dashboard, MemberProfile, cross-references | **Complete** |
+| T-059 | Delete all old loan code and obsolete files | **Complete** |
 
-**Next: T-052** — Rewrite loan schema + database layer.
+**All 59 tickets complete.** Phase 7 — Unified Loan System is finished.
+
+**Next: Phase 8** — TBD (post-refactor testing / new feature work).
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 

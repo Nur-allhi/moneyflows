@@ -5,23 +5,25 @@ import { SegmentedTabs, FormTextarea, Numpad } from '../components';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
+import { useLoanStore } from '../stores/useLoanStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
 import { Transaction } from '../../core/domain/Transaction';
 import type { Account } from '../../core/domain/Account';
 import styles from './TransactionFormModal.module.css';
-import { LoanForm } from '../../loans/presentation/components/LoanForm';
 
 interface TransactionFormModalProps {
   onClose: () => void;
   initialSource?: string;
   initialDestination?: string;
+  initialTab?: string;
 }
 
 const tabs = [
   { key: 'income', label: 'Income' },
   { key: 'expense', label: 'Expense' },
   { key: 'transfer', label: 'Transfer' },
+  { key: 'loan', label: 'Loan' },
 ];
 
 type ValidationErrors = Record<string, string>;
@@ -35,6 +37,8 @@ function validateForm(
   accounts: Account[],
   locale: string,
   currency: string,
+  loanAction: string,
+  selectedLoanId: string,
 ): ValidationErrors {
   const next: ValidationErrors = {};
   const amountNum = parseInt(rawAmount, 10);
@@ -52,30 +56,39 @@ function validateForm(
     next.description = 'Description must be 200 characters or less';
   }
 
-  if (!source) {
-    next.source = 'Select an account';
-  } else {
-    const acct = accounts.find((a) => a.id === source);
-    if (!acct) next.source = 'Account not found';
-    else if (!acct.isActive) next.source = 'Account is inactive';
-  }
-
-  if (tab === 'transfer') {
-    if (!destination) {
-      next.destination = 'Select a destination account';
-    } else if (source && destination === source) {
-      next.destination = 'Source and destination must differ';
+  if (tab === 'loan') {
+    if (loanAction === 'lend') {
+      if (!source) next.source = 'Select a lender account';
+      if (!destination) next.destination = 'Select a borrower account';
     } else {
-      const acct = accounts.find((a) => a.id === destination);
-      if (!acct) next.destination = 'Account not found';
-      else if (!acct.isActive) next.destination = 'Account is inactive';
+      if (!selectedLoanId) next.source = 'Select a loan to repay';
     }
-  }
+  } else {
+    if (!source) {
+      next.source = 'Select an account';
+    } else {
+      const acct = accounts.find((a) => a.id === source);
+      if (!acct) next.source = 'Account not found';
+      else if (!acct.isActive) next.source = 'Account is inactive';
+    }
 
-  if (source && tab !== 'income' && !isNaN(amountNum) && amountNum > 0) {
-    const srcAcct = accounts.find((a) => a.id === source);
-    if (srcAcct && amountNum > srcAcct.balance) {
-      next.amount = `Insufficient balance (${formatAmount(srcAcct.balance, locale, currency)} available)`;
+    if (tab === 'transfer') {
+      if (!destination) {
+        next.destination = 'Select a destination account';
+      } else if (source && destination === source) {
+        next.destination = 'Source and destination must differ';
+      } else {
+        const acct = accounts.find((a) => a.id === destination);
+        if (!acct) next.destination = 'Account not found';
+        else if (!acct.isActive) next.destination = 'Account is inactive';
+      }
+    }
+
+    if (source && tab !== 'income' && !isNaN(amountNum) && amountNum > 0) {
+      const srcAcct = accounts.find((a) => a.id === source);
+      if (srcAcct && amountNum > srcAcct.balance) {
+        next.amount = `Insufficient balance (${formatAmount(srcAcct.balance, locale, currency)} available)`;
+      }
     }
   }
 
@@ -86,13 +99,15 @@ export function TransactionFormModal({
   onClose,
   initialSource,
   initialDestination,
+  initialTab,
 }: TransactionFormModalProps) {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
   const { members, loading: memberLoading, fetchMembers } = useMemberStore();
   const { addTransaction, error: txError } = useTransactionStore();
+  const { loanStacks, createLoan, recordRepayment, createCounterparty, fetchLoanStacks, getLoanById } = useLoanStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
 
-  const [tab, setTab] = useState('transfer');
+  const [tab, setTab] = useState(initialTab ?? 'transfer');
   const [rawAmount, setRawAmount] = useState('');
   const [description, setDescription] = useState('');
   const [source, setSource] = useState(initialSource ?? '');
@@ -103,15 +118,28 @@ export function TransactionFormModal({
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [closing, setClosing] = useState(false);
-  const [showLoanForm, setShowLoanForm] = useState(false);
 
   const [pickerField, setPickerField] = useState<'source' | 'destination' | null>(null);
   const [pickerMember, setPickerMember] = useState<string | null>(null);
 
+  const [loanAction, setLoanAction] = useState<'lend' | 'repay'>('lend');
+  const [selectedLoanId, setSelectedLoanId] = useState('');
+  const [showAddCp, setShowAddCp] = useState(false);
+  const [newCpName, setNewCpName] = useState('');
+  const [showLoanPicker, setShowLoanPicker] = useState(false);
+
   useEffect(() => {
     fetchAccounts();
     fetchMembers();
+    fetchLoanStacks();
   }, []);
+
+  useEffect(() => {
+    if (tab !== 'loan' || loanAction !== 'repay' || !selectedLoanId) return;
+    getLoanById(selectedLoanId).then((loan) => {
+      if (loan) setDestination(loan.lenderAccountId);
+    });
+  }, [selectedLoanId, tab, loanAction]);
 
   const memberLookup = useMemo(
     () => Object.fromEntries(members.map((m) => [m.id, m])),
@@ -137,6 +165,11 @@ export function TransactionFormModal({
     [accounts],
   );
 
+  const counterpartyAccounts = useMemo(
+    () => accounts.filter((a) => a.type === 'counterparty'),
+    [accounts],
+  );
+
   const accountLabel = useCallback((id: string) => {
     const a = accounts.find(a => a.id === id);
     if (!a) return '';
@@ -147,11 +180,26 @@ export function TransactionFormModal({
 
   const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
 
+  const loanAccountOptions = useMemo(() => {
+    const options: { loanId: string; label: string }[] = [];
+    for (const stack of loanStacks) {
+      for (const loan of stack.loans) {
+        if (loan.status !== 'settled') {
+          options.push({
+            loanId: loan.id,
+            label: `${stack.debtorName} - ${formatAmount(loan.amount - loan.recovered, locale, currency)}`,
+          });
+        }
+      }
+    }
+    return options;
+  }, [loanStacks, locale, currency]);
+
   const validate = useCallback((): boolean => {
-    const next = validateForm(tab, rawAmount, description, source, destination, accounts, locale, currency);
+    const next = validateForm(tab, rawAmount, description, source, destination, accounts, locale, currency, loanAction, selectedLoanId);
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, accounts, locale, currency]);
+  }, [tab, rawAmount, description, source, destination, accounts, locale, currency, loanAction, selectedLoanId]);
 
   const clearError = useCallback((field: string) => {
     setErrors((prev) => {
@@ -183,6 +231,16 @@ export function TransactionFormModal({
     setTimeout(() => onClose(), 300);
   };
 
+  const handleCreateCp = async () => {
+    if (!newCpName.trim()) return;
+    try {
+      const result = await createCounterparty(newCpName.trim());
+      setDestination(result.accountId);
+      setShowAddCp(false);
+      setNewCpName('');
+    } catch { }
+  };
+
   const handleSubmit = async () => {
     if (!validate()) return;
     const amount = parseInt(rawAmount, 10);
@@ -192,6 +250,38 @@ export function TransactionFormModal({
       ?? '';
     if (!txMemberId) {
       setErrors({ source: 'No family members found. Create a member first.' });
+      return;
+    }
+
+    if (tab === 'loan') {
+      setClosing(true);
+      try {
+        if (loanAction === 'lend') {
+          await createLoan({
+            lenderAccountId: source,
+            borrowerAccountId: destination,
+            amount,
+            description: description.trim(),
+            date,
+            memberId: txMemberId,
+          });
+        } else {
+          await recordRepayment({
+            loanId: selectedLoanId,
+            amount,
+            description: description.trim(),
+            date,
+            memberId: txMemberId,
+            destinationAccountId: destination,
+          });
+        }
+        await fetchAccounts();
+        await fetchLoanStacks();
+      } catch (e) {
+        setErrors({ amount: (e as Error).message });
+        return;
+      }
+      setTimeout(() => onClose(), 300);
       return;
     }
 
@@ -359,10 +449,24 @@ export function TransactionFormModal({
   const buttonLabel =
     tab === 'income' ? 'Complete Income' :
     tab === 'expense' ? 'Complete Expense' :
-    'Complete Transfer';
+    tab === 'transfer' ? 'Complete Transfer' :
+    loanAction === 'lend' ? 'Confirm Loan' : 'Confirm Repayment';
 
   const formFields = (
     <>
+      {tab === 'loan' && (
+        <div className={styles.loanTypeStrip}>
+          <button
+            className={`${styles.loanTypeBtn} ${loanAction === 'lend' ? styles.loanTypeActive : ''}`}
+            onClick={() => setLoanAction('lend')}
+          >Lend Money</button>
+          <button
+            className={`${styles.loanTypeBtn} ${loanAction === 'repay' ? styles.loanTypeActive : ''}`}
+            onClick={() => setLoanAction('repay')}
+          >Record Repayment</button>
+        </div>
+      )}
+
       <div className={`${styles.amountRow} ${errors.amount ? styles.fieldError : ''}`}>
         <span className={styles.amountCurrency}>{currency}</span>
         <input
@@ -381,51 +485,81 @@ export function TransactionFormModal({
         <DatePicker className={styles.inputField} value={date} onChange={setDate} />
       </div>
 
-      <div className={`${styles.slideField} ${styles.slideOpen}`}>
-        <div className={styles.slideInner}>
+      {tab === 'loan' && loanAction === 'repay' ? (
+        <>
           <div className={styles.fieldGroup}>
-            <span className={styles.fieldLabel}>Source Account</span>
+            <span className={styles.fieldLabel}>Loan to Repay</span>
             <button
               type="button"
-              className={`${styles.pickerTrigger} ${errors.source ? styles.fieldError : ''}`}
-              onClick={() => { setPickerField('source'); setPickerMember(null); }}
+              className={styles.pickerTrigger}
+              onClick={() => setShowLoanPicker(true)}
             >
-              {source
-                ? <><span className={styles.pickerValue}>{accountLabel(source)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                : <span className={styles.pickerPlaceholder}>Select account</span>}
+              {selectedLoanId
+                ? <><span className={styles.pickerValue}>{loanAccountOptions.find(o => o.loanId === selectedLoanId)?.label ?? 'Select loan'}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                : <span className={styles.pickerPlaceholder}>Select loan</span>}
             </button>
-            {errors.source && <span className={styles.errorText}>{errors.source}</span>}
           </div>
-        </div>
-      </div>
-
-      <div className={`${styles.slideField} ${tab === 'transfer' ? styles.slideOpen : ''}`}>
-        <div className={styles.slideInner}>
-          <div className={styles.fieldGroup}>
-            <span className={styles.fieldLabel}>Destination Account</span>
-            <button
-              type="button"
-              className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`}
-              onClick={() => { setPickerField('destination'); setPickerMember(null); }}
-            >
-              {destination
-                ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                : <span className={styles.pickerPlaceholder}>Select account</span>}
-            </button>
-            {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
+          <div className={`${styles.slideField} ${styles.slideOpen}`}>
+            <div className={styles.slideInner}>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>Paid To</span>
+                <button
+                  type="button"
+                  className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`}
+                  onClick={() => { setPickerField('destination'); setPickerMember(null); }}
+                >
+                  {destination
+                    ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                    : <span className={styles.pickerPlaceholder}>Select account</span>}
+                </button>
+                {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      ) : (
+        <>
+          <div className={`${styles.slideField} ${styles.slideOpen}`}>
+            <div className={styles.slideInner}>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>
+                  {tab === 'loan' && loanAction === 'lend' ? 'Lender Account' : 'Source Account'}
+                </span>
+                <button
+                  type="button"
+                  className={`${styles.pickerTrigger} ${errors.source ? styles.fieldError : ''}`}
+                  onClick={() => { setPickerField('source'); setPickerMember(null); }}
+                >
+                  {source
+                    ? <><span className={styles.pickerValue}>{accountLabel(source)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                    : <span className={styles.pickerPlaceholder}>Select account</span>}
+                </button>
+                {errors.source && <span className={styles.errorText}>{errors.source}</span>}
+              </div>
+            </div>
+          </div>
 
-      <div className={styles.loanLink}>
-        <button
-          type="button"
-          className={styles.loanLinkBtn}
-          onClick={() => setShowLoanForm(true)}
-        >
-          Create or repay a loan {'\u2192'}
-        </button>
-      </div>
+          <div className={`${styles.slideField} ${tab === 'loan' || tab === 'transfer' ? styles.slideOpen : ''}`}>
+            <div className={styles.slideInner}>
+              <div className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>
+                  {tab === 'loan' && loanAction === 'lend' ? 'Borrower Account' : 'Destination Account'}
+                </span>
+                <button
+                  type="button"
+                  className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`}
+                  onClick={() => { setPickerField('destination'); setPickerMember(null); }}
+                >
+                  {destination
+                    ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                    : <span className={styles.pickerPlaceholder}>Select account</span>}
+                </button>
+                {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <FormTextarea
         label="Description"
@@ -442,7 +576,7 @@ export function TransactionFormModal({
 
   return (
     <>
-        <div className={`${styles.mobileLayout} ${closing ? styles.closing : ''}`}>
+      <div className={`${styles.mobileLayout} ${closing ? styles.closing : ''}`}>
         <div className={styles.wizard} onClick={handleClose}>
           <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
             <div className={styles.handle} />
@@ -487,6 +621,41 @@ export function TransactionFormModal({
         </div>
       </div>
 
+      {showLoanPicker && (
+        <div className={styles.pickerOverlay} onClick={() => setShowLoanPicker(false)}>
+          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.pickerHeader}>
+              <span className={styles.pickerTitle}>Select Loan to Repay</span>
+              <button className={styles.pickerClose} onClick={() => setShowLoanPicker(false)}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className={styles.pickerBody}>
+              {loanAccountOptions.length === 0 ? (
+                <div className={styles.pickerEmpty}>No active loans to repay</div>
+              ) : (
+                <div className={styles.pickerList}>
+                  {loanAccountOptions.map((opt) => (
+                    <button
+                      key={opt.loanId}
+                      className={`${styles.pickerItem} ${selectedLoanId === opt.loanId ? styles.pickerItemActive : ''}`}
+                      onClick={() => {
+                        setSelectedLoanId(opt.loanId);
+                        setShowLoanPicker(false);
+                      }}
+                    >
+                      <span className={styles.pickerItemName}>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {pickerField && (
         <div className={styles.pickerOverlay} onClick={() => { setPickerField(null); setPickerMember(null); }}>
           <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
@@ -515,6 +684,43 @@ export function TransactionFormModal({
                       <span className={styles.pickerItemCount}>{accountsByMember[m.id]?.length ?? 0} accounts</span>
                     </button>
                   ))}
+                  {tab === 'loan' && pickerField === 'destination' && (
+                    <>
+                      <div className={styles.pickerItem} style={{ opacity: 0.4, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 14px', cursor: 'default' }}>
+                        Person
+                      </div>
+                      {counterpartyAccounts.length === 0 ? (
+                        <div className={styles.pickerEmpty}>No persons yet</div>
+                      ) : (
+                        counterpartyAccounts.map((a) => (
+                          <button
+                            key={a.id}
+                            className={styles.pickerItem}
+                            onClick={() => {
+                              setDestination(a.id);
+                              clearError('destination');
+                              setPickerField(null);
+                              setPickerMember(null);
+                            }}
+                          >
+                            <span className={styles.pickerItemName}>{a.name}</span>
+                            <span className={styles.pickerItemMeta}>Counterparty</span>
+                            <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+                          </button>
+                        ))
+                      )}
+                      <button
+                        className={styles.pickerCreateBtn}
+                        onClick={() => {
+                          setShowAddCp(true);
+                          setPickerField(null);
+                          setPickerMember(null);
+                        }}
+                      >
+                        + Create New Person
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className={styles.pickerList}>
@@ -546,10 +752,32 @@ export function TransactionFormModal({
         </div>
       )}
 
-      {showLoanForm && (
-        <div className={styles.loanFormOverlay}>
-          <div className={styles.loanFormSheet}>
-            <LoanForm onClose={() => setShowLoanForm(false)} />
+      {showAddCp && (
+        <div className={styles.pickerOverlay} onClick={() => setShowAddCp(false)}>
+          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.pickerHeader}>
+              <span className={styles.pickerTitle}>Create New Person</span>
+              <button className={styles.pickerClose} onClick={() => setShowAddCp(false)}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className={styles.pickerBody}>
+              <div className={styles.createCpBody}>
+                <input
+                  className={styles.inputField}
+                  placeholder="Person name"
+                  value={newCpName}
+                  onChange={(e) => setNewCpName(e.target.value)}
+                  autoFocus
+                />
+                <div className={styles.createCpActions}>
+                  <button className={styles.cancelBtn} onClick={() => { setShowAddCp(false); setNewCpName(''); }}>Cancel</button>
+                  <button className={styles.saveBtn} onClick={handleCreateCp}>Create</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

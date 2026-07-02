@@ -12,6 +12,7 @@ interface LoanState {
   error: string | null;
 
   fetchLoanStacks: () => Promise<void>;
+  getLoanById: (id: string) => Promise<Loan | null>;
 
   createLoan: (params: {
     lenderAccountId: string;
@@ -28,6 +29,7 @@ interface LoanState {
     description: string;
     date: string;
     memberId: string;
+    destinationAccountId?: string;
   }) => Promise<void>;
 
   createCounterparty: (name: string, type?: string) => Promise<{ accountId: string }>;
@@ -74,6 +76,14 @@ export const useLoanStore = create<LoanState>((set) => ({
     }
   },
 
+  getLoanById: async (id) => {
+    try {
+      return await getService().getLoanById(id);
+    } catch {
+      return null;
+    }
+  },
+
   recordRepayment: async (params) => {
     set({ error: null });
     try {
@@ -94,6 +104,7 @@ export const useLoanStore = create<LoanState>((set) => ({
     try {
       const service = getService();
       const result = await service.createCounterparty(name);
+      await useAccountStore.getState().fetchAccounts();
       return result;
     } catch (err) {
       set({ error: (err as Error).message });

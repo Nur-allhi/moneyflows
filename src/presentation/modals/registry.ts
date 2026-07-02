@@ -7,6 +7,7 @@ const TransactionEditModal = lazy(() => import('./TransactionEditModal').then(m 
 const DeleteConfirmModal = lazy(() => import('./DeleteConfirmModal').then(m => ({ default: m.DeleteConfirmModal })));
 const EditMemberModal = lazy(() => import('./EditMemberModal').then(m => ({ default: m.EditMemberModal })));
 const AddAccountModal = lazy(() => import('./AddAccountModal').then(m => ({ default: m.AddAccountModal })));
+const LoanReportModal = lazy(() => import('../../loans/presentation/components/LoanReportModal').then(m => ({ default: m.LoanReportModal })));
 
 export const modalRegistry: Record<string, ComponentType<any>> = {
   'transaction-form': TransactionFormModal,
@@ -15,4 +16,5 @@ export const modalRegistry: Record<string, ComponentType<any>> = {
   'delete-confirm': DeleteConfirmModal,
   'edit-member': EditMemberModal,
   'add-account': AddAccountModal,
+  'loan-report': LoanReportModal,
 };

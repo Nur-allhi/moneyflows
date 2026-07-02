@@ -1,1 +1,1 @@
-export type { Loan, LoanStatus, LoanStack, LoanItem } from './domain/types';
+export type { Loan, LoanStatus, LoanStack, LoanItem, LoanReport, LoanReportFilter, LoanReportRow, LoanReportSummary } from './domain/types';
