@@ -424,19 +424,24 @@
 .txArrow {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
 }
 
+.txArrowIn { background: oklch(65% 0.15 150 / 0.15); color: var(--color-teal); }
+
+.txArrowOut { background: oklch(62% 0.18 30 / 0.15); color: var(--color-coral); }
+
 .txArrow svg { width: 12px; height: 12px; }
-
-.txArrowIn { color: var(--color-teal); }
-
-.txArrowOut { color: var(--color-coral); }
 
 .txDate {
   font-size: 11px;
   color: var(--color-text-secondary);
-  min-width: 55px;
+  width: 55px;
+  flex-shrink: 0;
 }
 
 .txType {
@@ -445,7 +450,8 @@
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
   font-weight: 600;
-  min-width: 45px;
+  width: 50px;
+  flex-shrink: 0;
 }
 
 .txDesc {
@@ -455,6 +461,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .txAmount {
@@ -463,7 +470,12 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  min-width: 80px;
+  width: 90px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
 }
 
 @media (max-width: 1000px) {
