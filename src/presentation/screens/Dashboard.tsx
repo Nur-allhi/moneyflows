@@ -9,7 +9,9 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
 import { formatAmount } from '../utils/format';
-import { ACCOUNT_TYPE_GRADIENT } from '../constants/labels';
+import { ACCOUNT_TYPE_GRADIENT, displayTxType } from '../constants/labels';
+import { shortDate } from '../constants/dates';
+import { DASHBOARD_TX_DISPLAY_LIMIT } from '../constants/config';
 import type { AccountType } from '../../core/domain/Account';
 import styles from './Dashboard.module.css';
 
@@ -85,6 +87,16 @@ export function Dashboard() {
   const activeLoansOutstanding = useMemo(
     () => loanStacks.reduce((s, ls) => s + ls.totalOutstanding, 0),
     [loanStacks],
+  );
+
+  const activeLoanStacks = useMemo(
+    () => loanStacks.filter((ls) => ls.totalOutstanding > 0 && !ls.loans.every((l) => l.status === 'settled')),
+    [loanStacks],
+  );
+
+  const recentTxs = useMemo(
+    () => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, DASHBOARD_TX_DISPLAY_LIMIT),
+    [transactions],
   );
 
   const now = new Date();
@@ -320,13 +332,13 @@ export function Dashboard() {
             <h2>Active Loans</h2>
           </div>
           <div className={styles.loanList}>
-            {loanStacks.length === 0 ? (
+            {activeLoanStacks.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 0' }}>
                 <div className="empty-state-icon">{'\u{1F4B3}'}</div>
                 <p className="empty-state-text">No active loans</p>
               </div>
             ) : (
-              loanStacks.map((stack) => {
+              activeLoanStacks.map((stack) => {
                 const total = stack.totalOutstanding + stack.totalRecovered;
                 const pct = total > 0 ? (stack.totalRecovered / total) * 100 : 0;
                 const isSettled = stack.loans.every((l) => l.status === 'settled');
@@ -352,6 +364,33 @@ export function Dashboard() {
                   </div>
                 );
               })
+            )}
+          </div>
+        </div>
+
+        <div className={`${styles.panel} ${styles.recentPanel}`}>
+          <div className={styles.panelHeader}>
+            <h2>Recent Transactions</h2>
+          </div>
+          <div className={styles.txList}>
+            {recentTxs.length === 0 ? (
+              <div className="empty-state" style={{ padding: '24px 20px' }}>
+                <div className="empty-state-icon">{'\u{1F4CB}'}</div>
+                <p className="empty-state-text">No transactions yet</p>
+              </div>
+            ) : (
+              recentTxs.map((tx) => (
+                <div
+                  key={tx.id}
+                  className={styles.txRow}
+                  onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}
+                >
+                  <span className={styles.txType}>{displayTxType(tx.type)}</span>
+                  <span className={styles.txDesc}>{tx.description}</span>
+                  <span className={styles.txAmount}>{formatAmount(tx.amount, locale, currency)}</span>
+                  <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
+                </div>
+              ))
             )}
           </div>
         </div>
