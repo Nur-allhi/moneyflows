@@ -72,4 +72,7 @@ export interface IDatabaseService {
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;
   getAccountGroupBalances(): Promise<GroupBalance[]>;
+
+  exportToFile(): Promise<void>;
+  importFromFile(): Promise<void>;
 }
