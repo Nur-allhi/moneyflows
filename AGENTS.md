@@ -136,13 +136,13 @@ See `session_log.md` for complete session history.
 
 | Ticket | Description | Status |
 |--------|-------------|--------|
-| T-060 | Ring buffer auto-backup in `save()` | Pending |
-| T-061 | Restore Points UI in SettingsModal | Pending |
-| T-062 | Integrity hash verification (SHA-256) | Pending |
-| T-063 | Build `FolderSync.ts` — File System Access API module | Pending |
-| T-064 | Wire FolderSync into `save()` + Settings UI | Pending |
+| T-060 | Ring buffer auto-backup in `save()` | **Complete** |
+| T-061 | Restore Points UI in SettingsModal | **Complete** |
+| T-062 | Integrity hash verification (SHA-256) | **Complete** |
+| T-063 | Build `FolderSync.ts` — File System Access API module | **Complete** |
+| T-064 | Wire FolderSync into `save()` + Settings UI | **Complete** |
 
-**Current: T-060** — Ring buffer auto-backup in `save()`.
+**All 64 tickets complete.** Phase 8 — Data Backup & Safety is finished.
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 

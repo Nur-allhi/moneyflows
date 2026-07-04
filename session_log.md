@@ -944,3 +944,53 @@
 ### Status
 - Dashboard redesigned per updated design spec. Build passes.
 - **Next:** TBD
+
+## Session 2026-07-04 12:00
+
+### Changes
+- **T-060**: Ring buffer auto-backup in `save()` — complete
+  - Added `SnapshotInfo` type + `getSnapshots()` / `restoreSnapshot()` to `IDatabaseService` interface
+  - Added `MAX_SNAPSHOTS`, `SNAPSHOT_COOLDOWN_MS`, `SNAPSHOT_PREFIX` constants to `config.ts`
+  - Implemented ring buffer logic in `SQLiteDatabaseService`:
+    - SHA-256 hash via Web Crypto API for integrity verification
+    - Cooldown timer (5 min) to throttle snapshot creation
+    - 10-slot rotating ring buffer in localStorage
+    - QuotaExceededError handled (drops oldest and retries)
+    - `getSnapshots()` returns metadata for all available snapshots
+    - `restoreSnapshot(i)` verifies hash → overwrites live DB → `location.reload()`
+    - Fire-and-forget async snapshot, never blocks the synchronous `save()` path
+- **T-061**: Restore Points UI in SettingsModal — complete
+  - Added "Restore Points" section in SettingsModal below existing fields
+  - Lists available snapshots with timestamps (relative: "Today 14:30" / "Jul 3 18:00")
+  - Restore button opens `window.confirm()` dialog, calls `restoreSnapshot(i)`
+  - On hash mismatch: error message displayed inline
+  - Empty state: "No backup snapshots found" when list is empty
+  - CSS: `.snapshotRow` with status dot + timestamp + label + restore button
+- **T-062**: Integrity hash auto-skip — complete
+  - `restoreSnapshot()` now auto-skips to the previous snapshot when hash mismatch is detected
+  - Reports which slots were corrupted
+  - If ALL snapshots corrupted: throws clear error with corrupted slot list
+- **T-063**: Built `src/infrastructure/database/FolderSync.ts` — complete
+  - Singleton `FolderSync` class with File System Access API integration
+  - IndexedDB-based handle persistence (key: `moneyflows_folder_handle`)
+  - `sync(data)`: atomic write via `.tmp` → `.db` rename pattern in `MoneyFlows/` subdirectory
+  - `load()`: reads back `moneyflows.db` as `Uint8Array`
+  - `hasPermission()` / `requestPermission()` for readwrite permission management
+  - `clearHandle()`: removes stored handle from IndexedDB
+  - `isFsaSupported` export for feature detection
+- **T-064**: Wired FolderSync into `save()` + Settings UI — complete
+  - `save()` calls `_maybeFolderSync()` after snapshot (2 min separate cooldown)
+  - FolderSync error is silently caught (never blocks the caller)
+  - SettingsModal "Cloud Backup" section with:
+    - Feature-detection: unsupported browser shows fallback message
+    - "Choose backup folder" button when no folder set
+    - Green status dot + folder name + "Stop backup" / "Change folder" when active
+    - Warning status dot + "Re-authorize" when permission revoked
+    - "Restore from Drive" button to load and reload from synced folder
+
+### Skill(s) Used
+- `senior-backend` — Ring buffer backup, FolderSync (File System Access API), IndexedDB
+- `senior-frontend` — SettingsModal Restore Points + Cloud Backup UI
+
+### Status
+- **All 64 tickets complete.** No remaining tickets.

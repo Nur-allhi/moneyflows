@@ -3,8 +3,9 @@ import { Member } from '../../core/domain/Member';
 import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
-import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance } from '../../core/ports/IDatabaseService';
-import { STORAGE_KEY, EXPORT_FILENAME_PREFIX } from '../../presentation/constants/config';
+import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo } from '../../core/ports/IDatabaseService';
+import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS } from '../../presentation/constants/config';
+import { folderSync } from './FolderSync';
 
 const SCHEMA = [
   "CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY,name TEXT NOT NULL,short_name TEXT,email TEXT,phone TEXT,avatar_url TEXT,is_external INTEGER NOT NULL DEFAULT 0,metadata TEXT DEFAULT '{}',created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT);",
@@ -64,6 +65,8 @@ function rowToGroup(r: Record<string, unknown>): AccountGroup {
 export class SQLiteDatabaseService implements IDatabaseService {
   private db: SqlJsDb | null = null;
   private SQL: Awaited<ReturnType<typeof initSqlJs>> | null = null;
+  private lastSnapshotTime = 0;
+  private lastFolderSyncTime = 0;
 
   getSqlJsDb(): SqlJsDb | null { return this.db; }
 
@@ -171,6 +174,93 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const data = this.db.export();
     const binary = Array.from(data).map((b) => String.fromCharCode(b)).join('');
     localStorage.setItem(STORAGE_KEY, btoa(binary));
+    this._maybeSnapshot(data).catch(() => {});
+    this._maybeFolderSync(data).catch(() => {});
+  }
+
+  private async sha256(str: string): Promise<string> {
+    const enc = new TextEncoder().encode(str);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  private async _maybeSnapshot(data: Uint8Array): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastSnapshotTime < SNAPSHOT_COOLDOWN_MS) return;
+    this.lastSnapshotTime = now;
+    const base64 = btoa(Array.from(data).map((b) => String.fromCharCode(b)).join(''));
+    const hash = await this.sha256(base64);
+    const snapshot = JSON.stringify({ data: base64, time: new Date().toISOString(), hash });
+    for (let i = MAX_SNAPSHOTS - 2; i >= 0; i--) {
+      const val = localStorage.getItem(`${SNAPSHOT_PREFIX}${i}`);
+      if (val !== null) localStorage.setItem(`${SNAPSHOT_PREFIX}${i + 1}`, val);
+    }
+    try {
+      localStorage.setItem(`${SNAPSHOT_PREFIX}0`, snapshot);
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        localStorage.removeItem(`${SNAPSHOT_PREFIX}${MAX_SNAPSHOTS - 1}`);
+        localStorage.setItem(`${SNAPSHOT_PREFIX}0`, snapshot);
+      }
+    }
+  }
+
+  private async _maybeFolderSync(data: Uint8Array): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastFolderSyncTime < FOLDER_SYNC_COOLDOWN_MS) return;
+    this.lastFolderSyncTime = now;
+    if (await folderSync.hasPermission()) {
+      await folderSync.sync(data);
+    }
+  }
+
+  getSnapshots(): SnapshotInfo[] {
+    const result: SnapshotInfo[] = [];
+    for (let i = 0; i < MAX_SNAPSHOTS; i++) {
+      try {
+        const raw = localStorage.getItem(`${SNAPSHOT_PREFIX}${i}`);
+        if (raw) {
+          const snap = JSON.parse(raw);
+          if (snap?.time && snap?.hash) result.push({ time: snap.time, hash: snap.hash });
+        }
+      } catch { /* skip corrupt entries */ }
+    }
+    return result;
+  }
+
+  async restoreSnapshot(index: number): Promise<void> {
+    const corrupted: number[] = [];
+    for (let i = index; i >= 0; i--) {
+      const raw = localStorage.getItem(`${SNAPSHOT_PREFIX}${i}`);
+      if (!raw) continue;
+      let snap: { data: string; time: string; hash: string };
+      try { snap = JSON.parse(raw); } catch {
+        corrupted.push(i);
+        continue;
+      }
+      if (!snap.data || !snap.time || !snap.hash) {
+        corrupted.push(i);
+        continue;
+      }
+      const computedHash = await this.sha256(snap.data);
+      if (computedHash !== snap.hash) {
+        corrupted.push(i);
+        continue;
+      }
+      const buffer = Uint8Array.from(atob(snap.data), (c) => c.charCodeAt(0));
+      if (this.SQL) {
+        this.db = new this.SQL.Database(buffer);
+        this.save();
+        window.location.reload();
+      }
+      return;
+    }
+    const msg = corrupted.length > 0
+      ? `All snapshots corrupted (slots ${corrupted.join(', ')})`
+      : 'No snapshots available to restore';
+    throw new Error(msg);
   }
 
   async exportToFile(): Promise<void> {

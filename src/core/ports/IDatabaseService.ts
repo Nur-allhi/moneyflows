@@ -35,6 +35,11 @@ export interface GroupBalance {
   accountCount: number;
 }
 
+export interface SnapshotInfo {
+  time: string;
+  hash: string;
+}
+
 export interface IDatabaseService {
   init(): Promise<void>;
   getSqlJsDb(): unknown;
@@ -75,4 +80,7 @@ export interface IDatabaseService {
 
   exportToFile(): Promise<void>;
   importFromFile(): Promise<void>;
+
+  getSnapshots(): SnapshotInfo[];
+  restoreSnapshot(index: number): Promise<void>;
 }

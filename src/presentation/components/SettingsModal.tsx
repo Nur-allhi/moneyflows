@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Modal } from './Modal';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
+import { isFsaSupported, folderSync } from '../../infrastructure/database/FolderSync';
+import type { SnapshotInfo } from '../../core/ports/IDatabaseService';
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
   DESCRIPTION_MAX_LENGTH_MAX,
@@ -28,6 +30,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [descriptionMaxLength, setDescriptionMaxLength] = useState(settings.descriptionMaxLength);
   const [numpadMaxDigits, setNumpadMaxDigits] = useState(settings.numpadMaxDigits);
   const [dashboardTxLimit, setDashboardTxLimit] = useState(settings.dashboardTxLimit);
+  const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [folderName, setFolderName] = useState<string | null>(null);
+  const [fsPermission, setFsPermission] = useState<boolean | null>(null);
+  const [restoringFromDrive, setRestoringFromDrive] = useState(false);
 
   useEffect(() => {
     if (isOpen) fetchMembers();
@@ -41,6 +49,89 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setNumpadMaxDigits(settings.numpadMaxDigits);
     setDashboardTxLimit(settings.dashboardTxLimit);
   }, [settings, isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSnapshots(getDatabase().getSnapshots());
+      setRestoreError(null);
+      (async () => {
+        const handle = await folderSync.getFolderHandle();
+        if (handle) {
+          setFolderName(handle.name);
+          setFsPermission(await folderSync.hasPermission());
+        } else {
+          setFolderName(null);
+          setFsPermission(null);
+        }
+      })();
+    }
+  }, [isOpen]);
+
+  const handleRestore = useCallback(async (index: number, time: string) => {
+    const ok = window.confirm(`Replace all current data with the snapshot from ${time}?`);
+    if (!ok) return;
+    setRestoring(true);
+    setRestoreError(null);
+    try {
+      await getDatabase().restoreSnapshot(index);
+    } catch (e) {
+      setRestoreError(e instanceof Error ? e.message : 'Restore failed');
+      setRestoring(false);
+    }
+  }, []);
+
+  const formatSnapshotTime = useCallback((iso: string): string => {
+    const d = new Date(iso);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const time = d.toLocaleTimeString(settings.locale, { hour: '2-digit', minute: '2-digit' } as const);
+    if (isToday) return `Today ${time}`;
+    const date = d.toLocaleDateString(settings.locale, { month: 'short', day: 'numeric' } as const);
+    return `${date} ${time}`;
+  }, [settings.locale]);
+
+  const handlePickFolder = useCallback(async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handle = await (window as any).showDirectoryPicker();
+      await folderSync.setFolder(handle);
+      setFolderName(handle.name);
+      setFsPermission(true);
+    } catch { /* user cancelled */ }
+  }, []);
+
+  const handleReauthorize = useCallback(async () => {
+    const ok = await folderSync.requestPermission();
+    setFsPermission(ok);
+  }, []);
+
+  const handleStopBackup = useCallback(async () => {
+    await folderSync.clearHandle();
+    setFolderName(null);
+    setFsPermission(null);
+  }, []);
+
+  const handleRestoreFromDrive = useCallback(async () => {
+    const ok = window.confirm('Replace all current data with the backup from your synced folder?');
+    if (!ok) return;
+    setRestoringFromDrive(true);
+    setRestoreError(null);
+    try {
+      const data = await folderSync.load();
+      if (!data) throw new Error('No backup file found in synced folder');
+      const db = getDatabase();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const SQL = (db as any).SQL;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (db as any).db = new SQL.Database(data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (db as any).save();
+      window.location.reload();
+    } catch (e) {
+      setRestoreError(e instanceof Error ? e.message : 'Restore failed');
+      setRestoringFromDrive(false);
+    }
+  }, []);
 
   const handleSave = () => {
     updateSettings({
@@ -127,6 +218,67 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           onChange={(e) => setDashboardTxLimit(Number(e.target.value))}
         />
       </div>
+
+      <div className={fieldStyles.separator} />
+
+      <div className={fieldStyles.sectionTitle}>Restore Points</div>
+      {restoreError && <div className={fieldStyles.errorMsg}>{restoreError}</div>}
+      {snapshots.length === 0 ? (
+        <div className={fieldStyles.emptyState}>No backup snapshots found</div>
+      ) : (
+        <div className={fieldStyles.snapshotList}>
+          {snapshots.map((snap, i) => (
+            <div key={i} className={fieldStyles.snapshotRow}>
+              <span className={fieldStyles.snapshotDot} />
+              <span className={fieldStyles.snapshotTime}>{formatSnapshotTime(snap.time)}</span>
+              <span className={fieldStyles.snapshotLabel}>— Auto-backup</span>
+              <button
+                className={fieldStyles.restoreBtn}
+                onClick={() => handleRestore(i, formatSnapshotTime(snap.time))}
+                disabled={restoring}
+              >
+                {restoring ? 'Restoring…' : 'Restore'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className={fieldStyles.separator} />
+
+      <div className={fieldStyles.sectionTitle}>Cloud Backup</div>
+      {!isFsaSupported ? (
+        <div className={fieldStyles.emptyState}>Cloud backup requires Chrome or Edge</div>
+      ) : fsPermission === null ? (
+        <div className={fieldStyles.emptyState}>
+          <button className={fieldStyles.actionBtn} onClick={handlePickFolder}>
+            Choose backup folder
+          </button>
+        </div>
+      ) : fsPermission ? (
+        <div className={fieldStyles.statusRow}>
+          <span className={fieldStyles.statusDot} />
+          <span className={fieldStyles.statusText}>Backing up to {folderName}</span>
+          <button className={fieldStyles.restoreBtn} onClick={handleStopBackup}>Stop backup</button>
+          <button className={fieldStyles.restoreBtn} onClick={handlePickFolder}>Change folder</button>
+        </div>
+      ) : (
+        <div className={fieldStyles.statusRow}>
+          <span className={fieldStyles.statusWarnDot} />
+          <span className={fieldStyles.statusText}>Permission needed — click to re-authorize</span>
+          <button className={fieldStyles.restoreBtn} onClick={handleReauthorize}>Re-authorize</button>
+        </div>
+      )}
+      {fsPermission && (
+        <button
+          className={fieldStyles.actionBtn}
+          onClick={handleRestoreFromDrive}
+          disabled={restoringFromDrive}
+          style={{ marginTop: 8, width: '100%' }}
+        >
+          {restoringFromDrive ? 'Restoring…' : 'Restore from Drive'}
+        </button>
+      )}
 
       <div className={fieldStyles.separator} />
 
