@@ -370,10 +370,17 @@ export function Dashboard() {
                   className={styles.txRow}
                   onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}
                 >
+                  <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
+                  <span className={`${styles.txArrow} ${tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? styles.txArrowIn : styles.txArrowOut}`}>
+                    {tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? (
+                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M2 6l4-4 4 4"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M2 6l4 4 4-4"/></svg>
+                    )}
+                  </span>
                   <span className={styles.txType}>{displayTxType(tx.type)}</span>
                   <span className={styles.txDesc}>{tx.description}</span>
                   <span className={styles.txAmount}>{formatAmount(tx.amount, locale, currency)}</span>
-                  <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
                 </div>
               ))
             )}
