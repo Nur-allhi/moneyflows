@@ -710,3 +710,135 @@ export const TX_DISPLAY_LABEL: Record<string, string> = {
 - `STORAGE_KEY = 'moneyflows_db'` (SQLiteDatabaseService.ts:28)
 - `EXPORT_FILENAME_PREFIX = 'moneyflows_'` (SQLiteDatabaseService.ts:90)
 **Acceptance:** All constants import from a single config file; no magic numbers remain in component/screen files.
+
+---
+
+## Phase 8: Data Backup & Safety (5 tickets)
+
+**Overview:** Three-layer data protection — ring buffer snapshots with integrity hashes (localStorage) + silent export to a user-picked cloud-synced folder (File System Access API). Covers logical corruption, bit rot, and physical/browser data loss.
+
+### T-060 — Ring buffer auto-backup in `save()`
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts`, `src/core/ports/IDatabaseService.ts`
+**Content:**
+1. Inside `save()`, after the live DB write, check a cooldown timer (5 min default, tracked via in-memory `lastSnapshotTime`)
+2. If cooldown elapsed: `db.export()` → Uint8Array → base64 string
+3. Compute SHA-256 hash of the base64 string via `crypto.subtle.digest('SHA-256', ...)`
+4. Build snapshot object: `{ data: "<base64>", time: "<ISO>", hash: "<hex>" }`
+5. Store at `localStorage` key `moneyflows_snap_0` (newest), shift existing slots down (`moneyflows_snap_i → moneyflows_snap_{i+1}`), delete overflow
+6. Max 10 slots, configurable via constant `MAX_SNAPSHOTS`
+7. Handle `QuotaExceededError` by deleting oldest snapshot and retrying once
+8. Add to `IDatabaseService` interface:
+   ```ts
+   getSnapshots(): { time: string; hash: string }[];
+   restoreSnapshot(index: number): Promise<void>;
+   ```
+9. `restoreSnapshot(i)`: read slot → verify SHA-256 hash → fail with error if mismatch → overwrite `moneyflows_db` → `location.reload()`
+**Acceptance:** 10 rotating snapshots created in localStorage after writes; snapshots have timestamps; hash verification catches corruption; restore replaces live DB and reloads; quota errors handled gracefully.
+
+### T-061 — Restore Points UI in SettingsModal
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/components/SettingsModal.tsx`, `SettingsModal.module.css`
+**Content:**
+1. Add a "Restore Points" section in Settings after the existing fields, below a separator
+2. Call `getDatabase().getSnapshots()` on mount to list available snapshots
+3. Render each snapshot as a row:
+   ```
+   ● Today 14:30 — Auto-backup     [Restore]
+   ● Today 09:15 — Auto-backup     [Restore]
+   ● Jul 3 18:00 — Auto-backup     [Restore]
+   ```
+4. "Restore" button opens confirmation dialog: *"Replace all current data with the snapshot from [time]?"*
+5. On confirm: `await getDatabase().restoreSnapshot(i)` → `window.location.reload()`
+6. If restore throws (hash mismatch): show error toast/snackbar
+7. Empty state: "No backup snapshots found" when list is empty
+8. Styles: `.snapshotRow` with timestamp + status dot + restore button, matching glassmorphism theme
+**Acceptance:** Snapshots list with timestamps; restore works with confirmation; error state shown on corruption; empty state when no snapshots exist.
+
+### T-062 — Add integrity hash to snapshot metadata
+**Skill:** `senior-backend`
+**Effort:** S
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts`
+**Content:**
+1. SHA-256 helper function using Web Crypto API:
+   ```ts
+   async function sha256(str: string): Promise<string> {
+     const enc = new TextEncoder().encode(str);
+     const buf = await crypto.subtle.digest('SHA-256', enc);
+     return Array.from(new Uint8Array(buf))
+       .map(b => b.toString(16).padStart(2, '0')).join('');
+   }
+   ```
+2. Hash computed on snapshot creation and stored in snapshot object
+3. On `restoreSnapshot()`: recompute hash of `snapshot.data`, compare
+   - Match → proceed with restore
+   - Mismatch → auto-skip to previous snapshot, report which slot was corrupted
+4. If ALL snapshots corrupted: throw with clear error for UI display
+**Acceptance:** Hash computed and verified; corrupted snapshot auto-skipped; UI gets actionable error.
+
+### T-063 — Build `FolderSync.ts` for File System Access API
+**Skill:** `senior-backend`
+**Effort:** L
+**File(s):** NEW: `src/infrastructure/database/FolderSync.ts`
+**Content:**
+Create a standalone module with the following API:
+
+```ts
+interface IFolderSync {
+  setFolder(handle: FileSystemDirectoryHandle): Promise<void>;
+  getFolderHandle(): Promise<FileSystemDirectoryHandle | null>;
+  sync(data: Uint8Array): Promise<void>;
+  load(): Promise<Uint8Array | null>;
+  hasPermission(): Promise<boolean>;
+  requestPermission(): Promise<boolean>;
+  clearHandle(): Promise<void>;
+}
+```
+
+Implementation details:
+1. **Handle persistence:** `FileSystemDirectoryHandle` serialized to IndexedDB (not serializable to localStorage). Use a simple IndexedDB wrapper with key `moneyflows_folder_handle`.
+2. **`sync()`:**
+   - Create/get `MoneyFlows/` subdirectory inside the picked folder
+   - Write `moneyflows.tmp` first (atomic write pattern)
+   - Rename to `moneyflows.db` by writing final content
+   - Remove `.tmp` file
+   - Silently catch all errors (never block the caller)
+3. **`load()`:**
+   - Read `MoneyFlows/moneyflows.db` from the folder handle
+   - Return as `Uint8Array` or `null` if not found
+4. **`hasPermission()`:** Check `handle.queryPermission()` — return boolean
+5. **`requestPermission()`:** Call `handle.requestPermission()` with `'readwrite'` mode
+6. **`clearHandle()`:** Remove IndexedDB entry — used when user wants to unpick the folder
+7. **Feature detection:** Export `isFsaSupported: boolean` (checks for `'showDirectoryPicker' in window`)
+**Acceptance:** Module compiles; `sync()` writes to folder via atomic rename; `load()` reads back; permission checks work; `clearHandle()` removes the stored handle; `isFsaSupported` correctly reflects browser support.
+
+### T-064 — Wire FolderSync into `save()` + add Settings UI
+**Skill:** `senior-frontend`, `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts`, `src/presentation/components/SettingsModal.tsx`, `SettingsModal.module.css`
+**Content:**
+
+**Part A — Wire into `save()`:**
+1. In `SQLiteDatabaseService`, import `FolderSync` module and create a singleton instance
+2. In `save()`, after ring buffer snapshot logic, call:
+   ```ts
+   if (folderSync.hasPermission()) {
+     folderSync.sync(this.db.export()).catch(() => {});
+   }
+   ```
+3. Throttle with separate cooldown (2 min, independent of ring buffer)
+4. Never throw/block if sync fails — logged to console only
+
+**Part B — Settings UI:**
+1. Add "Cloud Backup" section after Restore Points, with feature detection:
+   - If `!isFsaSupported`: show "Cloud backup requires Chrome or Edge" message
+   - If supported and no folder set: show **"Choose backup folder"** button
+   - If folder set and has permission: show ✅ "Backing up to [folder name]" + **"Change folder"** / **"Stop backup"** buttons
+   - If permission revoked: show ⚠️ "Permission needed — click to re-authorize"
+2. "Restore from Drive" button: calls `folderSync.load()` → if data exists, confirmation dialog → overwrite live DB → reload
+3. Styles: status indicators, icon + text layout, glassmorphism buttons
+
+**Acceptance:** sync fires after writes; Settings shows correct status; folder picker works; restore from Drive works; Firefox/Safari show fallback message; permission changes handled gracefully.
+

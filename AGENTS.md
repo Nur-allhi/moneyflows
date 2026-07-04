@@ -132,7 +132,17 @@ See `session_log.md` for complete session history.
 
 **All 59 tickets complete.** Phase 7 — Unified Loan System is finished.
 
-**Next: Phase 8** — TBD (post-refactor testing / new feature work).
+**Phase 8: Data Backup & Safety** — 5 tickets (T-060–T-064). See `docs/TICKETS.md` for full details.
+
+| Ticket | Description | Status |
+|--------|-------------|--------|
+| T-060 | Ring buffer auto-backup in `save()` | Pending |
+| T-061 | Restore Points UI in SettingsModal | Pending |
+| T-062 | Integrity hash verification (SHA-256) | Pending |
+| T-063 | Build `FolderSync.ts` — File System Access API module | Pending |
+| T-064 | Wire FolderSync into `save()` + Settings UI | Pending |
+
+**Current: T-060** — Ring buffer auto-backup in `save()`.
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 
