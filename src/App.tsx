@@ -64,7 +64,7 @@ function AppLayout() {
     <div className={styles.layout}>
       <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
       <div className={styles.main}>
-        {pathname !== '/' && <Header title={title} showBack={showBack} showLogo={!showBack} breadcrumb={breadcrumb} />}
+        <Header title={title} showBack={showBack} showLogo={!showBack} breadcrumb={breadcrumb} />
         <div className={styles.content}>
           <Suspense fallback={<div className="skeleton skeleton-wizard" />}>
             <PageTransition><Outlet /></PageTransition>
