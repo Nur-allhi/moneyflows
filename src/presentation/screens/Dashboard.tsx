@@ -155,10 +155,6 @@ export function Dashboard() {
 
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
 
-  const dateStr = now.toLocaleDateString(locale, {
-    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-  });
-
   if (loading) {
     return (
       <div className={styles.dashboard}>
@@ -192,20 +188,6 @@ export function Dashboard() {
 
   return (
     <div className={styles.dashboard}>
-      <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <div className={styles.logo}>MoneyFlows</div>
-        </div>
-        <div className={styles.headerRight}>
-          <span className={styles.headerDate}>{dateStr}</span>
-          <button className={styles.notifBtn} aria-label="Notifications">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-          </button>
-        </div>
-      </div>
 
       <div className={styles.metrics}>
         <div className={`${styles.metricCard} ${styles.glowViolet}`}>
