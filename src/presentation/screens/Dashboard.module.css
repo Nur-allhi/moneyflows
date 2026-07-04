@@ -440,7 +440,7 @@
 .txDate {
   font-size: 11px;
   color: var(--color-text-secondary);
-  width: 55px;
+  width: 65px;
   flex-shrink: 0;
 }
 
@@ -450,7 +450,7 @@
   letter-spacing: 0.06em;
   color: var(--color-text-secondary);
   font-weight: 600;
-  width: 55px;
+  width: 65px;
   flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
