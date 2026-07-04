@@ -22,5 +22,10 @@ export const OVERSCAN = 3;
 export const STORAGE_KEY = 'moneyflows_db';
 export const EXPORT_FILENAME_PREFIX = 'moneyflows_';
 
+export const MAX_SNAPSHOTS = 10;
+export const SNAPSHOT_COOLDOWN_MS = 300_000;
+export const SNAPSHOT_PREFIX = 'moneyflows_snap_';
+export const FOLDER_SYNC_COOLDOWN_MS = 120_000;
+
 export const DASHBOARD_TX_FETCH_LIMIT = 10;
 export const DASHBOARD_TX_DISPLAY_LIMIT = 12;
