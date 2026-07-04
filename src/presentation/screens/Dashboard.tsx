@@ -65,14 +65,6 @@ export function Dashboard() {
     [members],
   );
 
-  const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!activeMemberId && internalMembers.length > 0) {
-      setActiveMemberId(internalMembers[0]!.id);
-    }
-  }, [internalMembers]);
-
   const totalAssets = useMemo(
     () => accounts.filter((a) => a.type !== 'counterparty').reduce((s, a) => s + a.balance, 0),
     [accounts],
@@ -203,19 +195,6 @@ export function Dashboard() {
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.logo}>MoneyFlows</div>
-          <div className={styles.profiles}>
-            {internalMembers.map((m, i) => (
-              <div
-                key={m.id}
-                className={`${styles.avatar} ${activeMemberId === m.id ? styles.avatarActive : ''}`}
-                style={{ background: MEMBER_GRADIENTS[i % MEMBER_GRADIENTS.length] }}
-                title={m.name}
-                onClick={() => setActiveMemberId(m.id)}
-              >
-                {(m.shortName ?? m.name)[0]}
-              </div>
-            ))}
-          </div>
         </div>
         <div className={styles.headerRight}>
           <span className={styles.headerDate}>{dateStr}</span>
