@@ -127,3 +127,45 @@
   color: var(--color-text-secondary);
   padding: 32px 0;
 }
+
+.ledgerBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: width var(--transition-normal), border-radius var(--transition-normal), background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  padding: 0;
+  margin-right: auto;
+}
+
+.ledgerBtn:hover {
+  width: 130px;
+  border-radius: 999px;
+  gap: 6px;
+  padding-left: 5px;
+}
+
+.ledgerBtn:hover .btnLabel {
+  opacity: 1;
+  max-width: 100px;
+}
+
+.ledgerBtn .btnLabel {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity var(--transition-fast), max-width var(--transition-normal);
+  font-size: 13px;
+  white-space: nowrap;
+}

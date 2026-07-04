@@ -410,6 +410,54 @@
 
 .actPrimary:hover { opacity: 0.9; }
 
+.recentPanel {
+  grid-column: 1 / -1;
+}
+
+.txRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.txRow:hover { background: oklch(100% 0 0 / 0.04); }
+
+.txType {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  min-width: 60px;
+}
+
+.txDesc {
+  flex: 1;
+  font-size: 13px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txAmount {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.txDate {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  min-width: 70px;
+  text-align: right;
+}
+
 @media (max-width: 1000px) {
   .metrics { grid-template-columns: 1fr; gap: 10px; }
   .content { grid-template-columns: 1fr; }

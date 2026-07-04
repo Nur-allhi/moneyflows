@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { Transaction } from '../../core/domain/Transaction';
 import { Modal } from '../components';
 import { useTransactionStore } from '../stores/useTransactionStore';
@@ -16,6 +17,7 @@ interface TransactionDetailModalProps {
 }
 
 export function TransactionDetailModal({ txId, transaction: txProp, onClose }: TransactionDetailModalProps) {
+  const navigate = useNavigate();
   const storeTx = useTransactionStore((s) => txId ? s.transactions.find((t) => t.id === txId) : undefined);
   const loading = useTransactionStore((s) => s.loading);
   const members = useMemberStore((s) => s.members);
@@ -47,6 +49,18 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
     setTimeout(() => useModalStore.getState().open('delete-confirm', { txId: transaction.id }), 50);
   };
 
+  const handleOpenLedger = () => {
+    if (!transaction) return;
+    const srcAcct = transaction.sourceAccount ? accountMap.get(transaction.sourceAccount) : null;
+    const dstAcct = transaction.destAccount ? accountMap.get(transaction.destAccount) : null;
+    const ledgerAcct = (srcAcct && srcAcct.type !== 'counterparty') ? srcAcct
+      : (dstAcct && dstAcct.type !== 'counterparty') ? dstAcct
+      : null;
+    if (!ledgerAcct || !ledgerAcct.memberId) return;
+    onClose();
+    navigate(`/member/${ledgerAcct.memberId}?account=${ledgerAcct.id}`);
+  };
+
   return (
     <Modal
       isOpen
@@ -54,6 +68,12 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
       title={`${TX_TYPE_ICON[transaction.type] ?? ''} Transaction Details`}
       footer={
         <div className={styles.footer}>
+          <button className={styles.ledgerBtn} onClick={handleOpenLedger} title="Open in Ledger">
+            <span className={styles.icon}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </span>
+            <span className={styles.btnLabel}>Open in Ledger</span>
+          </button>
           <button className={styles.iconBtn} onClick={handleEdit} title="Edit">
             <span className={styles.icon}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
