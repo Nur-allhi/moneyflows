@@ -447,21 +447,26 @@
 .txType {
   font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--color-text-secondary);
   font-weight: 600;
-  width: 50px;
+  width: 55px;
   flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .txDesc {
   flex: 1;
   font-size: 13px;
   color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
 }
 
 .txAmount {
@@ -470,12 +475,13 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  width: 90px;
+  width: 100px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 6px;
   justify-content: flex-end;
+  white-space: nowrap;
 }
 
 @media (max-width: 1000px) {
