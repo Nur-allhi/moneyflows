@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useMemberStore } from '../stores/useMemberStore';
+import { getDatabase } from '../../infrastructure/database/getDatabase';
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
   DESCRIPTION_MAX_LENGTH_MAX,
@@ -10,7 +11,7 @@ import {
   DASHBOARD_TX_LIMIT_MIN,
   DASHBOARD_TX_LIMIT_MAX,
 } from '../constants/config';
-import styles from './Modal.module.css';
+import fieldStyles from './SettingsModal.module.css';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -57,30 +58,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Settings" onSave={handleSave}>
-      <div className={styles.fieldGroup}>
-        <label className={styles.fieldLabel}>Currency</label>
+      <div className={fieldStyles.fieldGroup}>
+        <label className={fieldStyles.fieldLabel}>Currency</label>
         <input
-          className={styles.fieldInput}
+          className={fieldStyles.inputField}
           value={currency}
           onChange={(e) => setCurrency(e.target.value.toUpperCase())}
           placeholder="e.g. BDT, USD"
         />
       </div>
 
-      <div className={styles.fieldGroup}>
-        <label className={styles.fieldLabel}>Locale</label>
+      <div className={fieldStyles.fieldGroup}>
+        <label className={fieldStyles.fieldLabel}>Locale</label>
         <input
-          className={styles.fieldInput}
+          className={fieldStyles.inputField}
           value={locale}
           onChange={(e) => setLocale(e.target.value)}
           placeholder="e.g. en-IN, en-US, bn-BD"
         />
       </div>
 
-      <div className={styles.fieldGroup}>
-        <label className={styles.fieldLabel}>Primary Member</label>
+      <div className={fieldStyles.fieldGroup}>
+        <label className={fieldStyles.fieldLabel}>Primary Member</label>
         <select
-          className={styles.fieldInput}
+          className={fieldStyles.selectField}
           value={primaryMemberId}
           onChange={(e) => setPrimaryMemberId(e.target.value)}
         >
@@ -91,10 +92,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </select>
       </div>
 
-      <div className={styles.fieldGroup}>
-        <label className={styles.fieldLabel}>Description Max Length</label>
+      <div className={fieldStyles.fieldGroup}>
+        <label className={fieldStyles.fieldLabel}>Description Max Length</label>
         <input
-          className={styles.fieldInput}
+          className={fieldStyles.inputField}
           type="number"
           min={DESCRIPTION_MAX_LENGTH_MIN}
           max={DESCRIPTION_MAX_LENGTH_MAX}
@@ -103,10 +104,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         />
       </div>
 
-      <div className={styles.fieldGroup}>
-        <label className={styles.fieldLabel}>Numpad Max Digits</label>
+      <div className={fieldStyles.fieldGroup}>
+        <label className={fieldStyles.fieldLabel}>Numpad Max Digits</label>
         <input
-          className={styles.fieldInput}
+          className={fieldStyles.inputField}
           type="number"
           min={NUMPAD_MAX_DIGITS_MIN}
           max={NUMPAD_MAX_DIGITS_MAX}
@@ -115,16 +116,27 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         />
       </div>
 
-      <div className={styles.fieldGroup}>
-        <label className={styles.fieldLabel}>Dashboard Transaction Limit</label>
+      <div className={fieldStyles.fieldGroup}>
+        <label className={fieldStyles.fieldLabel}>Dashboard Transaction Limit</label>
         <input
-          className={styles.fieldInput}
+          className={fieldStyles.inputField}
           type="number"
           min={DASHBOARD_TX_LIMIT_MIN}
           max={DASHBOARD_TX_LIMIT_MAX}
           value={dashboardTxLimit}
           onChange={(e) => setDashboardTxLimit(Number(e.target.value))}
         />
+      </div>
+
+      <div className={fieldStyles.separator} />
+
+      <div className={fieldStyles.actionsRow}>
+        <button className={fieldStyles.actionBtn} onClick={() => getDatabase().exportToFile()}>
+          ↓ Export Database
+        </button>
+        <button className={fieldStyles.actionBtn} onClick={() => getDatabase().importFromFile()}>
+          ↑ Import Database
+        </button>
       </div>
     </Modal>
   );
