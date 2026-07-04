@@ -146,7 +146,6 @@
   overflow: hidden;
   transition: width var(--transition-normal), border-radius var(--transition-normal), background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
   padding: 0;
-  margin-right: auto;
 }
 
 .ledgerBtn:hover {
