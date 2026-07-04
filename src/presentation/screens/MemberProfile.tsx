@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Avatar, AccountCard, LedgerTable, SegmentedTabs, GlassPanel } from '../components';
@@ -27,6 +27,7 @@ const ledgerFilters = [
 
 export function MemberProfile() {
   const { id: memberId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [activeDot, setActiveDot] = useState(0);
   const [ledgerFilter, setLedgerFilter] = useState('all');
@@ -70,6 +71,14 @@ export function MemberProfile() {
     () => accounts.filter((a) => a.memberId === memberId),
     [accounts, memberId],
   );
+
+  useEffect(() => {
+    if (!memberAccounts.length) return;
+    const acctParam = searchParams.get('account');
+    if (acctParam && memberAccounts.some((a) => a.id === acctParam)) {
+      setSelectedAccountId(acctParam);
+    }
+  }, [memberAccounts]);
 
   const totalBalance = useMemo(
     () => memberAccounts.reduce((s, a) => s + a.balance, 0),
