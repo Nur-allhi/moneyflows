@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { SettingsModal } from '../components';
 import { useAnimatedValue } from '../hooks';
 import { useAccountStore } from '../stores/useAccountStore';
@@ -38,6 +39,7 @@ function ArrowDown() {
 }
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const openWizard = () => useModalStore.getState().open('transaction-form');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
@@ -287,13 +289,13 @@ export function Dashboard() {
               const mName = member ? member.name : 'Unassigned';
               return (
                 <div key={mid} className={styles.memberGroup}>
-                  <div className={styles.memberHead}>
+                  <div className={styles.memberHead} onClick={() => navigate(`/member/${mid}`)}>
                     <div className={styles.miniAvatar} style={{ background: grad }}>{initial}</div>
                     <span className={styles.mname}>{mName}</span>
                   </div>
                   <div className={styles.memberAccounts}>
                     {accts.map((acct) => (
-                      <div key={acct.id} className={styles.acctRow}>
+                      <div key={acct.id} className={styles.acctRow} onClick={() => navigate(`/member/${mid}?account=${acct.id}`)}>
                         <div
                           className={styles.acctIcon}
                           style={{ background: ACCOUNT_TYPE_GRADIENT[acct.type as AccountType] }}
@@ -329,7 +331,7 @@ export function Dashboard() {
                 const pct = total > 0 ? (stack.totalRecovered / total) * 100 : 0;
                 const isSettled = stack.loans.every((l) => l.status === 'settled');
                 return (
-                  <div key={stack.debtorId} className={styles.loanRow}>
+                  <div key={stack.debtorId} className={styles.loanRow} onClick={() => navigate(`/loans/${stack.debtorId}`)}>
                     <div className={styles.loanTop}>
                       <span className={styles.loanDebtor}>
                         {stack.debtorName}
