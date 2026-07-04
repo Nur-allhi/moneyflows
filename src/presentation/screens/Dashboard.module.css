@@ -184,7 +184,7 @@
 
 .content {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 3fr 6fr 3fr;
   gap: 14px;
 }
 
@@ -409,10 +409,6 @@
 }
 
 .actPrimary:hover { opacity: 0.9; }
-
-.recentPanel {
-  grid-column: 1 / -1;
-}
 
 .txRow {
   display: flex;

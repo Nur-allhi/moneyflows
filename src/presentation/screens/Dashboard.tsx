@@ -329,6 +329,33 @@ export function Dashboard() {
 
         <div className={styles.panel}>
           <div className={styles.panelHeader}>
+            <h2>Recent Transactions</h2>
+          </div>
+          <div className={styles.txList}>
+            {recentTxs.length === 0 ? (
+              <div className="empty-state" style={{ padding: '24px 20px' }}>
+                <div className="empty-state-icon">{'\u{1F4CB}'}</div>
+                <p className="empty-state-text">No transactions yet</p>
+              </div>
+            ) : (
+              recentTxs.map((tx) => (
+                <div
+                  key={tx.id}
+                  className={styles.txRow}
+                  onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}
+                >
+                  <span className={styles.txType}>{displayTxType(tx.type)}</span>
+                  <span className={styles.txDesc}>{tx.description}</span>
+                  <span className={styles.txAmount}>{formatAmount(tx.amount, locale, currency)}</span>
+                  <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className={styles.panel}>
+          <div className={styles.panelHeader}>
             <h2>Active Loans</h2>
           </div>
           <div className={styles.loanList}>
@@ -364,33 +391,6 @@ export function Dashboard() {
                   </div>
                 );
               })
-            )}
-          </div>
-        </div>
-
-        <div className={`${styles.panel} ${styles.recentPanel}`}>
-          <div className={styles.panelHeader}>
-            <h2>Recent Transactions</h2>
-          </div>
-          <div className={styles.txList}>
-            {recentTxs.length === 0 ? (
-              <div className="empty-state" style={{ padding: '24px 20px' }}>
-                <div className="empty-state-icon">{'\u{1F4CB}'}</div>
-                <p className="empty-state-text">No transactions yet</p>
-              </div>
-            ) : (
-              recentTxs.map((tx) => (
-                <div
-                  key={tx.id}
-                  className={styles.txRow}
-                  onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}
-                >
-                  <span className={styles.txType}>{displayTxType(tx.type)}</span>
-                  <span className={styles.txDesc}>{tx.description}</span>
-                  <span className={styles.txAmount}>{formatAmount(tx.amount, locale, currency)}</span>
-                  <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
-                </div>
-              ))
             )}
           </div>
         </div>
