@@ -23,4 +23,4 @@ export const STORAGE_KEY = 'moneyflows_db';
 export const EXPORT_FILENAME_PREFIX = 'moneyflows_';
 
 export const DASHBOARD_TX_FETCH_LIMIT = 10;
-export const DASHBOARD_TX_DISPLAY_LIMIT = 7;
+export const DASHBOARD_TX_DISPLAY_LIMIT = 12;
