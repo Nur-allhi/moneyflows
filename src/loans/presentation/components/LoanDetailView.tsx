@@ -9,7 +9,7 @@ import { useMemberStore } from '../../../presentation/stores/useMemberStore';
 import { useSettingsStore } from '../../../presentation/stores/useSettingsStore';
 import { useTransactionStore } from '../../../presentation/stores/useTransactionStore';
 import { useModalStore } from '../../../presentation/stores/useModalStore';
-import { formatAmount } from '../../../presentation/utils/format';
+import { formatAmount, formatAmountParts } from '../../../presentation/utils/format';
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
 import { ProgressBar, LedgerTable, LedgerSearch } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
@@ -125,9 +125,10 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: bracket ? `${tx.description} [${bracket}]` : tx.description,
-        debit: isDebit ? formatAmount(tx.amount, locale, currency) : '\u2014',
-        credit: isCredit ? formatAmount(tx.amount, locale, currency) : '\u2014',
-        balance: formatAmount(running, locale, currency),
+        debit: isDebit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        credit: isCredit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        balance: formatAmountParts(running, locale, currency).amount,
+        currencyLabel: currency,
         type: isDebit ? 'expense' as const : 'income' as const,
         typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' :
                    tx.type === 'repay' || tx.type === 'loan_repayment' ? 'Repayment' : 'Paid Back',

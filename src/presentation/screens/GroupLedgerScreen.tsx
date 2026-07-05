@@ -9,7 +9,7 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import type { Transaction } from '../../core/domain/Transaction';
 import type { Account } from '../../core/domain/Account';
-import { formatAmount } from '../utils/format';
+import { formatAmount, formatAmountParts } from '../utils/format';
 import { shortDate } from '../constants/dates';
 import styles from './GroupLedgerScreen.module.css';
 
@@ -154,9 +154,10 @@ export function GroupLedgerScreen() {
         date: shortDate(tx.date, locale),
         description: tx.description,
         account: internal ? `(internal) ${resolveAccountDisplay(tx)}` : resolveAccountDisplay(tx),
-        debit: credit ? '\u2014' : formatAmount(tx.amount, locale, currency),
-        credit: debit ? '\u2014' : formatAmount(tx.amount, locale, currency),
-        balance: formatAmount(running, locale, currency),
+        debit: credit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
+        credit: debit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
+        balance: formatAmountParts(running, locale, currency).amount,
+        currencyLabel: currency,
         type: isLoanType(tx.type) ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer',
       };
     });
