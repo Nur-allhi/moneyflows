@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { RecycleRow, GlassPanel } from '../components';
 import { useRecycleStore } from '../stores/useRecycleStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -17,9 +18,11 @@ function timeAgo(iso: string): string {
 }
 
 export function RecycleBin() {
+  const navigate = useNavigate();
   const { deletedItems, loading, error, fetchDeleted, restore, purge } = useRecycleStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
+  const [mobileSearch, setMobileSearch] = useState('');
 
   useEffect(() => {
     fetchDeleted();
@@ -27,13 +30,14 @@ export function RecycleBin() {
 
   const [activeTab, setActiveTab] = useState('all');
 
+  const effectiveSearch = mobileSearch.toLowerCase().trim() || searchQuery;
   const filteredItems = useMemo(() => {
     const byTab = activeTab === 'all' ? deletedItems
       : deletedItems.filter((item) => activeTab === 'transactions' ? item.type === 'transaction' : item.type === 'account');
-    return searchQuery
-      ? byTab.filter((item) => item.name.toLowerCase().includes(searchQuery))
+    return effectiveSearch
+      ? byTab.filter((item) => item.name.toLowerCase().includes(effectiveSearch))
       : byTab;
-  }, [deletedItems, activeTab, searchQuery]);
+  }, [deletedItems, activeTab, effectiveSearch]);
 
   const tabCount = (key: string) => {
     if (key === 'all') return deletedItems.length;
@@ -73,6 +77,43 @@ export function RecycleBin() {
 
   return (
     <div className={styles.recycle}>
+      <div className={styles.mobHeader}>
+        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
+          {'\u2190'}
+        </button>
+        <span className={styles.pageTitle}>Recycle Bin</span>
+        <button className={styles.refreshCircleBtn} onClick={() => fetchDeleted()} aria-label="Refresh">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
+      </div>
+
+      <div className={styles.searchBar}>
+        <div className={styles.searchWrap}>
+          <span className={styles.searchIcon}>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+              <circle cx="7" cy="7" r="5.5" />
+              <path d="M11 11l3.5 3.5" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Search deleted items..."
+            value={mobileSearch}
+            onChange={(e) => setMobileSearch(e.target.value)}
+          />
+          {mobileSearch && (
+            <button className={styles.searchClear} onClick={() => setMobileSearch('')} aria-label="Clear search">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M3 3l6 6M9 3l-6 6" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className={styles.stats}>
         <div className={styles.statItem}>
           <span className={styles.statNum}>{deletedItems.length}</span>
