@@ -369,12 +369,15 @@ export function Dashboard() {
                   <div key={stack.debtorId} className={styles.loanRow} onClick={() => navigate(`/loans/${stack.debtorId}`)}>
                     <div className={styles.loanTop}>
                       <span className={styles.loanDebtor}>
-                        {stack.debtorName}
-                        {isSettled && <span className={`${styles.badge} ${styles.badgeSettled}`}>Settled</span>}
-                        {!isSettled && stack.settledCount > 0 && <span className={styles.badge}>Overdue</span>}
+                        <span className={styles.loanDebtorName}>{stack.debtorName}</span>
+                        <span className={styles.loanBadges}>
+                          {isSettled && <span className={`${styles.badge} ${styles.badgeSettled}`}>Settled</span>}
+                          {!isSettled && stack.settledCount > 0 && <span className={`${styles.badge} ${styles.badgePartial}`}>Partial</span>}
+                        </span>
                       </span>
                       <span className={styles.loanAmount}>
-                        {formatAmount(stack.totalOutstanding, locale, currency)}
+                        {Intl.NumberFormat(locale).format(stack.totalOutstanding)}
+                        <span className={styles.loanCurrency}>{currency}</span>
                       </span>
                     </div>
                     <div className={styles.loanBarWrap}>

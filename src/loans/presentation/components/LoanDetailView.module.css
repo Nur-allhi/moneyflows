@@ -116,6 +116,23 @@
   color: #fff;
 }
 
+.repayBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.repayBtn:hover {
+  opacity: 0.9;
+}
+
 .overlay {
   position: fixed;
   inset: 0;

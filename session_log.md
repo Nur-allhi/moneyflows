@@ -994,3 +994,37 @@
 
 ### Status
 - **All 64 tickets complete.** No remaining tickets.
+
+## Session 2026-07-05 03:05
+
+### Changes
+- Fixed misleading "Overdue" badge → "Partial" in Dashboard (`Dashboard.tsx:374`, `Dashboard.module.css:244-247`)
+- Added `.badgePartial` CSS class with amber/orange styling (vs red for bad `.badge` / teal for `.badgeSettled`)
+- Added `debtorId` prop to `TransactionFormModal` — filters `loanAccountOptions` to only show loans for that debtor, auto-sets `loanAction` to `'repay'`, auto-selects first loan pickable
+- Added "+ Repayment" button in `LoanDetailView` actions (opens TransactionFormModal pre-filtered to that debtor with repay mode)
+- Added `.repayBtn` CSS style in `LoanDetailView.module.css`
+
+### Skill(s) Used
+- `senior-frontend` — React component modifications, Zustand modal store integration, CSS styling
+
+### Status
+- **All changes compile and build.** Ready for next work.
+
+## Session 2026-07-05 03:55
+
+### Changes
+- Fixed misleading "Overdue" badge → "Partial" in Dashboard (amber styling)
+- Rewrote `LoanService.recordRepayment()` — now accepts `borrowerAccountId` instead of `loanId`, distributes repayments across active loans via **FIFO** (oldest→newest)
+- Updated `TransactionFormModal` — repayment picker now shows **counterparty-level** options (e.g. "Account B — 30,000") instead of per-loan items; removed per-loan `selectedLoanId`/`getLoanById`/auto-select logic
+- Updated `LoanForm` — same stack-level picker instead of per-loan `<select>`
+- Updated `useLoanStore` — `recordRepayment` signature changed from `loanId` to `borrowerAccountId`; `recordPayback` wrapper updated accordingly
+- Updated `syncLoanTransaction` to safely return when `loanRef` is undefined (repayments no longer link to a single loan)
+- Updated `LoanDetailView.handleAddRepayment` to pass `initialBorrowerId` (pre-selects counterparty on the modal)
+- 10 files changed, 139 insertions, 94 deletions
+
+### Skill(s) Used
+- `senior-frontend` — React component restructuring, modal store patterns
+- `senior-backend` — LoanService recordRepayment rewrite with FIFO distribution
+
+### Status
+- **All changes compile and build.** Ready for next work.

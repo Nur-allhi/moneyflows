@@ -59,6 +59,13 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     navigate('/loans');
   }, [deleteLoanStack, stack.debtorId, navigate]);
 
+  const handleAddRepayment = useCallback(() => {
+    useModalStore.getState().open('transaction-form', {
+      initialTab: 'loan',
+      initialBorrowerId: stack.debtorId,
+    });
+  }, [stack.debtorId]);
+
   const sortedTxs = useMemo(() => {
     const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback']);
     return [...txns]
@@ -235,9 +242,12 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
           {stack.isSettled ? (
             <span className={styles.settledBadge}>Settled</span>
           ) : (
-            <button className={styles.deleteBtn} onClick={() => setConfirmDelete(true)}>
-              Delete
-            </button>
+            <>
+              <button className={styles.repayBtn} onClick={handleAddRepayment}>+ Repayment</button>
+              <button className={styles.deleteBtn} onClick={() => setConfirmDelete(true)}>
+                Delete
+              </button>
+            </>
           )}
         </div>
       </div>

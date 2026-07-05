@@ -64,39 +64,52 @@ export class LoanService {
   }
 
   async recordRepayment(params: {
-    loanId: string;
+    borrowerAccountId: string;
     amount: number;
     description: string;
     date: string;
     memberId: string;
     destinationAccountId?: string;
   }): Promise<{ tx: Transaction }> {
-    if (!params.loanId) throw new Error('loanId is required for repayment');
+    if (!params.borrowerAccountId) throw new Error('borrowerAccountId is required for repayment');
 
-    const loan = await this.loanDb.getLoanById(params.loanId);
-    if (!loan) throw new Error(`Loan ${params.loanId} not found`);
-    if (loan.status === 'settled') throw new Error('Loan is already settled');
+    const allLoans = await this.loanDb.getLoansByBorrower(params.borrowerAccountId);
+    const activeLoans = allLoans.filter((l) => l.status !== 'settled' && l.outstanding > 0);
+    if (activeLoans.length === 0) throw new Error('No active loans found for this counterparty');
 
     const now = new Date();
     const nowStr = now.toISOString();
     const [y, m, d] = params.date.split('-');
     const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
 
-    const dst = params.destinationAccountId ?? loan.lenderAccountId;
+    const firstLoan = activeLoans[0]!;
+    const dst = params.destinationAccountId ?? firstLoan.lenderAccountId;
+
+    let remaining = params.amount;
+    const sorted = [...activeLoans].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+    for (const loan of sorted) {
+      if (remaining <= 0) break;
+      if (loan.outstanding <= 0) continue;
+
+      const applied = Math.min(remaining, loan.outstanding);
+      loan.outstanding -= applied;
+      remaining -= applied;
+
+      if (loan.outstanding <= 0) {
+        loan.outstanding = 0;
+        loan.status = 'settled';
+      }
+      loan.updatedAt = nowStr;
+      await this.loanDb.saveLoan(loan);
+    }
+
     const tx = new Transaction(
       uuidv4(), 'repay', params.description, params.amount,
-      params.memberId, dateTime, loan.borrowerAccountId, dst,
-      undefined, loan.id, {}, nowStr, nowStr,
+      params.memberId, dateTime, params.borrowerAccountId, dst,
+      undefined, undefined, {}, nowStr, nowStr,
     );
 
-    loan.outstanding -= params.amount;
-    if (loan.outstanding <= 0) {
-      loan.outstanding = 0;
-      loan.status = 'settled';
-    }
-    loan.updatedAt = nowStr;
-
-    await this.loanDb.saveLoan(loan);
     await this.db.saveTransaction(tx);
     return { tx };
   }
@@ -125,7 +138,8 @@ export class LoanService {
     return { accountId: account.id };
   }
 
-  async syncLoanTransaction(loanRef: string, oldAmount: number, newAmount: number, txType: string): Promise<void> {
+  async syncLoanTransaction(loanRef: string | undefined, oldAmount: number, newAmount: number, txType: string): Promise<void> {
+    if (!loanRef) return;
     const loan = await this.loanDb.getLoanById(loanRef);
     if (!loan) return;
     const diff = newAmount - oldAmount;
