@@ -376,6 +376,11 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const params: Record<string, string | number | null> = {};
     if (filters?.memberId) { sql += ' AND member_id=$mid'; params.$mid = filters.memberId; }
     if (filters?.accountId) { sql += ' AND (source_account=$aid OR dest_account=$aid)'; params.$aid = filters.accountId; }
+    if (filters?.accountIds && filters.accountIds.length > 0) {
+      const clauses = filters.accountIds.map((_, i) => `$aid${i}`);
+      sql += ` AND (source_account IN (${clauses.join(',')}) OR dest_account IN (${clauses.join(',')}))`;
+      filters.accountIds.forEach((id, i) => { params[`$aid${i}`] = id; });
+    }
     if (filters?.type) { sql += ' AND type=$type'; params.$type = filters.type; }
     if (filters?.loanRef) { sql += ' AND loan_ref=$ref'; params.$ref = filters.loanRef; }
     if (filters?.startDate) { sql += ' AND date>=$start'; params.$start = filters.startDate; }
@@ -434,8 +439,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     }
   }
 
-  saveTransaction(tx: Transaction): Promise<void> {
-    this.validateTransaction(tx);
+  private saveTransactionToDb(tx: Transaction): void {
     this.run(`INSERT INTO transactions (id,type,description,amount,source_account,dest_account,member_id,debtor_id,loan_ref,date,metadata,created_at,updated_at)
       VALUES ($id,$type,$desc,$amt,$src,$dst,$mid,$did,$loan,$date,$meta,$created,$updated)
       ON CONFLICT(id) DO UPDATE SET type=$type,description=$desc,amount=$amt,
@@ -444,6 +448,11 @@ export class SQLiteDatabaseService implements IDatabaseService {
       { $id: tx.id, $type: tx.type, $desc: tx.description, $amt: tx.amount, $src: tx.sourceAccount ?? null,
         $dst: tx.destAccount ?? null, $mid: tx.memberId, $did: tx.debtorId ?? null, $loan: tx.loanRef ?? null,
         $date: tx.date, $meta: JSON.stringify(tx.metadata), $created: tx.createdAt, $updated: now() });
+  }
+
+  saveTransaction(tx: Transaction): Promise<void> {
+    this.validateTransaction(tx);
+    this.saveTransactionToDb(tx);
     this.applyBalanceChange(tx.type, tx.amount, tx.sourceAccount, tx.destAccount);
     return Promise.resolve();
   }
@@ -454,12 +463,13 @@ export class SQLiteDatabaseService implements IDatabaseService {
       const oldTx = rowToTransaction(old);
       this.applyBalanceChange(oldTx.type, -oldTx.amount, oldTx.sourceAccount, oldTx.destAccount);
     }
-    this.saveTransaction(tx);
+    this.saveTransactionToDb(tx);
+    this.applyBalanceChange(tx.type, tx.amount, tx.sourceAccount, tx.destAccount);
     return Promise.resolve();
   }
 
   softDeleteTransaction(id: string): Promise<void> {
-    const tx = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id', { $id: id });
+    const tx = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id AND deleted_at IS NULL', { $id: id });
     if (tx) {
       const t = rowToTransaction(tx);
       this.applyBalanceChange(t.type, -t.amount, t.sourceAccount, t.destAccount);
@@ -468,7 +478,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     return Promise.resolve();
   }
   restoreTransaction(id: string): Promise<void> {
-    const tx = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id', { $id: id });
+    const tx = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id AND deleted_at IS NOT NULL', { $id: id });
     if (tx) {
       const t = rowToTransaction(tx);
       this.applyBalanceChange(t.type, t.amount, t.sourceAccount, t.destAccount);
@@ -503,6 +513,37 @@ export class SQLiteDatabaseService implements IDatabaseService {
         'SELECT account_id FROM account_group_mappings WHERE account_group_id=$gid', { $gid: g.id },
       ).map((r) => r.account_id),
     }));
+  }
+
+  saveAccountGroup(group: AccountGroup): Promise<void> {
+    this.run(`INSERT INTO account_groups (id,name,sort_order,metadata)
+      VALUES ($id,$name,$sort,$meta)
+      ON CONFLICT(id) DO UPDATE SET name=$name,sort_order=$sort,metadata=$meta`,
+      { $id: group.id, $name: group.name, $sort: group.sortOrder, $meta: JSON.stringify(group.metadata) });
+    return Promise.resolve();
+  }
+
+  softDeleteAccountGroup(id: string): Promise<void> {
+    this.run('UPDATE account_groups SET deleted_at=$now WHERE id=$id',{$id:id,$now:now()});
+    return Promise.resolve();
+  }
+
+  addGroupAccount(groupId: string, accountId: string): Promise<void> {
+    this.run('INSERT OR IGNORE INTO account_group_mappings (id,account_group_id,account_id) VALUES ($id,$gid,$aid)',
+      { $id: `${groupId}_${accountId}`, $gid: groupId, $aid: accountId });
+    return Promise.resolve();
+  }
+
+  removeGroupAccount(groupId: string, accountId: string): Promise<void> {
+    this.run('DELETE FROM account_group_mappings WHERE account_group_id=$gid AND account_id=$aid',
+      { $gid: groupId, $aid: accountId });
+    return Promise.resolve();
+  }
+
+  getGroupAccountIds(groupId: string): Promise<string[]> {
+    return Promise.resolve(this.query<{ account_id: string }>(
+      'SELECT account_id FROM account_group_mappings WHERE account_group_id=$gid', { $gid: groupId },
+    ).map((r) => r.account_id));
   }
 
   getDeletedItems(type?: 'transaction' | 'account'): Promise<DeletedItem[]> {
@@ -552,5 +593,21 @@ export class SQLiteDatabaseService implements IDatabaseService {
     return Promise.resolve(this.query<GroupBalance>(
       'SELECT g.name as groupName, COALESCE(SUM(a.balance),0) as totalBalance, COUNT(a.id) as accountCount FROM account_groups g LEFT JOIN account_group_mappings m ON m.account_group_id=g.id LEFT JOIN accounts a ON a.id=m.account_id AND a.deleted_at IS NULL WHERE g.deleted_at IS NULL GROUP BY g.id ORDER BY g.sort_order',
     ));
+  }
+
+  recalculateBalances(): Promise<void> {
+    this.run('UPDATE accounts SET balance=0,updated_at=$now',{ $now: now() });
+    const rows = this.query<Record<string, unknown>>(
+      "SELECT type,amount,source_account,dest_account FROM transactions WHERE deleted_at IS NULL ORDER BY created_at,rowid",
+    );
+    for (const row of rows) {
+      this.applyBalanceChange(
+        row.type as string,
+        row.amount as number,
+        (row.source_account as string) ?? undefined,
+        (row.dest_account as string) ?? undefined,
+      );
+    }
+    return Promise.resolve();
   }
 }

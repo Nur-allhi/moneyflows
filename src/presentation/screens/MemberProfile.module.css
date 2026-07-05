@@ -500,6 +500,30 @@
   outline-offset: 2px;
 }
 
+.obBtn {
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  height: 30px;
+}
+
+.obBtn:hover {
+  opacity: 0.85;
+}
+
+.obBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
 /* ---- Loading ---- */
 .loading {
   display: flex;

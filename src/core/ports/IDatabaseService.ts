@@ -6,6 +6,7 @@ import type { AccountGroup } from '../domain/AccountGroup';
 export interface TransactionFilter {
   memberId?: string;
   accountId?: string;
+  accountIds?: string[];
   type?: string;
   loanRef?: string;
   startDate?: string;
@@ -68,6 +69,11 @@ export interface IDatabaseService {
 
   getAccountGroups(): Promise<AccountGroup[]>;
   getAccountGroupsWithMembers(): Promise<(AccountGroup & { accountIds: string[] })[]>;
+  saveAccountGroup(group: AccountGroup): Promise<void>;
+  softDeleteAccountGroup(id: string): Promise<void>;
+  addGroupAccount(groupId: string, accountId: string): Promise<void>;
+  removeGroupAccount(groupId: string, accountId: string): Promise<void>;
+  getGroupAccountIds(groupId: string): Promise<string[]>;
 
   getDeletedItems(type?: 'transaction' | 'account'): Promise<DeletedItem[]>;
   restoreItem(id: string, type: 'transaction' | 'account'): Promise<void>;
@@ -80,6 +86,8 @@ export interface IDatabaseService {
 
   exportToFile(): Promise<void>;
   importFromFile(): Promise<void>;
+
+  recalculateBalances(): Promise<void>;
 
   getSnapshots(): SnapshotInfo[];
   restoreSnapshot(index: number): Promise<void>;

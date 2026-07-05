@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Avatar, AccountCard, LedgerTable, SegmentedTabs, GlassPanel } from '../components';
@@ -10,7 +11,7 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import type { Transaction } from '../../core/domain/Transaction';
+import { Transaction } from '../../core/domain/Transaction';
 import { formatAmount } from '../utils/format';
 import { shortDate } from '../constants/dates';
 import { ACCOUNT_TYPE_GRADIENT_THREE, displayType } from '../constants/labels';
@@ -189,16 +190,46 @@ export function MemberProfile() {
       });
     }
     const selectedAcct = memberAccounts.find((a) => a.id === selectedAccountId);
+    const hasOpeningTx = sortedTxs.some(
+      (tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true,
+    );
+
+    function isTxCredit(tx: Transaction): boolean {
+      const loanLike = ['transfer', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback', 'lend', 'repay'];
+      if (loanLike.includes(tx.type)) return tx.destAccount === selectedAccountId;
+      return tx.type === 'income';
+    }
+
+    if (hasOpeningTx) {
+      let running = 0;
+      const rows: LedgerRow[] = sortedTxs.map((tx) => {
+        const credit = isTxCredit(tx);
+        if (credit) running += tx.amount;
+        else running -= tx.amount;
+
+        const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' || tx.type === 'lend' || tx.type === 'repay' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
+
+        return {
+          id: tx.id,
+          date: shortDate(tx.date, locale),
+          description: tx.description,
+          debit: credit ? '\u2014' : formatAmount(tx.amount, locale, currency),
+          credit: credit ? formatAmount(tx.amount, locale, currency) : '\u2014',
+          balance: formatAmount(running, locale, currency),
+          type: displayType,
+        };
+      });
+      return rows.reverse();
+    }
+
     const accountBalance = selectedAcct?.balance ?? 0;
     const netChange = sortedTxs.reduce((sum, tx) => {
-      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
-      return isCredit ? sum + tx.amount : sum - tx.amount;
+      return isTxCredit(tx) ? sum + tx.amount : sum - tx.amount;
     }, 0);
-    const startBalance = accountBalance - netChange;
-    let running = startBalance;
+    let running = accountBalance - netChange;
     const rows: LedgerRow[] = sortedTxs.map((tx) => {
-      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
-      if (isCredit) running += tx.amount;
+      const credit = isTxCredit(tx);
+      if (credit) running += tx.amount;
       else running -= tx.amount;
 
       const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' || tx.type === 'lend' || tx.type === 'repay' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
@@ -207,19 +238,11 @@ export function MemberProfile() {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: tx.description,
-        debit: isCredit ? '\u2014' : formatAmount(tx.amount, locale, currency),
-        credit: isCredit ? formatAmount(tx.amount, locale, currency) : '\u2014',
+        debit: credit ? '\u2014' : formatAmount(tx.amount, locale, currency),
+        credit: credit ? formatAmount(tx.amount, locale, currency) : '\u2014',
         balance: formatAmount(running, locale, currency),
         type: displayType,
       };
-    });
-    rows.unshift({
-      date: shortDate(selectedAcct?.createdAt ?? '', locale),
-      description: 'Opening Balance',
-      debit: '\u2014',
-      credit: formatAmount(startBalance, locale, currency),
-      balance: formatAmount(startBalance, locale, currency),
-      type: 'income' as const,
     });
     return rows.reverse();
   }, [sortedTxs, displayedTxs, locale, showBalance, memberAccounts, selectedAccountId]);
@@ -234,6 +257,28 @@ export function MemberProfile() {
       useModalStore.getState().open('transaction-detail', { transaction: tx });
     }
   }, [transactions]);
+
+  const handleOpeningBalance = useCallback(() => {
+    if (!selectedAccountId) return;
+    const acct = memberAccounts.find((a) => a.id === selectedAccountId);
+    if (!acct?.memberId) return;
+    const openingTx = transactions.find(
+      (tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true,
+    );
+    if (openingTx) {
+      useModalStore.getState().open('transaction-detail', { transaction: openingTx });
+    } else if (acct.balance === 0) {
+      const amount = window.prompt('Enter opening balance amount:');
+      if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
+      const date = new Date().toISOString().slice(0, 10);
+      const tx = new Transaction(
+        uuidv4(), 'income', 'Opening Balance', Number(amount),
+        acct.memberId, date, undefined, selectedAccountId, undefined, undefined,
+        { isOpeningBalance: true },
+      );
+      useTransactionStore.getState().addTransaction(tx);
+    }
+  }, [selectedAccountId, memberAccounts, transactions]);
 
   const handleAccountClick = useCallback((acctId: string) => {
     setSelectedAccountId((prev) => prev === acctId ? null : acctId);
@@ -265,48 +310,65 @@ export function MemberProfile() {
   const txCount = accountTxs.length;
 
   const downloadPdf = useCallback(() => {
+    const isTxCredit = (tx: Transaction) => {
+      const loanLike = ['transfer', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback', 'lend', 'repay'];
+      if ((loanLike as readonly string[]).includes(tx.type)) return tx.destAccount === selectedAccountId;
+      return tx.type === 'income';
+    };
+
     const pdfRows: { date: string; type: string; description: string; debit: string; credit: string; balance: string }[] = [];
     if (!showBalance) {
       for (const tx of [...sortedTxs].reverse()) {
-        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
+        const credit = isTxCredit(tx);
         pdfRows.push({
           date: shortDate(tx.date, locale),
           type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
           description: tx.description,
-          debit: isCredit ? '' : formatAmount(tx.amount, locale, currency),
-          credit: isCredit ? formatAmount(tx.amount, locale, currency) : '',
+          debit: credit ? '' : formatAmount(tx.amount, locale, currency),
+          credit: credit ? formatAmount(tx.amount, locale, currency) : '',
           balance: '',
         });
       }
     } else {
       const selectedAcct = memberAccounts.find((a) => a.id === selectedAccountId);
-      const accountBalance = selectedAcct?.balance ?? 0;
-      const netChange = sortedTxs.reduce((sum, tx) => {
-        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
-        return isCredit ? sum + tx.amount : sum - tx.amount;
-      }, 0);
-      const startBalance = accountBalance - netChange;
-      let running = startBalance;
-      pdfRows.push({
-        date: shortDate(selectedAcct?.createdAt ?? '', locale),
-        type: 'Opening Balance',
-        description: '',
-        debit: '',
-        credit: formatAmount(startBalance, locale, currency),
-        balance: formatAmount(startBalance, locale, currency),
-      });
-      for (const tx of sortedTxs) {
-        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
-        if (isCredit) running += tx.amount;
-        else running -= tx.amount;
-        pdfRows.push({
-          date: shortDate(tx.date, locale),
-          type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-          description: tx.description,
-          debit: isCredit ? '' : formatAmount(tx.amount, locale, currency),
-          credit: isCredit ? formatAmount(tx.amount, locale, currency) : '',
-          balance: formatAmount(running, locale, currency),
-        });
+      const hasOpeningTx = sortedTxs.some(
+        (tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true,
+      );
+
+      if (hasOpeningTx) {
+        let running = 0;
+        for (const tx of sortedTxs) {
+          const credit = isTxCredit(tx);
+          if (credit) running += tx.amount;
+          else running -= tx.amount;
+          pdfRows.push({
+            date: shortDate(tx.date, locale),
+            type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+            description: tx.description,
+            debit: credit ? '' : formatAmount(tx.amount, locale, currency),
+            credit: credit ? formatAmount(tx.amount, locale, currency) : '',
+            balance: formatAmount(running, locale, currency),
+          });
+        }
+      } else {
+        const accountBalance = selectedAcct?.balance ?? 0;
+        const netChange = sortedTxs.reduce((sum, tx) => {
+          return isTxCredit(tx) ? sum + tx.amount : sum - tx.amount;
+        }, 0);
+        let running = accountBalance - netChange;
+        for (const tx of sortedTxs) {
+          const credit = isTxCredit(tx);
+          if (credit) running += tx.amount;
+          else running -= tx.amount;
+          pdfRows.push({
+            date: shortDate(tx.date, locale),
+            type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+            description: tx.description,
+            debit: credit ? '' : formatAmount(tx.amount, locale, currency),
+            credit: credit ? formatAmount(tx.amount, locale, currency) : '',
+            balance: formatAmount(running, locale, currency),
+          });
+        }
       }
     }
 
@@ -539,6 +601,18 @@ export function MemberProfile() {
               {selectedAccountId && (
                 <button className={styles.showAllBtn} onClick={() => setSelectedAccountId(null)}>All account</button>
               )}
+              {selectedAccountId && (() => {
+                const hasObTx = transactions.some(
+                  (tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true,
+                );
+                const showAdd = hasObTx || memberAccounts.find((a) => a.id === selectedAccountId)?.balance === 0;
+                if (!showAdd) return null;
+                return (
+                  <button className={styles.obBtn} onClick={handleOpeningBalance}>
+                    {hasObTx ? 'Opening Balance' : 'Add Opening'}
+                  </button>
+                );
+              })()}
             </div>
           </div>
           <LedgerTable rows={filteredLedger} desktop showBalance={showBalance} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} />
