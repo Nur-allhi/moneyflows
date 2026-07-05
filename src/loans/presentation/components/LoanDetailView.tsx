@@ -246,10 +246,6 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
 
   return (
     <div className={styles.container}>
-      <button className={styles.backBtn} onClick={() => navigate('/loans')}>
-        {'\u2190'} All Loans
-      </button>
-
       <div className={styles.summary}>
         <div className={styles.summaryTop}>
           <div className={styles.summaryInfo}>

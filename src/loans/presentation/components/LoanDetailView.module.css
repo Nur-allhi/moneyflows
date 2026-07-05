@@ -4,21 +4,6 @@
   gap: 20px;
 }
 
-.backBtn {
-  background: none;
-  border: none;
-  color: var(--color-text-secondary);
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 0;
-  text-align: left;
-  transition: color var(--transition-fast);
-}
-
-.backBtn:hover { color: var(--color-primary); }
-
 .summary {
   display: flex;
   flex-direction: column;
