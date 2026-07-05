@@ -335,3 +335,241 @@
     gap: 14px;
   }
 }
+
+/* ---- Mobile-only elements ---- */
+.mobHeader,
+.searchBar,
+.cardAvatar,
+.mobSheetFooter,
+.mobSheetBtn,
+.mobSheetDanger {
+  display: none;
+}
+
+.backBtn,
+.addCircleBtn,
+.searchWrap,
+.searchIcon,
+.searchClear,
+.pageTitle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .page :global(.app-header) {
+    display: none;
+  }
+
+  .page {
+    gap: 0;
+  }
+
+  .header {
+    display: none;
+  }
+
+  .mobHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 4px;
+    min-height: 52px;
+    justify-content: space-between;
+  }
+
+  .backBtn {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    backdrop-filter: blur(8px);
+    color: var(--color-text);
+    cursor: pointer;
+    place-items: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .backBtn:active {
+    transform: scale(0.92);
+  }
+
+  .pageTitle {
+    display: block;
+    flex: 1;
+    font: 600 18px var(--font-display);
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+  }
+
+  .addCircleBtn {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, var(--color-primary), oklch(50% 0.2 290));
+    color: #fff;
+    cursor: pointer;
+    place-items: center;
+    font-size: 22px;
+    font-weight: 300;
+    flex-shrink: 0;
+    box-shadow: 0 2px 12px oklch(62% 0.22 290 / 0.25);
+    transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .addCircleBtn:active {
+    transform: scale(0.92);
+  }
+
+  .searchBar {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .searchWrap {
+    display: block;
+    position: relative;
+  }
+
+  .searchIcon {
+    display: flex;
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-secondary);
+    pointer-events: none;
+  }
+
+  .searchWrap input {
+    width: 100%;
+    padding: 14px 16px;
+    padding-left: 44px;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    backdrop-filter: blur(12px);
+    color: var(--color-text);
+    font: 14px var(--font-body);
+    outline: none;
+    -webkit-appearance: none;
+    transition: border-color 0.2s;
+  }
+
+  .searchWrap input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-glow);
+  }
+
+  .searchWrap input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.6;
+  }
+
+  .searchClear {
+    display: grid;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: oklch(100% 0 0 / 0.1);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    place-items: center;
+    transition: background 0.15s;
+  }
+
+  .searchClear:active {
+    background: oklch(100% 0 0 / 0.18);
+  }
+
+  .searchClear svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card {
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+
+  .cardAvatar {
+    display: flex;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font: 700 16px var(--font-display);
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .cardName {
+    font-size: 15px;
+  }
+
+  .cardTag {
+    font-size: 11px;
+  }
+
+  .cardBalance {
+    font-size: 15px;
+  }
+
+  .empty {
+    padding: 48px 24px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .mobSheetFooter {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0 4px;
+    justify-content: stretch;
+  }
+
+  .mobSheetBtn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: 500 13px var(--font-display);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+  }
+
+  .mobSheetBtn:active {
+    background: oklch(100% 0 0 / 0.06);
+  }
+
+  .mobSheetDanger {
+    color: var(--color-coral);
+    border-color: oklch(62% 0.18 30 / 0.3);
+  }
+}

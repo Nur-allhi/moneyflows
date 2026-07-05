@@ -1174,3 +1174,16 @@
 
 ### Status
 - T-072 complete. **Next: T-073** — MemberList mobile (3-column avatar grid, search, add).
+
+## Session 2026-07-05 22:15
+
+### Changes
+- **T-077**: GroupsListScreen mobile (cards, search, detail bottom sheet)
+  - `GroupsListScreen.tsx`: Added `groupGradient()` for avatar colors, `mobileSearch` state, `isMobile` detection via resize listener, `.mobHeader` (back + title + add circle) for mobile, `.searchBar` (inline search with clear), `.cardAvatar` on each card row with gradient initial, `BottomSheet` for detail view on mobile (with Ledger/Edit/Delete action buttons), kept Modal for desktop detail
+  - `GroupsListScreen.module.css`: Added ~240 lines of mobile styles — mobHeader/searchBar/cardAvatar/mobSheetFooter all hidden on desktop, shown within `@media (max-width: 768px)` block; matched LoansScreen pattern for backBtn, addCircleBtn, searchWrap
+
+### Skill(s) Used
+- `senior-frontend` — Mobile-first responsive layout, component composition, TSX edits
+
+### Status
+- T-077 complete. **Next: T-078** — GroupLedgerScreen mobile (balance hero, ledger, infinite scroll).
