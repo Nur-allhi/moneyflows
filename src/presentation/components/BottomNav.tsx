@@ -1,10 +1,11 @@
+import { type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import styles from './BottomNav.module.css';
 
 interface BottomNavItem {
   path: string;
   label: string;
-  icon: string;
+  icon: ReactNode;
 }
 
 interface BottomNavProps {
