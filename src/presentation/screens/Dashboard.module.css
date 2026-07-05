@@ -129,7 +129,38 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 20px 4px;
+  padding: 12px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+  border-radius: 8px;
+}
+
+.memberHead:hover {
+  background: oklch(100% 0 0 / 0.03);
+}
+
+.memberTotal {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  margin-left: auto;
+}
+
+.memberChevron {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+  transition: transform 0.25s;
+}
+
+.memberChevron svg { width: 12px; height: 12px; }
+
+.chevronOpen {
+  transform: rotate(180deg);
 }
 
 .miniAvatar {
@@ -154,7 +185,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 4px 20px 12px 54px;
+  padding: 2px 20px 12px 54px;
 }
 
 .acctRow {

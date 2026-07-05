@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SettingsModal } from '../components';
 import { useAnimatedValue } from '../hooks';
@@ -155,6 +155,25 @@ export function Dashboard() {
 
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
 
+  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
+
+  const toggleMember = useCallback((mid: string) => {
+    setExpandedMembers((prev) => {
+      const next = new Set(prev);
+      if (next.has(mid)) next.delete(mid);
+      else next.add(mid);
+      return next;
+    });
+  }, []);
+
+  const memberTotalBalance = useMemo(() => {
+    const totals = new Map<string, number>();
+    for (const [mid, accts] of accountsByMember) {
+      totals.set(mid, accts.reduce((sum, a) => sum + a.balance, 0));
+    }
+    return totals;
+  }, [accountsByMember]);
+
   if (loading) {
     return (
       <div className={styles.dashboard}>
@@ -280,37 +299,47 @@ export function Dashboard() {
               <p className="empty-state-text">No accounts yet</p>
             </div>
           ) : (
-            [...accountsByMember.entries()].map(([mid, accts]) => {
-              const member = memberById[mid] ?? memberById.__unassigned__;
-              const memberIdx = member ? internalMembers.indexOf(member) : -1;
-              const grad = memberIdx >= 0 ? MEMBER_GRADIENTS[memberIdx % MEMBER_GRADIENTS.length] : MEMBER_GRADIENTS[0];
-              const initial = member ? (member.shortName ?? member.name)[0] : '?';
-              const mName = member ? member.name : 'Unassigned';
-              return (
-                <div key={mid} className={styles.memberGroup}>
-                  <div className={styles.memberHead} onClick={() => navigate(`/member/${mid}`)}>
-                    <div className={styles.miniAvatar} style={{ background: grad }}>{initial}</div>
-                    <span className={styles.mname}>{mName}</span>
-                  </div>
-                  <div className={styles.memberAccounts}>
-                    {accts.map((acct) => (
-                      <div key={acct.id} className={styles.acctRow} onClick={() => navigate(`/member/${mid}?account=${acct.id}`)}>
-                        <div
-                          className={styles.acctIcon}
-                          style={{ background: ACCOUNT_TYPE_GRADIENT[acct.type as AccountType] }}
-                        >
-                          {acct.name.slice(0, 2).toUpperCase()}
-                        </div>
-                        <span className={styles.acctName}>{acct.name}</span>
-                        <span className={styles.acctBalance}>
-                          {formatAmount(acct.balance, locale, currency)}
-                        </span>
+              [...accountsByMember.entries()].map(([mid, accts]) => {
+                const member = memberById[mid] ?? memberById.__unassigned__;
+                const memberIdx = member ? internalMembers.indexOf(member) : -1;
+                const grad = memberIdx >= 0 ? MEMBER_GRADIENTS[memberIdx % MEMBER_GRADIENTS.length] : MEMBER_GRADIENTS[0];
+                const initial = member ? (member.shortName ?? member.name)[0] : '?';
+                const mName = member ? member.name : 'Unassigned';
+                const expanded = expandedMembers.has(mid);
+                const totalBalance = memberTotalBalance.get(mid) ?? 0;
+                return (
+                  <div key={mid} className={styles.memberGroup}>
+                    <div className={styles.memberHead} onClick={() => toggleMember(mid)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleMember(mid)}>
+                      <div className={styles.miniAvatar} style={{ background: grad }}>{initial}</div>
+                      <span className={styles.mname}>{mName}</span>
+                      <span className={styles.memberTotal}>{formatAmount(totalBalance, locale, currency)}</span>
+                      <span className={`${styles.memberChevron} ${expanded ? styles.chevronOpen : ''}`}>
+                        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 4.5l3 3 3-3" />
+                        </svg>
+                      </span>
+                    </div>
+                    {expanded && (
+                      <div className={styles.memberAccounts}>
+                        {accts.map((acct) => (
+                          <div key={acct.id} className={styles.acctRow} onClick={(e) => { e.stopPropagation(); navigate(`/member/${mid}?account=${acct.id}`); }}>
+                            <div
+                              className={styles.acctIcon}
+                              style={{ background: ACCOUNT_TYPE_GRADIENT[acct.type as AccountType] }}
+                            >
+                              {acct.name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <span className={styles.acctName}>{acct.name}</span>
+                            <span className={styles.acctBalance}>
+                              {formatAmount(acct.balance, locale, currency)}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
-                </div>
-              );
-            })
+                );
+              })
           )}
         </div>
 
