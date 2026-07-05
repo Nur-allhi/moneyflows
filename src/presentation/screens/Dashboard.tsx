@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SettingsModal } from '../components';
+import { SettingsModal, FAB } from '../components';
 import { useAnimatedValue } from '../hooks';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
@@ -279,6 +279,7 @@ export function Dashboard() {
             {formatAmount(thisMonthIncome, locale, currency)}
           </span>
         </div>
+        <div className={styles.flowDivider} />
         <div className={styles.monthStat}>
           <span className={styles.monthStatLabel}>Expenses</span>
           <span className={styles.monthStatValue} style={{ color: 'var(--color-coral)' }}>
@@ -291,6 +292,9 @@ export function Dashboard() {
             {thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)}
           </span>
         </div>
+      </div>
+      <div className={styles.flowNet}>
+        {'\u2197'} Net {thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)} this month
       </div>
 
       <div className={styles.actions}>
@@ -392,7 +396,7 @@ export function Dashboard() {
                   onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}
                 >
                   <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
-                  <span className={styles.txType}>{displayTxType(tx.type)}</span>
+                  <span className={styles.txType} data-type={tx.type}>{displayTxType(tx.type)}</span>
                   <span className={styles.txDesc}>{tx.description}</span>
                   <span className={styles.txAmount}>
                     <span className={`${styles.txArrow} ${tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? styles.txArrowIn : styles.txArrowOut}`}>
@@ -456,6 +460,7 @@ export function Dashboard() {
       </div>
 
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <FAB />
     </div>
   );
 }

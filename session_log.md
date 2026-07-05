@@ -1028,3 +1028,149 @@
 
 ### Status
 - **All changes compile and build.** Ready for next work.
+
+## Session 2026-07-05 04:10
+
+### Changes
+- Read all 12 mobile HTML files in `DESIGN_FILES/Mobile_Screen/` (dashboard, member, member-profile, loans, loan-detail, groups, group-ledger, recycle-bin, settings, index, modals, moneyflows-launcher)
+- Read `DESIGN_FILES/Mobile_Screen/MOBILE_DESIGN.md` for design spec overview
+- Read current `docs/TICKETS.md` to understand existing ticket structure
+- Created `docs/MOBILE_UI_PLAN.md` — detailed implementation plan for Phase 9 (19 tickets, T-065–T-083)
+  - Foundation (6 tickets): body layout, header, bottom nav, bottom sheet, FAB, glass card standards
+  - Core Screens (6 tickets): splash, dashboard, member list, member profile, loans, loan detail
+  - Secondary Screens (4 tickets): groups list, group ledger, recycle bin, settings
+  - Modals (3 tickets): tx detail, tx form, shared modals
+  - Each ticket includes design source reference, files, and acceptance criteria
+- Updated `docs/TICKETS.md` — appended Phase 9 with all 19 mobile tickets (T-065–T-083)
+- Updated `AGENTS.md` §5 — added Phase 9 ticket table, T-065 as next up
+
+### Skill(s) Used
+- `frontend-design` — Mobile CSS architecture planning, glass card standardization
+- `ui-ux-pro-max` — Bottom sheet, FAB, carousel, typewriter animation specs
+- `senior-frontend` — Component architecture for mobile-override pattern
+
+### Status
+- Phase 9 planned and documented. **Next: T-065** — Mobile body layout + safe areas + bg-glow.
+
+## Session 2026-07-05 18:00
+
+### Changes
+- **T-065**: Mobile body layout + safe areas + bg-glow
+  - `index.html`: Added `viewport-fit=cover` to viewport meta tag for iOS safe-area support
+  - `src/presentation/styles/reset.css`: Added `background-attachment: fixed` to body for fixed glow; added mobile body padding `0 16px` + `calc(80px + env(safe-area-inset-bottom))` via `@media (max-width: 768px)`
+  - `src/presentation/styles/tokens.css`: Added `--font-size-base: clamp(14px, 3.5vw, 16px)` token override in mobile media query
+  - `src/App.module.css`: Updated `.main` mobile padding from `16px` to `16px 0` (body handles side padding), bottom padding uses `env(safe-area-inset-bottom)`
+
+### Skill(s) Used
+- `frontend-design` — Mobile layout CSS, safe-area handling, bg-glow fix
+- `senior-frontend` — CSS modular architecture, responsive breakpoint coordination
+
+### Status
+- T-065 complete. **Next: T-066** — Mobile Header with back, search, settings.
+
+## Session 2026-07-05 18:05
+
+### Changes
+- **T-066**: Mobile Header with back, search, settings
+  - `Header.tsx`: Added mobile search toggle (`setSearchVisible`), settings dropdown with outside-click close, SVG gear icon for settings, SVG search icon. Desktop layout unchanged (mobile buttons hidden via CSS, notification/add buttons hidden on mobile)
+  - `Header.module.css`: Added mobile-only styles at `≤768px` — 40px circle back/search/settings buttons, transparent background (no glass panel), breadcrumb hidden, date/notif/add hidden. Added settings dropdown (200px, glass backdrop, 14px radius) with 3 items (Launcher, Recycle Bin, Settings). Search bar toggles between `searchHidden`/`searchVisible`. Active/pressed states with `scale(0.92)`
+
+### Skill(s) Used
+- `senior-frontend` — React state management (dropdown toggle, outside-click, search toggle)
+- `ui-ux-pro-max` — Mobile header UX, icon sizing, dropdown placement, interaction states
+
+### Status
+- T-066 complete. **Next: T-067** — Mobile BottomNav (5 tabs, 64px, fixed).
+
+## Session 2026-07-05 18:08
+
+### Changes
+- **T-067**: Mobile BottomNav (5 tabs, 64px, fixed)
+  - `BottomNav.module.css`: Rewrote with `height: 64px`, `padding-bottom: env(safe-area-inset-bottom)`, min 44×44px touch targets, z-index 200, hidden on desktop (`≥769px`). Removed hover/focus styles that don't apply on mobile
+  - `App.module.css`: Removed `.bottomNav` class (responsive control now lives in `BottomNav.module.css`)
+  - `App.tsx`: Reordered bottom nav items to match design spec order (Home, Members, Loans, Groups, Recycle); removed unused `className` prop from `<BottomNav>`
+
+### Skill(s) Used
+- `frontend-design` — Mobile nav layout, safe-area padding, 44px touch targets
+- `ui-ux-pro-max` — Tab order, active state color, icon sizing
+
+### Status
+- T-067 complete. **Next: T-068** — BottomSheet component (slide-up, drag handle).
+
+## Session 2026-07-05 18:10
+
+### Changes
+- **T-068**: BottomSheet component (slide-up, drag handle)
+  - `BottomSheet.tsx`: Made `title` prop optional; removed X close button (close via overlay click or Escape key); conditional header rendering
+  - `BottomSheet.module.css`: Updated overlay to `oklch(0% 0 0 / 0.6)` + `backdrop-filter: blur(4px)`, sheet `max-height: 90%`, animation `0.35s ease-out`, handle `oklch(100% 0 0 / 0.2)` with 2px radius, removed unused `.close` styles
+
+### Skill(s) Used
+- `frontend-design` — Modal overlay blur, bottom sheet border-radius, handle styling
+- `ui-ux-pro-max` — Animation timing, touch-friendly handle, overlay opacity
+
+### Status
+- T-068 complete. **Next: T-069** — FAB component (Dashboard only).
+
+## Session 2026-07-05 18:12
+
+### Changes
+- **T-069**: FAB component (Dashboard only)
+  - Created `src/presentation/components/FAB.tsx` — 56px circle with "+" icon, opens transaction-form modal
+  - Created `src/presentation/components/FAB.module.css` — fixed bottom-right positioning (`calc(80px + env(safe-area-inset-bottom))`), violet gradient, `box-shadow` glow, `:active { transform: scale(0.92) }`, hidden on desktop via `@media (min-width: 769px)`
+  - Added FAB to `components/index.ts` export
+  - Wired FAB into `Dashboard.tsx` — renders below SettingsModal, automatically only on Dashboard route
+
+### Skill(s) Used
+- `frontend-design` — FAB positioning, gradient, shadow, active state
+- `ui-ux-pro-max` — FAB sizing, icon weight, z-index layering
+
+### Status
+- T-069 complete. **Next: T-070** — Standardize glass cards for mobile (16px, 20px padding).
+
+## Session 2026-07-05 18:15
+
+### Changes
+- **T-070**: Standardize glass cards for mobile (16px radius, 20px padding)
+  - `glassmorphism.css`: Added `@media (max-width: 768px)` override setting `.glass-panel` / `.glass-card` to `border-radius: 16px`, `backdrop-filter: blur(16px)`. Also sets `.glass-card` padding to `20px`. Desktop remains unaffected.
+
+### Skill(s) Used
+- `frontend-design` — CSS responsive overrides, mobile glass card standardization
+
+### Status
+- T-070 complete. **Next: T-071** — SplashScreen typewriter animation (mobile-first).
+
+## Session 2026-07-05 18:20
+
+### Changes
+- **T-071**: SplashScreen typewriter animation (mobile-first)
+  - `SplashScreen.tsx`: Rewrote with two-line typewriter ("Money" then "Flows" with 400ms line pause), letter-by-letter at 80ms interval, 300ms start delay. Gradient text via CSS `background-clip`, cursor blink at 0.8s step-end. Fade out 0.5s after min 2s + DB ready
+  - `SplashScreen.module.css`: Updated text to 36px/1.3, 700 weight, full gradient (`var(--color-primary)` → `oklch(55% 0.25 290)`), text-shadow glow (40px + 80px). Cursor: 3px wide, 36px tall, `box-shadow: 0 0 8px var(--color-primary)`, `overflow: hidden`. Added `background-image: radial-gradient(...)` glow to overlay
+
+### Skill(s) Used
+- `frontend-design` — Typewriter animation logic, gradient text, text-shadow glow, cursor design
+- `ui-ux-pro-max` — Animation timing (80ms char, 400ms line pause, 300ms start), 0.8s blink, 0.5s fade
+
+### Status
+- T-071 complete. **Next: T-072** — Dashboard mobile layout (total assets, metrics, accordion, FAB).
+
+## Session 2026-07-05 18:30
+
+### Changes
+- **T-072**: Dashboard mobile layout (total assets, metrics, accordion, FAB)
+  - `Dashboard.module.css`: Added `@media (max-width: 768px)` block with ~60 lines of mobile overrides:
+    - **Total Assets**: First metric card spans full 2-col grid, centered, 24px mono bold, "TOTAL ASSETS" uppercase label, change indicator hidden
+    - **Metrics**: 2-col grid for Cash (gold) + Loans Out (coral), simplified cards without change indicators
+    - **Flow Summary**: Flex row with Income | divider | Expenses, Net stat hidden, `flowNet` shown below with ↗ arrow
+    - **Actions row**: Hidden on mobile (FAB replaces)
+    - **Panels**: border-radius 16px, headers 15px
+    - **Transactions**: date hidden, type rendered as 36×36 colored icon (green/red/violet based on `data-type` attribute)
+    - **Loans**: progress bar 6px with teal gradient fill, rows with bottom border
+    - **Content gap**: 12px
+  - `Dashboard.tsx`: Added `.flowDivider` element between Income/Expenses (hidden on desktop), `.flowNet` below monthSummary (hidden on desktop, shown on mobile with ↗ arrow). Added `data-type` attribute to txType span for icon coloring
+
+### Skill(s) Used
+- `ui-ux-pro-max` — Mobile layout restructuring, metric card sizing, flow summary composition
+- `senior-frontend` — CSS grid reordering with `grid-column: 1 / -1`, data-attribute selectors for tx type icons
+
+### Status
+- T-072 complete. **Next: T-073** — MemberList mobile (3-column avatar grid, search, add).

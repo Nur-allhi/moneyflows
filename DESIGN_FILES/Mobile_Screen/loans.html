@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Loans — MoneyFlows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(14% 0.015 260);
+  --surface: oklch(22% 0.02 260 / 0.55);
+  --fg: oklch(92% 0.008 260);
+  --muted: oklch(60% 0.02 260);
+  --border: oklch(100% 0 0 / 0.10);
+  --violet: oklch(62% 0.22 290);
+  --teal: oklch(65% 0.15 170);
+  --coral: oklch(62% 0.18 30);
+  --gold: oklch(75% 0.15 85);
+  --purple: oklch(55% 0.18 290);
+  --success: oklch(65% 0.15 150);
+  --danger: oklch(58% 0.18 30);
+  --font-display: 'Outfit', -apple-system, system-ui, sans-serif;
+  --font-body: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-size-base: clamp(14px, 3.5vw, 16px);
+  --bg-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font: var(--font-size-base)/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+body {
+  background-image: var(--bg-glow);
+  background-attachment: fixed;
+  padding: 0 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  min-height: 52px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  color: var(--fg);
+  display: grid; place-items: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.back-btn:active { transform: scale(0.92); background: oklch(100% 0 0 / 0.08); }
+.header-title {
+  font: 600 18px var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.add-header-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  display: grid; place-items: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  box-shadow: 0 2px 12px oklch(62% 0.22 290 / 0.25);
+}
+.add-header-btn:active { transform: scale(0.92); }
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+.search-bar { margin-bottom: 4px; }
+.search-bar input {
+  width: 100%;
+  padding: 14px 16px;
+  padding-left: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  color: var(--fg);
+  font: 14px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.2s;
+}
+.search-bar input:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+}
+.search-bar input::placeholder { color: var(--muted); }
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 16px;
+  pointer-events: none;
+}
+.search-wrap { position: relative; }
+
+/* Pill filters */
+.pill-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+}
+.pill-scroll::-webkit-scrollbar { display: none; }
+.pill-filter {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  color: var(--muted);
+  font: 500 12px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.pill-filter.active {
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  border-color: transparent;
+}
+.pill-filter:active { transform: scale(0.95); }
+
+/* Summary line */
+.summary-line {
+  font: 500 14px var(--font-body);
+  color: var(--fg);
+}
+.summary-line .sum-val {
+  font: 600 16px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--coral);
+}
+
+/* Loan card */
+.loan-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.loan-card:active { transform: scale(0.98); }
+.loan-card:hover { border-color: var(--violet); }
+.loan-card .loan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.loan-card .loan-debtor {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.loan-card .loan-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font: 600 16px var(--font-display);
+  color: #fff;
+  flex-shrink: 0;
+}
+.loan-card .loan-name {
+  font: 500 15px var(--font-body);
+  color: var(--fg);
+}
+.loan-card .loan-outstanding {
+  font: 600 16px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--coral);
+}
+.loan-card .loan-progress {
+  margin-bottom: 10px;
+}
+.loan-card .loan-progress .bar-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: oklch(100% 0 0 / 0.08);
+  overflow: hidden;
+}
+.loan-card .loan-progress .bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--teal), oklch(65% 0.15 170 / 0.6));
+  transition: width 0.4s ease;
+}
+.loan-card .loan-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.loan-card .loan-pct {
+  font: 500 11px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.loan-card .loan-badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font: 500 10px var(--font-body);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.loan-card .loan-badge.active { background: oklch(62% 0.18 30 / 0.15); color: var(--coral); }
+.loan-card .loan-badge.partial { background: oklch(75% 0.15 85 / 0.15); color: var(--gold); }
+.loan-card .loan-badge.settled { background: oklch(65% 0.15 170 / 0.15); color: var(--teal); }
+
+/* Empty state */
+.empty-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+.empty-state.visible { display: flex; }
+.empty-state .empty-icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: oklch(55% 0.18 290 / 0.15);
+  display: grid; place-items: center;
+  font-size: 28px;
+  color: var(--purple);
+}
+.empty-state .empty-title {
+  font: 600 16px var(--font-display);
+  color: var(--fg);
+}
+.empty-state .empty-desc {
+  font: 400 13px var(--font-body);
+  color: var(--muted);
+}
+.empty-state .empty-btn {
+  margin-top: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  font: 600 14px var(--font-display);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.empty-state .empty-btn:active { opacity: 0.9; }
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 200;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px; min-height: 44px;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: 400 10px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--violet); }
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 300;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  width: 100%;
+  max-height: 90%;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 20px;
+  animation: slideUp 0.35s ease-out;
+  overflow-y: auto;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: oklch(100% 0 0 / 0.2);
+  margin: 0 auto 16px;
+}
+.modal-title {
+  font: 600 16px var(--font-display);
+  color: var(--fg);
+  margin-bottom: 16px;
+}
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font: 400 11px var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font: 14px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+}
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  font: 600 15px var(--font-display);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.submit-btn:active { opacity: 0.9; }
+.loan-detail-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font: 700 24px var(--font-display);
+  margin: 0 auto 12px;
+}
+.loan-detail-name {
+  text-align: center;
+  font: 600 18px var(--font-display);
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+.loan-detail-sub {
+  text-align: center;
+  font: 400 12px var(--font-body);
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.loan-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.loan-detail-row:last-child { border-bottom: none; }
+.loan-detail-row .det-label {
+  font: 400 13px var(--font-body);
+  color: var(--muted);
+}
+.loan-detail-row .det-val {
+  font: 500 14px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+.loan-detail-row .det-val.coral { color: var(--coral); }
+.loan-detail-row .det-val.teal { color: var(--teal); }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="window.location.href='dashboard.html'" aria-label="Back">&#8592;</button>
+    <span class="header-title">Loans</span>
+  </div>
+  <button class="add-header-btn" onclick="openAddLoan()" aria-label="Add Loan">+</button>
+</div>
+
+<div class="search-bar">
+  <div class="search-wrap">
+    <span class="search-icon">&#8981;</span>
+    <input type="text" id="searchInput" placeholder="Search debtor..." oninput="filterLoans()" />
+  </div>
+</div>
+
+<!-- Filter pills -->
+<div class="pill-scroll" id="pillFilters">
+  <button class="pill-filter active" data-status="active" onclick="switchFilter('active')">Active</button>
+  <button class="pill-filter" data-status="settled" onclick="switchFilter('settled')">Settled</button>
+  <button class="pill-filter" data-status="all" onclick="switchFilter('all')">All</button>
+</div>
+
+<!-- Summary -->
+<div class="glass" style="padding:12px 20px;">
+  <div class="summary-line">Total Active: <span class="sum-val" id="totalActive">&#2547;8,200</span></div>
+</div>
+
+<div id="loanList" class="scroll-content" style="padding-bottom:0;"></div>
+
+<div class="empty-state" id="emptyActiveState">
+  <div class="empty-icon">&#9679;</div>
+  <div class="empty-title">No active loans</div>
+  <div class="empty-desc">All loans have been settled. Tap + to add a new loan.</div>
+  <button class="empty-btn" onclick="openAddLoan()">Create Loan</button>
+</div>
+
+<div class="empty-state" id="emptyAllState">
+  <div class="empty-icon">&#9665;</div>
+  <div class="empty-title">Create your first loan</div>
+  <div class="empty-desc">Track money lent to friends and family. Set amounts, repayment progress, and keep records.</div>
+  <button class="empty-btn" onclick="openAddLoan()">Create First Loan</button>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item" onclick="window.location.href='dashboard.html'">
+    <span class="nav-icon">&#9632;</span>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='member.html'">
+    <span class="nav-icon">&#9679;</span>
+    <span>Members</span>
+  </button>
+  <button class="nav-item active">
+    <span class="nav-icon">&#9665;</span>
+    <span>Loans</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='groups.html'">
+    <span class="nav-icon">&#9630;</span>
+    <span>Groups</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='recycle-bin.html'">
+    <span class="nav-icon">&#9851;</span>
+    <span>Bin</span>
+  </button>
+</nav>
+
+<!-- Loan Detail Modal -->
+<div class="modal-overlay" id="loanDetailModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="loanDetailBody"></div>
+    <button onclick="closeModal('loanDetailModal')" style="width:100%;margin-top:20px;padding:14px;border:none;border-radius:12px;background:var(--surface);color:var(--fg);font:500 14px var(--font-body);cursor:pointer;border:1px solid var(--border);">Close</button>
+  </div>
+</div>
+
+<!-- Add Loan Modal -->
+<div class="modal-overlay" id="addLoanModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Loan</div>
+    <div class="form-group">
+      <label>Debtor Name</label>
+      <input type="text" id="loanNameInput" placeholder="e.g. Uncle John" />
+    </div>
+    <div class="form-group">
+      <label>Amount (BDT)</label>
+      <input type="number" inputmode="numeric" id="loanAmountInput" placeholder="0" />
+    </div>
+    <button class="submit-btn" onclick="addLoan()">Add Loan</button>
+  </div>
+</div>
+
+<script>
+var loans = [
+  {
+    id: 'l1',
+    name: 'Uncle John',
+    initials: 'UJ',
+    avatar: '#c96442',
+    amount: 5000,
+    repaid: 3250,
+    status: 'partial',
+    date: '10 Jan 2026'
+  },
+  {
+    id: 'l2',
+    name: 'BTC',
+    initials: 'BT',
+    avatar: '#6b5cf7',
+    amount: 355000,
+    repaid: 88750,
+    status: 'partial',
+    date: '05 Dec 2025'
+  },
+  {
+    id: 'l3',
+    name: 'Friend Alex',
+    initials: 'FA',
+    avatar: '#17a34a',
+    amount: 3200,
+    repaid: 3200,
+    status: 'settled',
+    date: '20 Nov 2025'
+  },
+  {
+    id: 'l4',
+    name: 'Sister Maya',
+    initials: 'SM',
+    avatar: '#d97757',
+    amount: 2000,
+    repaid: 2000,
+    status: 'settled',
+    date: '01 Oct 2025'
+  },
+  {
+    id: 'l5',
+    name: 'Cousin Rahim',
+    initials: 'CR',
+    avatar: '#6366f1',
+    amount: 1500,
+    repaid: 0,
+    status: 'active',
+    date: '15 Mar 2026'
+  }
+];
+
+var currentFilter = 'active';
+
+function getLoanProgress(loan) {
+  return Math.min(100, Math.round((loan.repaid / loan.amount) * 100));
+}
+
+function getBadge(status) {
+  if (status === 'active') return '<span class="loan-badge active">Active</span>';
+  if (status === 'partial') return '<span class="loan-badge partial">Partial</span>';
+  return '<span class="loan-badge settled">Settled</span>';
+}
+
+function renderLoans(list) {
+  var container = document.getElementById('loanList');
+  var emptyActive = document.getElementById('emptyActiveState');
+  var emptyAll = document.getElementById('emptyAllState');
+  container.innerHTML = '';
+
+  if (list.length === 0) {
+    if (currentFilter === 'all') {
+      emptyActive.classList.remove('visible');
+      emptyAll.classList.add('visible');
+    } else {
+      emptyAll.classList.remove('visible');
+      emptyActive.classList.add('visible');
+    }
+    return;
+  }
+
+  emptyActive.classList.remove('visible');
+  emptyAll.classList.remove('visible');
+
+  list.forEach(function(loan) {
+    var pct = getLoanProgress(loan);
+    var card = document.createElement('div');
+    card.className = 'loan-card';
+    card.onclick = function() { window.location.href = 'loan-detail.html?id=' + loan.id; };
+    card.innerHTML =
+      '<div class="loan-header">' +
+        '<div class="loan-debtor">' +
+          '<div class="loan-avatar" style="background:linear-gradient(135deg,' + loan.avatar + ',#00000040);">' + loan.initials + '</div>' +
+          '<div class="loan-name">' + loan.name + '</div>' +
+        '</div>' +
+        '<div class="loan-outstanding">&#2547;' + formatNum(loan.amount - loan.repaid) + '</div>' +
+      '</div>' +
+      '<div class="loan-progress">' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;"></div></div>' +
+      '</div>' +
+      '<div class="loan-footer">' +
+        '<span class="loan-pct">' + pct + '% repaid</span>' +
+        getBadge(loan.status) +
+      '</div>';
+    container.appendChild(card);
+  });
+
+  updateSummary();
+}
+
+function updateSummary() {
+  var total = loans
+    .filter(function(l) { return l.status !== 'settled'; })
+    .reduce(function(s, l) { return s + (l.amount - l.repaid); }, 0);
+  document.getElementById('totalActive').innerHTML = '&#2547;' + formatNum(total);
+}
+
+function switchFilter(status) {
+  currentFilter = status;
+  document.querySelectorAll('#pillFilters .pill-filter').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelector('#pillFilters .pill-filter[data-status="' + status + '"]').classList.add('active');
+  filterLoans();
+}
+
+function filterLoans() {
+  var q = document.getElementById('searchInput').value.toLowerCase().trim();
+  var list = loans;
+
+  if (currentFilter !== 'all') {
+    if (currentFilter === 'active') {
+      list = list.filter(function(l) { return l.status === 'active' || l.status === 'partial'; });
+    } else {
+      list = list.filter(function(l) { return l.status === 'settled'; });
+    }
+  }
+
+  if (q) list = list.filter(function(l) { return l.name.toLowerCase().includes(q); });
+  renderLoans(list);
+}
+
+function openLoanDetail(loan) {
+  var pct = getLoanProgress(loan);
+  var body = document.getElementById('loanDetailBody');
+  body.innerHTML =
+    '<div class="loan-detail-avatar" style="background:linear-gradient(135deg,' + loan.avatar + ',#00000040);">' + loan.initials + '</div>' +
+    '<div class="loan-detail-name">' + loan.name + '</div>' +
+    '<div class="loan-detail-sub">' + getBadge(loan.status) + '</div>' +
+    '<div class="loan-detail-row"><span class="det-label">Loan Amount</span><span class="det-val">&#2547;' + formatNum(loan.amount) + '</span></div>' +
+    '<div class="loan-detail-row"><span class="det-label">Repaid</span><span class="det-val teal">&#2547;' + formatNum(loan.repaid) + '</span></div>' +
+    '<div class="loan-detail-row"><span class="det-label">Outstanding</span><span class="det-val coral">&#2547;' + formatNum(loan.amount - loan.repaid) + '</span></div>' +
+    '<div class="loan-detail-row"><span class="det-label">Progress</span><span class="det-val">' + pct + '%</span></div>' +
+    '<div class="loan-detail-row"><span class="det-label">Started</span><span class="det-val">' + loan.date + '</span></div>';
+  document.getElementById('loanDetailModal').classList.add('open');
+}
+
+function openAddLoan() {
+  document.getElementById('loanNameInput').value = '';
+  document.getElementById('loanAmountInput').value = '';
+  document.getElementById('addLoanModal').classList.add('open');
+}
+
+function addLoan() {
+  var name = document.getElementById('loanNameInput').value.trim();
+  var amt = parseFloat(document.getElementById('loanAmountInput').value);
+  if (!name || !amt) return;
+  var initials = name.split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+  var colors = ['#c96442', '#6b5cf7', '#17a34a', '#d97757', '#6366f1', '#0ea5e9'];
+  loans.push({
+    id: 'l' + Date.now(),
+    name: name,
+    initials: initials,
+    avatar: colors[loans.length % colors.length],
+    amount: amt,
+    repaid: 0,
+    status: 'active',
+    date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  });
+  document.getElementById('loanNameInput').value = '';
+  document.getElementById('loanAmountInput').value = '';
+  closeModal('addLoanModal');
+  filterLoans();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function formatNum(n) {
+  return n.toLocaleString('en-IN');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+filterLoans();
+</script>
+</body>
+</html>

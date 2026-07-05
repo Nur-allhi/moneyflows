@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Emergency — MoneyFlows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(14% 0.015 260);
+  --surface: oklch(22% 0.02 260 / 0.55);
+  --fg: oklch(92% 0.008 260);
+  --muted: oklch(60% 0.02 260);
+  --border: oklch(100% 0 0 / 0.10);
+  --violet: oklch(62% 0.22 290);
+  --teal: oklch(65% 0.15 170);
+  --coral: oklch(62% 0.18 30);
+  --gold: oklch(75% 0.15 85);
+  --purple: oklch(55% 0.18 290);
+  --success: oklch(65% 0.15 150);
+  --danger: oklch(58% 0.18 30);
+  --font-display: 'Outfit', -apple-system, system-ui, sans-serif;
+  --font-body: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-size-base: clamp(14px, 3.5vw, 16px);
+  --bg-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font: var(--font-size-base)/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+body {
+  background-image: var(--bg-glow);
+  background-attachment: fixed;
+  padding: 0 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  min-height: 52px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  color: var(--fg);
+  display: grid; place-items: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.back-btn:active { transform: scale(0.92); background: oklch(100% 0 0 / 0.08); }
+.header-title {
+  font: 600 18px var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+.balance-hero {
+  text-align: center;
+  padding: 20px;
+}
+.balance-hero .bal-label {
+  font: 400 11px var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.balance-hero .bal-value {
+  font: 700 22px/1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+.balance-hero .bal-sub {
+  font: 400 12px var(--font-body);
+  color: var(--muted);
+  margin-top: 4px;
+}
+.ledger-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.ledger-toolbar .toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.ledger-toolbar .toolbar-left .search-icon {
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ledger-toolbar .toolbar-left .search-icon:active { color: var(--fg); }
+.ledger-toolbar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  font: 400 13px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+}
+.ledger-toolbar input::placeholder { color: var(--muted); }
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.toolbar-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  display: grid; place-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.toolbar-btn:active { background: oklch(100% 0 0 / 0.08); color: var(--fg); }
+.segmented-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: oklch(18% 0.02 260 / 0.6);
+  margin-bottom: 12px;
+}
+.seg-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 12px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.seg-tab.active {
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+}
+.ledger-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ledger-row:last-child { border-bottom: none; }
+.ledger-row:active { background: oklch(100% 0 0 / 0.04); border-radius: 8px; margin: 0 -4px; padding: 12px 4px; }
+.ledger-row .tx-date {
+  font: 400 12px var(--font-body);
+  color: var(--muted);
+}
+.ledger-row .tx-center { display: flex; flex-direction: column; gap: 2px; }
+.ledger-row .tx-desc {
+  font: 400 14px var(--font-body);
+  color: var(--fg);
+}
+.ledger-row .tx-cat {
+  font: 400 10px var(--font-body);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.ledger-row .tx-amount {
+  font: 600 14px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.ledger-row .tx-amount.income { color: var(--teal); }
+.ledger-row .tx-amount.expense { color: var(--coral); }
+.ledger-row .tx-amount.transfer { color: var(--violet); }
+#sentinel { height: 1px; width: 100%; }
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 200;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px; min-height: 44px;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: 400 10px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--violet); }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 300;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  width: 100%;
+  max-height: 90%;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 20px;
+  animation: slideUp 0.35s ease-out;
+  overflow-y: auto;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: oklch(100% 0 0 / 0.2);
+  margin: 0 auto 16px;
+}
+.modal-title {
+  font: 600 16px var(--font-display);
+  color: var(--fg);
+  margin-bottom: 16px;
+}
+.td-body { text-align: center; padding: 4px 0 16px; }
+.td-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 20px;
+  margin: 0 auto 8px;
+}
+.td-icon.income { background: oklch(65% 0.15 170 / 0.2); color: var(--teal); }
+.td-icon.expense { background: oklch(62% 0.18 30 / 0.2); color: var(--coral); }
+.td-icon.transfer { background: oklch(62% 0.22 290 / 0.2); color: var(--violet); }
+.td-type-label {
+  font: 500 11px var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.td-amount {
+  font: 600 32px/1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.td-amount.income { color: var(--teal); }
+.td-amount.expense { color: var(--coral); }
+.td-amount.transfer { color: var(--violet); }
+.td-divider {
+  height: 1px;
+  background: oklch(100% 0 0 / 0.08);
+  margin: 16px 0;
+}
+.td-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+}
+.td-field:last-of-type { border-bottom: none; }
+.td-field-label {
+  font: 400 11px var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.td-field-value {
+  font: 400 14px var(--font-body);
+  color: var(--fg);
+  text-align: right;
+}
+.td-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.td-actions .td-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font: 500 13px var(--font-body);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.td-actions .td-btn:active { transform: scale(0.97); }
+.td-actions .td-btn.ghost {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+.td-actions .td-btn.danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid oklch(58% 0.18 30 / 0.3);
+}
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="window.location.href='groups.html'" aria-label="Back">&#8592;</button>
+    <span class="header-title" id="groupNameHeader">Emergency</span>
+  </div>
+</div>
+
+<div class="scroll-content">
+
+  <!-- Balance Summary -->
+  <div class="glass balance-hero">
+    <div class="bal-label">Total Balance</div>
+    <div class="bal-value" id="groupTotal">&#2547;12,450</div>
+    <div class="bal-sub"><span id="acctCount">3</span> accounts</div>
+  </div>
+
+  <!-- Ledger -->
+  <div class="glass" style="padding-bottom:4px;">
+    <div class="section-title" style="font:600 15px var(--font-display);color:var(--fg);padding:4px 0 8px;">Transactions</div>
+
+    <div class="ledger-toolbar">
+      <div class="toolbar-left">
+        <span class="search-icon">&#8981;</span>
+        <input type="text" id="ledgerSearch" placeholder="Search transactions..." oninput="filterLedger()" />
+      </div>
+      <div class="toolbar-right">
+        <button class="toolbar-btn" onclick="exportLedger()" aria-label="Download">&#8615;</button>
+      </div>
+    </div>
+
+    <div class="segmented-tabs" id="ledgerTabs">
+      <button class="seg-tab active" data-type="all" onclick="switchLedgerTab('all')">All</button>
+      <button class="seg-tab" data-type="income" onclick="switchLedgerTab('income')">Income</button>
+      <button class="seg-tab" data-type="expense" onclick="switchLedgerTab('expense')">Expense</button>
+      <button class="seg-tab" data-type="transfer" onclick="switchLedgerTab('transfer')">Transfer</button>
+    </div>
+
+    <div id="ledgerList"></div>
+    <div id="sentinel"></div>
+  </div>
+
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item" onclick="window.location.href='dashboard.html'">
+    <span class="nav-icon">&#9632;</span>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='member.html'">
+    <span class="nav-icon">&#9679;</span>
+    <span>Members</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='loans.html'">
+    <span class="nav-icon">&#9665;</span>
+    <span>Loans</span>
+  </button>
+  <button class="nav-item active" onclick="window.location.href='groups.html'">
+    <span class="nav-icon">&#9630;</span>
+    <span>Groups</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='recycle-bin.html'">
+    <span class="nav-icon">&#9851;</span>
+    <span>Bin</span>
+  </button>
+</nav>
+
+<!-- Tx Detail Modal -->
+<div class="modal-overlay" id="txDetailModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="td-body" id="tdBody">
+      <div class="td-icon income">&#9650;</div>
+      <div class="td-type-label" id="tdTypeLabel">Income</div>
+      <div class="td-amount income" id="tdAmount">+&#2547;2,000</div>
+      <div class="td-divider"></div>
+      <div class="td-field">
+        <span class="td-field-label">Description</span>
+        <span class="td-field-value" id="tdDesc">Salary</span>
+      </div>
+      <div class="td-field">
+        <span class="td-field-label">Date</span>
+        <span class="td-field-value" id="tdDate">15 Jan 2026</span>
+      </div>
+      <div class="td-field">
+        <span class="td-field-label">Category</span>
+        <span class="td-field-value" id="tdFrom">Income</span>
+      </div>
+    </div>
+    <div class="td-actions">
+      <button class="td-btn ghost" onclick="closeModal('txDetailModal')">Open in Ledger</button>
+      <button class="td-btn ghost" onclick="editTx()">Edit</button>
+      <button class="td-btn danger" onclick="deleteTx()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var group = {
+  id: 'g1',
+  name: 'Emergency Fund',
+  accounts: [
+    { name: 'Cash', balance: 8450 },
+    { name: 'bKash', balance: 4000 }
+  ],
+  transactions: [
+    { id: 't1', date: '15 Jan', desc: 'Grocery', category: 'Food', amount: -45, type: 'expense' },
+    { id: 't2', date: '14 Jan', desc: 'Salary', category: 'Income', amount: 2000, type: 'income' },
+    { id: 't3', date: '12 Jan', desc: 'Electricity Bill', category: 'Utilities', amount: -1200, type: 'expense' },
+    { id: 't4', date: '10 Jan', desc: 'Freelance Payment', category: 'Freelance', amount: 3230, type: 'income' },
+    { id: 't5', date: '08 Jan', desc: 'Transfer to Savings', category: 'Transfer', amount: -500, type: 'transfer' },
+    { id: 't6', date: '05 Jan', desc: 'Dining Out', category: 'Food', amount: -850, type: 'expense' },
+    { id: 't7', date: '03 Jan', desc: 'Dividend', category: 'Investment', amount: 1200, type: 'income' },
+    { id: 't8', date: '01 Jan', desc: 'Rent Received', category: 'Property', amount: 5000, type: 'income' },
+    { id: 't9', date: '28 Dec', desc: 'Mobile Recharge', category: 'Utilities', amount: -300, type: 'expense' },
+    { id: 't10', date: '25 Dec', desc: 'Gift', category: 'Personal', amount: 1000, type: 'income' },
+    { id: 't11', date: '22 Dec', desc: 'Insurance', category: 'Finance', amount: -1500, type: 'expense' },
+    { id: 't12', date: '20 Dec', desc: 'Bonus', category: 'Income', amount: 3000, type: 'income' }
+  ]
+};
+
+var filteredTx = group.transactions.slice();
+var ledgerPage = 0;
+var PAGE_SIZE = 6;
+var currentTab = 'all';
+
+function init() {
+  var total = group.accounts.reduce(function(s, a) { return s + a.balance; }, 0);
+  document.getElementById('groupNameHeader').textContent = group.name;
+  document.getElementById('groupTotal').innerHTML = '&#2547;' + formatNum(total);
+  document.getElementById('acctCount').textContent = group.accounts.length;
+  filteredTx = getFiltered();
+  renderLedger(true);
+}
+
+function switchLedgerTab(type) {
+  currentTab = type;
+  document.querySelectorAll('#ledgerTabs .seg-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('#ledgerTabs .seg-tab[data-type="' + type + '"]').classList.add('active');
+  ledgerPage = 0;
+  filteredTx = getFiltered();
+  renderLedger(true);
+}
+
+function getFiltered() {
+  var q = (document.getElementById('ledgerSearch').value || '').toLowerCase().trim();
+  var list = group.transactions;
+  if (currentTab !== 'all') list = list.filter(function(t) { return t.type === currentTab; });
+  if (q) list = list.filter(function(t) { return t.desc.toLowerCase().includes(q) || t.category.toLowerCase().includes(q); });
+  return list;
+}
+
+function filterLedger() {
+  ledgerPage = 0;
+  filteredTx = getFiltered();
+  renderLedger(true);
+}
+
+function renderLedger(reset) {
+  var list = document.getElementById('ledgerList');
+  if (reset) list.innerHTML = '';
+  var start = ledgerPage * PAGE_SIZE;
+  var end = start + PAGE_SIZE;
+  var page = filteredTx.slice(start, end);
+
+  if (page.length === 0 && ledgerPage === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--muted);font:400 13px var(--font-body);">No transactions found</div>';
+    return;
+  }
+
+  page.forEach(function(tx) {
+    var row = document.createElement('div');
+    row.className = 'ledger-row';
+    row.onclick = function() { openTxDetail(tx); };
+    var sign = tx.amount >= 0 ? '+' : '';
+    row.innerHTML =
+      '<div class="tx-date">' + tx.date + '</div>' +
+      '<div class="tx-center"><div class="tx-desc">' + tx.desc + '</div><div class="tx-cat">' + tx.category + '</div></div>' +
+      '<div class="tx-amount ' + tx.type + '">' + sign + '&#2547;' + formatNum(Math.abs(tx.amount)) + '</div>';
+    list.appendChild(row);
+  });
+}
+
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      var end = (ledgerPage + 1) * PAGE_SIZE;
+      if (end < filteredTx.length) {
+        ledgerPage++;
+        renderLedger(false);
+      }
+    }
+  });
+});
+document.addEventListener('DOMContentLoaded', function() {
+  var sentinel = document.getElementById('sentinel');
+  if (sentinel) observer.observe(sentinel);
+});
+
+var currentTx = null;
+
+function openTxDetail(tx) {
+  currentTx = tx;
+  var sign = tx.amount >= 0 ? '+' : '';
+  var iconMap = { income: '&#9650;', expense: '&#9660;', transfer: '&#9679;' };
+  var typeLabels = { income: 'Income', expense: 'Expense', transfer: 'Transfer' };
+  document.getElementById('tdAmount').textContent = sign + '\u09F3' + formatNum(Math.abs(tx.amount));
+  document.getElementById('tdAmount').className = 'td-amount ' + tx.type;
+  document.getElementById('tdDesc').textContent = tx.desc;
+  document.getElementById('tdDate').textContent = tx.date;
+  document.getElementById('tdFrom').textContent = tx.category || tx.type;
+  document.getElementById('tdTypeLabel').textContent = typeLabels[tx.type] || tx.type;
+  var iconEl = document.getElementById('tdBody').querySelector('.td-icon');
+  iconEl.innerHTML = iconMap[tx.type] || '&#9632;';
+  iconEl.className = 'td-icon ' + tx.type;
+  document.getElementById('txDetailModal').classList.add('open');
+}
+
+function editTx() {
+  if (!currentTx) return;
+  closeModal('txDetailModal');
+}
+
+function deleteTx() {
+  if (!currentTx) return;
+  var idx = group.transactions.indexOf(currentTx);
+  if (idx > -1) group.transactions.splice(idx, 1);
+  closeModal('txDetailModal');
+  filteredTx = getFiltered();
+  ledgerPage = 0;
+  renderLedger(true);
+}
+
+function exportLedger() {}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function formatNum(n) {
+  return n.toLocaleString('en-IN');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+init();
+</script>
+</body>
+</html>

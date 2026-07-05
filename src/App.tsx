@@ -36,8 +36,8 @@ const sidebarItems = [
 const bottomNavItems = [
   { path: '/', label: 'Home', icon: <Svg d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /> },
   { path: '/member', label: 'Members', icon: <Svg d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /> },
-  { path: '/groups', label: 'Groups', icon: <Svg d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /> },
   { path: '/loans', label: 'Loans', icon: <Svg d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /> },
+  { path: '/groups', label: 'Groups', icon: <Svg d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /> },
   { path: '/recycle', label: 'Recycle', icon: <Svg d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /> },
 ];
 
@@ -78,14 +78,14 @@ function AppLayout() {
       <CursorGlow />
       <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
       <div className={styles.main}>
-        <Header title={title} showBack={showBack} showLogo={!showBack} breadcrumb={breadcrumb} />
+        <Header title={title} showBack={showBack} showLogo={!showBack} breadcrumb={breadcrumb} className="app-header" />
         <div className={styles.content}>
           <Suspense fallback={<div className="skeleton skeleton-wizard" />}>
             <PageTransition><Outlet /></PageTransition>
           </Suspense>
         </div>
       </div>
-      <BottomNav className={styles.bottomNav} items={bottomNavItems} />
+      <BottomNav items={bottomNavItems} />
       <ModalRenderer />
     </div>
   );

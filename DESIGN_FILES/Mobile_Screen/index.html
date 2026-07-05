@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>MoneyFlows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(14% 0.015 260);
+  --violet: oklch(62% 0.22 290);
+  --font-display: 'Outfit', -apple-system, system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100vh;
+  background: var(--bg);
+  overflow: hidden;
+}
+#splash {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  background-image: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.5s ease;
+}
+#splash.hidden { opacity: 0; pointer-events: none; }
+#splash-logo { text-align: center; }
+#splash-text {
+  font: 700 36px/1.3 var(--font-display);
+  letter-spacing: -0.02em;
+  white-space: pre-line;
+  background: linear-gradient(135deg, var(--violet), oklch(55% 0.25 290));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 40px oklch(62% 0.22 290 / 0.3), 0 0 80px oklch(62% 0.22 290 / 0.15);
+}
+#splash-cursor {
+  display: inline-block;
+  width: 3px; height: 36px;
+  background: var(--violet);
+  margin-left: 2px;
+  animation: blink 0.8s step-end infinite;
+  vertical-align: text-bottom;
+  box-shadow: 0 0 8px var(--violet);
+}
+@keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<div id="splash">
+  <div id="splash-logo"><span id="splash-text"></span><span id="splash-cursor">|</span></div>
+</div>
+<script>
+(function(){
+  var lines = ['Money','Flows'];
+  var lineIdx = 0, charIdx = 0;
+  var el = document.getElementById('splash-text');
+  var splash = document.getElementById('splash');
+  var start = Date.now();
+
+  function type() {
+    if (lineIdx >= lines.length) return;
+    var cl = lines[lineIdx];
+    if (charIdx < cl.length) {
+      el.textContent += cl[charIdx];
+      charIdx++;
+      setTimeout(type, 80);
+    } else {
+      if (lineIdx < lines.length - 1) {
+        el.textContent += '\n';
+        lineIdx++; charIdx = 0;
+        setTimeout(type, 400);
+      } else {
+        var elapsed = Date.now() - start;
+        var rem = Math.max(0, 2000 - elapsed);
+        setTimeout(function(){
+          splash.classList.add('hidden');
+          setTimeout(function(){ window.location.href = 'dashboard.html'; }, 500);
+        }, rem);
+      }
+    }
+  }
+  setTimeout(type, 300);
+})();
+</script>
+</body>
+</html>

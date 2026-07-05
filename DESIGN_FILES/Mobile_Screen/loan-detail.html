@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Uncle John — MoneyFlows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(14% 0.015 260);
+  --surface: oklch(22% 0.02 260 / 0.55);
+  --fg: oklch(92% 0.008 260);
+  --muted: oklch(60% 0.02 260);
+  --border: oklch(100% 0 0 / 0.10);
+  --violet: oklch(62% 0.22 290);
+  --teal: oklch(65% 0.15 170);
+  --coral: oklch(62% 0.18 30);
+  --gold: oklch(75% 0.15 85);
+  --purple: oklch(55% 0.18 290);
+  --success: oklch(65% 0.15 150);
+  --danger: oklch(58% 0.18 30);
+  --font-display: 'Outfit', -apple-system, system-ui, sans-serif;
+  --font-body: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-size-base: clamp(14px, 3.5vw, 16px);
+  --bg-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font: var(--font-size-base)/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+body {
+  background-image: var(--bg-glow);
+  background-attachment: fixed;
+  padding: 0 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  min-height: 52px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  color: var(--fg);
+  display: grid; place-items: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.back-btn:active { transform: scale(0.92); background: oklch(100% 0 0 / 0.08); }
+.header-title {
+  font: 600 18px var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  color: var(--muted);
+  display: grid; place-items: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn:active { transform: scale(0.92); background: oklch(100% 0 0 / 0.08); }
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* Summary card */
+.summary-card {
+  text-align: center;
+  padding: 24px 20px;
+}
+.summary-card .type-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: oklch(62% 0.22 290 / 0.15);
+  color: var(--violet);
+  font: 500 11px var(--font-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.summary-card .loan-name {
+  font: 600 20px var(--font-display);
+  color: var(--fg);
+  margin-bottom: 4px;
+}
+.summary-card .loan-amount {
+  font: 700 28px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--coral);
+  margin-bottom: 4px;
+}
+.summary-card .loan-sub {
+  font: 400 11px var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Progress */
+.progress-section {
+  padding: 0 20px 16px;
+}
+.progress-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: oklch(100% 0 0 / 0.08);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--teal), oklch(65% 0.15 170 / 0.6));
+  transition: width 0.5s ease;
+}
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font: 400 12px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.pct-value { color: var(--teal); font-weight: 500; }
+
+/* Action buttons */
+.action-row {
+  display: flex;
+  gap: 12px;
+  padding: 0 20px 8px;
+}
+.action-row .btn-primary {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  font: 600 14px var(--font-display);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.action-row .btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+.action-row .btn-delete {
+  flex: 0 0 auto;
+  padding: 14px 20px;
+  border: 1px solid oklch(58% 0.18 30 / 0.3);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--danger);
+  font: 500 13px var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.action-row .btn-delete:active { background: oklch(58% 0.18 30 / 0.1); transform: scale(0.97); }
+
+/* Ledger toolbar */
+.ledger-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.ledger-toolbar .toolbar-left {
+  flex: 1;
+  position: relative;
+}
+.ledger-toolbar .toolbar-left input {
+  width: 100%;
+  padding: 10px 12px 10px 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: oklch(100% 0 0 / 0.05);
+  color: var(--fg);
+  font: 13px var(--font-body);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.ledger-toolbar .toolbar-left input:focus { border-color: var(--violet); }
+.ledger-toolbar .toolbar-left input::placeholder { color: var(--muted); }
+.ledger-toolbar .toolbar-left .search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+.toolbar-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  display: grid; place-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.toolbar-btn:active { background: oklch(100% 0 0 / 0.08); }
+
+/* Segmented tabs */
+.segmented-tabs {
+  display: flex;
+  gap: 4px;
+  background: oklch(100% 0 0 / 0.05);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 12px;
+}
+.seg-tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 11px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.seg-tab.active {
+  background: var(--surface);
+  color: var(--fg);
+}
+.seg-tab:active { transform: scale(0.95); }
+
+/* Date filter dropdown */
+.date-filter {
+  margin-bottom: 12px;
+}
+.date-filter select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font: 13px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Ledger rows */
+.ledger-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  cursor: pointer;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+}
+.ledger-row:active { background: oklch(100% 0 0 / 0.03); }
+.ledger-row:last-child { border-bottom: none; }
+.ledger-row .tx-date {
+  font: 400 11px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  width: 56px;
+  flex-shrink: 0;
+}
+.ledger-row .tx-desc {
+  flex: 1;
+  font: 400 13px var(--font-body);
+  color: var(--fg);
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ledger-row .tx-amount {
+  font: 500 13px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.ledger-row .tx-amount.issued { color: var(--teal); }
+.ledger-row .tx-amount.repaid { color: var(--coral); }
+
+/* Tx detail modal */
+.td-body { text-align: center; padding: 4px 0 16px; }
+.td-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 20px;
+  margin: 0 auto 8px;
+}
+.td-icon.issued { background: oklch(65% 0.15 170 / 0.15); color: var(--teal); }
+.td-icon.repaid { background: oklch(58% 0.18 30 / 0.15); color: var(--coral); }
+.td-type-label {
+  font: 500 11px var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.td-amount {
+  font: 600 32px/1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.td-amount.issued { color: var(--teal); }
+.td-amount.repaid { color: var(--coral); }
+.td-divider {
+  height: 1px;
+  background: oklch(100% 0 0 / 0.08);
+  margin: 16px 0;
+}
+.td-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+}
+.td-field:last-of-type { border-bottom: none; }
+.td-field-label {
+  font: 400 11px var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.td-field-value {
+  font: 400 14px var(--font-body);
+  color: var(--fg);
+  text-align: right;
+}
+.td-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.td-actions .td-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font: 500 13px var(--font-body);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.td-actions .td-btn:active { transform: scale(0.97); }
+.td-actions .td-btn.ghost {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+.td-actions .td-btn.danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid oklch(58% 0.18 30 / 0.3);
+}
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 200;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px; min-height: 44px;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: 400 10px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--violet); }
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 300;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  width: 100%;
+  max-height: 90%;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 20px;
+  animation: slideUp 0.35s ease-out;
+  overflow-y: auto;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: oklch(100% 0 0 / 0.2);
+  margin: 0 auto 16px;
+}
+.modal-title {
+  font: 600 16px var(--font-display);
+  color: var(--fg);
+  margin-bottom: 16px;
+}
+
+/* Transaction form modal */
+.tx-type-tabs {
+  display: flex;
+  gap: 4px;
+  background: oklch(100% 0 0 / 0.05);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 16px;
+}
+.tx-type-tab {
+  flex: 1;
+  padding: 10px 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 12px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+.tx-type-tab.active { background: var(--surface); color: var(--fg); }
+.tx-type-tab:active { transform: scale(0.95); }
+.amount-display {
+  text-align: center;
+  font: 700 32px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  padding: 8px 0 16px;
+  letter-spacing: -0.01em;
+}
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font: 400 11px var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font: 14px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.2s;
+}
+.form-group textarea { resize: none; min-height: 44px; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--violet); box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15); }
+.form-group select option { background: var(--bg); color: var(--fg); }
+/* Numpad */
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+}
+.numpad-key {
+  padding: 16px 0;
+  border: none;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--fg);
+  font: 600 20px var(--font-display);
+  cursor: pointer;
+  transition: background 0.1s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+}
+.numpad-key:active { background: oklch(100% 0 0 / 0.1); transform: scale(0.95); }
+.numpad-key.fn {
+  background: oklch(100% 0 0 / 0.05);
+  color: var(--muted);
+  font-size: 16px;
+}
+.numpad-key.submit {
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+}
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  font: 600 15px var(--font-display);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.submit-btn:active { opacity: 0.9; }
+.hidden { display: none; }
+.settled-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: oklch(65% 0.15 170 / 0.15);
+  color: var(--teal);
+  font: 500 12px var(--font-body);
+  letter-spacing: 0.04em;
+  margin: 0 auto;
+  width: fit-content;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="window.location.href='loans.html'" aria-label="Back">&#8592;</button>
+    <span class="header-title">Loans</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="exportLedger()" aria-label="Download PDF">&#8615;</button>
+    <button class="icon-btn" onclick="openLoanReport()" aria-label="Loan Report">&#9971;</button>
+  </div>
+</div>
+
+<div class="scroll-content">
+
+  <!-- Summary Card -->
+  <div class="glass summary-card">
+    <div class="type-badge">&#9971; Loan (Lend)</div>
+    <div class="loan-name" id="detailName">Uncle John</div>
+    <div class="loan-amount" id="detailAmount">&#2547;5,000</div>
+    <div class="loan-sub">Total Outstanding</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-section">
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width:65%;"></div>
+    </div>
+    <div class="progress-label">
+      <span><span class="pct-value" id="pctLabel">65%</span> repaid — <span id="remainingLabel">&#2547;1,750</span> remaining</span>
+    </div>
+  </div>
+
+  <!-- Action Buttons (hidden when settled) -->
+  <div class="action-row" id="actionRow">
+    <button class="btn-primary" onclick="openRepaymentModal()">+ Repayment</button>
+    <button class="btn-delete" onclick="openDeleteConfirm()">Delete</button>
+  </div>
+
+  <!-- Settled badge (visible when settled) -->
+  <div id="settledBadge" class="hidden" style="display:none;padding: 0 20px 8px;justify-content:center;">
+    <div class="settled-pill">&#10003; Settled</div>
+  </div>
+
+  <!-- Ledger -->
+  <div class="glass" style="padding-bottom:4px;">
+    <div class="section-title" style="font:600 14px var(--font-display);color:var(--fg);margin-bottom:8px;">Transaction History</div>
+
+    <!-- Toolbar -->
+    <div class="ledger-toolbar">
+      <div class="toolbar-left">
+        <span class="search-icon">&#8981;</span>
+        <input type="text" id="ledgerSearch" placeholder="Search..." oninput="filterLedger()" />
+      </div>
+      <button class="toolbar-btn" onclick="exportLedger()" aria-label="Download CSV">&#8615;</button>
+      <button class="toolbar-btn" onclick="toggleFilterDropdown()" aria-label="Filter">&#9776;</button>
+    </div>
+
+    <!-- Segmented tabs -->
+    <div class="segmented-tabs" id="ledgerTabs">
+      <button class="seg-tab active" data-type="all" onclick="switchLedgerTab('all')">All</button>
+      <button class="seg-tab" data-type="issued" onclick="switchLedgerTab('issued')">Issued</button>
+      <button class="seg-tab" data-type="repaid" onclick="switchLedgerTab('repaid')">Repaid</button>
+    </div>
+
+    <!-- Date filter -->
+    <div id="filterDropdown" class="date-filter hidden">
+      <select id="monthFilter" onchange="filterLedger()">
+        <option value="all">All Months</option>
+        <option value="2026-04">Apr 2026</option>
+        <option value="2026-03">Mar 2026</option>
+        <option value="2026-02">Feb 2026</option>
+        <option value="2026-01">Jan 2026</option>
+        <option value="2025-12">Dec 2025</option>
+      </select>
+    </div>
+
+    <!-- Ledger list -->
+    <div id="ledgerList"></div>
+    <div id="sentinel"></div>
+  </div>
+
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item" onclick="window.location.href='dashboard.html'">
+    <span class="nav-icon">&#9632;</span>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='member.html'">
+    <span class="nav-icon">&#9679;</span>
+    <span>Members</span>
+  </button>
+  <button class="nav-item active" onclick="window.location.href='loans.html'">
+    <span class="nav-icon">&#9665;</span>
+    <span>Loans</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='groups.html'">
+    <span class="nav-icon">&#9630;</span>
+    <span>Groups</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='recycle-bin.html'">
+    <span class="nav-icon">&#9851;</span>
+    <span>Bin</span>
+  </button>
+</nav>
+
+<!-- Transaction Detail Modal -->
+<div class="modal-overlay" id="txDetailModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="td-body" id="tdBody">
+      <div class="td-icon issued">&#9660;</div>
+      <div class="td-type-label" id="tdTypeLabel">Loan Issue</div>
+      <div class="td-amount issued" id="tdAmount">+&#2547;5,000</div>
+      <div class="td-divider"></div>
+      <div class="td-field">
+        <span class="td-field-label">Description</span>
+        <span class="td-field-value" id="tdDesc">Loan Issued</span>
+      </div>
+      <div class="td-field">
+        <span class="td-field-label">Date</span>
+        <span class="td-field-value" id="tdDate">15 Jan 2026</span>
+      </div>
+      <div class="td-field">
+        <span class="td-field-label">Party</span>
+        <span class="td-field-value" id="tdFrom">Uncle John</span>
+      </div>
+    </div>
+    <div class="td-actions">
+      <button class="td-btn ghost" onclick="openInLedger()">Open in Ledger</button>
+      <button class="td-btn ghost" onclick="editTx()">Edit</button>
+      <button class="td-btn danger" onclick="deleteTx()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Repayment Form Modal (TransactionFormModal pattern) -->
+<div class="modal-overlay" id="repaymentModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Record Repayment</div>
+
+    <!-- Type tabs -->
+    <div class="tx-type-tabs">
+      <button class="tx-type-tab" data-type="income" onclick="switchRepayType('income')">Income</button>
+      <button class="tx-type-tab active" data-type="expense" onclick="switchRepayType('expense')">Expense</button>
+      <button class="tx-type-tab" data-type="transfer" onclick="switchRepayType('transfer')">Transfer</button>
+      <button class="tx-type-tab" data-type="loan" onclick="switchRepayType('loan')">Loan</button>
+    </div>
+
+    <!-- Amount display -->
+    <div class="amount-display" id="repayAmountDisplay">&#2547; 0.00</div>
+
+    <!-- Form fields -->
+    <div class="form-group">
+      <label>From Account</label>
+      <select id="repayFromAcct">
+        <option value="cash">Cash</option>
+        <option value="bank">Brac Bank</option>
+        <option value="bkash">bKash</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>To</label>
+      <input type="text" id="repayToInput" value="Uncle John" disabled style="opacity:0.7;" />
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <select id="repayDate">
+        <option value="" selected>Today</option>
+        <option>Yesterday</option>
+        <option>Custom...</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="repayDesc" placeholder="e.g. Partial repayment" />
+    </div>
+
+    <!-- Numpad -->
+    <div class="numpad">
+      <button class="numpad-key" onclick="numpadInput('1')">1</button>
+      <button class="numpad-key" onclick="numpadInput('2')">2</button>
+      <button class="numpad-key" onclick="numpadInput('3')">3</button>
+      <button class="numpad-key fn" onclick="numpadClear()">C</button>
+      <button class="numpad-key" onclick="numpadInput('4')">4</button>
+      <button class="numpad-key" onclick="numpadInput('5')">5</button>
+      <button class="numpad-key" onclick="numpadInput('6')">6</button>
+      <button class="numpad-key fn" onclick="numpadInput('0')">0</button>
+      <button class="numpad-key" onclick="numpadInput('7')">7</button>
+      <button class="numpad-key" onclick="numpadInput('8')">8</button>
+      <button class="numpad-key" onclick="numpadInput('9')">9</button>
+      <button class="numpad-key fn" onclick="numpadBackspace()">&#9003;</button>
+    </div>
+
+    <button class="submit-btn" onclick="submitRepayment()">Save Repayment</button>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteConfirmModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Delete Loan?</div>
+    <p style="font:400 13px var(--font-body);color:var(--muted);margin-bottom:20px;">
+      This will move the loan record and all associated transactions to the Recycle Bin. You can recover them within 30 days.
+    </p>
+    <button class="submit-btn" onclick="deleteLoan()" style="background:linear-gradient(135deg,var(--danger),oklch(50% 0.2 30));margin-bottom:8px;">Move to Recycle Bin</button>
+    <button onclick="closeModal('deleteConfirmModal')" style="width:100%;padding:14px;border:none;border-radius:12px;background:transparent;color:var(--muted);font:500 14px var(--font-body);cursor:pointer;">Cancel</button>
+  </div>
+</div>
+
+<script>
+/* ===== LOAN DATA ===== */
+var loan = {
+  id: 'l1',
+  name: 'Uncle John',
+  amount: 5000,
+  repaid: 3250,
+  status: 'partial',
+  date: '10 Jan 2026',
+  transactions: [
+    { id: 'lt1', dateLabel: '15 Jan', dateVal: '2026-01-15', desc: 'Loan Issued', amount: 5000, type: 'issued' },
+    { id: 'lt2', dateLabel: '10 Feb', dateVal: '2026-02-10', desc: 'Partial Repayment', amount: -500, type: 'repaid' },
+    { id: 'lt3', dateLabel: '05 Mar', dateVal: '2026-03-05', desc: 'Payment Received', amount: -1000, type: 'repaid' },
+    { id: 'lt4', dateLabel: '20 Mar', dateVal: '2026-03-20', desc: 'Repayment', amount: -750, type: 'repaid' },
+    { id: 'lt5', dateLabel: '15 Apr', dateVal: '2026-04-15', desc: 'Payment', amount: -1000, type: 'repaid' }
+  ]
+};
+
+var ledgerTx = loan.transactions.slice();
+var ledgerPage = 0;
+var PAGE_SIZE = 8;
+var currentTab = 'all';
+var repayType = 'expense';
+var repayAmount = 0;
+
+/* ===== PROGRESS ===== */
+function updateProgress() {
+  var pct = Math.min(100, Math.round((loan.repaid / loan.amount) * 100));
+  var remaining = loan.amount - loan.repaid;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('pctLabel').textContent = pct + '%';
+  document.getElementById('remainingLabel').innerHTML = '&#2547;' + formatNum(remaining);
+  document.getElementById('detailAmount').innerHTML = '&#2547;' + formatNum(loan.amount);
+
+  if (loan.status === 'settled') {
+    document.getElementById('actionRow').style.display = 'none';
+    document.getElementById('settledBadge').style.display = 'flex';
+  } else {
+    document.getElementById('actionRow').style.display = 'flex';
+    document.getElementById('settledBadge').style.display = 'none';
+  }
+}
+
+/* ===== LEDGER ===== */
+function switchLedgerTab(type) {
+  currentTab = type;
+  document.querySelectorAll('#ledgerTabs .seg-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('#ledgerTabs .seg-tab[data-type="' + type + '"]').classList.add('active');
+  ledgerPage = 0;
+  ledgerTx = getFiltered();
+  renderLedger(true);
+}
+
+function getFiltered() {
+  var q = (document.getElementById('ledgerSearch').value || '').toLowerCase().trim();
+  var month = document.getElementById('monthFilter').value;
+  var list = loan.transactions;
+  if (currentTab !== 'all') list = list.filter(function(t) { return t.type === currentTab; });
+  if (q) list = list.filter(function(t) { return t.desc.toLowerCase().includes(q); });
+  if (month && month !== 'all') list = list.filter(function(t) { return t.dateVal && t.dateVal.startsWith(month); });
+  return list;
+}
+
+function filterLedger() {
+  ledgerPage = 0;
+  ledgerTx = getFiltered();
+  renderLedger(true);
+}
+
+function renderLedger(reset) {
+  var list = document.getElementById('ledgerList');
+  if (reset) list.innerHTML = '';
+  var start = ledgerPage * PAGE_SIZE;
+  var end = start + PAGE_SIZE;
+  var page = ledgerTx.slice(start, end);
+
+  if (page.length === 0 && ledgerPage === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--muted);font:400 13px var(--font-body);">No transactions found</div>';
+    return;
+  }
+
+  page.forEach(function(tx) {
+    var row = document.createElement('div');
+    row.className = 'ledger-row';
+    row.onclick = function() { openTxDetail(tx); };
+    var sign = tx.amount >= 0 ? '+' : '';
+    row.innerHTML =
+      '<div class="tx-date">' + tx.dateLabel + '</div>' +
+      '<div class="tx-desc">' + tx.desc + '</div>' +
+      '<div class="tx-amount ' + tx.type + '">' + sign + '&#2547;' + formatNum(Math.abs(tx.amount)) + '</div>';
+    list.appendChild(row);
+  });
+}
+
+/* Infinite scroll */
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      var end = (ledgerPage + 1) * PAGE_SIZE;
+      if (end < ledgerTx.length) {
+        ledgerPage++;
+        renderLedger(false);
+      }
+    }
+  });
+});
+document.addEventListener('DOMContentLoaded', function() {
+  var sentinel = document.getElementById('sentinel');
+  if (sentinel) observer.observe(sentinel);
+});
+
+/* ===== MODALS ===== */
+var currentTx = null;
+
+function openTxDetail(tx) {
+  currentTx = tx;
+  var sign = tx.amount >= 0 ? '+' : '';
+  var typeLabels = { issued: 'Loan Issue', repaid: 'Repayment' };
+  document.getElementById('tdAmount').textContent = sign + '\u09F3' + formatNum(Math.abs(tx.amount));
+  document.getElementById('tdAmount').className = 'td-amount ' + tx.type;
+  document.getElementById('tdDesc').textContent = tx.desc;
+  document.getElementById('tdDate').textContent = tx.dateLabel;
+  document.getElementById('tdFrom').textContent = loan.name;
+  document.getElementById('tdTypeLabel').textContent = typeLabels[tx.type] || tx.type;
+  var iconEl = document.getElementById('tdBody').querySelector('.td-icon');
+  iconEl.innerHTML = tx.amount >= 0 ? '&#9660;' : '&#9650;';
+  iconEl.className = 'td-icon ' + tx.type;
+  document.getElementById('txDetailModal').classList.add('open');
+}
+
+function openInLedger() {
+  closeModal('txDetailModal');
+}
+
+function editTx() {
+  if (!currentTx) return;
+  closeModal('txDetailModal');
+  MoneyFlows.Modals.editTransaction({
+    type: currentTx.amount >= 0 ? 'income' : 'expense',
+    amount: Math.abs(currentTx.amount),
+    description: currentTx.desc,
+    date: currentTx.dateVal || '',
+    onSave: function(data) {
+      currentTx.amount = data.amount;
+      currentTx.desc = data.description;
+      currentTx.type = data.amount >= 0 ? 'income' : 'expense';
+      ledgerTx = getFiltered();
+      ledgerPage = 0;
+      renderLedger(true);
+      updateProgress();
+    }
+  });
+}
+
+function deleteTx() {
+  if (!currentTx) return;
+  var idx = loan.transactions.indexOf(currentTx);
+  if (idx > -1) loan.transactions.splice(idx, 1);
+  if (currentTx.type === 'repaid') {
+    loan.repaid -= Math.abs(currentTx.amount);
+  }
+  closeModal('txDetailModal');
+  updateProgress();
+  ledgerTx = getFiltered();
+  ledgerPage = 0;
+  renderLedger(true);
+}
+
+function openRepaymentModal() {
+  repayAmount = 0;
+  repayType = 'expense';
+  document.getElementById('repayAmountDisplay').innerHTML = '&#2547; 0.00';
+  document.getElementById('repayDesc').value = '';
+  document.querySelectorAll('#repaymentModal .tx-type-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('#repaymentModal .tx-type-tab[data-type="expense"]').classList.add('active');
+  document.getElementById('repaymentModal').classList.add('open');
+}
+
+function switchRepayType(type) {
+  repayType = type;
+  document.querySelectorAll('#repaymentModal .tx-type-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('#repaymentModal .tx-type-tab[data-type="' + type + '"]').classList.add('active');
+}
+
+function numpadInput(digit) {
+  var str = String(repayAmount);
+  if (str === '0') str = '';
+  str += digit;
+  repayAmount = parseFloat(str) || 0;
+  document.getElementById('repayAmountDisplay').innerHTML = '&#2547; ' + repayAmount.toFixed(2);
+}
+
+function numpadClear() {
+  repayAmount = 0;
+  document.getElementById('repayAmountDisplay').innerHTML = '&#2547; 0.00';
+}
+
+function numpadBackspace() {
+  var str = String(repayAmount);
+  if (str.length <= 1) { numpadClear(); return; }
+  repayAmount = parseFloat(str.slice(0, -1)) || 0;
+  document.getElementById('repayAmountDisplay').innerHTML = '&#2547; ' + repayAmount.toFixed(2);
+}
+
+function submitRepayment() {
+  if (repayAmount <= 0) return;
+  var desc = document.getElementById('repayDesc').value.trim() || 'Repayment';
+  var tx = {
+    id: 'lt' + Date.now(),
+    dateLabel: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    dateVal: new Date().toISOString().slice(0, 10),
+    desc: desc,
+    amount: -repayAmount,
+    type: 'repaid'
+  };
+  loan.transactions.push(tx);
+  loan.repaid += repayAmount;
+  if (loan.repaid >= loan.amount) { loan.repaid = loan.amount; loan.status = 'settled'; }
+  updateProgress();
+  ledgerPage = 0;
+  ledgerTx = getFiltered();
+  renderLedger(true);
+  closeModal('repaymentModal');
+}
+
+function openDeleteConfirm() {
+  document.getElementById('deleteConfirmModal').classList.add('open');
+}
+
+function deleteLoan() {
+  closeModal('deleteConfirmModal');
+  window.location.href = 'loans.html';
+}
+
+function toggleFilterDropdown() {
+  var el = document.getElementById('filterDropdown');
+  el.classList.toggle('hidden');
+}
+
+function exportLedger() {
+  // Placeholder - in production this would generate CSV
+}
+
+function openLoanReport() {
+  MoneyFlows.Modals.loanReport({
+    borrower: loan.name,
+    amount: loan.amount,
+    repaid: loan.repaid,
+    date: loan.date,
+    interest: 'None',
+    transactions: loan.transactions
+  });
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function formatNum(n) {
+  return n.toLocaleString('en-IN');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+/* ===== INIT ===== */
+updateProgress();
+ledgerTx = getFiltered();
+renderLedger(true);
+</script>
+<script src="modals.js"></script>
+</body>
+</html>
