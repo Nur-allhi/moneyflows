@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { LedgerTable, SegmentedTabs } from '../components';
+import { LedgerTable, SegmentedTabs, LedgerSearch } from '../components';
 import type { LedgerRow } from '../components';
 import { useModalStore } from '../stores/useModalStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -36,6 +36,7 @@ export function GroupLedgerScreen() {
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('all');
+  const [ledgerQuery, setLedgerQuery] = useState('');
   const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
 
   useEffect(() => {
@@ -67,6 +68,12 @@ export function GroupLedgerScreen() {
     () => sortedTxs.slice(-displayLimit),
     [sortedTxs, displayLimit],
   );
+
+  const searchFilteredTxs = useMemo(() => {
+    const q = ledgerQuery.toLowerCase().trim();
+    if (!q) return displayedTxs;
+    return displayedTxs.filter((tx) => tx.description.toLowerCase().includes(q));
+  }, [displayedTxs, ledgerQuery]);
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -125,7 +132,7 @@ export function GroupLedgerScreen() {
   }, [accountMap]);
 
   const ledgerRows = useMemo((): LedgerRow[] => {
-    const netChange = displayedTxs.reduce((sum, tx) => {
+    const netChange = searchFilteredTxs.reduce((sum, tx) => {
       if (isGroupCredit(tx) && !isGroupDebit(tx)) return sum + tx.amount;
       if (isGroupDebit(tx) && !isGroupCredit(tx)) return sum - tx.amount;
       return sum;
@@ -161,7 +168,7 @@ export function GroupLedgerScreen() {
       if (typeFilter === 'loan') return r.type === 'loan';
       return r.type === typeFilter;
     });
-  }, [displayedTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay]);
+  }, [searchFilteredTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     const tx = txs.find((t) => t.id === row.id);
@@ -172,27 +179,34 @@ export function GroupLedgerScreen() {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     doc.setFontSize(16);
-    doc.text(groupName, 10, 20);
+    doc.text(groupName, pageW / 2, 20, { align: 'center' });
     doc.setFontSize(10);
-    const dateRange = `${shortDate(sortedTxs[0]?.date ?? '', locale)} - ${shortDate(sortedTxs[sortedTxs.length - 1]?.date ?? '', locale)}`;
-    doc.text(`Period: ${dateRange}`, 10, 28);
-    doc.text(`Accounts: ${accountIds.length}`, 10, 34);
+    const firstTx = searchFilteredTxs[0];
+    const lastTx = searchFilteredTxs[searchFilteredTxs.length - 1];
+    const dateRange = firstTx && lastTx
+      ? `${shortDate(firstTx.date, locale)} - ${shortDate(lastTx.date, locale)}`
+      : '';
+    if (dateRange) doc.text(`Period: ${dateRange}`, 14, 28);
+    doc.text(`Accounts: ${accountIds.length}`, 14, 36);
 
     const isCredit = (tx: Transaction) => accountSet.has(tx.destAccount ?? '') && !accountSet.has(tx.sourceAccount ?? '');
     const pdfRows: { date: string; type: string; desc: string; debit: string; credit: string; balance: string }[] = [];
 
-    const netChange = sortedTxs.reduce((sum, tx) => {
+    const netChange = searchFilteredTxs.reduce((sum, tx) => {
       if (isCredit(tx)) return sum + tx.amount;
       if (accountSet.has(tx.sourceAccount ?? '')) return sum - tx.amount;
       return sum;
     }, 0);
     let running = totalBalance - netChange;
 
-    for (const tx of sortedTxs) {
+    let totalDebit = 0;
+    let totalCredit = 0;
+
+    for (const tx of searchFilteredTxs) {
       const credit = isCredit(tx);
       const debit = accountSet.has(tx.sourceAccount ?? '') && !accountSet.has(tx.destAccount ?? '');
-      if (credit) running += tx.amount;
-      else if (debit) running -= tx.amount;
+      if (credit) { running += tx.amount; totalCredit += tx.amount; }
+      else if (debit) { running -= tx.amount; totalDebit += tx.amount; }
       pdfRows.push({
         date: shortDate(tx.date, locale),
         type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
@@ -203,21 +217,56 @@ export function GroupLedgerScreen() {
       });
     }
 
+    if (pdfRows.length === 0) return;
+
+    const rightX = pageW - 14;
+    const gap = 3;
+    doc.setFontSize(10);
+
+    const obVal = formatAmount(totalBalance - netChange, locale, currency);
+    const obValW = doc.getTextWidth(obVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Opening Balance:', rightX - obValW - gap, 28, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(obVal, rightX, 28, { align: 'right' });
+
+    const tdVal = formatAmount(totalDebit, locale, currency);
+    const tdValW = doc.getTextWidth(tdVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Debit:', rightX - tdValW - gap, 36, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(tdVal, rightX, 36, { align: 'right' });
+
+    const tcVal = formatAmount(totalCredit, locale, currency);
+    const tcValW = doc.getTextWidth(tcVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Credit:', rightX - tcValW - gap, 44, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(tcVal, rightX, 44, { align: 'right' });
+
     autoTable(doc, {
       head: [['Date', 'Type', 'Description', 'Debit', 'Credit', 'Balance']],
-      body: pdfRows.reverse().map((r) => [r.date, r.type, r.desc, r.debit, r.credit, r.balance]),
-      startY: 40,
+      body: pdfRows.map((r) => [r.date, r.type, r.desc, r.debit, r.credit, r.balance]),
+      startY: 52,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [99, 102, 241] },
+      columnStyles: {
+        0: { cellWidth: 28 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 'auto', halign: 'left' },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 30 },
+      },
     });
 
-    doc.text('System generated report', pageW / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+    doc.text('MoneyFlows \u2014 System generated report', pageW / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
     doc.save(`${groupName.replace(/\s+/g, '_')}_ledger.pdf`);
-  }, [groupName, sortedTxs, accountIds.length, accountSet, totalBalance, locale, currency]);
+  }, [groupName, searchFilteredTxs, accountIds.length, accountSet, totalBalance, locale, currency]);
 
   if (loading) return <div className={styles.loading}>Loading...</div>;
 
-  const typeRows = typeFilter === 'all' ? displayedTxs : displayedTxs.filter((tx) => {
+  const typeRows = typeFilter === 'all' ? searchFilteredTxs : searchFilteredTxs.filter((tx) => {
     if (typeFilter === 'loan') return ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'].includes(tx.type);
     return tx.type === typeFilter;
   });
@@ -229,6 +278,7 @@ export function GroupLedgerScreen() {
           <h1 className={styles.title}>{groupName}</h1>
           <span className={styles.subtitle}>{accountIds.length} accounts &middot; {formatAmount(totalBalance, locale, currency)} total</span>
         </div>
+        <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
         <button className={styles.pdfBtn} onClick={handleDownloadPdf}>PDF</button>
       </div>
 
