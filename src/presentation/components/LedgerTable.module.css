@@ -32,7 +32,7 @@
 }
 
 .desktop .header {
-  grid-template-columns: 72px 72px 1fr 72px 72px 72px;
+  grid-template-columns: 90px 90px 1fr 90px 90px 90px;
   padding: 10px 20px;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .desktop.noBalance .header {
-  grid-template-columns: 72px 72px 1fr 200px 72px 72px;
+  grid-template-columns: 90px 90px 1fr 250px 90px 90px;
 }
 
 .body {
@@ -81,7 +81,7 @@
 }
 
 .desktop .row {
-  grid-template-columns: 72px 72px 1fr 72px 72px 72px;
+  grid-template-columns: 90px 90px 1fr 90px 90px 90px;
   padding: 10px 20px;
   font-size: 14px;
 }
@@ -91,7 +91,7 @@
 }
 
 .desktop.noBalance .row {
-  grid-template-columns: 72px 72px 1fr 200px 72px 72px;
+  grid-template-columns: 90px 90px 1fr 250px 90px 90px;
 }
 
 .row:hover {
