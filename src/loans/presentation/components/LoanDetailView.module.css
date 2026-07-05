@@ -383,3 +383,101 @@
   background: oklch(100% 0 0 / 0.1);
   color: var(--color-text);
 }
+
+@media (max-width: 768px) {
+  .container {
+    gap: 12px;
+  }
+
+  .summary {
+    text-align: center;
+    padding: 24px 20px;
+    gap: 12px;
+  }
+
+  .summaryTop {
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .summaryInfo {
+    align-items: center;
+  }
+
+  .typeLabel {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: oklch(62% 0.22 290 / 0.15);
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+
+  .debtorName {
+    font-size: 20px;
+    justify-content: center;
+  }
+
+  .badge {
+    display: none;
+  }
+
+  .summaryAmount {
+    text-align: center;
+  }
+
+  .amountValue {
+    font-size: 28px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 4px;
+  }
+
+  .repayBtn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    border: none;
+  }
+
+  .deleteBtn {
+    flex: 0 0 auto;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .settledBadge {
+    width: 100%;
+    text-align: center;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14px;
+  }
+
+  .ledgerHead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .ledgerActions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .filterDropdown {
+    right: auto;
+    left: 0;
+    min-width: 260px;
+  }
+
+  .overlay {
+    padding: 16px;
+  }
+}
