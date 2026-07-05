@@ -7,6 +7,7 @@ interface SplashScreenProps {
 }
 
 const LINES = ['Money', 'Flows'];
+const TEXT = LINES.join('\n');
 const MIN_SPLASH_MS = 2000;
 const CHAR_INTERVAL = 80;
 const LINE_PAUSE = 400;
@@ -14,48 +15,32 @@ const START_DELAY = 300;
 const FADE_DURATION = 500;
 
 export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
-  const [displayed, setDisplayed] = useState('');
-  const [done, setDone] = useState(false);
+  const [idx, setIdx] = useState(0);
   const [fading, setFading] = useState(false);
   const startedAt = useRef(Date.now());
-  const lineIdx = useRef(0);
-  const charIdx = useRef(0);
 
   useEffect(() => {
-    const td = setTimeout(() => {
-      function type() {
-        if (lineIdx.current >= LINES.length) {
-          setDone(true);
-          return;
-        }
-        const cl = LINES[lineIdx.current];
-        if (charIdx.current < cl.length) {
-          setDisplayed((prev) => prev + cl[charIdx.current]);
-          charIdx.current++;
-          setTimeout(type, CHAR_INTERVAL);
-        } else {
-          if (lineIdx.current < LINES.length - 1) {
-            setDisplayed((prev) => prev + '\n');
-            lineIdx.current++;
-            charIdx.current = 0;
-            setTimeout(type, LINE_PAUSE);
-          } else {
-            setDone(true);
-          }
-        }
-      }
-      type();
-    }, START_DELAY);
-    return () => clearTimeout(td);
+    startedAt.current = Date.now();
+    const tids: ReturnType<typeof setTimeout>[] = [];
+    let acc = 0;
+
+    for (let i = 0; i < TEXT.length; i++) {
+      const delay = i === 0 ? START_DELAY : TEXT[i - 1] === '\n' ? LINE_PAUSE : CHAR_INTERVAL;
+      acc += delay;
+      const j = i + 1;
+      tids.push(setTimeout(() => setIdx(j), acc));
+    }
+
+    return () => tids.forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
-    if (!done || !ready) return;
+    if (idx < TEXT.length || !ready) return;
     const elapsed = Date.now() - startedAt.current;
     const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
-    const id = setTimeout(() => setFading(true), remaining);
-    return () => clearTimeout(id);
-  }, [done, ready]);
+    const t = setTimeout(() => setFading(true), remaining);
+    return () => clearTimeout(t);
+  }, [idx, ready]);
 
   useEffect(() => {
     if (!fading) return;
@@ -66,8 +51,8 @@ export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
   return (
     <div className={`${styles.overlay} ${fading ? styles.fadeOut : ''}`}>
       <div className={styles.logo}>
-        <span className={styles.text}>{displayed}</span>
-        {!done && <span className={styles.cursor}>|</span>}
+        <span className={styles.text}>{TEXT.slice(0, idx)}</span>
+        {idx < TEXT.length && <span className={styles.cursor}>|</span>}
       </div>
     </div>
   );
