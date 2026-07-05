@@ -148,7 +148,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const internalMembers = members.filter((m) => !m.isExternal);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Settings" onSave={handleSave}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Settings" onSave={handleSave} className={fieldStyles.modalWrap}>
       <div className={fieldStyles.fieldGroup}>
         <label className={fieldStyles.fieldLabel}>Currency</label>
         <input

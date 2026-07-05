@@ -246,3 +246,67 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.modalWrap {
+  /* overrides Modal .modal class */
+}
+
+@media (max-width: 768px) {
+  .modalWrap {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    height: 100dvh;
+    background: var(--color-bg) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .body {
+    padding: 0 20px 24px;
+    gap: 14px;
+  }
+
+  .inputField,
+  .selectField {
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  .fieldLabel {
+    font-size: 11px;
+  }
+
+  .actionBtn {
+    padding: 14px;
+    font-size: 14px;
+  }
+
+  .snapshotRow {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .snapshotLabel {
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .restoreBtn {
+    padding: 8px 16px;
+  }
+
+  .statusRow {
+    gap: 6px;
+  }
+
+  .statusText {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .actionsRow {
+    flex-direction: column;
+  }
+}
