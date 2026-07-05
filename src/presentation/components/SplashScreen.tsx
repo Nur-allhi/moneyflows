@@ -46,7 +46,6 @@ export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
         <span className={styles.logoAccent}>{accent}</span>
         {charCount < FULL_TEXT.length && <span className={styles.cursor} />}
       </div>
-      {charCount >= FULL_TEXT.length && <div className={styles.spinner} />}
     </div>
   );
 }
