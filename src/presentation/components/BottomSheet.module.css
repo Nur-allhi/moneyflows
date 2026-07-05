@@ -1,8 +1,10 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 100;
+  background: oklch(0% 0 0 / 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 300;
   animation: fadeIn 0.2s ease-out;
   will-change: opacity;
 }
@@ -17,17 +19,18 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 101;
+  z-index: 301;
   background: var(--color-bg);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   border: 1px solid var(--color-border);
   border-bottom: 0;
-  max-height: 92vh;
+  max-height: 90%;
   display: flex;
   flex-direction: column;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.35s ease-out;
   will-change: transform;
+  overflow-y: auto;
 }
 
 @keyframes slideUp {
@@ -38,17 +41,14 @@
 .handle {
   width: 36px;
   height: 4px;
-  border-radius: 4px;
-  background: oklch(100% 0 0 / 0.15);
-  margin: 10px auto 6px;
+  border-radius: 2px;
+  background: oklch(100% 0 0 / 0.2);
+  margin: 10px auto 12px;
   flex-shrink: 0;
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 20px 16px;
+  padding: 0 20px 16px;
   flex-shrink: 0;
 }
 
@@ -59,45 +59,9 @@
   letter-spacing: -0.01em;
 }
 
-.close {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 16px;
-  font-family: inherit;
-  transition: background var(--transition-fast);
-}
-
-.close:hover {
-  background: var(--color-surface-hover);
-  box-shadow: 0 0 20px var(--color-primary-glow);
-}
-
-.close:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.close:active {
-  background: rgba(255,255,255,0.08);
-}
-
-.close:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .body {
-  padding: 0 20px;
+  padding: 0 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow-y: auto;
-  padding-bottom: 20px;
 }

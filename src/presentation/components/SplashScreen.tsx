@@ -6,45 +6,68 @@ interface SplashScreenProps {
   onFinish: () => void;
 }
 
-const FULL_TEXT = 'MoneyFlows';
+const LINES = ['Money', 'Flows'];
 const MIN_SPLASH_MS = 2000;
-const TYPING_INTERVAL = 120;
+const CHAR_INTERVAL = 80;
+const LINE_PAUSE = 400;
+const START_DELAY = 300;
+const FADE_DURATION = 500;
 
 export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
-  const [charCount, setCharCount] = useState(1);
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
   const [fading, setFading] = useState(false);
   const startedAt = useRef(Date.now());
+  const lineIdx = useRef(0);
+  const charIdx = useRef(0);
 
   useEffect(() => {
-    if (charCount >= FULL_TEXT.length) return;
-    const id = setTimeout(() => setCharCount((c) => c + 1), TYPING_INTERVAL);
-    return () => clearTimeout(id);
-  }, [charCount]);
+    const td = setTimeout(() => {
+      function type() {
+        if (lineIdx.current >= LINES.length) {
+          setDone(true);
+          return;
+        }
+        const cl = LINES[lineIdx.current];
+        if (charIdx.current < cl.length) {
+          setDisplayed((prev) => prev + cl[charIdx.current]);
+          charIdx.current++;
+          setTimeout(type, CHAR_INTERVAL);
+        } else {
+          if (lineIdx.current < LINES.length - 1) {
+            setDisplayed((prev) => prev + '\n');
+            lineIdx.current++;
+            charIdx.current = 0;
+            setTimeout(type, LINE_PAUSE);
+          } else {
+            setDone(true);
+          }
+        }
+      }
+      type();
+    }, START_DELAY);
+    return () => clearTimeout(td);
+  }, []);
 
   useEffect(() => {
-    if (!ready || charCount < FULL_TEXT.length) return;
+    if (!done || !ready) return;
     const elapsed = Date.now() - startedAt.current;
     const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
     const id = setTimeout(() => setFading(true), remaining);
     return () => clearTimeout(id);
-  }, [ready, charCount]);
+  }, [done, ready]);
 
   useEffect(() => {
     if (!fading) return;
-    const id = setTimeout(onFinish, 500);
+    const id = setTimeout(onFinish, FADE_DURATION);
     return () => clearTimeout(id);
   }, [fading, onFinish]);
-
-  const typed = FULL_TEXT.slice(0, charCount);
-  const base = typed.slice(0, 5);
-  const accent = typed.slice(5);
 
   return (
     <div className={`${styles.overlay} ${fading ? styles.fadeOut : ''}`}>
       <div className={styles.logo}>
-        <span className={styles.logoBase}>{base}</span>
-        <span className={styles.logoAccent}>{accent}</span>
-        {charCount < FULL_TEXT.length && <span className={styles.cursor} />}
+        <span className={styles.text}>{displayed}</span>
+        {!done && <span className={styles.cursor}>|</span>}
       </div>
     </div>
   );

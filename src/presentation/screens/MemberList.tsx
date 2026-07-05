@@ -10,6 +10,15 @@ import { formatAmount } from '../utils/format';
 import { useSearchStore } from '../stores/useSearchStore';
 import styles from './MemberList.module.css';
 
+function getGradient(name: string): string {
+  const hues = [290, 170, 30, 85, 220, 330, 50, 190];
+  let idx = 0;
+  for (let i = 0; i < name.length; i++) {
+    idx = (idx * 31 + name.charCodeAt(i)) % hues.length;
+  }
+  const h = hues[idx];
+  return `linear-gradient(135deg, oklch(62% 0.22 ${h}), oklch(50% 0.2 ${h}))`;
+}
 
 export function MemberList() {
   const navigate = useNavigate();
@@ -20,6 +29,7 @@ export function MemberList() {
   const [showModal, setShowModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newShortName, setNewShortName] = useState('');
+  const [mobileSearch, setMobileSearch] = useState('');
 
   useEffect(() => {
     fetchMembers();
@@ -27,9 +37,10 @@ export function MemberList() {
   }, []);
 
   const familyMembers = members.filter((m) => !m.isExternal);
+  const effectiveQuery = mobileSearch.toLowerCase().trim() || searchQuery;
   const filteredMembers = useMemo(
-    () => searchQuery ? familyMembers.filter((m) => m.name.toLowerCase().includes(searchQuery)) : familyMembers,
-    [familyMembers, searchQuery],
+    () => effectiveQuery ? familyMembers.filter((m) => m.name.toLowerCase().includes(effectiveQuery)) : familyMembers,
+    [familyMembers, effectiveQuery],
   );
 
   function getBalance(memberId: string): number {
@@ -64,17 +75,60 @@ export function MemberList() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.mobHeader}>
+        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
+          {'\u2190'}
+        </button>
+        <span className={styles.pageTitle}>Members</span>
+      </div>
+
+      <div className={styles.searchBar}>
+        <div className={styles.searchWrap}>
+          <span className={styles.searchIcon}>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+              <circle cx="7" cy="7" r="5.5" />
+              <path d="M11 11l3.5 3.5" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Search members..."
+            value={mobileSearch}
+            onChange={(e) => setMobileSearch(e.target.value)}
+          />
+          {mobileSearch && (
+            <button className={styles.searchClear} onClick={() => setMobileSearch('')} aria-label="Clear search">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M3 3l6 6M9 3l-6 6" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className={styles.header}>
         <h2 className={styles.title}>Family Members</h2>
         <p className={styles.subtitle}>{filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''}</p>
         <button className={styles.addBtn} onClick={() => setShowModal(true)}>+ New Member</button>
       </div>
+
+      {familyMembers.length === 0 && (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>{'+'}</div>
+          <div className={styles.emptyTitle}>No members yet</div>
+          <div className={styles.emptyDesc}>Add your first family member to start tracking finances together</div>
+          <button className={styles.emptyBtn} onClick={() => setShowModal(true)}>Add First Member</button>
+        </div>
+      )}
+
       <div className={styles.grid}>
         {filteredMembers.length === 0 ? (
-          <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>
-            <div className="empty-state-icon">{'\u{1F50D}'}</div>
-            <p className="empty-state-text">No members match your search</p>
-          </div>
+          familyMembers.length > 0 && (
+            <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>
+              <div className="empty-state-icon">{'\u{1F50D}'}</div>
+              <p className="empty-state-text">No members match your search</p>
+            </div>
+          )
         ) : (
           filteredMembers.map((m) => (
           <button
@@ -83,11 +137,15 @@ export function MemberList() {
             onClick={() => navigate(`/member/${m.id}`)}
           >
             <div className={styles.cardLeft}>
+              <div className={styles.cellAvatar} style={{ background: getGradient(m.name) }}>
+                {(m.shortName?.[0] ?? m.name[0]!).toUpperCase()}
+              </div>
               <Avatar
                 initial={m.shortName?.[0] ?? m.name[0]!}
                 seed={m.name}
                 name={m.name}
                 size={48}
+                className={styles.deskAvatar}
               />
               <div className={styles.cardInfo}>
                 <span className={styles.cardName}>{m.name}</span>
@@ -97,6 +155,11 @@ export function MemberList() {
             <span className={styles.cardBalance}>{formatAmount(getBalance(m.id), locale, currency)}</span>
           </button>
           ))
+        )}
+        {familyMembers.length > 0 && (
+          <button className={styles.addCell} onClick={() => setShowModal(true)} aria-label="Add member">
+            <div className={styles.addIcon}>{'+'}</div>
+          </button>
         )}
       </div>
 

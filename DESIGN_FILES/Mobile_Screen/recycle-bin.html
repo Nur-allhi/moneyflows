@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Recycle Bin — MoneyFlows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(14% 0.015 260);
+  --surface: oklch(22% 0.02 260 / 0.55);
+  --fg: oklch(92% 0.008 260);
+  --muted: oklch(60% 0.02 260);
+  --border: oklch(100% 0 0 / 0.10);
+  --violet: oklch(62% 0.22 290);
+  --teal: oklch(65% 0.15 170);
+  --coral: oklch(62% 0.18 30);
+  --gold: oklch(75% 0.15 85);
+  --purple: oklch(55% 0.18 290);
+  --success: oklch(65% 0.15 150);
+  --danger: oklch(58% 0.18 30);
+  --font-display: 'Outfit', -apple-system, system-ui, sans-serif;
+  --font-body: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-size-base: clamp(14px, 3.5vw, 16px);
+  --bg-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font: var(--font-size-base)/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+body {
+  background-image: var(--bg-glow);
+  background-attachment: fixed;
+  padding: 0 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  min-height: 52px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  color: var(--fg);
+  display: grid; place-items: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.back-btn:active { transform: scale(0.92); background: oklch(100% 0 0 / 0.08); }
+.header-title {
+  font: 600 18px var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+/* Search bar */
+.search-bar { margin-bottom: 4px; }
+.search-bar input {
+  width: 100%;
+  padding: 14px 16px;
+  padding-left: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  color: var(--fg);
+  font: 14px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.2s;
+}
+.search-bar input:focus { border-color: var(--violet); box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15); }
+.search-bar input::placeholder { color: var(--muted); }
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 16px;
+  pointer-events: none;
+}
+.search-wrap { position: relative; }
+
+/* Tab bar */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  background: oklch(100% 0 0 / 0.05);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 4px;
+}
+.tab-item {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font: 500 12px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-item.active { background: var(--surface); color: var(--fg); }
+.tab-item:active { transform: scale(0.95); }
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.stats-bar .stats-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stats-bar .stats-count {
+  font: 500 14px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+.stats-bar .stats-total {
+  font: 500 12px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--coral);
+}
+.stats-bar .stats-purge {
+  text-align: right;
+  font: 400 11px var(--font-body);
+  color: var(--gold);
+  letter-spacing: 0.02em;
+}
+
+/* Recycle row */
+.recycle-row {
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s;
+}
+.recycle-row .row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.recycle-row .row-desc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.recycle-row .row-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.recycle-row .row-icon.tx { background: oklch(62% 0.22 290 / 0.15); }
+.recycle-row .row-icon.account { background: oklch(65% 0.15 170 / 0.15); }
+.recycle-row .row-name {
+  font: 500 14px var(--font-body);
+  color: var(--fg);
+}
+.recycle-row .row-sub {
+  font: 400 11px var(--font-body);
+  color: var(--muted);
+  margin-top: 1px;
+}
+.recycle-row .row-amount {
+  font: 500 14px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.recycle-row .row-amount.negative { color: var(--coral); }
+.recycle-row .row-amount.positive { color: var(--teal); }
+.recycle-row .row-days {
+  font: 400 11px var(--font-mono);
+  color: var(--gold);
+  text-align: right;
+  margin-bottom: 10px;
+}
+.recycle-row .row-actions {
+  display: flex;
+  gap: 8px;
+}
+.recycle-row .row-actions button {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font: 500 12px var(--font-body);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.recycle-row .row-actions button:active { transform: scale(0.97); }
+.btn-restore {
+  background: linear-gradient(135deg, var(--teal), oklch(55% 0.15 170));
+  color: #fff;
+}
+.btn-delete {
+  background: oklch(100% 0 0 / 0.08);
+  color: var(--muted);
+  border: 1px solid var(--border) !important;
+}
+
+/* Empty state */
+.empty-state {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  gap: 12px;
+}
+.empty-state.visible { display: flex; }
+.empty-state .empty-icon {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: oklch(55% 0.18 290 / 0.15);
+  display: grid; place-items: center;
+  font-size: 28px;
+  color: var(--purple);
+}
+.empty-state .empty-title {
+  font: 600 16px var(--font-display);
+  color: var(--fg);
+}
+.empty-state .empty-desc {
+  font: 400 13px var(--font-body);
+  color: var(--muted);
+}
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 200;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px; min-height: 44px;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: 400 10px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--violet); }
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 300;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  width: 100%;
+  max-height: 90%;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 20px;
+  animation: slideUp 0.35s ease-out;
+  overflow-y: auto;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: oklch(100% 0 0 / 0.2);
+  margin: 0 auto 16px;
+}
+.modal-title {
+  font: 600 16px var(--font-display);
+  color: var(--fg);
+  margin-bottom: 16px;
+}
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  font: 600 15px var(--font-display);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.submit-btn:active { opacity: 0.9; }
+.danger-btn {
+  background: linear-gradient(135deg, var(--danger), oklch(50% 0.2 30));
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="window.location.href='dashboard.html'" aria-label="Back">&#8592;</button>
+    <span class="header-title">Recycle Bin</span>
+  </div>
+</div>
+
+<div class="search-bar">
+  <div class="search-wrap">
+    <span class="search-icon">&#8981;</span>
+    <input type="text" id="searchInput" placeholder="Search deleted items..." oninput="filterItems()" />
+  </div>
+</div>
+
+<!-- Tab bar -->
+<div class="tab-bar" id="tabBar">
+  <button class="tab-item active" data-tab="all" onclick="switchTab('all')">All</button>
+  <button class="tab-item" data-tab="tx" onclick="switchTab('tx')">Tx</button>
+  <button class="tab-item" data-tab="accounts" onclick="switchTab('accounts')">Accounts</button>
+</div>
+
+<!-- Stats bar -->
+<div class="stats-bar" id="statsBar">
+  <div class="stats-left">
+    <span class="stats-count" id="itemCount">12 items</span>
+    <span class="stats-total" id="itemTotal">&#2547;3,450</span>
+  </div>
+  <div class="stats-purge" id="purgeDays">Auto-purge in 24d</div>
+</div>
+
+<div id="itemList" class="scroll-content" style="padding-bottom:0;"></div>
+
+<div class="empty-state" id="emptyState">
+  <div class="empty-icon">&#9851;</div>
+  <div class="empty-title">Nothing here</div>
+  <div class="empty-desc">Deleted items appear here and are automatically purged after 30 days.</div>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item" onclick="window.location.href='dashboard.html'">
+    <span class="nav-icon">&#9632;</span>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='member.html'">
+    <span class="nav-icon">&#9679;</span>
+    <span>Members</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='loans.html'">
+    <span class="nav-icon">&#9665;</span>
+    <span>Loans</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='groups.html'">
+    <span class="nav-icon">&#9630;</span>
+    <span>Groups</span>
+  </button>
+  <button class="nav-item active">
+    <span class="nav-icon">&#9851;</span>
+    <span>Bin</span>
+  </button>
+</nav>
+
+<script>
+var deletedItems = [
+  { id: 'd1', type: 'tx', icon: '&#128722;', name: 'Grocery', sub: 'Expense · Food', amount: -45, daysLeft: 5 },
+  { id: 'd2', type: 'tx', icon: '&#127970;', name: 'Dining Out', sub: 'Expense · Food', amount: -850, daysLeft: 3 },
+  { id: 'd3', type: 'tx', icon: '&#128178;', name: 'Insurance', sub: 'Expense · Finance', amount: -1500, daysLeft: 8 },
+  { id: 'd4', type: 'tx', icon: '&#128188;', name: 'Freelance Payment', sub: 'Income · Freelance', amount: 3230, daysLeft: 12 },
+  { id: 'd5', type: 'account', icon: '&#128179;', name: 'DBBL Account', sub: 'Bank account', amount: 12500, daysLeft: 18 },
+  { id: 'd6', type: 'tx', icon: '&#128241;', name: 'Mobile Recharge', sub: 'Expense · Utilities', amount: -300, daysLeft: 21 },
+  { id: 'd7', type: 'account', icon: '&#128179;', name: 'Nagad Wallet', sub: 'Mobile account', amount: 3200, daysLeft: 24 },
+  { id: 'd8', type: 'tx', icon: '&#127873;', name: 'Birthday Gift', sub: 'Income · Personal', amount: 1000, daysLeft: 2 },
+  { id: 'd9', type: 'tx', icon: '&#9889;', name: 'Electricity Bill', sub: 'Expense · Utilities', amount: -1200, daysLeft: 14 },
+  { id: 'd10', type: 'tx', icon: '&#127970;', name: 'Grocery Run', sub: 'Expense · Food', amount: -2250, daysLeft: 1 },
+  { id: 'd11', type: 'tx', icon: '&#128176;', name: 'Bonus', sub: 'Income · Work', amount: 5000, daysLeft: 22 },
+  { id: 'd12', type: 'account', icon: '&#128179;', name: 'Rocket Account', sub: 'Mobile account', amount: 850, daysLeft: 27 }
+];
+
+var currentTab = 'all';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('#tabBar .tab-item').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('#tabBar .tab-item[data-tab="' + tab + '"]').classList.add('active');
+  filterItems();
+}
+
+function filterItems() {
+  var q = document.getElementById('searchInput').value.toLowerCase().trim();
+  var list = deletedItems;
+
+  if (currentTab === 'tx') list = list.filter(function(i) { return i.type === 'tx'; });
+  else if (currentTab === 'accounts') list = list.filter(function(i) { return i.type === 'account'; });
+
+  if (q) list = list.filter(function(i) { return i.name.toLowerCase().includes(q) || i.sub.toLowerCase().includes(q); });
+
+  renderItems(list);
+}
+
+function renderItems(list) {
+  var container = document.getElementById('itemList');
+  var empty = document.getElementById('emptyState');
+
+  container.innerHTML = '';
+
+  if (list.length === 0) {
+    empty.classList.add('visible');
+    updateStats(deletedItems);
+    return;
+  }
+  empty.classList.remove('visible');
+
+  list.forEach(function(item) {
+    var row = document.createElement('div');
+    row.className = 'recycle-row';
+    var sign = item.amount >= 0 ? '+' : '';
+    row.innerHTML =
+      '<div class="row-top">' +
+        '<div class="row-desc">' +
+          '<div class="row-icon ' + item.type + '">' + item.icon + '</div>' +
+          '<div><div class="row-name">' + item.name + '</div><div class="row-sub">' + item.sub + '</div></div>' +
+        '</div>' +
+        '<div class="row-amount ' + (item.amount >= 0 ? 'positive' : 'negative') + '">' + sign + '&#2547;' + formatNum(Math.abs(item.amount)) + '</div>' +
+      '</div>' +
+      '<div class="row-days">&#9200; ' + item.daysLeft + 'd left</div>' +
+      '<div class="row-actions">' +
+        '<button class="btn-restore" onclick="restoreItem(\'' + item.id + '\')">&#8634; Restore</button>' +
+        '<button class="btn-delete" onclick="permaDelete(\'' + item.id + '\')">&#128465; Delete</button>' +
+      '</div>';
+    container.appendChild(row);
+  });
+
+  updateStats(list);
+}
+
+function updateStats(list) {
+  var totalItems = list.length;
+  var totalAmount = list.reduce(function(s, i) { return s + Math.abs(i.amount); }, 0);
+  var minDays = list.reduce(function(m, i) { return Math.min(m, i.daysLeft); }, 999);
+  document.getElementById('itemCount').textContent = totalItems + ' item' + (totalItems !== 1 ? 's' : '');
+  document.getElementById('itemTotal').innerHTML = '&#2547;' + formatNum(totalAmount);
+  document.getElementById('purgeDays').textContent = 'Auto-purge in ' + minDays + 'd';
+}
+
+function restoreItem(id) {
+  deletedItems = deletedItems.filter(function(i) { return i.id !== id; });
+  filterItems();
+}
+
+function permaDelete(id) {
+  if (!confirm('Permanently delete this item?')) return;
+  deletedItems = deletedItems.filter(function(i) { return i.id !== id; });
+  filterItems();
+}
+
+function formatNum(n) {
+  return n.toLocaleString('en-IN');
+}
+
+filterItems();
+</script>
+</body>
+</html>

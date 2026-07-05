@@ -29,6 +29,7 @@ body {
   color: var(--color-text);
   background: var(--color-bg);
   background-image: var(--color-bg-glow);
+  background-attachment: fixed;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -86,4 +87,11 @@ img {
 
 table {
   border-collapse: collapse;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 0 16px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
 }

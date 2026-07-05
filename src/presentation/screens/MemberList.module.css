@@ -120,10 +120,295 @@
   color: var(--color-income);
 }
 
+.cellAvatar {
+  display: none;
+}
+
+.deskAvatar {
+  display: flex;
+}
+
+.addCell {
+  display: none;
+}
+
+.mobHeader {
+  display: none;
+}
+
+.searchBar {
+  display: none;
+}
+
+.emptyState {
+  display: none;
+}
+
 @media (min-width: 600px) {
   .grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .page :global(.app-header) {
+    display: none;
+  }
+
+  .page {
+    gap: 0;
+  }
+
+  .header {
+    display: none;
+  }
+
+  .mobHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 4px;
+    min-height: 52px;
+  }
+
+  .backBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    backdrop-filter: blur(8px);
+    color: var(--color-text);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .backBtn:active {
+    transform: scale(0.92);
+  }
+
+  .pageTitle {
+    font: 600 18px var(--font-display);
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+  }
+
+  .searchBar {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .searchWrap {
+    position: relative;
+  }
+
+  .searchIcon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-secondary);
+    pointer-events: none;
+    display: flex;
+  }
+
+  .searchWrap input {
+    width: 100%;
+    padding: 14px 16px;
+    padding-left: 44px;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    backdrop-filter: blur(12px);
+    color: var(--color-text);
+    font: 14px var(--font-body);
+    outline: none;
+    -webkit-appearance: none;
+    transition: border-color 0.2s;
+  }
+
+  .searchWrap input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-glow);
+  }
+
+  .searchWrap input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: 0.6;
+  }
+
+  .searchClear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: oklch(100% 0 0 / 0.1);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background 0.15s;
+  }
+
+  .searchClear:active {
+    background: oklch(100% 0 0 / 0.18);
+  }
+
+  .searchClear svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .emptyIcon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--color-primary-dim);
+    display: grid;
+    place-items: center;
+    font-size: 28px;
+    color: var(--color-primary);
+  }
+
+  .emptyTitle {
+    font: 600 16px var(--font-display);
+    color: var(--color-text);
+  }
+
+  .emptyDesc {
+    font: 400 13px var(--font-body);
+    color: var(--color-text-secondary);
+    max-width: 280px;
+  }
+
+  .emptyBtn {
+    margin-top: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--color-primary), oklch(50% 0.2 290));
+    color: #fff;
+    font: 600 14px var(--font-display);
+    cursor: pointer;
+    transition: opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .emptyBtn:active {
+    opacity: 0.9;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .card {
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 8px;
+    border-radius: 16px;
+    min-height: 100px;
+    gap: 6px;
+  }
+
+  .cardLeft {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cellAvatar {
+    display: flex;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font: 700 18px var(--font-display);
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .deskAvatar {
+    display: none;
+  }
+
+  .cardInfo {
+    align-items: center;
+  }
+
+  .cardName {
+    font: 500 13px var(--font-body);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cardTag {
+    display: none;
+  }
+
+  .cardBalance {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--color-teal);
+  }
+
+  .addCell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 8px;
+    border-radius: 16px;
+    border: 1px dashed var(--color-border);
+    background: oklch(22% 0.02 260 / 0.3);
+    cursor: pointer;
+    min-height: 100px;
+    transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+    color: inherit;
+  }
+
+  .addCell:active {
+    transform: scale(0.95);
+  }
+
+  .addIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--color-primary-dim);
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    color: var(--color-primary);
   }
 }

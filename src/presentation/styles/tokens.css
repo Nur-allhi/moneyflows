@@ -66,3 +66,9 @@
 
   --animation-shimmer: 1.5s ease-in-out infinite;
 }
+
+@media (max-width: 768px) {
+  :root {
+    --font-size-base: clamp(14px, 3.5vw, 16px);
+  }
+}

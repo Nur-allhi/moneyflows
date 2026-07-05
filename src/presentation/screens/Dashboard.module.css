@@ -227,6 +227,14 @@
   color: var(--color-text);
 }
 
+.flowDivider {
+  display: none;
+}
+
+.flowNet {
+  display: none;
+}
+
 .loanList {
   padding: 8px 16px;
   display: flex;
@@ -467,4 +475,232 @@
   .monthSummary { flex-direction: column; gap: 8px; padding: 16px; }
   .monthStat { padding: 8px 0; border-right: none; }
   .monthStat:not(:last-child) { border-bottom: 1px solid var(--color-border); }
+}
+
+@media (max-width: 768px) {
+  .metrics {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .metrics > .metricCard:first-child {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .metrics > .metricCard:first-child .metricChange {
+    display: none;
+  }
+
+  .metrics > .metricCard:first-child .metricLabel {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .metrics > .metricCard:first-child .metricValue {
+    font-size: 24px;
+  }
+
+  .metrics > .metricCard:nth-child(2),
+  .metrics > .metricCard:nth-child(3) {
+    padding: 16px;
+    gap: 2px;
+    border-radius: 16px;
+  }
+
+  .metrics > .metricCard:nth-child(2) .metricValue,
+  .metrics > .metricCard:nth-child(3) .metricValue {
+    font-size: 20px;
+  }
+
+  .metrics > .metricCard:nth-child(2) .metricChange,
+  .metrics > .metricCard:nth-child(3) .metricChange {
+    display: none;
+  }
+
+  .metrics > .metricCard:nth-child(2) .metricLabel,
+  .metrics > .metricCard:nth-child(3) .metricLabel {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .monthSummary {
+    flex-direction: row;
+    justify-content: space-between;
+    border-radius: 16px;
+    padding: 20px;
+  }
+
+  .monthSummary > .monthStat {
+    flex: 1;
+    text-align: center;
+    padding: 0;
+    border: none !important;
+  }
+
+  .monthSummary > .monthStat:not(:last-child) {
+    border-right: none !important;
+  }
+
+  .monthSummary .monthStatLabel {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+
+  .monthSummary .monthStatValue {
+    font-size: 16px;
+  }
+
+  .monthSummary > .monthStat:last-child {
+    display: none;
+  }
+
+  .flowDivider {
+    display: block;
+    width: 1px;
+    height: 36px;
+    background: var(--color-border);
+    flex-shrink: 0;
+  }
+
+  .flowNet {
+    display: block;
+    text-align: center;
+    margin-top: 8px;
+    font: 500 13px var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-teal);
+  }
+
+  .actions {
+    display: none;
+  }
+
+  .panel {
+    border-radius: 16px;
+  }
+
+  .panelHeader h2 {
+    font-size: 15px;
+  }
+
+  .memberHead {
+    padding: 12px 16px;
+  }
+
+  .memberAccounts {
+    padding: 2px 16px 12px 50px;
+  }
+
+  .mname {
+    font-size: 14px;
+  }
+
+  .memberTotal {
+    font-size: 14px;
+  }
+
+  .txRow {
+    padding: 12px 16px;
+  }
+
+  .txDate {
+    display: none;
+  }
+
+  .txType {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: transparent;
+    overflow: hidden;
+    margin-right: -2px;
+    background: oklch(62% 0.18 30 / 0.2);
+  }
+
+  .txType[data-type="income"],
+  .txType[data-type="loan_repayment"],
+  .txType[data-type="repay"] {
+    background: oklch(65% 0.15 170 / 0.2);
+    color: transparent;
+  }
+
+  .txType[data-type="expense"],
+  .txType[data-type="loan_issue"],
+  .txType[data-type="lend"] {
+    background: oklch(62% 0.18 30 / 0.2);
+    color: transparent;
+  }
+
+  .txType[data-type="transfer"] {
+    background: oklch(62% 0.22 290 / 0.2);
+    color: transparent;
+  }
+
+  .txDesc {
+    font-size: 14px;
+  }
+
+  .txAmount {
+    font-size: 14px;
+  }
+
+  .txArrow {
+    width: 24px;
+    height: 24px;
+  }
+
+  .txArrow svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .loanRow {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0;
+  }
+
+  .loanRow:last-child {
+    border-bottom: none;
+  }
+
+  .loanBarWrap {
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  .loanBarFill {
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--color-teal), oklch(65% 0.15 170 / 0.5));
+  }
+
+  .loanDebtorName {
+    font-size: 14px;
+  }
+
+  .loanAmount {
+    font-size: 14px;
+  }
+
+  .loanMeta {
+    font-size: 11px;
+  }
+
+  .content {
+    gap: 12px;
+  }
 }

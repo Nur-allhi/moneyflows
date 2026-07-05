@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import { SplashScreen } from './presentation/components/SplashScreen';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
-import { seedDatabase } from './seed';
 import './presentation/styles/tailwind.css';
 import './presentation/styles/reset.css';
 import './presentation/styles/tokens.css';
@@ -17,11 +16,7 @@ function Root() {
   const handleFinish = useCallback(() => setShowApp(true), []);
 
   React.useEffect(() => {
-    initDatabase().then(async () => {
-      const members = await getDatabase().getMembers();
-      if (members.length === 0) {
-        await seedDatabase();
-      }
+    initDatabase().then(() => {
       getDatabase().recalculateBalances();
       setReady(true);
     });

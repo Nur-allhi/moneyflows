@@ -5,7 +5,7 @@ import styles from './BottomSheet.module.css';
 interface BottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title?: string;
   children: ReactNode;
   className?: string;
 }
@@ -25,12 +25,13 @@ export function BottomSheet({ isOpen, onClose, title, children, className = '' }
   return (
     <>
       <div className={styles.overlay} onClick={onClose} />
-      <div className={`${styles.sheet} ${className}`} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`${styles.sheet} ${className}`} role="dialog" aria-modal="true" aria-label={title ?? 'Sheet'}>
         <div className={styles.handle} />
-        <div className={styles.header}>
-          <h2 className={styles.title}>{title}</h2>
-          <button className={styles.close} onClick={onClose} aria-label="Close">&times;</button>
-        </div>
+        {title && (
+          <div className={styles.header}>
+            <h2 className={styles.title}>{title}</h2>
+          </div>
+        )}
         <div className={styles.body}>
           {children}
         </div>

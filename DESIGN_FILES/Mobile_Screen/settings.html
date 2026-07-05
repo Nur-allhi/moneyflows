@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Settings — MoneyFlows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(14% 0.015 260);
+  --surface: oklch(22% 0.02 260 / 0.55);
+  --fg: oklch(92% 0.008 260);
+  --muted: oklch(60% 0.02 260);
+  --border: oklch(100% 0 0 / 0.10);
+  --violet: oklch(62% 0.22 290);
+  --teal: oklch(65% 0.15 170);
+  --coral: oklch(62% 0.18 30);
+  --gold: oklch(75% 0.15 85);
+  --purple: oklch(55% 0.18 290);
+  --success: oklch(65% 0.15 150);
+  --danger: oklch(58% 0.18 30);
+  --font-display: 'Outfit', -apple-system, system-ui, sans-serif;
+  --font-body: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-size-base: clamp(14px, 3.5vw, 16px);
+  --bg-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font: var(--font-size-base)/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+body {
+  background-image: var(--bg-glow);
+  background-attachment: fixed;
+  padding: 0 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  min-height: 52px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  color: var(--fg);
+  display: grid; place-items: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.back-btn:active { transform: scale(0.92); background: oklch(100% 0 0 / 0.08); }
+.header-title {
+  font: 600 18px var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 24px;
+}
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+.section-title {
+  font: 600 15px var(--font-display);
+  color: var(--fg);
+  margin-bottom: 14px;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid oklch(100% 0 0 / 0.06);
+  gap: 12px;
+  min-height: 48px;
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-label {
+  font: 400 13px var(--font-body);
+  color: var(--fg);
+  flex-shrink: 0;
+}
+.settings-input {
+  width: 120px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: oklch(100% 0 0 / 0.06);
+  color: var(--fg);
+  font: 13px var(--font-body);
+  outline: none;
+  text-align: right;
+  -webkit-appearance: none;
+  transition: border-color 0.2s;
+}
+.settings-input:focus { border-color: var(--violet); box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15); }
+.settings-input.wide { width: 180px; text-align: left; }
+.settings-select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font: 13px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 120px;
+  text-align: right;
+}
+.settings-select option { background: var(--bg); color: var(--fg); }
+.backup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid oklch(100% 0 0 / 0.06);
+}
+.backup-row:last-child { border-bottom: none; }
+.backup-date {
+  font: 400 14px var(--font-body);
+  color: var(--fg);
+}
+.btn-restore {
+  padding: 8px 16px;
+  border: 1px solid var(--violet);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--violet);
+  font: 500 12px var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-restore:active { background: oklch(62% 0.22 290 / 0.15); transform: scale(0.97); }
+.drive-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.drive-status .drive-label {
+  font: 400 13px var(--font-body);
+  color: var(--muted);
+}
+.btn-setup {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  font: 500 13px var(--font-display);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-setup:active { opacity: 0.9; transform: scale(0.97); }
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 200;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px; min-height: 44px;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: 400 10px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--violet); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font: 500 13px var(--font-body);
+  z-index: 500;
+  display: none;
+  animation: toastIn 0.25s ease-out;
+  white-space: nowrap;
+}
+.toast.show { display: block; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="history.back()" aria-label="Back">&#8592;</button>
+    <span class="header-title">Settings</span>
+  </div>
+</div>
+
+<div class="scroll-content">
+
+  <!-- General -->
+  <div class="glass">
+    <div class="section-title">General</div>
+
+    <div class="settings-row">
+      <span class="settings-label">Currency</span>
+      <input class="settings-input wide" type="text" id="currencyInput" value="BDT" />
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Locale</span>
+      <input class="settings-input wide" type="text" id="localeInput" value="bn-BD" />
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Primary Member</span>
+      <select class="settings-select" id="primaryMember">
+        <option value="efty" selected>Efty</option>
+        <option value="azam">Azam</option>
+        <option value="nahar">Nahar</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Validation -->
+  <div class="glass">
+    <div class="section-title">Validation</div>
+
+    <div class="settings-row">
+      <span class="settings-label">Description Max</span>
+      <input class="settings-input" type="number" id="descMax" value="60" min="1" max="200" />
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Numpad Digits</span>
+      <input class="settings-input" type="number" id="numpadMax" value="9" min="1" max="15" />
+    </div>
+    <div class="settings-row">
+      <span class="settings-label">Tx Per Page</span>
+      <input class="settings-input" type="number" id="txLimit" value="50" min="10" max="200" />
+    </div>
+  </div>
+
+  <!-- Backup -->
+  <div class="glass">
+    <div class="section-title">Backup &amp; Restore</div>
+
+    <div class="backup-row">
+      <span class="backup-date">&#9679; 2 Jan 2026 &mdash; 12:30</span>
+      <button class="btn-restore" onclick="restoreBackup('2 Jan 2026')">Restore</button>
+    </div>
+    <div class="backup-row">
+      <span class="backup-date">&#9679; 1 Jan 2026 &mdash; 18:15</span>
+      <button class="btn-restore" onclick="restoreBackup('1 Jan 2026')">Restore</button>
+    </div>
+
+    <div class="drive-status">
+      <span class="drive-label">Drive Sync: <span id="driveStatus" style="color:var(--muted);">Not set</span></span>
+      <button class="btn-setup" onclick="setupDrive()">Set up Drive</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item" onclick="window.location.href='dashboard.html'">
+    <span class="nav-icon">&#9632;</span>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='member.html'">
+    <span class="nav-icon">&#9679;</span>
+    <span>Members</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='loans.html'">
+    <span class="nav-icon">&#9665;</span>
+    <span>Loans</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='groups.html'">
+    <span class="nav-icon">&#9630;</span>
+    <span>Groups</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='recycle-bin.html'">
+    <span class="nav-icon">&#9851;</span>
+    <span>Bin</span>
+  </button>
+</nav>
+
+<script>
+function restoreBackup(date) {
+  showToast('Restoring backup from ' + date + '…');
+}
+
+function setupDrive() {
+  showToast('Drive setup opened in browser');
+  document.getElementById('driveStatus').textContent = 'Connecting…';
+  setTimeout(function() {
+    document.getElementById('driveStatus').textContent = 'Not set';
+  }, 3000);
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+</script>
+</body>
+</html>

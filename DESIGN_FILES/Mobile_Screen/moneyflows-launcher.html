@@ -1,0 +1,244 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>MoneyFlows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(14% 0.015 260);
+  --surface: oklch(22% 0.02 260 / 0.55);
+  --fg: oklch(92% 0.008 260);
+  --muted: oklch(60% 0.02 260);
+  --border: oklch(100% 0 0 / 0.10);
+  --violet: oklch(62% 0.22 290);
+  --teal: oklch(65% 0.15 170);
+  --coral: oklch(62% 0.18 30);
+  --gold: oklch(75% 0.15 85);
+  --purple: oklch(55% 0.18 290);
+  --success: oklch(65% 0.15 150);
+  --danger: oklch(58% 0.18 30);
+  --font-display: 'Outfit', -apple-system, system-ui, sans-serif;
+  --font-body: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --bg-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+  --font-size-base: clamp(14px, 3.5vw, 16px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font: var(--font-size-base)/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Splash screen */
+#splash {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.5s ease;
+}
+#splash.hidden { opacity: 0; pointer-events: none; }
+#splash-logo {
+  font: 600 36px/1 var(--font-display);
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--violet), var(--teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#splash-cursor {
+  display: inline-block;
+  width: 3px; height: 36px;
+  background: var(--violet);
+  margin-left: 2px;
+  animation: blink 0.8s step-end infinite;
+  vertical-align: text-bottom;
+}
+@keyframes blink { 50% { opacity: 0; } }
+#splash-loader {
+  margin-top: 32px;
+  width: 120px; height: 3px;
+  border-radius: 2px;
+  background: oklch(100% 0 0 / 0.08);
+  overflow: hidden;
+}
+#splash-loader-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--violet), var(--teal));
+  border-radius: 2px;
+  transition: width 1.5s ease;
+}
+
+/* Launcher */
+#app {
+  display: none;
+  min-height: 100vh;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 16px 32px;
+  background: var(--bg);
+  background-image: var(--bg-glow);
+}
+#app.visible { display: flex; }
+.launcher-logo {
+  font: 700 28px/1 var(--font-display);
+  letter-spacing: -0.02em;
+  margin-bottom: 32px;
+  background: linear-gradient(135deg, var(--violet), var(--teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.launcher-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  max-width: 400px;
+}
+.launcher-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px 16px;
+  border-radius: 16px;
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.launcher-card:active { transform: scale(0.97); }
+.launcher-card:hover { border-color: var(--violet); box-shadow: 0 0 20px oklch(62% 0.22 290 / 0.12); }
+.launcher-card.full { grid-column: 1 / -1; }
+.launcher-card .icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  font-size: 18px;
+}
+.launcher-card .icon.violet { background: oklch(62% 0.22 290 / 0.2); }
+.launcher-card .icon.teal { background: oklch(65% 0.15 170 / 0.2); }
+.launcher-card .icon.coral { background: oklch(62% 0.18 30 / 0.2); }
+.launcher-card .icon.gold { background: oklch(75% 0.15 85 / 0.2); }
+.launcher-card .label { font: 600 15px/1.3 var(--font-display); color: var(--fg); }
+.launcher-card .desc { font: 400 12px/1.4 var(--font-body); color: var(--muted); }
+
+.enter-btn {
+  margin-top: 32px;
+  width: 100%;
+  max-width: 400px;
+  padding: 16px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  font: 600 16px var(--font-display);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.enter-btn:active { transform: scale(0.97); opacity: 0.9; }
+
+@media (max-width: 360px) {
+  .launcher-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div id="splash-logo"><span id="splash-text"></span><span id="splash-cursor">|</span></div>
+  <div id="splash-loader"><div id="splash-loader-bar"></div></div>
+</div>
+
+<div id="app">
+  <div class="launcher-logo">MoneyFlows</div>
+  <div class="launcher-grid">
+    <div class="launcher-card full" onclick="navigate('dashboard.html')">
+      <div class="icon violet">&#9632;</div>
+      <div class="label">Dashboard</div>
+      <div class="desc">Quick overview of your finances</div>
+    </div>
+    <div class="launcher-card" onclick="navigate('member.html')">
+      <div class="icon teal">&#9679;</div>
+      <div class="label">Members</div>
+      <div class="desc">View family accounts</div>
+    </div>
+    <div class="launcher-card" onclick="navigate('loans.html')">
+      <div class="icon gold">&#9665;</div>
+      <div class="label">Loans</div>
+      <div class="desc">Track receivables</div>
+    </div>
+    <div class="launcher-card" onclick="navigate('recycle-bin.html')">
+      <div class="icon coral">&#9672;</div>
+      <div class="label">Recycle Bin</div>
+      <div class="desc">Recover deleted items</div>
+    </div>
+    <div class="launcher-card" onclick="navigate('dashboard.html')">
+      <div class="icon violet" style="background:oklch(62% 0.22 290 / 0.2);">+</div>
+      <div class="label">Add Transaction</div>
+      <div class="desc">Record a new entry</div>
+    </div>
+  </div>
+  <button class="enter-btn" onclick="navigate('dashboard.html')">Enter App</button>
+</div>
+
+<script>
+function navigate(url) {
+  window.location.href = url;
+}
+
+(function() {
+  var text = 'MoneyFlows';
+  var idx = 0;
+  var el = document.getElementById('splash-text');
+  var bar = document.getElementById('splash-loader-bar');
+  var splash = document.getElementById('splash');
+  var app = document.getElementById('app');
+
+  function type() {
+    if (idx < text.length) {
+      el.textContent += text[idx];
+      idx++;
+      setTimeout(type, 80);
+    }
+  }
+
+  setTimeout(type, 200);
+  setTimeout(function() { bar.style.width = '100%'; }, 300);
+
+  var minTime = 2000;
+  var start = Date.now();
+
+  function hideSplash() {
+    var elapsed = Date.now() - start;
+    var remaining = Math.max(0, minTime - elapsed);
+    setTimeout(function() {
+      splash.classList.add('hidden');
+      app.classList.add('visible');
+    }, remaining);
+  }
+
+  setTimeout(hideSplash, minTime);
+})();
+</script>
+</body>
+</html>

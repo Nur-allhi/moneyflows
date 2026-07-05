@@ -842,3 +842,284 @@ Implementation details:
 
 **Acceptance:** sync fires after writes; Settings shows correct status; folder picker works; restore from Drive works; Firefox/Safari show fallback message; permission changes handled gracefully.
 
+---
+
+## Phase 9: Mobile Screen UI — 19 tickets (T-065–T-083)
+
+**Source of truth:** `DESIGN_FILES/Mobile_Screen/*.html` — pixel-perfect HTML mockups for all mobile screens.
+**Mobile CSS rules (from all HTML files):** `body { padding: 0 16px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }` — glass cards `border-radius: 16px; padding: 20px` — touch targets min 44×44px — `:active { transform: scale(0.97) }` — fonts `--font-size-base` (clamp 14–16px).
+
+**Design files per screen:**
+| Screen | HTML file |
+|--------|-----------|
+| Dashboard | `dashboard.html` (920 lines) |
+| Member List | `member.html` (480 lines) |
+| Member Profile | `member-profile.html` (1006 lines) |
+| Loans | `loans.html` (746 lines) |
+| Loan Detail | `loan-detail.html` (1091 lines) |
+| Groups | `groups.html` (749 lines) |
+| Group Ledger | `group-ledger.html` (627 lines) |
+| Recycle Bin | `recycle-bin.html` (532 lines) |
+| Settings | `settings.html` (365 lines) |
+| Splash | `index.html` |
+| Modals | `modals.js` (180 lines) |
+| Launcher | `moneyflows-launcher.html` |
+
+### T-065 — Mobile body layout + safe areas + bg-glow
+**Skill:** `frontend-design`, `senior-frontend`
+**Effort:** S
+**File(s):** `src/App.module.css`, `src/presentation/styles/tokens.css`
+**Content:**
+1. Add `body { padding: 0 16px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }`
+2. Fix `--bg-glow` background via `background-attachment: fixed`
+3. `--font-size-base: clamp(14px, 3.5vw, 16px)` token override for mobile
+4. Override `App.module.css` `.main` padding for mobile
+**Design:** All HTML files declare body padding rule
+**Acceptance:** Desktop unaffected; mobile has 16px side padding, 80px + safe-area bottom space, correct font scaling.
+
+### T-066 — Mobile Header with back, search, settings
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/components/Header.tsx`, `Header.module.css`
+**Content:**
+1. Mobile header: back button (40px circle, border, ← arrow) + title + right actions (search 🔍 + settings ⚙)
+2. Settings gear dropdown: Settings, Recycle Bin, Launcher
+3. No date display, no notification bell on mobile
+4. Hide breadcrumb on mobile via CSS/context
+5. Search bar hidden by default, toggles via search icon
+**Design:** `dashboard.html` lines 48-97
+**Acceptance:** Mobile shows compact header with back + title + icons; desktop header unchanged; search toggles correctly.
+
+### T-067 — Mobile BottomNav (5 tabs, 64px, fixed)
+**Skill:** `frontend-design`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** NEW: `src/presentation/components/BottomNav.tsx`, `BottomNav.module.css`
+**Content:**
+1. Fixed position: `bottom: 0; left: 0; right: 0`
+2. Height: 64px, `backdrop-filter: blur(20px)`
+3. 5 nav items: Home, Members, Loans, Groups, Bin
+4. Each: icon (text/emoji) + label, min 44×44px
+5. Active state: color `var(--violet)`
+6. `padding-bottom: env(safe-area-inset-bottom)`
+7. Only visible on mobile (<768px)
+**Design:** Nav pattern identical in all HTML files (e.g. `dashboard.html` lines 361-393)
+**Acceptance:** Bottom nav renders on mobile with 5 tabs; active state highlights correctly; hidden on desktop.
+
+### T-068 — BottomSheet component (slide-up, drag handle)
+**Skill:** `frontend-design`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** NEW: `src/presentation/components/BottomSheet.tsx`, `BottomSheet.module.css`
+**Content:**
+1. Overlay: `background: oklch(0% 0 0 / 0.6)`, `backdrop-filter: blur(4px)`
+2. Sheet: `max-height: 90%`, `border-radius: 20px 20px 0 0`
+3. Animation: `slideUp` 0.35s ease-out (translateY 100% → 0)
+4. Drag handle: 36×4px rounded bar, centered, `background: oklch(100% 0 0 / 0.2)`
+5. Close on overlay click
+6. Props: `isOpen`, `onClose`, `children`, optional `title`
+**Design:** Modal pattern in all HTML files (e.g. `dashboard.html` lines 409-435)
+**Acceptance:** Sheet slides up smoothly; overlay click closes; drag handle renders. Replaces existing modal overlay pattern on mobile.
+
+### T-069 — FAB component (Dashboard only)
+**Skill:** `frontend-design`, `ui-ux-pro-max`
+**Effort:** S
+**File(s):** NEW: `src/presentation/components/FAB.tsx`, `FAB.module.css`
+**Content:**
+1. Position: fixed, `bottom: calc(80px + env(safe-area-inset-bottom))`, `right: 16px`
+2. Size: 56×56px circle, gradient violet, white "+" 28px
+3. Shadow: `0 4px 20px oklch(62% 0.22 290 / 0.3)`
+4. `:active { transform: scale(0.92) }`
+5. z-index: 100
+6. Only rendered on Dashboard route; hidden on desktop
+**Design:** `dashboard.html` lines 341-358
+**Acceptance:** FAB renders bottom-right on mobile Dashboard; hidden on other screens and desktop; `:active` animation works.
+
+### T-070 — Standardize glass cards for mobile (16px radius, 20px padding)
+**Skill:** `frontend-design`
+**Effort:** S
+**File(s):** `src/presentation/styles/glassmorphism.css`
+**Content:**
+1. Mobile glass card: `border-radius: 16px; padding: 20px; backdrop-filter: blur(16px); border: 1px solid var(--border)`
+2. Section headers inside glass: 600 weight, 15px, display font
+3. Ensure all `.glass-panel` styles match mobile spec
+**Design:** `dashboard.html` `.glass` class (lines 108-115)
+**Acceptance:** All glass cards on mobile have correct radius/padding; desktop unaffected via breakpoint overrides.
+
+### T-071 — SplashScreen typewriter animation (mobile-first)
+**Skill:** `frontend-design`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/components/SplashScreen.tsx`, `SplashScreen.module.css`
+**Content:**
+1. Typewriter: reveal "Money\nFlows" letter by letter on two lines
+2. Gradient text: `linear-gradient(135deg, var(--violet), oklch(55% 0.25 290))`
+3. Blinking cursor: 3px wide, `var(--violet)`, `box-shadow: 0 0 8px var(--violet)`
+4. Min 2s display, then fade out 0.5s
+5. Loader bar tied to DB init progress (optional)
+**Design:** `index.html` (full file)
+**Acceptance:** Typewriter plays on launch; gradient text renders; cursor blinks; fades out after DB init.
+
+### T-072 — Dashboard mobile layout (total assets, metrics, accordion, FAB)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** L
+**File(s):** `src/presentation/screens/Dashboard.tsx`, `Dashboard.module.css`
+**Content:**
+1. **Total Assets** card: centered, 24px mono bold, "TOTAL ASSETS" label below
+2. **2-col Metric Row**: Cash (gold) + Loans Out (coral), side by side
+3. **Flow Summary**: Income + divider + Expenses, net row below with ↗ arrow
+4. **Where Your Money Is** accordion: expandable sections for each member with accounts
+5. **Active Loans**: loan cards with progress bar (6px, teal gradient) + badge + %
+6. **Recent Transactions**: icon + description + signed amount
+7. Remove desktop action button row; FAB replaces "New Transaction" / "Quick Loan" buttons
+8. Settings gear in header replaces inline settings button
+9. Search bar toggles from header search icon
+**Design:** `dashboard.html` (full file)
+**Acceptance:** All sections render per spec; accordion expand/collapse works; FAB visible; desktop layout unchanged via breakpoints.
+
+### T-073 — MemberList mobile (3-column avatar grid, search, add)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/screens/MemberList.tsx`, `MemberList.module.css`
+**Content:**
+1. 3-column grid, 12px gap
+2. Each cell: 56px circular avatar (gradient) + truncated name + formatted balance
+3. Last cell: "+" add button (dashed border)
+4. Search bar: full-width, rounded 14px, 🔍 icon
+5. Empty state: centered icon + title + description + "Add First Member" button
+**Design:** `member.html` (full file, 480 lines)
+**Acceptance:** 3-col grid renders; avatar placeholders use gradient initials; add cell works; search filters list; desktop grid unchanged.
+
+### T-074 — MemberProfile mobile (hero, pills, account carousel, ledger)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** L
+**File(s):** `src/presentation/screens/MemberProfile.tsx`, `MemberProfile.module.css`
+**Content:**
+1. **Hero card**: centered 72px avatar, name 18px bold, balance 28px mono teal
+2. **Quick action pills**: 3 buttons (Income/Expense/Transfer) with icon + uppercase label
+3. **Account carousel**: horizontal snap-scroll, cards with type+name+balance, dots, "+" add card
+4. **Ledger**: toolbar (search+download), All/Income/Expense tabs, date|desc+category|amount rows, infinite scroll via IntersectionObserver
+**Design:** `member-profile.html` (full file, 1006 lines)
+**Acceptance:** Hero renders; pills open tx form with correct type; carousel snaps; tabs filter ledger; infinite scroll loads more.
+
+### T-075 — LoansScreen mobile (search, pills, loan cards, badges)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** Rewrite `src/loans/presentation/screens/LoansScreen.tsx`, `LoansScreen.module.css`
+**Content:**
+1. Header: ← Loans + [+] button
+2. Search bar: "Search debtor..."
+3. Filter pills: horizontally scrollable (Active/Settled/All)
+4. Summary line: "Total Active: ₹8,200"
+5. Loan cards: avatar+name | outstanding | progress bar | badge (active/partial/settled) | %
+6. Empty states: "No active loans" / "Create your first loan"
+**Design:** `loans.html` (full file, 746 lines)
+**Acceptance:** All sections render; pills filter correctly; badges (Active/Partial/Settled) match spec; "Create your first loan" shows when empty.
+
+### T-076 — LoanDetailView mobile (summary, progress, ledger, repayment modal)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** L
+**File(s):** Rewrite `src/loans/presentation/components/LoanDetailView.tsx`, `LoanDetailView.module.css`
+**Content:**
+1. Summary card: type badge, name, amount coral, "Total Outstanding" label
+2. Progress: 10px track, teal fill, "% — ₹remaining remaining"
+3. Action row: [+] Repayment + [🗑 Delete]
+4. Ledger: search+download toolbar, All/Issued/Repaid tabs, date filter, rows, infinite scroll
+5. Repayment modal: type tabs, centered amount 32px, form fields, numpad (4×4 grid)
+6. Settled badge: "✓ Settled" pill
+7. Delete confirm modal: "Move to Recycle Bin" (red) + "Cancel"
+**Design:** `loan-detail.html` (full file, 1091 lines)
+**Acceptance:** Summary renders; progress bar fills correctly; ledger tabs + filter work; repayment modal with numpad works.
+
+### T-077 — GroupsListScreen mobile (cards, search, detail bottom sheet)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/screens/GroupsListScreen.tsx`, `GroupsListScreen.module.css`
+**Content:**
+1. Header: ← Groups + [+] button
+2. Search bar: "Search groups..."
+3. Group cards: icon (44×44 rounded) + name + account count | total balance
+4. Empty state: icon + "No groups yet" + "Create First Group" button
+5. **Group detail bottom sheet** (drag-to-dismiss via touch translateY, >80px threshold): handle bar, title, balance, account list, action buttons (View Ledger / Edit / Delete)
+**Design:** `groups.html` (full file, 749 lines)
+**Acceptance:** Cards render; search filters; bottom sheet opens on tap; drag-to-dismiss works; group actions functional.
+
+### T-078 — GroupLedgerScreen mobile (balance hero, ledger, infinite scroll)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/screens/GroupLedgerScreen.tsx`, `GroupLedgerScreen.module.css`
+**Content:**
+1. Header: ← group name
+2. Balance hero: centered, "TOTAL BALANCE" label, balance 22px bold, "X accounts" sub
+3. Ledger: search+download toolbar, All/Income/Expense/Transfer tabs, date|desc+category|amount rows, infinite scroll
+**Design:** `group-ledger.html` (full file, 627 lines)
+**Acceptance:** Hero renders; tabs filter; infinite scroll loads more; tx detail modal opens on row tap.
+
+### T-079 — RecycleBin mobile (tab bar, stats, rows with restore/delete)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/screens/RecycleBin.tsx`, `RecycleBin.module.css`
+**Content:**
+1. Header: ← Recycle Bin
+2. Search bar: "Search deleted items..."
+3. Tab bar: All / Tx / Accounts (segmented tabs)
+4. Stats bar: "12 items" + "₹3,450" | "Auto-purge in 24d"
+5. Rows: icon + name+sub | signed amount | "Xd left" | [↩ Restore] [🗑 Delete]
+6. Empty state: "Nothing here" with description
+**Design:** `recycle-bin.html` (full file, 532 lines)
+**Acceptance:** Tabs filter by type; stats bar accurate; restore/delete buttons work; empty state shows when no items.
+
+### T-080 — Settings mobile (full-screen, sections, toasts)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/components/SettingsModal.tsx`, `SettingsModal.module.css`
+**Content:**
+1. Convert to full-screen overlay (not bottom sheet)
+2. Header: ← Settings
+3. General: Currency, Locale, Primary Member
+4. Validation: Description Max, Numpad Digits, Tx Per Page
+5. Backup: Restore points list with [Restore], Drive Sync status + "Set up Drive"
+6. Each row: label left + input right
+7. Toast notification for feedback
+**Design:** `settings.html` (full file, 365 lines)
+**Acceptance:** Full-screen overlay works; all settings rows render; edits save to store; toasts on save; revert to desktop modal above 768px.
+
+### T-081 — TransactionDetailModal mobile (bottom sheet pattern)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/modals/TransactionDetailModal.tsx`, `TransactionDetailModal.module.css`
+**Content:**
+1. Bottom sheet with drag handle
+2. Icon (48px circle, colored by type): ▲ income / ▼ expense / ● transfer
+3. Type label: 11px uppercase
+4. Amount: 32px bold, colored by type
+5. Divider + fields: Description | Date | Source/Category
+6. Action buttons: [Open in Ledger] [Edit] [Delete]
+**Design:** `dashboard.html` lines 792-819
+**Acceptance:** Sheet slides up; icon+type+amount render correctly; actions work; close on overlay click.
+
+### T-082 — TransactionFormModal mobile (tabs, numpad, form)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** `src/presentation/modals/TransactionFormModal.tsx`, `TransactionFormModal.module.css`
+**Content:**
+1. Bottom sheet with drag handle
+2. Title: "New Transaction"
+3. Type tabs: Income / Expense / Transfer (colored by type)
+4. Amount display: centered, 20px mono
+5. Form fields: Description, Amount (from numpad)
+6. Submit button: full-width, gradient violet
+7. Numpad: 4×4 grid (1-9, C/0/./⌫), submit key
+**Design:** `dashboard.html` lines 822-835
+**Acceptance:** Type tabs switch correctly; numpad input works; form validates; submit creates transaction.
+
+### T-083 — Shared modals (AddAccount, EditMember, DeleteConfirm, LoanReport)
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
+**Effort:** M
+**File(s):** Respective modal files in `src/presentation/modals/`
+**Content:**
+All follow bottom sheet pattern from T-068:
+1. **AddAccount**: Account Name (text), Type (select), Opening Balance (number), Opening Date (date)
+2. **EditMember**: Name (text), Short Name (text)
+3. **DeleteConfirm**: Explanatory text + "Delete" (red) + "Cancel"
+4. **LoanReport**: Summary card + progress + activity list
+**Design:** `modals.js` (full file, 180 lines) + respective HTML files
+**Acceptance:** All modals render as bottom sheets; form validation works; create/update/delete operations succeed.
+

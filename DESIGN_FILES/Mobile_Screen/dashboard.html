@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dashboard — MoneyFlows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: oklch(14% 0.015 260);
+  --surface: oklch(22% 0.02 260 / 0.55);
+  --fg: oklch(92% 0.008 260);
+  --muted: oklch(60% 0.02 260);
+  --border: oklch(100% 0 0 / 0.10);
+  --violet: oklch(62% 0.22 290);
+  --teal: oklch(65% 0.15 170);
+  --coral: oklch(62% 0.18 30);
+  --gold: oklch(75% 0.15 85);
+  --purple: oklch(55% 0.18 290);
+  --success: oklch(65% 0.15 150);
+  --danger: oklch(58% 0.18 30);
+  --font-display: 'Outfit', -apple-system, system-ui, sans-serif;
+  --font-body: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-size-base: clamp(14px, 3.5vw, 16px);
+  --bg-glow: radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 / 0.35), transparent 70%);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font: var(--font-size-base)/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+body {
+  background-image: var(--bg-glow);
+  background-attachment: fixed;
+  padding: 0 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  min-height: 52px;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  color: var(--fg);
+  display: grid; place-items: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:active { transform: scale(0.92); background: oklch(100% 0 0 / 0.08); }
+.header-title {
+  font: 600 18px var(--font-display);
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  color: var(--muted);
+  display: grid; place-items: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn:active { transform: scale(0.92); background: oklch(100% 0 0 / 0.08); }
+
+/* Scroll content */
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+/* Glass card */
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* Total Assets */
+.total-assets { text-align: center; }
+.total-assets .value {
+  font: 600 24px/1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+.total-assets .label {
+  font: 400 11px/1.4 var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Metric row */
+.metric-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.metric-card {
+  background: var(--surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+.metric-card .metric-label {
+  font: 400 11px/1.4 var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.metric-card .metric-value {
+  font: 600 20px/1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+}
+.metric-card .metric-value.gold { color: var(--gold); }
+.metric-card .metric-value.coral { color: var(--coral); }
+
+/* Income/expense summary */
+.flow-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.flow-summary .flow-item { text-align: center; flex: 1; }
+.flow-summary .flow-item .amount {
+  font: 600 16px/1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.flow-summary .flow-item .amount.income { color: var(--teal); }
+.flow-summary .flow-item .amount.expense { color: var(--coral); }
+.flow-summary .flow-item .lbl {
+  font: 400 11px/1.4 var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.flow-divider {
+  width: 1px; height: 36px;
+  background: var(--border);
+}
+.flow-net {
+  text-align: center;
+  margin-top: 8px;
+  font: 500 13px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--teal);
+}
+
+/* Members section */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.section-header h3 {
+  font: 600 15px var(--font-display);
+  color: var(--fg);
+}
+.section-header .chevron {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+  font-size: 14px;
+}
+.section-header .chevron.open { transform: rotate(180deg); }
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.member-item:last-child { border-bottom: none; }
+.member-item:active { background: oklch(100% 0 0 / 0.04); border-radius: 8px; margin: 0 -4px; padding: 12px 4px; }
+.member-item .left { display: flex; align-items: center; gap: 10px; }
+.member-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font: 600 14px var(--font-display);
+  color: #fff;
+  flex-shrink: 0;
+}
+.member-avatar.efty { background: linear-gradient(135deg, oklch(62% 0.22 290), oklch(50% 0.2 290)); }
+.member-avatar.azam { background: linear-gradient(135deg, oklch(65% 0.15 170), oklch(50% 0.15 170)); }
+.member-avatar.nahar { background: linear-gradient(135deg, oklch(62% 0.18 30), oklch(50% 0.18 30)); }
+.member-item .name { font: 500 14px var(--font-body); color: var(--fg); }
+.member-item .balance {
+  font: 600 14px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--teal);
+}
+.member-accounts {
+  display: none;
+  padding: 4px 0 8px 50px;
+}
+.member-accounts.open { display: block; }
+.account-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+}
+.account-row .acct-name { color: var(--muted); }
+.account-row .acct-balance {
+  font: 500 13px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* Loans card */
+.loan-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.loan-item:last-child { border-bottom: none; }
+.loan-item .loan-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.loan-item .loan-name { font: 500 14px var(--font-body); color: var(--fg); }
+.loan-item .loan-amount {
+  font: 600 14px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--coral);
+}
+.loan-item .loan-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.loan-item .loan-badge {
+  font: 400 11px/1 var(--font-body);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.loan-item .loan-badge.active { background: oklch(62% 0.18 30 / 0.2); color: var(--coral); }
+.loan-item .loan-badge.partial { background: oklch(75% 0.15 85 / 0.2); color: var(--gold); }
+.loan-item .progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: oklch(100% 0 0 / 0.08);
+  overflow: hidden;
+}
+.loan-item .progress-bar .fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--teal), oklch(65% 0.15 170 / 0.5));
+}
+
+/* Recent transactions */
+.tx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tx-row:last-child { border-bottom: none; }
+.tx-row:active { background: oklch(100% 0 0 / 0.04); border-radius: 8px; margin: 0 -4px; padding: 12px 4px; }
+.tx-row .left { display: flex; align-items: center; gap: 10px; }
+.tx-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  font-size: 16px;
+}
+.tx-icon.expense { background: oklch(62% 0.18 30 / 0.2); }
+.tx-icon.income { background: oklch(65% 0.15 170 / 0.2); }
+.tx-icon.transfer { background: oklch(62% 0.22 290 / 0.2); }
+.tx-row .tx-desc { font: 400 14px var(--font-body); color: var(--fg); }
+.tx-row .tx-amount {
+  font: 600 14px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.tx-row .tx-amount.positive { color: var(--teal); }
+.tx-row .tx-amount.negative { color: var(--coral); }
+
+/* Fab */
+.fab {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  right: 16px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--violet), oklch(50% 0.2 290));
+  color: #fff;
+  font-size: 28px;
+  display: grid; place-items: center;
+  box-shadow: 0 4px 20px oklch(62% 0.22 290 / 0.3);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 100;
+}
+.fab:active { transform: scale(0.92); box-shadow: 0 2px 12px oklch(62% 0.22 290 / 0.2); }
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 200;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px; min-height: 44px;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: 400 10px var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--violet); }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, oklch(22% 0.02 260 / 0.4), oklch(22% 0.02 260 / 0.6), oklch(22% 0.02 260 / 0.4));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease infinite;
+  border-radius: 12px;
+}
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.skeleton-card {
+  height: 80px;
+  border-radius: 16px;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0% 0 0 / 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 300;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  width: 100%;
+  max-height: 90%;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  padding: 20px;
+  animation: slideUp 0.35s ease-out;
+  overflow-y: auto;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: oklch(100% 0 0 / 0.2);
+  margin: 0 auto 16px;
+}
+.modal-title {
+  font: 600 16px var(--font-display);
+  color: var(--fg);
+  margin-bottom: 16px;
+}
+
+/* Settings dropdown */
+.settings-wrap { position: relative; }
+.settings-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 200px;
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 6px;
+  display: none;
+  z-index: 250;
+  box-shadow: 0 8px 32px oklch(0% 0 0 / 0.4);
+}
+.settings-dropdown.open { display: block; }
+.settings-dropdown .dd-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font: 500 13px var(--font-body);
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.settings-dropdown .dd-item:active { background: oklch(100% 0 0 / 0.08); }
+
+/* Tx detail modal */
+.td-body { text-align: center; padding: 4px 0 16px; }
+.td-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 20px;
+  margin: 0 auto 8px;
+}
+.td-icon.income { background: oklch(65% 0.15 170 / 0.2); color: var(--teal); }
+.td-icon.expense { background: oklch(62% 0.18 30 / 0.2); color: var(--coral); }
+.td-icon.transfer { background: oklch(62% 0.22 290 / 0.2); color: var(--violet); }
+.td-type-label {
+  font: 500 11px var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.td-amount {
+  font: 600 32px/1.2 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.td-amount.income { color: var(--teal); }
+.td-amount.expense { color: var(--coral); }
+.td-amount.transfer { color: var(--violet); }
+.td-divider {
+  height: 1px;
+  background: oklch(100% 0 0 / 0.08);
+  margin: 16px 0;
+}
+.td-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+}
+.td-field:last-of-type { border-bottom: none; }
+.td-field-label {
+  font: 400 11px var(--font-body);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.td-field-value {
+  font: 400 14px var(--font-body);
+  color: var(--fg);
+  text-align: right;
+}
+.td-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.td-actions .td-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font: 500 13px var(--font-body);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.td-actions .td-btn:active { transform: scale(0.97); }
+.td-actions .td-btn.ghost {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+.td-actions .td-btn.danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid oklch(58% 0.18 30 / 0.3);
+}
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <button class="back-btn" onclick="window.location.href='index.html'" aria-label="Back">&#8592;</button>
+    <span class="header-title">MoneyFlows</span>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" onclick="toggleSearch()" aria-label="Search">&#8981;</button>
+    <div class="settings-wrap">
+      <button class="icon-btn" onclick="toggleSettings()" aria-label="Settings">&#9881;</button>
+      <div class="settings-dropdown" id="settingsDropdown">
+        <button class="dd-item" onclick="window.location.href='settings.html'">&#9881; Settings</button>
+        <button class="dd-item" onclick="window.location.href='recycle-bin.html'">&#9851; Recycle Bin</button>
+        <button class="dd-item" onclick="window.location.href='moneyflows-launcher.html'">&#9665; Launcher</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="searchBar" class="hidden" style="margin-bottom:8px;">
+  <input type="text" id="searchInput" placeholder="Search transactions..." style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font:14px var(--font-body);outline:none;-webkit-appearance:none;" />
+</div>
+
+<div id="loadingState" class="scroll-content">
+  <div class="skeleton skeleton-card"></div>
+  <div class="skeleton skeleton-card"></div>
+  <div class="skeleton skeleton-card"></div>
+  <div class="skeleton skeleton-card"></div>
+</div>
+
+<div id="mainContent" class="scroll-content hidden">
+
+  <!-- Total Assets -->
+  <div class="glass total-assets">
+    <div class="value">&#2547;45,230</div>
+    <div class="label">Total Assets</div>
+  </div>
+
+  <!-- Metric Row -->
+  <div class="metric-row">
+    <div class="metric-card">
+      <div class="metric-label">Cash</div>
+      <div class="metric-value gold">&#2547;12.0k</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Loans Out</div>
+      <div class="metric-value coral">&#2547;8.2k</div>
+    </div>
+  </div>
+
+  <!-- Flow Summary -->
+  <div class="glass">
+    <div class="flow-summary">
+      <div class="flow-item">
+        <div class="amount income">+&#2547;5,230</div>
+        <div class="lbl">Income</div>
+      </div>
+      <div class="flow-divider"></div>
+      <div class="flow-item">
+        <div class="amount expense">-&#2547;3,100</div>
+        <div class="lbl">Expenses</div>
+      </div>
+    </div>
+    <div class="flow-net">&#8599; Net +&#2547;2,130 this month</div>
+  </div>
+
+  <!-- Where Your Money Is -->
+  <div class="glass">
+    <div class="section-header" onclick="toggleMembers()">
+      <h3>Where Your Money Is</h3>
+      <span class="chevron" id="membersChevron">&#9660;</span>
+    </div>
+    <div id="membersBody">
+      <div class="member-item" onclick="toggleAccounts(this)">
+        <div class="left">
+          <div class="member-avatar efty">Ef</div>
+          <span class="name">Efty</span>
+        </div>
+        <span class="balance">&#2547;15,200</span>
+      </div>
+      <div class="member-accounts">
+        <div class="account-row">
+          <span class="acct-name">Brac Bank</span>
+          <span class="acct-balance">&#2547;8,400</span>
+        </div>
+        <div class="account-row">
+          <span class="acct-name">Business Cash</span>
+          <span class="acct-balance">&#2547;6,800</span>
+        </div>
+      </div>
+
+      <div class="member-item" onclick="toggleAccounts(this)">
+        <div class="left">
+          <div class="member-avatar azam">Az</div>
+          <span class="name">Azam</span>
+        </div>
+        <span class="balance">&#2547;12,400</span>
+      </div>
+      <div class="member-accounts">
+        <div class="account-row">
+          <span class="acct-name">bKash</span>
+          <span class="acct-balance">&#2547;7,200</span>
+        </div>
+        <div class="account-row">
+          <span class="acct-name">Cash</span>
+          <span class="acct-balance">&#2547;5,200</span>
+        </div>
+      </div>
+
+      <div class="member-item" onclick="toggleAccounts(this)">
+        <div class="left">
+          <div class="member-avatar nahar">Na</div>
+          <span class="name">Nahar</span>
+        </div>
+        <span class="balance">&#2547;8,600</span>
+      </div>
+      <div class="member-accounts">
+        <div class="account-row">
+          <span class="acct-name">Cash</span>
+          <span class="acct-balance">&#2547;8,600</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Loans -->
+  <div class="glass">
+    <div class="section-header" style="cursor:default;">
+      <h3>Active Loans</h3>
+    </div>
+    <div class="loan-item">
+      <div class="loan-top">
+        <span class="loan-name">Uncle John</span>
+        <span class="loan-amount">&#2547;5,000</span>
+      </div>
+      <div class="loan-bottom">
+        <span class="loan-badge partial">Partial</span>
+        <div class="progress-bar"><div class="fill" style="width:65%;"></div></div>
+        <span style="font:400 11px var(--font-mono);color:var(--muted);">65%</span>
+      </div>
+    </div>
+    <div class="loan-item">
+      <div class="loan-top">
+        <span class="loan-name">BTC</span>
+        <span class="loan-amount">&#2547;3,200</span>
+      </div>
+      <div class="loan-bottom">
+        <span class="loan-badge active">Active</span>
+        <div class="progress-bar"><div class="fill" style="width:25%;"></div></div>
+        <span style="font:400 11px var(--font-mono);color:var(--muted);">25%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="glass">
+    <div class="section-header" style="cursor:default;padding-bottom:4px;">
+      <h3>Recent Transactions</h3>
+    </div>
+    <div class="tx-row" onclick="openTxModal('Grocery', '-&#2547;45', 'expense')">
+      <div class="left">
+        <div class="tx-icon expense">&#9632;</div>
+        <span class="tx-desc">Grocery</span>
+      </div>
+      <span class="tx-amount negative">-&#2547;45</span>
+    </div>
+    <div class="tx-row" onclick="openTxModal('Salary', '+&#2547;2,000', 'income')">
+      <div class="left">
+        <div class="tx-icon income">&#9650;</div>
+        <span class="tx-desc">Salary</span>
+      </div>
+      <span class="tx-amount positive">+&#2547;2,000</span>
+    </div>
+    <div class="tx-row" onclick="openTxModal('Electricity Bill', '-&#2547;1,200', 'expense')">
+      <div class="left">
+        <div class="tx-icon expense">&#9632;</div>
+        <span class="tx-desc">Electricity Bill</span>
+      </div>
+      <span class="tx-amount negative">-&#2547;1,200</span>
+    </div>
+    <div class="tx-row" onclick="openTxModal('Freelance Payment', '+&#2547;3,230', 'income')">
+      <div class="left">
+        <div class="tx-icon income">&#9650;</div>
+        <span class="tx-desc">Freelance Payment</span>
+      </div>
+      <span class="tx-amount positive">+&#2547;3,230</span>
+    </div>
+    <div class="tx-row" onclick="openTxModal('Transfer to Savings', '-&#2547;500', 'transfer')">
+      <div class="left">
+        <div class="tx-icon transfer">&#9679;</div>
+        <span class="tx-desc">Transfer to Savings</span>
+      </div>
+      <span class="tx-amount negative">-&#2547;500</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openNewTxModal()" aria-label="New Transaction">+</button>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item active">
+    <span class="nav-icon">&#9632;</span>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='member.html'">
+    <span class="nav-icon">&#9679;</span>
+    <span>Members</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='loans.html'">
+    <span class="nav-icon">&#9665;</span>
+    <span>Loans</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='groups.html'">
+    <span class="nav-icon">&#9630;</span>
+    <span>Groups</span>
+  </button>
+  <button class="nav-item" onclick="window.location.href='recycle-bin.html'">
+    <span class="nav-icon">&#9851;</span>
+    <span>Bin</span>
+  </button>
+</nav>
+
+<!-- Tx Detail Modal -->
+<div class="modal-overlay" id="txModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="td-body">
+      <div class="td-icon income" id="tdIcon">&#9650;</div>
+      <div class="td-type-label" id="tdTypeLabel">Income</div>
+      <div class="td-amount income" id="tdAmount">+&#2547;2,000</div>
+      <div class="td-divider"></div>
+      <div class="td-field">
+        <span class="td-field-label">Description</span>
+        <span class="td-field-value" id="tdDesc">Salary</span>
+      </div>
+      <div class="td-field">
+        <span class="td-field-label">Date</span>
+        <span class="td-field-value" id="tdDate">Today</span>
+      </div>
+      <div class="td-field">
+        <span class="td-field-label">Source</span>
+        <span class="td-field-value" id="tdFrom">Dashboard</span>
+      </div>
+    </div>
+    <div class="td-actions">
+      <button class="td-btn ghost" onclick="closeModal('txModal')">Open in Ledger</button>
+      <button class="td-btn ghost" onclick="closeModal('txModal')">Edit</button>
+      <button class="td-btn danger" onclick="closeModal('txModal')">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Tx Modal -->
+<div class="modal-overlay" id="newTxModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">New Transaction</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="tx-type-btn" data-type="income" onclick="selectTxType('income')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--teal);font:500 13px;cursor:pointer;">Income</button>
+      <button class="tx-type-btn" data-type="expense" onclick="selectTxType('expense')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--coral);font:500 13px;cursor:pointer;">Expense</button>
+      <button class="tx-type-btn" data-type="transfer" onclick="selectTxType('transfer')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--violet);font:500 13px;cursor:pointer;">Transfer</button>
+    </div>
+    <input type="text" placeholder="Description" style="width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font:14px var(--font-body);margin-bottom:10px;outline:none;-webkit-appearance:none;" />
+    <input type="number" inputmode="numeric" pattern="[0-9]*" placeholder="Amount (BDT)" style="width:100%;padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--fg);font:600 20px var(--font-mono);margin-bottom:16px;outline:none;-webkit-appearance:none;" />
+    <button onclick="closeModal('newTxModal')" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--violet),oklch(50% 0.2 290));color:#fff;font:600 15px var(--font-display);cursor:pointer;">Add Transaction</button>
+  </div>
+</div>
+
+<script>
+/* Loading simulation */
+setTimeout(function() {
+  document.getElementById('loadingState').classList.add('hidden');
+  document.getElementById('mainContent').classList.remove('hidden');
+}, 800);
+
+/* Members toggle */
+function toggleMembers() {
+  var body = document.getElementById('membersBody');
+  var chevron = document.getElementById('membersChevron');
+  body.classList.toggle('hidden');
+  chevron.classList.toggle('open');
+}
+
+/* Accounts expand */
+function toggleAccounts(el) {
+  var accounts = el.nextElementSibling;
+  if (accounts && accounts.classList.contains('member-accounts')) {
+    accounts.classList.toggle('open');
+  }
+}
+
+/* Search */
+function toggleSearch() {
+  var bar = document.getElementById('searchBar');
+  bar.classList.toggle('hidden');
+  if (!bar.classList.contains('hidden')) {
+    document.getElementById('searchInput').focus();
+  }
+}
+
+/* Modals */
+function openTxModal(desc, amount, type) {
+  var iconMap = { income: '&#9650;', expense: '&#9660;', transfer: '&#9679;' };
+  var typeLabels = { income: 'Income', expense: 'Expense', transfer: 'Transfer' };
+  document.getElementById('tdAmount').textContent = amount;
+  document.getElementById('tdAmount').className = 'td-amount ' + type;
+  document.getElementById('tdDesc').textContent = desc;
+  document.getElementById('tdDate').textContent = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  document.getElementById('tdFrom').textContent = typeLabels[type] || type;
+  document.getElementById('tdTypeLabel').textContent = typeLabels[type] || type;
+  var iconEl = document.getElementById('tdIcon');
+  iconEl.innerHTML = iconMap[type] || '&#9632;';
+  iconEl.className = 'td-icon ' + type;
+  document.getElementById('txModal').classList.add('open');
+}
+
+function openNewTxModal() {
+  document.getElementById('newTxModal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function toggleSettings() {
+  var dd = document.getElementById('settingsDropdown');
+  dd.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('settingsDropdown');
+  var wrap = document.querySelector('.settings-wrap');
+  if (dd && wrap && !wrap.contains(e.target)) dd.classList.remove('open');
+});
+
+function selectTxType(type) {
+  var btns = document.querySelectorAll('.tx-type-btn');
+  btns.forEach(function(b) {
+    b.style.background = 'var(--surface)';
+  });
+  document.querySelector('.tx-type-btn[data-type="' + type + '"]').style.background = 'oklch(100% 0 0 / 0.1)';
+}
+
+/* Close modal on overlay click */
+document.querySelectorAll('.modal-overlay').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>

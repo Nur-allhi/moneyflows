@@ -26,10 +26,6 @@
   gap: 20px;
 }
 
-.bottomNav {
-  display: flex;
-}
-
 @media (min-width: 1024px) {
   .sidebar {
     display: flex;
@@ -38,10 +34,6 @@
     top: 16px;
     bottom: 16px;
     z-index: 100;
-  }
-
-  .bottomNav {
-    display: none;
   }
 
   .main {
@@ -54,7 +46,7 @@
 
 @media (max-width: 768px) {
   .main {
-    padding: 16px;
-    padding-bottom: 80px;
+    padding: 16px 0;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
 }
