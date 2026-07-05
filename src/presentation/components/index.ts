@@ -22,4 +22,5 @@ export { PageTransition } from './PageTransition';
 export { SettingsModal } from './SettingsModal';
 export { LedgerSearch } from './LedgerSearch';
 export { SplashScreen } from './SplashScreen';
+export { CursorGlow } from './CursorGlow';
 

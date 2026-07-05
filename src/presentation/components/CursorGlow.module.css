@@ -1,0 +1,29 @@
+.container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.glow1 {
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  top: -350px;
+  left: -350px;
+  border-radius: 50%;
+  background: radial-gradient(circle, oklch(62% 0.22 290 / 0.07) 0%, transparent 70%);
+  will-change: transform;
+}
+
+.glow2 {
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  top: -225px;
+  left: -225px;
+  border-radius: 50%;
+  background: radial-gradient(circle, oklch(65% 0.15 170 / 0.05) 0%, transparent 70%);
+  will-change: transform;
+}

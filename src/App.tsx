@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import { Agentation } from 'agentation';
-import { Sidebar, BottomNav, Header, PageTransition } from './presentation/components';
+import { Sidebar, BottomNav, Header, PageTransition, CursorGlow } from './presentation/components';
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
@@ -67,6 +67,7 @@ function AppLayout() {
 
   return (
     <div className={styles.layout}>
+      <CursorGlow />
       <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
       <div className={styles.main}>
         <Header title={title} showBack={showBack} showLogo={!showBack} breadcrumb={breadcrumb} />
