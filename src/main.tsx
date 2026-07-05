@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
-import { initDatabase } from './infrastructure/database/getDatabase';
+import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
 import './presentation/styles/tailwind.css';
 import './presentation/styles/reset.css';
 import './presentation/styles/tokens.css';
@@ -13,6 +13,7 @@ function Root() {
 
   useEffect(() => {
     initDatabase().then(() => {
+      getDatabase().recalculateBalances();
       setReady(true);
     });
   }, []);

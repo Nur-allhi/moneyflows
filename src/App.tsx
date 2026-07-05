@@ -14,10 +14,13 @@ const MemberProfile = lazy(() => import('./presentation/screens/MemberProfile').
 const Loans = lazy(() => import('./loans/presentation/screens/LoansScreen').then(m => ({ default: m.LoansScreen })));
 const RecycleBin = lazy(() => import('./presentation/screens/RecycleBin').then(m => ({ default: m.RecycleBin })));
 const Launcher = lazy(() => import('./presentation/screens/Launcher').then(m => ({ default: m.Launcher })));
+const GroupsListScreen = lazy(() => import('./presentation/screens/GroupsListScreen').then(m => ({ default: m.GroupsListScreen })));
+const GroupLedgerScreen = lazy(() => import('./presentation/screens/GroupLedgerScreen').then(m => ({ default: m.GroupLedgerScreen })));
 
 const sidebarItems = [
   { path: '/', label: 'Dashboard', icon: '\u{1F3E0}' },
   { path: '/member', label: 'Members', icon: '\u{1F465}' },
+  { path: '/groups', label: 'Groups', icon: '\u{1F4E6}' },
   { path: '/loans', label: 'Loans', icon: '\u{1F4CB}' },
   { path: '/recycle', label: 'Recycle Bin', icon: '\u{1F5D1}\uFE0F' },
 ];
@@ -25,6 +28,7 @@ const sidebarItems = [
 const bottomNavItems = [
   { path: '/', label: 'Home', icon: '\u{1F3E0}' },
   { path: '/member', label: 'Members', icon: '\u{1F465}' },
+  { path: '/groups', label: 'Groups', icon: '\u{1F4E6}' },
   { path: '/loans', label: 'Loans', icon: '\u{1F4CB}' },
   { path: '/recycle', label: 'Recycle', icon: '\u{1F5D1}\uFE0F' },
 ];
@@ -32,6 +36,7 @@ const bottomNavItems = [
 const routeTitles: Record<string, string> = {
   '/': 'Dashboard',
   '/member': 'Members',
+  '/groups': 'Groups',
   '/loans': 'Loans',
   '/recycle': 'Recycle Bin',
 };
@@ -86,6 +91,8 @@ export function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/member" element={<MemberList />} />
           <Route path="/member/:id" element={<MemberProfile />} />
+          <Route path="/groups" element={<GroupsListScreen />} />
+          <Route path="/groups/:groupId" element={<GroupLedgerScreen />} />
           <Route path="/loans" element={<Loans />} />
           <Route path="/loans/:debtorId" element={<Loans />} />
           <Route path="/recycle" element={<RecycleBin />} />
