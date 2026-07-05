@@ -20,7 +20,7 @@
 
 .header {
   display: grid;
-  grid-template-columns: 60px 90px 1fr 72px 72px 72px;
+  grid-template-columns: 55px 55px 1fr 55px 55px 55px;
   gap: 4px;
   padding: 12px 14px;
   font-size: 10px;
@@ -32,16 +32,16 @@
 }
 
 .desktop .header {
-  grid-template-columns: 70px 130px 1fr 90px 90px 100px;
+  grid-template-columns: 72px 72px 1fr 72px 72px 72px;
   padding: 10px 20px;
 }
 
 .noBalance .header {
-  grid-template-columns: 60px 56px 1fr 150px 72px 72px;
+  grid-template-columns: 55px 55px 1fr 150px 55px 55px;
 }
 
 .desktop.noBalance .header {
-  grid-template-columns: 70px 130px 1fr 200px 90px 90px;
+  grid-template-columns: 72px 72px 1fr 200px 72px 72px;
 }
 
 .body {
@@ -70,28 +70,28 @@
 
 .row {
   display: grid;
-  grid-template-columns: 60px 90px 1fr 72px 72px 72px;
+  grid-template-columns: 55px 55px 1fr 55px 55px 55px;
   gap: 4px;
-  padding: 14px 14px;
+  padding: 10px 14px;
   font-size: 13px;
-  align-items: center;
+  align-items: start;
   border-bottom: 1px solid oklch(100% 0 0 / 0.04);
   transition: background var(--transition-fast);
   cursor: pointer;
 }
 
 .desktop .row {
-  grid-template-columns: 70px 130px 1fr 90px 90px 100px;
-  padding: 14px 20px;
+  grid-template-columns: 72px 72px 1fr 72px 72px 72px;
+  padding: 10px 20px;
   font-size: 14px;
 }
 
 .noBalance .row {
-  grid-template-columns: 60px 56px 1fr 150px 72px 72px;
+  grid-template-columns: 55px 55px 1fr 150px 55px 55px;
 }
 
 .desktop.noBalance .row {
-  grid-template-columns: 70px 64px 1fr 200px 90px 90px;
+  grid-template-columns: 72px 72px 1fr 200px 72px 72px;
 }
 
 .row:hover {
@@ -118,6 +118,9 @@
   color: var(--color-text-secondary);
   font-size: 12px;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .desktop .date {
@@ -126,10 +129,9 @@
 
 .desc {
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   text-align: left;
+  word-break: break-word;
+  line-height: 1.4;
 }
 
 .typeCell {
@@ -138,6 +140,9 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .typeCell.income {
@@ -158,6 +163,9 @@
   font-variant-numeric: tabular-nums;
   color: var(--color-expense);
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .credit {
@@ -166,6 +174,9 @@
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .balance {
@@ -173,6 +184,18 @@
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.currencyLabel {
+  font-family: var(--font-body);
+  font-size: 8px;
+  font-weight: 400;
+  opacity: 0.55;
+  margin-left: 2px;
+  letter-spacing: 0.04em;
 }
 
 .account {

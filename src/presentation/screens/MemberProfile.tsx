@@ -12,7 +12,7 @@ import { useAccountStore } from '../stores/useAccountStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { Transaction } from '../../core/domain/Transaction';
-import { formatAmount } from '../utils/format';
+import { formatAmount, formatAmountParts } from '../utils/format';
 import { shortDate } from '../constants/dates';
 import { ACCOUNT_TYPE_GRADIENT_THREE, displayType } from '../constants/labels';
 import { ACCOUNT_CARD_WIDTH, CARD_GAP } from '../constants/config';
@@ -184,8 +184,9 @@ export function MemberProfile() {
           date: shortDate(tx.date, locale),
           description: tx.description,
           account: resolveAccountDisplay(tx),
-          debit: isCredit ? '\u2014' : formatAmount(tx.amount, locale, currency),
-          credit: isCredit ? formatAmount(tx.amount, locale, currency) : '\u2014',
+          debit: isCredit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
+          credit: isCredit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+          currencyLabel: currency,
           type: displayType,
         };
       });
@@ -214,9 +215,10 @@ export function MemberProfile() {
           id: tx.id,
           date: shortDate(tx.date, locale),
           description: tx.description,
-          debit: credit ? '\u2014' : formatAmount(tx.amount, locale, currency),
-          credit: credit ? formatAmount(tx.amount, locale, currency) : '\u2014',
-          balance: formatAmount(running, locale, currency),
+          debit: credit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
+          credit: credit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+          balance: formatAmountParts(running, locale, currency).amount,
+          currencyLabel: currency,
           type: displayType,
         };
       });
@@ -239,9 +241,10 @@ export function MemberProfile() {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: tx.description,
-        debit: credit ? '\u2014' : formatAmount(tx.amount, locale, currency),
-        credit: credit ? formatAmount(tx.amount, locale, currency) : '\u2014',
-        balance: formatAmount(running, locale, currency),
+        debit: credit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
+        credit: credit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        balance: formatAmountParts(running, locale, currency).amount,
+        currencyLabel: currency,
         type: displayType,
       };
     });

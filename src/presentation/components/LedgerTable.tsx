@@ -10,6 +10,7 @@ export interface LedgerRow {
   debit?: string;
   credit?: string;
   balance?: string;
+  currencyLabel?: string;
   type?: 'income' | 'expense' | 'transfer' | 'loan';
   typeLabel?: string;
 }
@@ -130,9 +131,9 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                     </span>
                     <span className={styles.desc}>{row.description}</span>
                     {!showBalance && <span className={styles.account}>{row.account ?? '\u2014'}</span>}
-                    <span className={styles.debit}>{row.debit ?? '\u2014'}</span>
-                    <span className={styles.credit}>{row.credit ?? '\u2014'}</span>
-                    {showBalance && <span className={styles.balance}>{row.balance ?? '\u2014'}</span>}
+                    <span className={styles.debit}>{row.debit ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>
+                    <span className={styles.credit}>{row.credit ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>
+                    {showBalance && <span className={styles.balance}>{row.balance ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>}
                   </div>
                 );
               })}
@@ -155,9 +156,9 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                 </span>
                 <span className={styles.desc}>{row.description}</span>
                 {!showBalance && <span className={styles.account}>{row.account ?? '\u2014'}</span>}
-                <span className={styles.debit}>{row.debit ?? '\u2014'}</span>
-                <span className={styles.credit}>{row.credit ?? '\u2014'}</span>
-                {showBalance && <span className={styles.balance}>{row.balance ?? '\u2014'}</span>}
+                <span className={styles.debit}>{row.debit ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>
+                <span className={styles.credit}>{row.credit ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>
+                {showBalance && <span className={styles.balance}>{row.balance ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>}
               </div>
             ))}
             {sentinel}
