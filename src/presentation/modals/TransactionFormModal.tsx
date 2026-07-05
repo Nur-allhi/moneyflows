@@ -17,6 +17,7 @@ interface TransactionFormModalProps {
   initialSource?: string;
   initialDestination?: string;
   initialTab?: string;
+  initialBorrowerId?: string;
 }
 
 const tabs = [
@@ -38,7 +39,7 @@ function validateForm(
   locale: string,
   currency: string,
   loanAction: string,
-  selectedLoanId: string,
+  selectedBorrowerId: string,
 ): ValidationErrors {
   const next: ValidationErrors = {};
   const amountNum = parseInt(rawAmount, 10);
@@ -61,7 +62,7 @@ function validateForm(
       if (!source) next.source = 'Select a lender account';
       if (!destination) next.destination = 'Select a borrower account';
     } else {
-      if (!selectedLoanId) next.source = 'Select a loan to repay';
+      if (!selectedBorrowerId) next.source = 'Select a counterparty to repay';
     }
   } else {
     if (!source) {
@@ -100,11 +101,12 @@ export function TransactionFormModal({
   initialSource,
   initialDestination,
   initialTab,
+  initialBorrowerId,
 }: TransactionFormModalProps) {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
   const { members, loading: memberLoading, fetchMembers } = useMemberStore();
   const { addTransaction, error: txError } = useTransactionStore();
-  const { loanStacks, createLoan, recordRepayment, createCounterparty, fetchLoanStacks, getLoanById } = useLoanStore();
+  const { loanStacks, createLoan, recordRepayment, createCounterparty, fetchLoanStacks } = useLoanStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
 
   const [tab, setTab] = useState(initialTab ?? 'transfer');
@@ -122,24 +124,17 @@ export function TransactionFormModal({
   const [pickerField, setPickerField] = useState<'source' | 'destination' | null>(null);
   const [pickerMember, setPickerMember] = useState<string | null>(null);
 
-  const [loanAction, setLoanAction] = useState<'lend' | 'repay'>('lend');
-  const [selectedLoanId, setSelectedLoanId] = useState('');
+  const [loanAction, setLoanAction] = useState<'lend' | 'repay'>(initialTab === 'loan' && initialBorrowerId ? 'repay' : 'lend');
+  const [selectedBorrowerId, setSelectedBorrowerId] = useState(initialBorrowerId ?? '');
   const [showAddCp, setShowAddCp] = useState(false);
   const [newCpName, setNewCpName] = useState('');
-  const [showLoanPicker, setShowLoanPicker] = useState(false);
+  const [showBorrowerPicker, setShowBorrowerPicker] = useState(false);
 
   useEffect(() => {
     fetchAccounts();
     fetchMembers();
     fetchLoanStacks();
   }, []);
-
-  useEffect(() => {
-    if (tab !== 'loan' || loanAction !== 'repay' || !selectedLoanId) return;
-    getLoanById(selectedLoanId).then((loan) => {
-      if (loan) setDestination(loan.lenderAccountId);
-    });
-  }, [selectedLoanId, tab, loanAction]);
 
   const memberLookup = useMemo(
     () => Object.fromEntries(members.map((m) => [m.id, m])),
@@ -180,26 +175,20 @@ export function TransactionFormModal({
 
   const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
 
-  const loanAccountOptions = useMemo(() => {
-    const options: { loanId: string; label: string }[] = [];
-    for (const stack of loanStacks) {
-      for (const loan of stack.loans) {
-        if (loan.status !== 'settled') {
-          options.push({
-            loanId: loan.id,
-            label: `${stack.debtorName} - ${formatAmount(loan.amount - loan.recovered, locale, currency)}`,
-          });
-        }
-      }
-    }
-    return options;
+  const repayStackOptions = useMemo(() => {
+    return loanStacks
+      .filter((s) => s.totalOutstanding > 0)
+      .map((s) => ({
+        borrowerId: s.debtorId,
+        label: `${s.debtorName} - ${formatAmount(s.totalOutstanding, locale, currency)}`,
+      }));
   }, [loanStacks, locale, currency]);
 
   const validate = useCallback((): boolean => {
-    const next = validateForm(tab, rawAmount, description, source, destination, accounts, locale, currency, loanAction, selectedLoanId);
+    const next = validateForm(tab, rawAmount, description, source, destination, accounts, locale, currency, loanAction, selectedBorrowerId);
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, accounts, locale, currency, loanAction, selectedLoanId]);
+  }, [tab, rawAmount, description, source, destination, accounts, locale, currency, loanAction, selectedBorrowerId]);
 
   const clearError = useCallback((field: string) => {
     setErrors((prev) => {
@@ -267,7 +256,7 @@ export function TransactionFormModal({
           });
         } else {
           await recordRepayment({
-            loanId: selectedLoanId,
+            borrowerAccountId: selectedBorrowerId,
             amount,
             description: description.trim(),
             date,
@@ -488,15 +477,15 @@ export function TransactionFormModal({
       {tab === 'loan' && loanAction === 'repay' ? (
         <>
           <div className={styles.fieldGroup}>
-            <span className={styles.fieldLabel}>Loan to Repay</span>
+            <span className={styles.fieldLabel}>Counterparty</span>
             <button
               type="button"
               className={styles.pickerTrigger}
-              onClick={() => setShowLoanPicker(true)}
+              onClick={() => setShowBorrowerPicker(true)}
             >
-              {selectedLoanId
-                ? <><span className={styles.pickerValue}>{loanAccountOptions.find(o => o.loanId === selectedLoanId)?.label ?? 'Select loan'}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                : <span className={styles.pickerPlaceholder}>Select loan</span>}
+              {selectedBorrowerId
+                ? <><span className={styles.pickerValue}>{repayStackOptions.find(o => o.borrowerId === selectedBorrowerId)?.label ?? 'Select counterparty'}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+                : <span className={styles.pickerPlaceholder}>Select counterparty</span>}
             </button>
           </div>
           <div className={`${styles.slideField} ${styles.slideOpen}`}>
@@ -621,29 +610,29 @@ export function TransactionFormModal({
         </div>
       </div>
 
-      {showLoanPicker && (
-        <div className={styles.pickerOverlay} onClick={() => setShowLoanPicker(false)}>
+      {showBorrowerPicker && (
+        <div className={styles.pickerOverlay} onClick={() => setShowBorrowerPicker(false)}>
           <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.pickerHeader}>
-              <span className={styles.pickerTitle}>Select Loan to Repay</span>
-              <button className={styles.pickerClose} onClick={() => setShowLoanPicker(false)}>
+              <span className={styles.pickerTitle}>Select Counterparty</span>
+              <button className={styles.pickerClose} onClick={() => setShowBorrowerPicker(false)}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </button>
             </div>
             <div className={styles.pickerBody}>
-              {loanAccountOptions.length === 0 ? (
-                <div className={styles.pickerEmpty}>No active loans to repay</div>
+              {repayStackOptions.length === 0 ? (
+                <div className={styles.pickerEmpty}>No counterparties with outstanding loans</div>
               ) : (
                 <div className={styles.pickerList}>
-                  {loanAccountOptions.map((opt) => (
+                  {repayStackOptions.map((opt) => (
                     <button
-                      key={opt.loanId}
-                      className={`${styles.pickerItem} ${selectedLoanId === opt.loanId ? styles.pickerItemActive : ''}`}
+                      key={opt.borrowerId}
+                      className={`${styles.pickerItem} ${selectedBorrowerId === opt.borrowerId ? styles.pickerItemActive : ''}`}
                       onClick={() => {
-                        setSelectedLoanId(opt.loanId);
-                        setShowLoanPicker(false);
+                        setSelectedBorrowerId(opt.borrowerId);
+                        setShowBorrowerPicker(false);
                       }}
                     >
                       <span className={styles.pickerItemName}>{opt.label}</span>

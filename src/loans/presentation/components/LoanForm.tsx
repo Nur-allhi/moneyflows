@@ -17,7 +17,7 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
   const [action, setAction] = useState<'lend' | 'repay'>(initialAction ?? 'lend');
   const [lenderAccountId, setLenderAccountId] = useState(initialLenderAccountId ?? '');
   const [borrowerAccountId, setBorrowerAccountId] = useState(initialBorrowerAccountId ?? '');
-  const [selectedLoanId, setSelectedLoanId] = useState('');
+  const [selectedBorrowerId, setSelectedBorrowerId] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
@@ -30,19 +30,13 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
   const activeAccounts = useMemo(() => accounts.filter((a) => a.isActive), [accounts]);
   const lenderAccounts = useMemo(() => activeAccounts.filter((a) => a.type !== 'counterparty'), [activeAccounts]);
 
-  const activeLoanOptions = useMemo(() => {
-    const options: { loanId: string; label: string }[] = [];
-    for (const stack of loanStacks) {
-      for (const loan of stack.loans) {
-        if (loan.status !== 'settled') {
-          options.push({
-            loanId: loan.id,
-            label: `${stack.debtorName} - ${formatAmount(loan.amount, locale, currency)}`,
-          });
-        }
-      }
-    }
-    return options;
+  const repayStackOptions = useMemo(() => {
+    return loanStacks
+      .filter((s) => s.totalOutstanding > 0)
+      .map((s) => ({
+        borrowerId: s.debtorId,
+        label: `${s.debtorName} - ${formatAmount(s.totalOutstanding, locale, currency)}`,
+      }));
   }, [loanStacks, locale, currency]);
 
   const showAddCp = borrowerAccountId === '__new__';
@@ -52,7 +46,7 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
   const handleSubmit = useCallback(async () => {
     setErr('');
     if (action === 'repay') {
-      if (!selectedLoanId) { setErr('Select a loan to repay'); return; }
+      if (!selectedBorrowerId) { setErr('Select a counterparty to repay'); return; }
     } else {
       if (!lenderAccountId || !borrowerAccountId) { setErr('Select both accounts'); return; }
     }
@@ -69,11 +63,11 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
           description: description.trim(), date: dateStr, memberId: txMemberId,
         });
       } else {
-        const loan = loanStacks.flatMap((s) => s.loans).find((l) => l.id === selectedLoanId);
-        const lenderAcct = loan ? accounts.find((a) => a.name === loan.fundingSource) : undefined;
+        const stack = loanStacks.find((s) => s.debtorId === selectedBorrowerId);
+        const lenderAcct = stack ? accounts.find((a) => a.type !== 'counterparty') : undefined;
         const txMemberId = lenderAcct?.memberId ?? '';
         await recordRepayment({
-          loanId: selectedLoanId, amount: amt,
+          borrowerAccountId: selectedBorrowerId, amount: amt,
           description: description.trim(), date: dateStr, memberId: txMemberId,
         });
       }
@@ -85,7 +79,7 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
     } finally {
       setSaving(false);
     }
-  }, [action, lenderAccountId, borrowerAccountId, selectedLoanId, amount, description, dateStr, accounts, loanStacks, createLoan, recordRepayment, fetchAccounts, fetchLoanStacks, onClose]);
+  }, [action, lenderAccountId, borrowerAccountId, selectedBorrowerId, amount, description, dateStr, accounts, loanStacks, createLoan, recordRepayment, fetchAccounts, fetchLoanStacks, onClose]);
 
   return (
     <div className={styles.container}>
@@ -111,15 +105,15 @@ export function LoanForm({ initialAction, initialLenderAccountId, initialBorrowe
 
       {action === 'repay' ? (
         <div className={styles.fieldGroup}>
-          <span className={styles.fieldLabel}>Loan to Repay</span>
+          <span className={styles.fieldLabel}>Counterparty</span>
           <select
             className={styles.select}
-            value={selectedLoanId}
-            onChange={(e) => setSelectedLoanId(e.target.value)}
+            value={selectedBorrowerId}
+            onChange={(e) => setSelectedBorrowerId(e.target.value)}
           >
-            <option value="">Select loan</option>
-            {activeLoanOptions.map((opt) => (
-              <option key={opt.loanId} value={opt.loanId}>
+            <option value="">Select counterparty</option>
+            {repayStackOptions.map((opt) => (
+              <option key={opt.borrowerId} value={opt.borrowerId}>
                 {opt.label}
               </option>
             ))}

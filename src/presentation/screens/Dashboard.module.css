@@ -214,8 +214,9 @@
 
 .loanTop {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 8px;
   margin-bottom: 8px;
 }
 
@@ -223,8 +224,21 @@
   font-weight: 500;
   font-size: 13px;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.loanDebtorName {
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.loanBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .badge {
@@ -243,12 +257,27 @@
   color: var(--color-teal);
 }
 
+.badgePartial {
+  background: oklch(75% 0.15 85 / 0.12);
+  color: oklch(65% 0.14 60);
+}
+
 .loanAmount {
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-coral);
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.loanCurrency {
+  font-size: 9px;
+  font-weight: 500;
+  margin-left: 3px;
+  opacity: 0.55;
 }
 
 .loanBarWrap {

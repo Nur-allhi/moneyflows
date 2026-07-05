@@ -24,7 +24,7 @@ interface LoanState {
   }) => Promise<void>;
 
   recordRepayment: (params: {
-    loanId: string;
+    borrowerAccountId: string;
     amount: number;
     description: string;
     date: string;
@@ -227,11 +227,12 @@ export const useLoanStore = create<LoanState>((set) => ({
     try {
       const service = getService();
       await service.recordRepayment({
-        loanId: params.loanRef,
+        borrowerAccountId: params.sourceAccount,
         amount: params.amount,
         description: params.description,
         date: params.date,
         memberId: params.memberId,
+        destinationAccountId: params.destAccount,
       });
       const loanStacks = await service.getLoanStacks();
       set({ loanStacks });
