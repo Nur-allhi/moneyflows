@@ -1,0 +1,72 @@
+.container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.splash {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, oklch(62% 0.22 290 / 0.18) 0%, transparent 70%);
+  animation: splashAnim 0.75s ease-out forwards;
+}
+
+.dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: oklch(65% 0.15 170 / 0.5);
+  animation: dotAnim 0.35s ease-out forwards;
+}
+
+.ring,
+.ring2 {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: ringAnim 0.8s ease-out forwards;
+}
+
+.ring {
+  border: 2.5px solid oklch(62% 0.22 290 / 0.3);
+}
+
+.ring2 {
+  border: 2px solid oklch(65% 0.15 170 / 0.25);
+  animation-delay: 0.1s;
+}
+
+@keyframes splashAnim {
+  0%   { width: 8px; height: 8px; opacity: 1; }
+  100% { width: 700px; height: 700px; opacity: 0; }
+}
+
+@keyframes dotAnim {
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+}
+
+@keyframes ringAnim {
+  0%   { width: 4px; height: 4px; opacity: 1; }
+  100% { width: 750px; height: 750px; opacity: 0; }
+}

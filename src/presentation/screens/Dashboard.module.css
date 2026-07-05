@@ -123,21 +123,22 @@
   border-radius: 12px;
 }
 
-.memberGroup { padding: 0; }
+.memberGroup + .memberGroup {
+  border-top: 1px solid var(--color-border);
+}
 
 .memberHead {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 20px;
+  padding: 10px 16px;
   cursor: pointer;
   user-select: none;
   transition: background 0.15s;
-  border-radius: 8px;
 }
 
 .memberHead:hover {
-  background: oklch(100% 0 0 / 0.03);
+  background: var(--color-surface-hover);
 }
 
 .memberTotal {
@@ -147,6 +148,7 @@
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
   margin-left: auto;
+  white-space: nowrap;
 }
 
 .memberChevron {
@@ -179,52 +181,72 @@
 .mname {
   font-weight: 500;
   font-size: 13px;
+  min-width: 0;
+}
+
+.currencyLabel {
+  font-family: var(--font-body);
+  font-size: 8px;
+  font-weight: 400;
+  opacity: 0.55;
+  margin-left: 2px;
+  letter-spacing: 0.04em;
 }
 
 .memberAccounts {
+  border-top: 1px solid var(--color-border);
+  padding: 8px 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 2px 20px 12px 54px;
+  gap: 2px;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .acctRow {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
+  padding: 7px 10px;
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s;
 }
 
-.acctRow:hover { background: oklch(100% 0 0 / 0.04); }
+.acctRow:hover { background: var(--color-surface-hover); }
 
-.acctIcon {
-  width: 32px; height: 32px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 600;
+.acctTypeIcon {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
-  color: #fff;
+}
+
+.acctTypeIcon svg {
+  width: 15px;
+  height: 15px;
+  display: block;
 }
 
 .acctName {
   flex: 1;
-  font-size: 12px;
+  min-width: 0;
+  font-size: 13px;
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: var(--color-text);
 }
 
 .acctBalance {
   font-family: var(--font-mono);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .flowDivider {
