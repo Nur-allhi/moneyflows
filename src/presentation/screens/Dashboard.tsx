@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SettingsModal, FAB } from '../components';
 import { useAnimatedValue } from '../hooks';
@@ -8,12 +8,11 @@ import { useLoanStore } from '../stores/useLoanStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
-import { formatAmount } from '../utils/format';
-import { ACCOUNT_TYPE_GRADIENT, displayTxType } from '../constants/labels';
+import { formatAmount, formatAmountParts } from '../utils/format';
+import { displayTxType, ACCOUNT_TYPE_ACCENT } from '../constants/labels';
 import { useSearchStore } from '../stores/useSearchStore';
 import { shortDate } from '../constants/dates';
 import { DASHBOARD_TX_DISPLAY_LIMIT } from '../constants/config';
-import type { AccountType } from '../../core/domain/Account';
 import styles from './Dashboard.module.css';
 
 const MEMBER_GRADIENTS = [
@@ -40,6 +39,68 @@ function ArrowDown() {
     </svg>
   );
 }
+
+function BankIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 14h14M2 10l6-8 6 8M4 10v3M8 10v3M12 10v3"/>
+    </svg>
+  );
+}
+
+function WalletIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="1" width="10" height="14" rx="2"/>
+      <path d="M6 11h4"/>
+    </svg>
+  );
+}
+
+function CashIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="14" height="8" rx="1"/>
+      <path d="M8 6v4M6 8h4"/>
+    </svg>
+  );
+}
+
+function SavingsIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="8" r="6"/>
+      <path d="M8 5v3l2 2"/>
+    </svg>
+  );
+}
+
+function BusinessIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="5" width="14" height="9" rx="1"/>
+      <path d="M5 5V3a1 1 0 011-1h4a1 1 0 011 1v2"/>
+    </svg>
+  );
+}
+
+function PersonIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="5" r="3"/>
+      <path d="M2 14c0-3.5 2.7-6 6-6s6 2.5 6 6"/>
+    </svg>
+  );
+}
+
+const ACCOUNT_ICONS: Record<string, ReactNode> = {
+  bank: <BankIcon />,
+  mobile_wallet: <WalletIcon />,
+  cash: <CashIcon />,
+  savings: <SavingsIcon />,
+  business: <BusinessIcon />,
+  counterparty: <PersonIcon />,
+};
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -347,7 +408,7 @@ export function Dashboard() {
                     <div className={styles.memberHead} onClick={() => toggleMember(mid)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleMember(mid)}>
                       <div className={styles.miniAvatar} style={{ background: grad }}>{initial}</div>
                       <span className={styles.mname}>{mName}</span>
-                      <span className={styles.memberTotal}>{formatAmount(totalBalance, locale, currency)}</span>
+                      <span className={styles.memberTotal}>{formatAmountParts(totalBalance, locale, currency).amount}<span className={styles.currencyLabel}>{formatAmountParts(totalBalance, locale, currency).currency}</span></span>
                       <span className={`${styles.memberChevron} ${expanded ? styles.chevronOpen : ''}`}>
                         <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 4.5l3 3 3-3" />
@@ -358,15 +419,12 @@ export function Dashboard() {
                       <div className={styles.memberAccounts}>
                         {accts.map((acct) => (
                           <div key={acct.id} className={styles.acctRow} onClick={(e) => { e.stopPropagation(); navigate(`/member/${mid}?account=${acct.id}`); }}>
-                            <div
-                              className={styles.acctIcon}
-                              style={{ background: ACCOUNT_TYPE_GRADIENT[acct.type as AccountType] }}
-                            >
-                              {acct.name.slice(0, 2).toUpperCase()}
-                            </div>
+                            <span className={styles.acctTypeIcon} style={{ color: ACCOUNT_TYPE_ACCENT[acct.type as keyof typeof ACCOUNT_TYPE_ACCENT] }}>
+                              {ACCOUNT_ICONS[acct.type]}
+                            </span>
                             <span className={styles.acctName}>{acct.name}</span>
                             <span className={styles.acctBalance}>
-                              {formatAmount(acct.balance, locale, currency)}
+                              {formatAmountParts(acct.balance, locale, currency).amount}<span className={styles.currencyLabel}>{formatAmountParts(acct.balance, locale, currency).currency}</span>
                             </span>
                           </div>
                         ))}

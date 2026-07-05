@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import styles from './SplashScreen.module.css';
 
 interface SplashScreenProps {
@@ -7,18 +7,19 @@ interface SplashScreenProps {
 }
 
 const TEXT = 'MoneyFlows';
-const CHAR_INTERVAL = 60;
-const TYPING_DELAY = 50;
-const POST_TYPING_DELAY = 500;
+const CHAR_INTERVAL = 40;
+const POST_TYPING_DELAY = 300;
 const FADE_DURATION = 500;
 
 export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
-  const [displayed, setDisplayed] = useState('M');
+  const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const [fading, setFading] = useState(false);
-  const idx = useRef(1);
+  const idx = useRef(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    setDisplayed(TEXT.charAt(0));
+    idx.current = 1;
     const td = setTimeout(function type() {
       if (idx.current < TEXT.length) {
         setDisplayed(TEXT.slice(0, idx.current + 1));
@@ -27,7 +28,7 @@ export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
       } else {
         setDone(true);
       }
-    }, TYPING_DELAY);
+    }, CHAR_INTERVAL);
     return () => clearTimeout(td);
   }, []);
 
