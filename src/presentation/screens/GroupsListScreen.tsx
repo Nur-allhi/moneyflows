@@ -8,6 +8,7 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import type { Member } from '../../core/domain/Member';
 import type { Account } from '../../core/domain/Account';
 import { formatAmount } from '../utils/format';
+import { useSearchStore } from '../stores/useSearchStore';
 import styles from './GroupsListScreen.module.css';
 
 export function GroupsListScreen() {
@@ -101,6 +102,10 @@ export function GroupsListScreen() {
   });
   const balanceMap = new Map(groupBalances.map((b) => [b.id, b.total]));
   const memberMap = new Map(members.map((m) => [m.id, m]));
+  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
+  const filteredGroups = searchQuery
+    ? groups.filter((g) => g.name.toLowerCase().includes(searchQuery))
+    : groups;
 
   if (loading) {
     return (
@@ -116,15 +121,15 @@ export function GroupsListScreen() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h2 className={styles.title}>Account Groups</h2>
-        <p className={styles.subtitle}>{groups.length} group{groups.length !== 1 ? 's' : ''}</p>
+        <p className={styles.subtitle}>{filteredGroups.length} group{filteredGroups.length !== 1 ? 's' : ''}</p>
         <button className={styles.addBtn} onClick={() => setShowCreate(true)}>+ New Group</button>
       </div>
 
-      {groups.length === 0 ? (
-        <div className={styles.empty}>No groups yet. Create one to combine account ledgers.</div>
+      {filteredGroups.length === 0 ? (
+        <div className={styles.empty}>{searchQuery ? 'No groups match your search' : 'No groups yet. Create one to combine account ledgers.'}</div>
       ) : (
         <div className={styles.grid}>
-          {groups.map((g) => (
+          {filteredGroups.map((g) => (
             <button key={g.id} className={styles.card} onClick={() => openDetail(g)}>
               <div className={styles.cardLeft}>
                 <div className={styles.cardInfo}>

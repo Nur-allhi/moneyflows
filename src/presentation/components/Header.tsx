@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
+import { useSearchStore } from '../stores/useSearchStore';
 import styles from './Header.module.css';
 
 interface BreadcrumbItem {
@@ -31,6 +32,9 @@ export function Header({
   className = '',
 }: HeaderProps) {
   const navigate = useNavigate();
+  const query = useSearchStore((s) => s.query);
+  const setQuery = useSearchStore((s) => s.setQuery);
+
   return (
     <header className={`${styles.header} ${className}`}>
       <div className={styles.left}>
@@ -59,6 +63,27 @@ export function Header({
           </>
         )}
       </div>
+
+      <div className={styles.searchWrap}>
+        <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="7" cy="7" r="5.5" />
+          <path d="M11 11l3.5 3.5" />
+        </svg>
+        <input
+          className={styles.searchInput}
+          placeholder="Search..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {query && (
+          <button className={styles.searchClear} onClick={() => setQuery('')} aria-label="Clear search">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M3 3l6 6M9 3l-6 6" />
+            </svg>
+          </button>
+        )}
+      </div>
+
       <div className={styles.right}>
         {showDate && <span className={styles.date}>{formatDate()}</span>}
         <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form')} aria-label="New transaction">

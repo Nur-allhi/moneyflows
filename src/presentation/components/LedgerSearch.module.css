@@ -1,0 +1,85 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: transparent;
+  transition: width var(--transition-normal), border-radius var(--transition-normal), border-color var(--transition-fast), background var(--transition-fast);
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.wrap:hover,
+.wrap.hasValue {
+  width: 180px;
+  border-radius: 999px;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+  cursor: text;
+}
+
+.icon {
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.input {
+  width: 100%;
+  padding: 4px 26px 4px 26px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.wrap:hover .input,
+.wrap.hasValue .input {
+  opacity: 1;
+}
+
+.input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+}
+
+.clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: oklch(100% 0 0 / 0.1);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  transition: background var(--transition-fast);
+}
+
+.clear:hover {
+  background: oklch(100% 0 0 / 0.18);
+}
+
+.clear svg {
+  width: 10px;
+  height: 10px;
+}

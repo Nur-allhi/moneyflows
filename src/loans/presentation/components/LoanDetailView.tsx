@@ -11,7 +11,7 @@ import { useTransactionStore } from '../../../presentation/stores/useTransaction
 import { useModalStore } from '../../../presentation/stores/useModalStore';
 import { formatAmount } from '../../../presentation/utils/format';
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
-import { ProgressBar, LedgerTable } from '../../../presentation/components';
+import { ProgressBar, LedgerTable, LedgerSearch } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import styles from './LoanDetailView.module.css';
 
@@ -35,6 +35,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [dateMode, setDateMode] = useState<'none' | 'month' | 'range'>('none');
+  const [ledgerQuery, setLedgerQuery] = useState('');
   const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,8 +94,11 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
       if (endDate) result = result.filter((tx) => tx.date <= endDate);
     }
 
+    const q = ledgerQuery.toLowerCase().trim();
+    if (q) result = result.filter((tx) => tx.description.toLowerCase().includes(q));
+
     return result;
-  }, [sortedTxs, txFilter, month, startDate, endDate, dateMode]);
+  }, [sortedTxs, txFilter, month, startDate, endDate, dateMode, ledgerQuery]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -152,10 +156,12 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     const pageW = doc.internal.pageSize.getWidth();
     const isLend = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue' || t.type === 'loan_paidback';
     let running = 0;
+    let totalDebit = 0;
+    let totalCredit = 0;
     const pdfRows = filteredTxs.map((tx) => {
       const d = isLend(tx);
-      if (d) running += tx.amount;
-      else running -= tx.amount;
+      if (d) { running += tx.amount; totalDebit += tx.amount; }
+      else { running -= tx.amount; totalCredit += tx.amount; }
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
@@ -178,30 +184,56 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
     doc.text('Loan Ledger Report', pageW / 2, 20, { align: 'center' });
+
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text(`${stack.debtorName}`, pageW / 2, 30, { align: 'center' });
+    doc.text(`${stack.debtorName}`, pageW / 2, 28, { align: 'center' });
 
     const periodLabel = dateMode === 'month' && month
       ? `${MONTHS[parseInt(month.split('-')[1]!, 10) - 1]} ${month.split('-')[0]}`
       : dateMode === 'range' && (startDate || endDate)
         ? `${startDate || '...'} to ${endDate || '...'}`
         : 'All time';
-    doc.text(`Period: ${periodLabel}`, pageW / 2, 38, { align: 'center' });
+    doc.text(`Period: ${periodLabel}`, 14, 36);
+
+    const rightX = pageW - 14;
+    const gap = 3;
+    doc.setFontSize(10);
+
+    const obVal = formatAmount(0, locale, currency);
+    const obValW = doc.getTextWidth(obVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Opening Balance:', rightX - obValW - gap, 28, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(obVal, rightX, 28, { align: 'right' });
+
+    const lentVal = formatAmount(totalDebit, locale, currency);
+    const lentValW = doc.getTextWidth(lentVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Lent:', rightX - lentValW - gap, 36, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(lentVal, rightX, 36, { align: 'right' });
+
+    const repaidVal = formatAmount(totalCredit, locale, currency);
+    const repaidValW = doc.getTextWidth(repaidVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Repaid:', rightX - repaidValW - gap, 44, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(repaidVal, rightX, 44, { align: 'right' });
 
     autoTable(doc, {
       head: [['Date', 'Type', 'Description', 'Lent', 'Repaid', 'Balance']],
       body: pdfRows,
-      startY: 46,
+      startY: 52,
       styles: { fontSize: 8, cellPadding: 2, halign: 'center', overflow: 'linebreak' },
       headStyles: { fillColor: [55, 65, 81], fontStyle: 'bold', halign: 'center' },
       columnStyles: {
         0: { cellWidth: 28 },
-        1: { cellWidth: 20 },
+        1: { cellWidth: 22 },
         2: { cellWidth: 'auto', halign: 'left' },
-        3: { cellWidth: 28 },
-        4: { cellWidth: 28 },
-        5: { cellWidth: 28 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 30 },
+        5: { cellWidth: 30 },
       },
       margin: { left: 10, right: 10 },
       tableWidth: 'auto',
@@ -271,6 +303,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
             <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF">
               {'\u{1F4E5}'} <span className={styles.pdfBtnLabel}>Download PDF</span>
             </button>
+            <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
             <div className={styles.filterWrap} ref={filterRef}>
               <button
                 className={`${styles.filterBtn} ${activeFilterCount > 0 ? styles.filterActive : ''}`}

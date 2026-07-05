@@ -3,6 +3,7 @@ import { RecycleRow, GlassPanel } from '../components';
 import { useRecycleStore } from '../stores/useRecycleStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
+import { useSearchStore } from '../stores/useSearchStore';
 import styles from './RecycleBin.module.css';
 
 function timeAgo(iso: string): string {
@@ -18,6 +19,7 @@ function timeAgo(iso: string): string {
 export function RecycleBin() {
   const { deletedItems, loading, error, fetchDeleted, restore, purge } = useRecycleStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
+  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
 
   useEffect(() => {
     fetchDeleted();
@@ -26,11 +28,12 @@ export function RecycleBin() {
   const [activeTab, setActiveTab] = useState('all');
 
   const filteredItems = useMemo(() => {
-    if (activeTab === 'all') return deletedItems;
-    return deletedItems.filter((item) =>
-      activeTab === 'transactions' ? item.type === 'transaction' : item.type === 'account'
-    );
-  }, [deletedItems, activeTab]);
+    const byTab = activeTab === 'all' ? deletedItems
+      : deletedItems.filter((item) => activeTab === 'transactions' ? item.type === 'transaction' : item.type === 'account');
+    return searchQuery
+      ? byTab.filter((item) => item.name.toLowerCase().includes(searchQuery))
+      : byTab;
+  }, [deletedItems, activeTab, searchQuery]);
 
   const tabCount = (key: string) => {
     if (key === 'all') return deletedItems.length;
@@ -120,7 +123,7 @@ export function RecycleBin() {
           {filteredItems.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">{'\uD83D\uDDD1\uFE0F'}</div>
-              <p className="empty-state-text">No deleted items</p>
+              <p className="empty-state-text">{searchQuery ? 'No deleted items match your search' : 'No deleted items'}</p>
             </div>
           ) : (
             filteredItems.map((item) => (

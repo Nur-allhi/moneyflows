@@ -10,6 +10,7 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
 import { formatAmount } from '../utils/format';
 import { ACCOUNT_TYPE_GRADIENT, displayTxType } from '../constants/labels';
+import { useSearchStore } from '../stores/useSearchStore';
 import { shortDate } from '../constants/dates';
 import { DASHBOARD_TX_DISPLAY_LIMIT } from '../constants/config';
 import type { AccountType } from '../../core/domain/Account';
@@ -153,7 +154,37 @@ export function Dashboard() {
     return map;
   }, [accounts]);
 
+  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
+
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
+
+  const filteredAccountsByMember = useMemo(() => {
+    if (!searchQuery) return accountsByMember;
+    const result = new Map<string, typeof accounts>();
+    for (const [mid, accts] of accountsByMember) {
+      const member = memberById[mid];
+      const mName = (member?.name ?? '').toLowerCase();
+      const filtered = accts.filter((a) =>
+        a.name.toLowerCase().includes(searchQuery) || mName.includes(searchQuery),
+      );
+      if (filtered.length > 0) result.set(mid, filtered);
+    }
+    return result;
+  }, [accountsByMember, memberById, searchQuery]);
+
+  const filteredRecentTxs = useMemo(() => {
+    if (!searchQuery) return recentTxs;
+    return recentTxs.filter((tx) =>
+      tx.description.toLowerCase().includes(searchQuery),
+    );
+  }, [recentTxs, searchQuery]);
+
+  const filteredActiveLoanStacks = useMemo(() => {
+    if (!searchQuery) return activeLoanStacks;
+    return activeLoanStacks.filter((ls) =>
+      ls.debtorName.toLowerCase().includes(searchQuery),
+    );
+  }, [activeLoanStacks, searchQuery]);
 
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
 
@@ -168,11 +199,11 @@ export function Dashboard() {
 
   const memberTotalBalance = useMemo(() => {
     const totals = new Map<string, number>();
-    for (const [mid, accts] of accountsByMember) {
+    for (const [mid, accts] of filteredAccountsByMember) {
       totals.set(mid, accts.reduce((sum, a) => sum + a.balance, 0));
     }
     return totals;
-  }, [accountsByMember]);
+  }, [filteredAccountsByMember]);
 
   if (loading) {
     return (
@@ -293,13 +324,13 @@ export function Dashboard() {
           <div className={styles.panelHeader}>
             <h2>Where Your Money Is</h2>
           </div>
-          {accountsByMember.size === 0 ? (
+          {filteredAccountsByMember.size === 0 ? (
             <div className="empty-state" style={{ padding: '24px 20px' }}>
               <div className="empty-state-icon">{'\u{1F4B0}'}</div>
               <p className="empty-state-text">No accounts yet</p>
             </div>
           ) : (
-              [...accountsByMember.entries()].map(([mid, accts]) => {
+              [...filteredAccountsByMember.entries()].map(([mid, accts]) => {
                 const member = memberById[mid] ?? memberById.__unassigned__;
                 const memberIdx = member ? internalMembers.indexOf(member) : -1;
                 const grad = memberIdx >= 0 ? MEMBER_GRADIENTS[memberIdx % MEMBER_GRADIENTS.length] : MEMBER_GRADIENTS[0];
@@ -348,13 +379,13 @@ export function Dashboard() {
             <h2>Recent Transactions</h2>
           </div>
           <div className={styles.txList}>
-            {recentTxs.length === 0 ? (
+            {filteredRecentTxs.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 20px' }}>
                 <div className="empty-state-icon">{'\u{1F4CB}'}</div>
                 <p className="empty-state-text">No transactions yet</p>
               </div>
             ) : (
-              recentTxs.map((tx) => (
+              filteredRecentTxs.map((tx) => (
                 <div
                   key={tx.id}
                   className={styles.txRow}
@@ -384,13 +415,13 @@ export function Dashboard() {
             <h2>Active Loans</h2>
           </div>
           <div className={styles.loanList}>
-            {activeLoanStacks.length === 0 ? (
+            {filteredActiveLoanStacks.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 0' }}>
                 <div className="empty-state-icon">{'\u{1F4B3}'}</div>
                 <p className="empty-state-text">No active loans</p>
               </div>
             ) : (
-              activeLoanStacks.map((stack) => {
+              filteredActiveLoanStacks.map((stack) => {
                 const total = stack.totalOutstanding + stack.totalRecovered;
                 const pct = total > 0 ? (stack.totalRecovered / total) * 100 : 0;
                 const isSettled = stack.loans.every((l) => l.status === 'settled');

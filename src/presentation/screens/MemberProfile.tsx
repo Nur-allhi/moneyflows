@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Avatar, AccountCard, LedgerTable, SegmentedTabs, GlassPanel } from '../components';
+import { Avatar, AccountCard, LedgerTable, SegmentedTabs, GlassPanel, LedgerSearch } from '../components';
 import type { LedgerRow } from '../components';
 import { useAnimatedValue } from '../hooks';
 import { useModalStore } from '../stores/useModalStore';
@@ -32,6 +32,7 @@ export function MemberProfile() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [activeDot, setActiveDot] = useState(0);
   const [ledgerFilter, setLedgerFilter] = useState('all');
+  const [ledgerQuery, setLedgerQuery] = useState('');
 
   const {
     members, loading: mLoading, error: mError,
@@ -247,9 +248,12 @@ export function MemberProfile() {
     return rows.reverse();
   }, [sortedTxs, displayedTxs, locale, showBalance, memberAccounts, selectedAccountId]);
 
-  const filteredLedger = ledgerFilter === 'all'
-    ? ledgerRows
-    : ledgerRows.filter((row) => row.type === ledgerFilter);
+  const filteredLedger = useMemo(() => {
+    const q = ledgerQuery.toLowerCase().trim();
+    let rows = ledgerFilter === 'all' ? ledgerRows : ledgerRows.filter((row) => row.type === ledgerFilter);
+    if (q) rows = rows.filter((r) => r.description.toLowerCase().includes(q));
+    return rows;
+  }, [ledgerRows, ledgerFilter, ledgerQuery]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) {
@@ -318,7 +322,7 @@ export function MemberProfile() {
 
     const pdfRows: { date: string; type: string; description: string; debit: string; credit: string; balance: string }[] = [];
     if (!showBalance) {
-      for (const tx of [...sortedTxs].reverse()) {
+      for (const tx of sortedTxs) {
         const credit = isTxCredit(tx);
         pdfRows.push({
           date: shortDate(tx.date, locale),
@@ -372,43 +376,107 @@ export function MemberProfile() {
       }
     }
 
-    const filteredPdfRows = ledgerFilter === 'all'
+    let filteredPdfRows = ledgerFilter === 'all'
       ? pdfRows
       : pdfRows.filter((r) => {
           const typeKey = r.type.toLowerCase().replace(/\s+/g, '_');
           return typeKey === ledgerFilter || (ledgerFilter === 'income' && typeKey === 'opening_balance') || (ledgerFilter === 'loan' && (typeKey === 'loan_issue' || typeKey === 'loan_repayment' || typeKey === 'lend' || typeKey === 'repay'));
         });
 
+    const q = ledgerQuery.toLowerCase().trim();
+    if (q) filteredPdfRows = filteredPdfRows.filter((r) => r.description.toLowerCase().includes(q));
+
     if (filteredPdfRows.length === 0) return;
 
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
 
+    const pdfTxFilter = (tx: Transaction) => {
+      if (ledgerFilter !== 'all') {
+        const typeKey = tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()).toLowerCase().replace(/\s+/g, '_');
+        const match = typeKey === ledgerFilter ||
+          (ledgerFilter === 'income' && typeKey === 'opening_balance') ||
+          (ledgerFilter === 'loan' && ['loan_issue', 'loan_repayment', 'lend', 'repay'].includes(typeKey));
+        if (!match) return false;
+      }
+      if (q && !tx.description.toLowerCase().includes(q)) return false;
+      return true;
+    };
+
+    let totalDebit = 0;
+    let totalCredit = 0;
+    for (const tx of sortedTxs) {
+      if (!pdfTxFilter(tx)) continue;
+      if (isTxCredit(tx)) totalCredit += tx.amount;
+      else totalDebit += tx.amount;
+    }
+
+    const openingBal = showBalance
+      ? (() => {
+          const acct = memberAccounts.find((a) => a.id === selectedAccountId);
+          if (!acct) return 0;
+          const netCh = sortedTxs.reduce((s, tx) => {
+            if (!pdfTxFilter(tx)) return s;
+            return s + (isTxCredit(tx) ? tx.amount : -tx.amount);
+          }, 0);
+          return acct.balance - netCh;
+        })()
+      : 0;
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
     doc.text('Transaction Report', pageW / 2, 20, { align: 'center' });
 
-    doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    const headerInfo = selectedAcct
-      ? `Account: ${selectedAcct.name}  |  Member: ${member?.name ?? ''}`
-      : `All Accounts  |  Member: ${member?.name ?? ''}`;
-    doc.text(headerInfo, pageW / 2, 30, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(selectedAcct ? selectedAcct.name : 'All Accounts', pageW / 2, 28, { align: 'center' });
+    doc.text(`Member: ${member?.name ?? ''}`, 14, 36);
 
     const firstTx = sortedTxs[0];
     const lastTx = sortedTxs[sortedTxs.length - 1];
     const firstDate = firstTx ? shortDate(firstTx.date, locale) : '';
     const lastDate = lastTx ? shortDate(lastTx.date, locale) : '';
     const period = firstDate && lastDate ? `Period: ${firstDate}  -  ${lastDate}` : '';
-    if (period) doc.text(period, pageW / 2, 38, { align: 'center' });
+    if (period) doc.text(period, 14, 44);
 
-    const headers = ['Date', 'Type', 'Description', 'Debit', 'Credit', 'Balance'];
-    const body = filteredPdfRows.map((r) => [r.date, r.type, r.description, r.debit, r.credit, r.balance]);
+    doc.setFontSize(10);
+    const rightX = pageW - 14;
+    const gap = 3;
+
+    const obVal = formatAmount(openingBal, locale, currency);
+    const obValW = doc.getTextWidth(obVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Opening Balance:', rightX - obValW - gap, 28, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(obVal, rightX, 28, { align: 'right' });
+
+    const tdVal = formatAmount(totalDebit, locale, currency);
+    const tdValW = doc.getTextWidth(tdVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Debit:', rightX - tdValW - gap, 36, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(tdVal, rightX, 36, { align: 'right' });
+
+    const tcVal = formatAmount(totalCredit, locale, currency);
+    const tcValW = doc.getTextWidth(tcVal);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total Credit:', rightX - tcValW - gap, 44, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(tcVal, rightX, 44, { align: 'right' });
+
+    const includeBalance = showBalance;
+    const headers = includeBalance
+      ? ['Date', 'Type', 'Description', 'Debit', 'Credit', 'Balance']
+      : ['Date', 'Type', 'Description', 'Debit', 'Credit'];
+    const body = filteredPdfRows.map((r) => includeBalance
+      ? [r.date, r.type, r.description, r.debit, r.credit, r.balance]
+      : [r.date, r.type, r.description, r.debit, r.credit],
+    );
 
     autoTable(doc, {
       head: [headers],
       body,
-      startY: 46,
+      startY: 52,
       styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
       headStyles: { fillColor: [55, 65, 81], fontStyle: 'bold', halign: 'center' },
       columnStyles: {
@@ -417,19 +485,19 @@ export function MemberProfile() {
         2: { cellWidth: 'auto', halign: 'left' },
         3: { cellWidth: 30 },
         4: { cellWidth: 30 },
-        5: { cellWidth: 30 },
+        ...(includeBalance ? { 5: { cellWidth: 30 } } : {}),
       },
       didDrawPage: (data) => {
         const y = data.cursor?.y ?? 200;
         doc.setFontSize(8);
         doc.setFont('helvetica', 'italic');
-        doc.text('This is a system generated report', pageW / 2, y + 15, { align: 'center' });
+        doc.text('MoneyFlows \u2014 This is a system generated report', pageW / 2, y + 15, { align: 'center' });
       },
     });
 
     const fileName = `Transaction_Report_${member?.name ?? 'Unknown'}_${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(fileName);
-  }, [sortedTxs, showBalance, ledgerFilter, locale, currency, memberAccounts, selectedAccountId, member]);
+  }, [sortedTxs, showBalance, ledgerFilter, locale, currency, memberAccounts, selectedAccountId, member, ledgerQuery]);
 
   if (loading) {
     return (
@@ -593,6 +661,7 @@ export function MemberProfile() {
                 <span className={styles.pdfBtnIcon}>{'\u{1F4E5}'}</span>
                 <span className={styles.pdfBtnLabel}>Download PDF</span>
               </button>
+              <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
               <SegmentedTabs
                 tabs={ledgerFilters}
                 activeKey={ledgerFilter}

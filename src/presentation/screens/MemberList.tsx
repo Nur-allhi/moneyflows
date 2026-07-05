@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { Avatar, Modal, FormInput } from '../components';
@@ -7,6 +7,7 @@ import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { Member } from '../../core/domain/Member';
 import { formatAmount } from '../utils/format';
+import { useSearchStore } from '../stores/useSearchStore';
 import styles from './MemberList.module.css';
 
 
@@ -15,6 +16,7 @@ export function MemberList() {
   const { members, loading, error, fetchMembers, saveMember } = useMemberStore();
   const { accounts, fetchAccounts } = useAccountStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
+  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
   const [showModal, setShowModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newShortName, setNewShortName] = useState('');
@@ -25,6 +27,10 @@ export function MemberList() {
   }, []);
 
   const familyMembers = members.filter((m) => !m.isExternal);
+  const filteredMembers = useMemo(
+    () => searchQuery ? familyMembers.filter((m) => m.name.toLowerCase().includes(searchQuery)) : familyMembers,
+    [familyMembers, searchQuery],
+  );
 
   function getBalance(memberId: string): number {
     return accounts
@@ -60,11 +66,17 @@ export function MemberList() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h2 className={styles.title}>Family Members</h2>
-        <p className={styles.subtitle}>{familyMembers.length} members</p>
+        <p className={styles.subtitle}>{filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''}</p>
         <button className={styles.addBtn} onClick={() => setShowModal(true)}>+ New Member</button>
       </div>
       <div className={styles.grid}>
-        {familyMembers.map((m) => (
+        {filteredMembers.length === 0 ? (
+          <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>
+            <div className="empty-state-icon">{'\u{1F50D}'}</div>
+            <p className="empty-state-text">No members match your search</p>
+          </div>
+        ) : (
+          filteredMembers.map((m) => (
           <button
             key={m.id}
             className={styles.card}
@@ -84,7 +96,8 @@ export function MemberList() {
             </div>
             <span className={styles.cardBalance}>{formatAmount(getBalance(m.id), locale, currency)}</span>
           </button>
-        ))}
+          ))
+        )}
       </div>
 
       <Modal
