@@ -168,3 +168,47 @@
   font-size: 13px;
   white-space: nowrap;
 }
+
+.mobSheetFooter {
+  display: none;
+}
+
+.mobSheetBtn,
+.mobSheetDanger {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobSheetFooter {
+    display: flex;
+    gap: 10px;
+    padding: 8px 0 4px;
+    justify-content: stretch;
+  }
+
+  .mobSheetBtn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: 500 13px var(--font-display);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+  }
+
+  .mobSheetBtn:active {
+    background: oklch(100% 0 0 / 0.06);
+  }
+
+  .mobSheetDanger {
+    color: var(--color-coral);
+    border-color: oklch(62% 0.18 30 / 0.3);
+  }
+}
