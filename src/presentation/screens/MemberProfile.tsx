@@ -538,16 +538,27 @@ export function MemberProfile() {
       <div className={styles.mobileOnly}>
         <div className={styles.profileCard}>
           <Avatar initial={initial} seed={member.name} name={member.name} size={72} />
-          <div className={styles.profileInfo}>
-            <div className={styles.profileName}>{member.name}</div>
-            <div className={styles.profileTag}>
-              {member.isExternal ? 'External' : 'Family'}
-            </div>
+          <div className={styles.profileName}>{member.name}</div>
+          <div className={styles.profileTag}>
+            {member.isExternal ? 'External' : 'Family'}
           </div>
-          <div className={styles.profileBalance}>
-            <div className={styles.balanceLabel}>Balance</div>
-            <div className={styles.balanceAmount}>{formatAmount(animTotalBalance, locale, currency)}</div>
-          </div>
+          <div className={styles.balanceLabel}>Net Balance</div>
+          <div className={styles.balanceAmount}>{formatAmount(animTotalBalance, locale, currency)}</div>
+        </div>
+
+        <div className={styles.actionPills}>
+          <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form')}>
+            <span className={`${styles.pillIcon} ${styles.pillIncome}`}>{'+$'}</span>
+            <span className={styles.pillLabel}>Income</span>
+          </button>
+          <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form')}>
+            <span className={`${styles.pillIcon} ${styles.pillExpense}`}>{'-$'}</span>
+            <span className={styles.pillLabel}>Expense</span>
+          </button>
+          <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form')}>
+            <span className={`${styles.pillIcon} ${styles.pillTransfer}`}>{'$'}</span>
+            <span className={styles.pillLabel}>Transfer</span>
+          </button>
         </div>
 
         <div className={styles.sectionLabel}>
@@ -582,6 +593,41 @@ export function MemberProfile() {
               className={`${styles.dot} ${i === activeDot ? styles.dotActive : ''}`}
             />
           ))}
+        </div>
+
+        <div className={styles.mobileLedger}>
+          <div className={styles.ledgerSectionTitle}>Transactions</div>
+          <div className={styles.ledgerToolbar}>
+            <div className={styles.ledgerSearchWrap}>
+              <svg className={styles.ledgerSearchIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                <circle cx="7" cy="7" r="5.5" />
+                <path d="M11 11l3.5 3.5" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search transactions..."
+                value={ledgerQuery}
+                onChange={(e) => setLedgerQuery(e.target.value)}
+              />
+            </div>
+            <button className={styles.downloadBtn} onClick={downloadPdf} aria-label="Download PDF">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </button>
+          </div>
+          <SegmentedTabs
+            tabs={[
+              { key: 'all', label: 'All' },
+              { key: 'income', label: 'Income' },
+              { key: 'expense', label: 'Expense' },
+            ]}
+            activeKey={ledgerFilter}
+            onChange={setLedgerFilter}
+          />
+          <LedgerTable rows={filteredLedger} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} />
         </div>
       </div>
 

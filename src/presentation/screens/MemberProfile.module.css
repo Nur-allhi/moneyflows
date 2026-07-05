@@ -705,3 +705,152 @@
   color: var(--color-primary);
   background: rgba(255,255,255,0.08);
 }
+
+/* ---- Mobile action pills ---- */
+.actionPills {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.actionPill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+  color: inherit;
+}
+
+.actionPill:active {
+  transform: scale(0.95);
+}
+
+.pillIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pillIncome {
+  background: oklch(65% 0.15 170 / 0.2);
+  color: var(--color-teal);
+}
+
+.pillExpense {
+  background: oklch(62% 0.18 30 / 0.2);
+  color: var(--color-coral);
+}
+
+.pillTransfer {
+  background: oklch(62% 0.22 290 / 0.2);
+  color: var(--color-primary);
+}
+
+.pillLabel {
+  font: 400 11px var(--font-body);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---- Mobile profile card (hero) ---- */
+.profileCard {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin: 0;
+  padding: 24px 20px;
+  border-radius: 16px;
+}
+
+.profileInfo {
+  display: none;
+}
+
+.profileBalance {
+  display: none;
+}
+
+/* ---- Mobile ledger ---- */
+.mobileLedger {
+  margin-top: 12px;
+}
+
+.ledgerSectionTitle {
+  font: 600 15px var(--font-display);
+  color: var(--color-text);
+  padding: 4px 0 12px;
+}
+
+.ledgerToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ledgerSearchWrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+}
+
+.ledgerSearchIcon {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  display: flex;
+}
+
+.ledgerSearchWrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font: 400 13px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.ledgerSearchWrap input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.downloadBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.downloadBtn:active {
+  background: oklch(100% 0 0 / 0.08);
+  color: var(--color-text);
+}
