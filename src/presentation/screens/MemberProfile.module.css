@@ -462,8 +462,9 @@
 
 .pdfBtnIcon {
   flex-shrink: 0;
-  font-size: 14px;
-  line-height: 1;
+  width: 16px;
+  height: 16px;
+  display: flex;
 }
 
 .pdfBtnLabel {
