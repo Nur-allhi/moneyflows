@@ -274,6 +274,52 @@ export function GroupLedgerScreen() {
 
   return (
     <div className={styles.container}>
+      <div className={styles.mobHeader}>
+        <button className={styles.backBtn} onClick={() => navigate('/groups')} aria-label="Back">
+          {'\u2190'}
+        </button>
+        <span className={styles.pageTitle}>{groupName || 'Ledger'}</span>
+        <button className={styles.pdfIconBtn} onClick={handleDownloadPdf} aria-label="Download PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </button>
+      </div>
+
+      <div className={styles.heroCard}>
+        <span className={styles.heroLabel}>Total Balance</span>
+        <span className={styles.heroValue}>{formatAmount(totalBalance, locale, currency)}</span>
+        <span className={styles.heroMeta}>{accountIds.length} account{accountIds.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      <div className={styles.searchBar}>
+        <div className={styles.searchWrap}>
+          <span className={styles.searchIcon}>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+              <circle cx="7" cy="7" r="5.5" />
+              <path d="M11 11l3.5 3.5" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            placeholder="Search ledger..."
+            value={ledgerQuery}
+            onChange={(e) => setLedgerQuery(e.target.value)}
+          />
+          {ledgerQuery && (
+            <button className={styles.searchClear} onClick={() => setLedgerQuery('')} aria-label="Clear search">
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M3 3l6 6M9 3l-6 6" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>{groupName}</h1>
