@@ -21,7 +21,7 @@
 .header {
   display: grid;
   grid-template-columns: 55px 55px 1fr 55px 55px 55px;
-  gap: 4px;
+  gap: 8px;
   padding: 12px 14px;
   font-size: 10px;
   text-transform: uppercase;
@@ -71,7 +71,7 @@
 .row {
   display: grid;
   grid-template-columns: 55px 55px 1fr 55px 55px 55px;
-  gap: 4px;
+  gap: 8px;
   padding: 10px 14px;
   font-size: 13px;
   align-items: start;
