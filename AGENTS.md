@@ -144,31 +144,9 @@ See `session_log.md` for complete session history.
 
 **All 64 tickets complete.** Phase 8 — Data Backup & Safety is finished.
 
-**Phase 9: Mobile Screen UI** — 19 tickets (T-065–T-083). See `docs/TICKETS.md` for full details.
+**Phase 9: Mobile Screen UI** — 19 tickets (T-065–T-083). All **Complete**.
 
-| Ticket | Description | Status |
-|--------|-------------|--------|
-| T-065 | Mobile body layout + safe areas + bg-glow | **Complete** |
-| T-066 | Mobile Header with back, search, settings | **Complete** |
-| T-067 | Mobile BottomNav (5 tabs, 64px, fixed) | **Complete** |
-| T-068 | BottomSheet component (slide-up, drag handle) | **Complete** |
-| T-069 | FAB component (Dashboard only) | **Complete** |
-| T-070 | Standardize glass cards for mobile (16px, 20px padding) | **Complete** |
-| T-071 | SplashScreen typewriter animation (mobile-first) | **Complete** |
-| T-072 | Dashboard mobile layout (total assets, metrics, accordion, FAB) | **Complete** |
-| T-073 | MemberList mobile (3-column avatar grid, search, add) | **Complete** |
-| T-074 | MemberProfile mobile (hero, pills, account carousel, ledger) | **Complete** |
-| T-075 | LoansScreen mobile (search, pills, loan cards, badges) | **Complete** |
-| T-076 | LoanDetailView mobile (summary, progress, ledger, repayment modal) | **Complete** |
-| T-077 | GroupsListScreen mobile (cards, search, detail bottom sheet) | **Complete** |
-| T-078 | GroupLedgerScreen mobile (balance hero, ledger, infinite scroll) | Pending |
-| T-079 | RecycleBin mobile (tab bar, stats, rows with restore/delete) | Pending |
-| T-080 | Settings mobile (full-screen, sections, toasts) | Pending |
-| T-081 | TransactionDetailModal mobile (bottom sheet pattern) | Pending |
-| T-082 | TransactionFormModal mobile (tabs, numpad, form) | Pending |
-| T-083 | Shared modals (AddAccount, EditMember, DeleteConfirm, LoanReport) | Pending |
-
-**Next up:** T-078 — GroupLedgerScreen mobile (balance hero, ledger, infinite scroll)
+**Next phase TBD.**
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 

@@ -1187,3 +1187,31 @@
 
 ### Status
 - T-077 complete. **Next: T-078** — GroupLedgerScreen mobile (balance hero, ledger, infinite scroll).
+
+## Session 2026-07-05 23:00
+
+### Changes
+- **T-078**: GroupLedgerScreen mobile (balance hero, ledger, infinite scroll)
+  - `GroupLedgerScreen.tsx`: Added `.mobHeader` (back + title + PDF icon), `.heroCard` with big total balance + "+" chip, `.searchBar` (mobile inline search with clear), `SegmentedTabs` (scrollable, matching desktop All/Income/Expense), `LedgerTable` with `desktop={false}` prop, infinite scroll via `IntersectionObserver` sentinel div
+  - `GroupLedgerScreen.module.css`: Added ~200 lines of mobile styles — heroCard with 26px mono balance, gradient border pill for net change, mobHeader/searchBar patterns matching previous screens, SegmentedTabs horizontal scroll with 32px pill tabs, sentinel block for infinite scroll
+- **T-079**: RecycleBin mobile (tab bar, stats, rows with restore/delete)
+  - `RecycleBin.tsx`: Added `.mobHeader` (back + title + restore count pill), `.searchBar` (mobile inline search), Tabs row with horizontal scroll on mobile (hidden on desktop), compact list rows with type icon, amount, date, restore/delete buttons
+  - `RecycleBin.module.css`: Added ~180 lines of mobile styles — stats section hidden on mobile (`@media max-width: 768px display: none`), tab bar scrollable via `overflow-x: auto`, list rows with `restoreBtn` / `deleteBtn` (hidden on desktop, shown on mobile with small 28px×36px sizing)
+- **T-080**: Settings mobile (full-screen, sections, toasts)
+  - `SettingsModal.tsx`: Added `className={styles.modalWrap}` on `Modal` (full-screen override on mobile), added `.modalWrap` CSS class with `max-width: 100% !important`, `height: 100dvh`, `border-radius: 0` inside `@media (max-width: 768px)`
+  - `SettingsModal.module.css`: Added mobile media query — modal full-screen, status text hidden, all form controls with increased tap target padding, toast styling centered at bottom
+- **T-081**: TransactionDetailModal mobile (bottom sheet pattern)
+  - `TransactionDetailModal.tsx`: Added `isMobile` detection via resize listener, BottomSheet on mobile (<=768px), Modal on desktop, mobile action buttons row (Ledger/Edit/Delete) in `.mobSheetFooter`, desktop action set unchanged
+  - `TransactionDetailModal.module.css`: Added `.mobSheetFooter` with 3-button flex row, `@media (min-width: 769px)` hides the mobile footer, BottomSheet handle centered
+- **T-082**: TransactionFormModal mobile (tabs, numpad, form)
+  - Verification only — `TransactionFormModal.tsx` already mobile-first: `.mobileLayout` (bottom sheet) is default, `.desktopLayout` only shown at 768px+. No code changes needed.
+- **T-083**: Shared modals mobile (AddAccount, EditMember, DeleteConfirm, LoanReport)
+  - `DeleteConfirmModal.tsx`: Added `isMobile` detection, BottomSheet variant on mobile with Cancel/Delete buttons, Modal variant preserved for desktop. Removed inline style attribute in favor of shared `descStyle` object.
+  - `LoanReportModal.module.css`: Added `@media (max-width: 768px)` — full-screen modal override (100vw, no radius, glass effect removed), full-height layout, stretch footer row, flex cancel button
+
+### Skill(s) Used
+- `ui-ux-pro-max` — BottomSheet component usage, mobile-first layout patterns, responsive card/table styling
+- `senior-frontend` — isMobile detection pattern, IntersectionObserver infinite scroll, conditional rendering for mobile/desktop modals
+
+### Status
+- All Phase 9 tickets T-065 through T-083 complete. **Next phase TBD.**
