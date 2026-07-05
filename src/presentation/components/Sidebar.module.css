@@ -1,14 +1,15 @@
 .sidebar {
   width: 220px;
-  min-height: 100vh;
   background: var(--color-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid var(--color-border);
+  border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   padding: 24px 0;
   flex-shrink: 0;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .logo {
@@ -69,9 +70,11 @@
 }
 
 .icon {
-  font-size: 18px;
   width: 24px;
-  text-align: center;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 

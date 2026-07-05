@@ -33,6 +33,11 @@
 @media (min-width: 1024px) {
   .sidebar {
     display: flex;
+    position: fixed;
+    left: 16px;
+    top: 16px;
+    bottom: 16px;
+    z-index: 100;
   }
 
   .bottomNav {
@@ -41,6 +46,7 @@
 
   .main {
     padding-bottom: 24px;
+    padding-left: calc(220px + 56px);
   }
 }
 
