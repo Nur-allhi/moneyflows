@@ -79,15 +79,43 @@ export class SQLiteDatabaseService implements IDatabaseService {
         this.db = new this.SQL.Database(buffer);
         await this._migrate();
       } catch {
-        localStorage.removeItem(STORAGE_KEY);
-        this.db = new this.SQL.Database();
-        this.db.run(SCHEMA);
+        await this._trySnapshotRecovery();
       }
-    } else {
+    }
+    if (!this.db) {
       this.db = new this.SQL.Database();
       this.db.run(SCHEMA);
     }
     this.save();
+  }
+
+  private async _trySnapshotRecovery(): Promise<void> {
+    const SQL = this.SQL!;
+    for (let i = 0; i < MAX_SNAPSHOTS; i++) {
+      const raw = localStorage.getItem(`${SNAPSHOT_PREFIX}${i}`);
+      if (!raw) continue;
+      try {
+        const snap = JSON.parse(raw);
+        if (snap?.data && snap?.hash) {
+          const hash = await this.sha256(snap.data);
+          if (hash === snap.hash) {
+            const buffer = Uint8Array.from(atob(snap.data), (c) => c.charCodeAt(0));
+            this.db = new SQL.Database(buffer);
+            await this._migrate();
+            return;
+          }
+        }
+      } catch { /* skip */ }
+    }
+    const msg =
+      'Your database file could not be loaded and no valid backup was found.\n\n' +
+      'Click OK to start fresh (your data will be lost).\n' +
+      'Click Cancel to keep the corrupt file for manual recovery.';
+    if (window.confirm(msg)) {
+      localStorage.removeItem(STORAGE_KEY);
+    } else {
+      throw new Error('Database corrupt — user declined reset');
+    }
   }
 
   private async _migrate(): Promise<void> {
@@ -173,9 +201,22 @@ export class SQLiteDatabaseService implements IDatabaseService {
     if (!this.db) return;
     const data = this.db.export();
     const binary = Array.from(data).map((b) => String.fromCharCode(b)).join('');
-    localStorage.setItem(STORAGE_KEY, btoa(binary));
+    try {
+      localStorage.setItem(STORAGE_KEY, btoa(binary));
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        this._freeSnapshotSlot();
+        try {
+          localStorage.setItem(STORAGE_KEY, btoa(binary));
+        } catch { /* give up — data at risk */ }
+      }
+    }
     this._maybeSnapshot(data).catch(() => {});
     this._maybeFolderSync(data).catch(() => {});
+  }
+
+  private _freeSnapshotSlot(): void {
+    localStorage.removeItem(`${SNAPSHOT_PREFIX}${MAX_SNAPSHOTS - 1}`);
   }
 
   private async sha256(str: string): Promise<string> {
