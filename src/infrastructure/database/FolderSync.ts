@@ -3,8 +3,10 @@ const DB_NAME = 'moneyflows_folder_sync';
 const STORE_NAME = 'handles';
 const HANDLE_KEY = 'moneyflows_folder_handle';
 const SUBDIR = 'MoneyFlows';
-const FILE_NAME = 'moneyflows.db';
-const TMP_NAME = 'moneyflows.tmp';
+const OLD_FILE = 'moneyflows.db';
+const OLD_TMP = 'moneyflows.tmp';
+const FILE_PREFIX = 'moneyflows-';
+const MAX_FILES = 10;
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -13,6 +15,17 @@ function openDb(): Promise<IDBDatabase> {
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
+}
+
+function timestampName(): string {
+  const n = new Date();
+  const y = n.getFullYear().toString();
+  const M = (n.getMonth() + 1).toString().padStart(2, '0');
+  const d = n.getDate().toString().padStart(2, '0');
+  const h = n.getHours().toString().padStart(2, '0');
+  const m = n.getMinutes().toString().padStart(2, '0');
+  const s = n.getSeconds().toString().padStart(2, '0');
+  return `${FILE_PREFIX}${y}${M}${d}-${h}${m}${s}.db`;
 }
 
 export const isFsaSupported = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
@@ -74,27 +87,77 @@ export class FolderSync {
     if (!ok) return;
     try {
       const dir = await h.getDirectoryHandle(SUBDIR, { create: true });
-      const tmpFile = await dir.getFileHandle(TMP_NAME, { create: true });
-      const tmpStream = await tmpFile.createWritable();
-      await (tmpStream as any).write(data);
-      await tmpStream.close();
-      try { await dir.removeEntry(FILE_NAME); } catch { /* may not exist */ }
-      const finalFile = await dir.getFileHandle(FILE_NAME, { create: true });
-      const finalStream = await finalFile.createWritable();
-      await (finalStream as any).write(data);
-      await finalStream.close();
-      try { await dir.removeEntry(TMP_NAME); } catch { /* best-effort cleanup */ }
+      const name = timestampName();
+      const file = await dir.getFileHandle(name, { create: true });
+      const stream = await file.createWritable({ keepExistingData: false });
+      await (stream as any).write(data);
+      await stream.close();
+      await this._cleanup(dir);
     } catch { /* never block caller */ }
   }
 
-  async load(): Promise<Uint8Array | null> {
+  private async _cleanup(dir: FileSystemDirectoryHandle): Promise<void> {
+    const entries: { name: string; handle: FileSystemFileHandle; mod: number }[] = [];
+    for await (const [name, entry] of (dir as any).entries()) {
+      if (entry.kind !== 'file') continue;
+      if (name.startsWith(FILE_PREFIX) && name.endsWith('.db')) {
+        const file = await (entry as FileSystemFileHandle).getFile();
+        entries.push({ name, handle: entry as FileSystemFileHandle, mod: file.lastModified });
+      }
+    }
+    /* Remove old single-file format */
+    try { await dir.removeEntry(OLD_FILE); } catch { /* ok */ }
+    try { await dir.removeEntry(OLD_TMP); } catch { /* ok */ }
+    /* Keep newest MAX_FILES */
+    if (entries.length <= MAX_FILES) return;
+    entries.sort((a, b) => b.name.localeCompare(a.name));
+    for (let i = MAX_FILES; i < entries.length; i++) {
+      try { await dir.removeEntry(entries[i]!.name); } catch { /* best-effort */ }
+    }
+  }
+
+  async listFiles(): Promise<{ name: string; lastModified: number }[]> {
     const h = await this.getFolderHandle();
-    if (!h) return null;
+    if (!h) return [];
     const ok = await this.hasPermission();
-    if (!ok) return null;
+    if (!ok) return [];
+    const result: { name: string; lastModified: number }[] = [];
     try {
       const dir = await h.getDirectoryHandle(SUBDIR);
-      const file = await dir.getFileHandle(FILE_NAME);
+      for await (const [name, entry] of (dir as any).entries()) {
+        if (entry.kind !== 'file') continue;
+        if (name.startsWith(FILE_PREFIX) && name.endsWith('.db')) {
+          const file = await (entry as FileSystemFileHandle).getFile();
+          result.push({ name, lastModified: file.lastModified });
+        }
+      }
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    } catch { /* ignore */ }
+    return result;
+  }
+
+  async loadFile(name: string): Promise<Uint8Array | null> {
+    const h = await this.getFolderHandle();
+    if (!h) return null;
+    try {
+      const dir = await h.getDirectoryHandle(SUBDIR);
+      const file = await dir.getFileHandle(name);
+      const blob = await file.getFile();
+      return new Uint8Array(await blob.arrayBuffer());
+    } catch { return null; }
+  }
+
+  async load(): Promise<Uint8Array | null> {
+    const files = await this.listFiles();
+    if (files.length > 0) {
+      return this.loadFile(files[0]!.name);
+    }
+    /* Fallback: old single-file format */
+    const h = await this.getFolderHandle();
+    if (!h) return null;
+    try {
+      const dir = await h.getDirectoryHandle(SUBDIR);
+      const file = await dir.getFileHandle(OLD_FILE);
       const blob = await file.getFile();
       return new Uint8Array(await blob.arrayBuffer());
     } catch { return null; }

@@ -35,7 +35,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [folderName, setFolderName] = useState<string | null>(null);
   const [fsPermission, setFsPermission] = useState<boolean | null>(null);
-  const [restoringFromDrive, setRestoringFromDrive] = useState(false);
+  const [backupFiles, setBackupFiles] = useState<{ name: string; lastModified: number }[]>([]);
+  const [restoringFile, setRestoringFile] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) fetchMembers();
@@ -58,10 +59,15 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         const handle = await folderSync.getFolderHandle();
         if (handle) {
           setFolderName(handle.name);
-          setFsPermission(await folderSync.hasPermission());
+          const ok = await folderSync.hasPermission();
+          setFsPermission(ok);
+          if (ok) {
+            setBackupFiles(await folderSync.listFiles());
+          }
         } else {
           setFolderName(null);
           setFsPermission(null);
+          setBackupFiles([]);
         }
       })();
     }
@@ -97,12 +103,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       await folderSync.setFolder(handle);
       setFolderName(handle.name);
       setFsPermission(true);
+      setBackupFiles(await folderSync.listFiles());
     } catch { /* user cancelled */ }
   }, []);
 
   const handleReauthorize = useCallback(async () => {
     const ok = await folderSync.requestPermission();
     setFsPermission(ok);
+    if (ok) setBackupFiles(await folderSync.listFiles());
   }, []);
 
   const handleStopBackup = useCallback(async () => {
@@ -111,14 +119,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setFsPermission(null);
   }, []);
 
-  const handleRestoreFromDrive = useCallback(async () => {
-    const ok = window.confirm('Replace all current data with the backup from your synced folder?');
+  const handleRestoreFile = useCallback(async (name: string) => {
+    const ts = name.replace('moneyflows-', '').replace('.db', '');
+    const y = ts.slice(0, 4), M = ts.slice(4, 6), d = ts.slice(6, 8);
+    const h = ts.slice(9, 11), m = ts.slice(11, 13), s = ts.slice(13, 15);
+    const label = `${y}-${M}-${d} ${h}:${m}:${s}`;
+    const ok = window.confirm(`Replace all current data with the backup from ${label}?`);
     if (!ok) return;
-    setRestoringFromDrive(true);
+    setRestoringFile(name);
     setRestoreError(null);
     try {
-      const data = await folderSync.load();
-      if (!data) throw new Error('No backup file found in synced folder');
+      const data = await folderSync.loadFile(name);
+      if (!data) throw new Error('Failed to read backup file');
       const db = getDatabase();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const SQL = (db as any).SQL;
@@ -129,7 +141,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       window.location.reload();
     } catch (e) {
       setRestoreError(e instanceof Error ? e.message : 'Restore failed');
-      setRestoringFromDrive(false);
+      setRestoringFile(null);
     }
   }, []);
 
@@ -270,14 +282,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         </div>
       )}
       {fsPermission && (
-        <button
-          className={fieldStyles.actionBtn}
-          onClick={handleRestoreFromDrive}
-          disabled={restoringFromDrive}
-          style={{ marginTop: 8, width: '100%' }}
-        >
-          {restoringFromDrive ? 'Restoring…' : 'Restore from Drive'}
-        </button>
+        <div className={fieldStyles.snapshotList} style={{ marginTop: 8 }}>
+          {backupFiles.length === 0 ? (
+            <div className={fieldStyles.emptyState}>No backup files found in folder</div>
+          ) : (
+            backupFiles.slice(0, 10).map((f) => {
+              const ts = f.name.replace('moneyflows-', '').replace('.db', '');
+              const y = ts.slice(0, 4), M = ts.slice(4, 6), d = ts.slice(6, 8);
+              const h = ts.slice(9, 11), m = ts.slice(11, 13);
+              const label = `${y}-${M}-${d} ${h}:${m}`;
+              return (
+                <div key={f.name} className={fieldStyles.snapshotRow}>
+                  <span className={fieldStyles.statusDot} />
+                  <span className={fieldStyles.snapshotTime}>{label}</span>
+                  <button
+                    className={fieldStyles.restoreBtn}
+                    onClick={() => handleRestoreFile(f.name)}
+                    disabled={restoringFile === f.name}
+                  >
+                    {restoringFile === f.name ? 'Restoring…' : 'Restore'}
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
       )}
 
       <div className={fieldStyles.separator} />
