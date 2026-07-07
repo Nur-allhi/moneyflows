@@ -12,9 +12,6 @@ export const DASHBOARD_TX_LIMIT_MAX = 50;
 
 export const ANIMATION_DURATION = 600;
 
-export const ACCOUNT_CARD_WIDTH = 180;
-export const CARD_GAP = 12;
-
 export const ROW_HEIGHT = 54;
 export const DESKTOP_ROW_HEIGHT = 56;
 export const OVERSCAN = 3;
@@ -27,5 +24,4 @@ export const SNAPSHOT_COOLDOWN_MS = 300_000;
 export const SNAPSHOT_PREFIX = 'moneyflows_snap_';
 export const FOLDER_SYNC_COOLDOWN_MS = 120_000;
 
-export const DASHBOARD_TX_FETCH_LIMIT = 10;
 export const DASHBOARD_TX_DISPLAY_LIMIT = 12;

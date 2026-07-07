@@ -90,16 +90,6 @@ export function LoansScreen() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.mobHeader}>
-        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
-          {'\u2190'}
-        </button>
-        <span className={styles.pageTitle}>Loans</span>
-        <button className={styles.addCircleBtn} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'loan' })} aria-label="New loan">
-          {'+'}
-        </button>
-      </div>
-
       <div className={styles.searchBar}>
         <div className={styles.searchWrap}>
           <span className={styles.searchIcon}>
@@ -143,8 +133,9 @@ export function LoansScreen() {
         </div>
       </div>
 
-      <div className={styles.summaryLine}>
-        Total Outstanding <span className={styles.sumVal}>{formatAmount(totals[filter], locale, currency)}</span>
+      <div className={styles.summaryCard}>
+        <span className={styles.summaryLabel}>Total Outstanding</span>
+        <span className={styles.summaryValue}>{formatAmount(totals[filter], locale, currency)}</span>
       </div>
 
       {filteredStacks.length === 0 ? (

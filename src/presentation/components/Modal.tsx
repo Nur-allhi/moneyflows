@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
+import { handleFormFocus } from '../utils/focus';
 import styles from './Modal.module.css';
 
 interface ModalProps {
@@ -56,7 +57,7 @@ export function Modal({
           <h2 className={styles.title}>{title}</h2>
           <button className={styles.close} onClick={onClose} aria-label="Close">&times;</button>
         </div>
-        <div className={styles.body}>
+        <div className={styles.body} onFocus={handleFormFocus}>
           {children}
         </div>
         {footer ?? (

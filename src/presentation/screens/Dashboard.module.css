@@ -199,12 +199,21 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  animation: slideIn 0.2s ease-out;
+  animation: fadeSlideIn 0.2s ease-out;
 }
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(-4px); }
+.closingAccounts {
+  animation: fadeSlideOut 0.2s ease-in forwards;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
 }
 
 .acctRow {
@@ -335,7 +344,7 @@
 }
 
 .loanCurrency {
-  font-size: 9px;
+  font-size: 7px;
   font-weight: 500;
   margin-left: 3px;
   opacity: 0.55;
@@ -489,6 +498,13 @@
   white-space: nowrap;
 }
 
+.txCurrency {
+  font-size: 8px;
+  font-weight: 400;
+  opacity: 0.55;
+  margin-left: 2px;
+}
+
 @media (max-width: 1000px) {
   .metrics { grid-template-columns: 1fr; gap: 10px; }
   .content { grid-template-columns: 1fr; }
@@ -619,7 +635,47 @@
   }
 
   .memberAccounts {
-    padding: 2px 16px 12px 50px;
+    padding: 0 16px 8px 44px;
+    border-top: none;
+    position: relative;
+  }
+
+  .memberAccounts::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 0;
+    bottom: 8px;
+    width: 2px;
+    background: var(--color-border);
+    border-radius: 1px;
+  }
+
+  .acctRow {
+    position: relative;
+    padding-left: 18px;
+  }
+
+  .acctRow::before {
+    content: '';
+    position: absolute;
+    left: -17px;
+    top: 50%;
+    width: 16px;
+    height: 2px;
+    background: var(--color-border);
+    border-radius: 1px;
+  }
+
+  .acctRow:last-child::after {
+    content: '';
+    position: absolute;
+    left: -17px;
+    top: 0;
+    bottom: 50%;
+    width: 2px;
+    background: var(--color-border);
+    border-radius: 1px;
   }
 
   .mname {
@@ -639,37 +695,48 @@
   }
 
   .txType {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: transparent;
+    gap: 1px;
     overflow: hidden;
-    margin-right: -2px;
+    flex-shrink: 0;
     background: oklch(62% 0.18 30 / 0.2);
+    line-height: 1;
   }
 
   .txType[data-type="income"],
   .txType[data-type="loan_repayment"],
   .txType[data-type="repay"] {
     background: oklch(65% 0.15 170 / 0.2);
-    color: transparent;
   }
 
   .txType[data-type="expense"],
   .txType[data-type="loan_issue"],
   .txType[data-type="lend"] {
     background: oklch(62% 0.18 30 / 0.2);
-    color: transparent;
   }
 
   .txType[data-type="transfer"] {
     background: oklch(62% 0.22 290 / 0.2);
-    color: transparent;
+  }
+
+  .txDay {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .txMonth {
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
   }
 
   .txDesc {
@@ -678,6 +745,10 @@
 
   .txAmount {
     font-size: 14px;
+  }
+
+  .txCurrency {
+    font-size: 8px;
   }
 
   .txArrow {

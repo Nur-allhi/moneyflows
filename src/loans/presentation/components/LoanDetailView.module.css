@@ -481,3 +481,120 @@
     padding: 16px;
   }
 }
+
+/* ---- Mobile transaction rows ---- */
+.txRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.txRow:hover {
+  background: oklch(100% 0 0 / 0.04);
+}
+
+.txType {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: oklch(62% 0.18 30 / 0.2);
+  line-height: 1;
+}
+
+.txType[data-type="income"],
+.txType[data-type="loan_repayment"],
+.txType[data-type="repay"] {
+  background: oklch(65% 0.15 170 / 0.2);
+}
+
+.txType[data-type="expense"],
+.txType[data-type="loan_issue"],
+.txType[data-type="lend"] {
+  background: oklch(62% 0.18 30 / 0.2);
+}
+
+.txType[data-type="transfer"] {
+  background: oklch(62% 0.22 290 / 0.2);
+}
+
+.txDay {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.txMonth {
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.txDesc {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text);
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.txAmount {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.txCurrency {
+  font-size: 8px;
+  font-weight: 400;
+  opacity: 0.55;
+  margin-left: 2px;
+}
+
+.txArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.txArrowIn {
+  background: oklch(65% 0.15 150 / 0.15);
+  color: var(--color-teal);
+}
+
+.txArrowOut {
+  background: oklch(62% 0.18 30 / 0.15);
+  color: var(--color-coral);
+}
+
+.txArrow svg {
+  width: 12px;
+  height: 12px;
+}

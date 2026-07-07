@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
 import { useSearchStore } from '../stores/useSearchStore';
@@ -17,6 +16,8 @@ interface HeaderProps {
   showDate?: boolean;
   breadcrumb?: BreadcrumbItem[];
   className?: string;
+  searchActive?: boolean;
+  onSearchToggle?: () => void;
 }
 
 function formatDate(): string {
@@ -31,54 +32,65 @@ export function Header({
   showDate = true,
   breadcrumb,
   className = '',
+  searchActive = false,
+  onSearchToggle,
 }: HeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const query = useSearchStore((s) => s.query);
   const setQuery = useSearchStore((s) => s.setQuery);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [searchVisible, setSearchVisible] = useState(false);
-  const settingsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
-        setSettingsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+  const isMobile = window.innerWidth < 768;
+  const isDashboard = location.pathname === '/';
 
   return (
     <header className={`${styles.header} ${className}`}>
       <div className={styles.left}>
-        {showBack && (
-          <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
-            {'\u2190'}
-          </button>
-        )}
-        {breadcrumb ? (
-          <div className={styles.breadcrumb}>
-            {breadcrumb.map((item, i) => (
-              <span key={item.label}>
-                {i > 0 && <span className={styles.sep}>/</span>}
-                {item.path ? <Link to={item.path}>{item.label}</Link> : <span>{item.label}</span>}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <>
-            {showLogo && (
+        {isMobile ? (
+          isDashboard ? (
+            showLogo && (
               <span className={styles.logo}>
                 Money<span className={styles.logoSpan}>Flows</span>
               </span>
+            )
+          ) : (
+            <>
+              <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
+                {'\u2190'}
+              </button>
+              <span className={styles.title}>{title}</span>
+            </>
+          )
+        ) : (
+          <>
+            {showBack && (
+              <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
+                {'\u2190'}
+              </button>
             )}
-            {title && <span className={styles.title}>{title}</span>}
+            {breadcrumb ? (
+              <div className={styles.breadcrumb}>
+                {breadcrumb.map((item, i) => (
+                  <span key={item.label}>
+                    {i > 0 && <span className={styles.sep}>/</span>}
+                    {item.path ? <Link to={item.path}>{item.label}</Link> : <span>{item.label}</span>}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <>
+                {showLogo && (
+                  <span className={styles.logo}>
+                    Money<span className={styles.logoSpan}>Flows</span>
+                  </span>
+                )}
+                {title && <span className={styles.title}>{title}</span>}
+              </>
+            )}
           </>
         )}
       </div>
 
-      <div className={`${styles.searchWrap} ${searchVisible ? styles.searchVisible : styles.searchHidden}`}>
+      <div className={styles.searchWrap}>
         <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="7" cy="7" r="5.5" />
           <path d="M11 11l3.5 3.5" />
@@ -100,30 +112,21 @@ export function Header({
 
       <div className={styles.right}>
         {showDate && <span className={styles.date}>{formatDate()}</span>}
-        <button className={styles.mobileSearchBtn} onClick={() => setSearchVisible((v) => !v)} aria-label="Search">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-            <circle cx="7" cy="7" r="5.5" />
-            <path d="M11 11l3.5 3.5" />
-          </svg>
-        </button>
-        <div className={styles.settingsWrap} ref={settingsRef}>
-          <button className={styles.mobileSettingsBtn} onClick={() => setSettingsOpen((v) => !v)} aria-label="Settings">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-              <circle cx="8" cy="8" r="1.5" />
-              <path d="M8 2v1.5M8 12.5V14M2 8h1.5M12.5 8H14M3.76 3.76l1.06 1.06M11.18 11.18l1.06 1.06M3.76 12.24l1.06-1.06M11.18 4.82l1.06-1.06" />
+        <div className={styles.settingsWrap}>
+          {(!isMobile || isDashboard) && (
+            <button className={`${styles.mobileSearchBtn} ${searchActive ? styles.searchActiveBtn : ''}`} onClick={onSearchToggle} aria-label="Search">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                <circle cx="7" cy="7" r="5.5" />
+                <path d="M11 11l3.5 3.5" />
+              </svg>
+            </button>
+          )}
+          <button className={styles.mobileSettingsBtn} onClick={() => useModalStore.getState().open('settings')} aria-label="Settings">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+              <circle cx="10" cy="6" r="3.5" />
+              <path d="M3 18c0-4 3.1-7 7-7s7 3 7 7" />
             </svg>
           </button>
-          <div className={`${styles.settingsDropdown} ${settingsOpen ? styles.dropdownOpen : ''}`}>
-            <button className={styles.ddItem} onClick={() => { navigate('/launcher'); setSettingsOpen(false); }}>
-              {'\u25C0'} Launcher
-            </button>
-            <button className={styles.ddItem} onClick={() => { navigate('/recycle'); setSettingsOpen(false); }}>
-              {'\u267B'} Recycle Bin
-            </button>
-            <button className={styles.ddItem} onClick={() => { useModalStore.getState().open('settings'); setSettingsOpen(false); }}>
-              {'\u2699'} Settings
-            </button>
-          </div>
         </div>
         <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form')} aria-label="New transaction">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

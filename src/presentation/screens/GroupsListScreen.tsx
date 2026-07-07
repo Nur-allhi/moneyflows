@@ -138,16 +138,6 @@ export function GroupsListScreen() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.mobHeader}>
-        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
-          {'\u2190'}
-        </button>
-        <span className={styles.pageTitle}>Groups</span>
-        <button className={styles.addCircleBtn} onClick={() => setShowCreate(true)} aria-label="New group">
-          {'+'}
-        </button>
-      </div>
-
       <div className={styles.searchBar}>
         <div className={styles.searchWrap}>
           <span className={styles.searchIcon}>

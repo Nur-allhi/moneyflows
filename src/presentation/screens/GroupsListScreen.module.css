@@ -337,7 +337,6 @@
 }
 
 /* ---- Mobile-only elements ---- */
-.mobHeader,
 .searchBar,
 .cardAvatar,
 .mobSheetFooter,
@@ -346,86 +345,19 @@
   display: none;
 }
 
-.backBtn,
-.addCircleBtn,
 .searchWrap,
 .searchIcon,
-.searchClear,
-.pageTitle {
+.searchClear {
   display: none;
 }
 
 @media (max-width: 768px) {
-  .page :global(.app-header) {
-    display: none;
-  }
-
   .page {
     gap: 0;
   }
 
   .header {
     display: none;
-  }
-
-  .mobHeader {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 4px;
-    min-height: 52px;
-    justify-content: space-between;
-  }
-
-  .backBtn {
-    display: grid;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    backdrop-filter: blur(8px);
-    color: var(--color-text);
-    cursor: pointer;
-    place-items: center;
-    font-size: 20px;
-    flex-shrink: 0;
-    transition: transform 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .backBtn:active {
-    transform: scale(0.92);
-  }
-
-  .pageTitle {
-    display: block;
-    flex: 1;
-    font: 600 18px var(--font-display);
-    letter-spacing: -0.01em;
-    color: var(--color-text);
-  }
-
-  .addCircleBtn {
-    display: grid;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: none;
-    background: linear-gradient(135deg, var(--color-primary), oklch(50% 0.2 290));
-    color: #fff;
-    cursor: pointer;
-    place-items: center;
-    font-size: 22px;
-    font-weight: 300;
-    flex-shrink: 0;
-    box-shadow: 0 2px 12px oklch(62% 0.22 290 / 0.25);
-    transition: transform 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .addCircleBtn:active {
-    transform: scale(0.92);
   }
 
   .searchBar {

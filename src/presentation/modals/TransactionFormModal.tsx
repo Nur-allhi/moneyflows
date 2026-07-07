@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { DatePicker } from '../../components/ui/date-picker';
-import { SegmentedTabs, FormTextarea, Numpad } from '../components';
+import { SegmentedTabs, FormTextarea } from '../components';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useLoanStore } from '../stores/useLoanStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
+import { handleFormFocus } from '../utils/focus';
 import { Transaction } from '../../core/domain/Transaction';
 import type { Account } from '../../core/domain/Account';
 import styles from './TransactionFormModal.module.css';
@@ -199,20 +200,17 @@ export function TransactionFormModal({
     });
   }, []);
 
-  const handleNumpadInput = useCallback((digit: string) => {
-    setRawAmount((prev) => {
-      const next = prev + digit;
-      return next.length > 10 ? prev : next;
-    });
-  }, []);
-
-  const handleNumpadBackspace = useCallback(() => {
-    setRawAmount((prev) => prev.slice(0, -1) || '');
-  }, []);
-
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cleaned = e.target.value.replace(/[^0-9]/g, '');
     setRawAmount(cleaned);
+  };
+
+  const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('tx-description')?.focus();
+    }
   };
 
   const handleClose = () => {
@@ -462,9 +460,11 @@ export function TransactionFormModal({
           className={styles.amountInput}
           type="text"
           inputMode="decimal"
+          enterKeyHint="next"
           placeholder="0"
           value={displayAmount}
           onChange={handleAmountChange}
+          onKeyDown={handleAmountKeyDown}
         />
       </div>
       {errors.amount && <span className={styles.errorText}>{errors.amount}</span>}
@@ -555,6 +555,7 @@ export function TransactionFormModal({
         placeholder="What's this for?"
         value={description}
         maxLength={200}
+        id="tx-description"
         onChange={(e) => { setDescription(e.target.value); clearError('description'); }}
       />
       {errors.description && <span className={styles.errorText}>{errors.description}</span>}
@@ -578,16 +579,13 @@ export function TransactionFormModal({
               <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
             </div>
 
-            <div className={styles.formBody} onKeyDown={(e) => { if (e.key === 'Enter') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); handleSubmit(); } else if (!(e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); } } }}>
+            <div className={styles.formBody} onFocus={handleFormFocus} onKeyDown={(e) => { if (e.key === 'Enter') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); handleSubmit(); } else if (!(e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); } } }}>
               {formFields}
               <button className={styles.submitBtn} onClick={handleSubmit} disabled={!rawAmount || Object.keys(errors).length > 0}>
                 {buttonLabel}
               </button>
             </div>
 
-            <div className={styles.numpadArea}>
-              <Numpad onInput={handleNumpadInput} onBackspace={handleNumpadBackspace} />
-            </div>
           </div>
         </div>
       </div>

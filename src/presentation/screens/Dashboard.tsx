@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SettingsModal, FAB } from '../components';
 import { useAnimatedValue } from '../hooks';
@@ -9,9 +9,9 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
 import { formatAmount, formatAmountParts } from '../utils/format';
-import { displayTxType, ACCOUNT_TYPE_ACCENT } from '../constants/labels';
+import { ACCOUNT_TYPE_ACCENT } from '../constants/labels';
 import { useSearchStore } from '../stores/useSearchStore';
-import { shortDate } from '../constants/dates';
+import { shortDate, MONTHS } from '../constants/dates';
 import { DASHBOARD_TX_DISPLAY_LIMIT } from '../constants/config';
 import styles from './Dashboard.module.css';
 
@@ -248,15 +248,22 @@ export function Dashboard() {
   }, [activeLoanStacks, searchQuery]);
 
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
+  const [closingMembers, setClosingMembers] = useState<Set<string>>(new Set());
+  const closingRef = useRef<Set<string>>(new Set());
 
   const toggleMember = useCallback((mid: string) => {
-    setExpandedMembers((prev) => {
-      const next = new Set(prev);
-      if (next.has(mid)) next.delete(mid);
-      else next.add(mid);
-      return next;
-    });
-  }, []);
+    if (expandedMembers.has(mid)) {
+      closingRef.current.add(mid);
+      setClosingMembers(new Set(closingRef.current));
+      setTimeout(() => {
+        closingRef.current.delete(mid);
+        setClosingMembers(new Set(closingRef.current));
+        setExpandedMembers((prev) => { const n = new Set(prev); n.delete(mid); return n; });
+      }, 200);
+    } else {
+      setExpandedMembers((prev) => { const n = new Set(prev); n.add(mid); return n; });
+    }
+  }, [expandedMembers]);
 
   const memberTotalBalance = useMemo(() => {
     const totals = new Map<string, number>();
@@ -416,7 +423,7 @@ export function Dashboard() {
                       </span>
                     </div>
                     {expanded && (
-                      <div className={styles.memberAccounts}>
+                      <div className={`${styles.memberAccounts} ${closingMembers.has(mid) ? styles.closingAccounts : ''}`}>
                         {accts.map((acct) => (
                           <div key={acct.id} className={styles.acctRow} onClick={(e) => { e.stopPropagation(); navigate(`/member/${mid}?account=${acct.id}`); }}>
                             <span className={styles.acctTypeIcon} style={{ color: ACCOUNT_TYPE_ACCENT[acct.type as keyof typeof ACCOUNT_TYPE_ACCENT] }}>
@@ -447,14 +454,19 @@ export function Dashboard() {
                 <p className="empty-state-text">No transactions yet</p>
               </div>
             ) : (
-              filteredRecentTxs.map((tx) => (
+              filteredRecentTxs.map((tx) => {
+                const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
+                return (
                 <div
                   key={tx.id}
                   className={styles.txRow}
                   onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}
                 >
+                  <span className={styles.txType} data-type={tx.type}>
+                    <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
+                    <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
+                  </span>
                   <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
-                  <span className={styles.txType} data-type={tx.type}>{displayTxType(tx.type)}</span>
                   <span className={styles.txDesc}>{tx.description}</span>
                   <span className={styles.txAmount}>
                     <span className={`${styles.txArrow} ${tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? styles.txArrowIn : styles.txArrowOut}`}>
@@ -464,10 +476,11 @@ export function Dashboard() {
                         <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M2 6l4 4 4-4"/></svg>
                       )}
                     </span>
-                    {formatAmount(tx.amount, locale, currency)}
+                    {fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small>
                   </span>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

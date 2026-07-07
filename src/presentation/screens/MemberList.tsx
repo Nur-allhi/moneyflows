@@ -10,16 +10,6 @@ import { formatAmount } from '../utils/format';
 import { useSearchStore } from '../stores/useSearchStore';
 import styles from './MemberList.module.css';
 
-function getGradient(name: string): string {
-  const hues = [290, 170, 30, 85, 220, 330, 50, 190];
-  let idx = 0;
-  for (let i = 0; i < name.length; i++) {
-    idx = (idx * 31 + name.charCodeAt(i)) % hues.length;
-  }
-  const h = hues[idx];
-  return `linear-gradient(135deg, oklch(62% 0.22 ${h}), oklch(50% 0.2 ${h}))`;
-}
-
 export function MemberList() {
   const navigate = useNavigate();
   const { members, loading, error, fetchMembers, saveMember } = useMemberStore();
@@ -75,13 +65,6 @@ export function MemberList() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.mobHeader}>
-        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
-          {'\u2190'}
-        </button>
-        <span className={styles.pageTitle}>Members</span>
-      </div>
-
       <div className={styles.searchBar}>
         <div className={styles.searchWrap}>
           <span className={styles.searchIcon}>
@@ -93,6 +76,7 @@ export function MemberList() {
           <input
             type="text"
             placeholder="Search members..."
+            className="member-search-input"
             value={mobileSearch}
             onChange={(e) => setMobileSearch(e.target.value)}
           />
@@ -137,15 +121,11 @@ export function MemberList() {
             onClick={() => navigate(`/member/${m.id}`)}
           >
             <div className={styles.cardLeft}>
-              <div className={styles.cellAvatar} style={{ background: getGradient(m.name) }}>
-                {(m.shortName?.[0] ?? m.name[0]!).toUpperCase()}
-              </div>
               <Avatar
                 initial={m.shortName?.[0] ?? m.name[0]!}
                 seed={m.name}
                 name={m.name}
                 size={48}
-                className={styles.deskAvatar}
               />
               <div className={styles.cardInfo}>
                 <span className={styles.cardName}>{m.name}</span>

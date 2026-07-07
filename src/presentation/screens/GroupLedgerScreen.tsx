@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { LedgerTable, SegmentedTabs, LedgerSearch } from '../components';
+import { LedgerTable, SegmentedTabs, LedgerSearch, MobileLedger } from '../components';
 import type { LedgerRow } from '../components';
 import { useModalStore } from '../stores/useModalStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -10,7 +10,7 @@ import { getDatabase } from '../../infrastructure/database/getDatabase';
 import type { Transaction } from '../../core/domain/Transaction';
 import type { Account } from '../../core/domain/Account';
 import { formatAmount, formatAmountParts } from '../utils/format';
-import { shortDate } from '../constants/dates';
+import { shortDate, MONTHS } from '../constants/dates';
 import styles from './GroupLedgerScreen.module.css';
 
 const TX_TABS = [
@@ -21,7 +21,15 @@ const TX_TABS = [
   { key: 'loan', label: 'Loan' },
 ];
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 10;
+
+const TX_FILTER_OPTIONS = [
+  { key: 'all', label: 'All' },
+  { key: 'income', label: 'Income' },
+  { key: 'expense', label: 'Expense' },
+  { key: 'transfer', label: 'Transfer' },
+  { key: 'loan', label: 'Loan' },
+];
 
 export function GroupLedgerScreen() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -29,6 +37,9 @@ export function GroupLedgerScreen() {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const locale = useSettingsStore((s) => s.settings.locale);
   const currency = useSettingsStore((s) => s.settings.currency);
+
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const [groupName, setGroupName] = useState('');
   const [accountIds, setAccountIds] = useState<string[]>([]);
@@ -38,6 +49,13 @@ export function GroupLedgerScreen() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [ledgerQuery, setLedgerQuery] = useState('');
   const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (!groupId) return;
@@ -77,18 +95,38 @@ export function GroupLedgerScreen() {
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || displayLimit >= sortedTxs.length) return;
+    if (!el || displayLimit >= sortedTxs.length || loadingMore) return;
     const obs = new IntersectionObserver((entries) => {
       if (entries[0]?.isIntersecting) {
-        setDisplayLimit((prev) => Math.min(prev + PAGE_SIZE, sortedTxs.length));
+        setLoadingMore(true);
+        setTimeout(() => {
+          setDisplayLimit((prev) => Math.min(prev + PAGE_SIZE, sortedTxs.length));
+          setLoadingMore(false);
+        }, 250);
       }
     }, { rootMargin: '200px' });
     obs.observe(el);
     return () => obs.disconnect();
-  }, [displayLimit, sortedTxs.length]);
+  }, [displayLimit, sortedTxs.length, loadingMore]);
 
   const accountSet = useMemo(() => new Set(accountIds), [accountIds]);
   const accountMap = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
+
+  const mobileFilteredTxs = useMemo(() => {
+    let txs = [...displayedTxs];
+    if (typeFilter !== 'all') {
+      const map: Record<string, string[]> = { income: ['income'], expense: ['expense', 'lend', 'loan_issue'], transfer: ['transfer'], loan: ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'] };
+      const allowed = map[typeFilter] ?? [];
+      txs = txs.filter((tx) => allowed.includes(tx.type));
+    }
+    const q = ledgerQuery.toLowerCase().trim();
+    if (q) txs = txs.filter((tx) => tx.description.toLowerCase().includes(q));
+    return txs.sort((a, b) => b.date.localeCompare(a.date));
+  }, [displayedTxs, typeFilter, ledgerQuery]);
+
+  const isMobileGroupCredit = useCallback((tx: Transaction) => {
+    return accountSet.has(tx.destAccount ?? '') && !accountSet.has(tx.sourceAccount ?? '');
+  }, [accountSet]);
 
   const isGroupDebit = useCallback((tx: Transaction) => {
     return accountSet.has(tx.sourceAccount ?? '');
@@ -274,72 +312,74 @@ export function GroupLedgerScreen() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.mobHeader}>
-        <button className={styles.backBtn} onClick={() => navigate('/groups')} aria-label="Back">
-          {'\u2190'}
-        </button>
-        <span className={styles.pageTitle}>{groupName || 'Ledger'}</span>
-        <button className={styles.pdfIconBtn} onClick={handleDownloadPdf} aria-label="Download PDF">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
-        </button>
-      </div>
-
       <div className={styles.heroCard}>
         <span className={styles.heroLabel}>Total Balance</span>
         <span className={styles.heroValue}>{formatAmount(totalBalance, locale, currency)}</span>
         <span className={styles.heroMeta}>{accountIds.length} account{accountIds.length !== 1 ? 's' : ''}</span>
       </div>
 
-      <div className={styles.searchBar}>
-        <div className={styles.searchWrap}>
-          <span className={styles.searchIcon}>
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-              <circle cx="7" cy="7" r="5.5" />
-              <path d="M11 11l3.5 3.5" />
-            </svg>
-          </span>
-          <input
-            type="text"
-            placeholder="Search ledger..."
-            value={ledgerQuery}
-            onChange={(e) => setLedgerQuery(e.target.value)}
+      {!isDesktop ? (
+        <MobileLedger
+          title={groupName || 'Ledger'}
+          count={mobileFilteredTxs.length}
+          filterOptions={TX_FILTER_OPTIONS}
+          activeFilter={typeFilter}
+          onFilterChange={setTypeFilter}
+          searchQuery={ledgerQuery}
+          onSearchChange={setLedgerQuery}
+          onDownloadPdf={handleDownloadPdf}
+          loadingMore={loadingMore}
+          sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
+          empty={mobileFilteredTxs.length === 0 ? <div className={styles.empty}>No entries found</div> : undefined}
+        >
+          {mobileFilteredTxs.map((tx) => {
+            const isCredit = isMobileGroupCredit(tx);
+            const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
+            return (
+              <div key={tx.id} className={styles.txRow} onClick={() => handleRowClick({ id: tx.id } as LedgerRow)}>
+                <span className={styles.txType} data-type={tx.type}>
+                  <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
+                  <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
+                </span>
+                <span className={styles.txDesc}>{tx.description}</span>
+                <span className={styles.txAmount}>
+                  <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>
+                    {isCredit ? (
+                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M2 6l4-4 4 4"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M2 6l4 4 4-4"/></svg>
+                    )}
+                  </span>
+                  {fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small>
+                </span>
+              </div>
+            );
+          })}
+        </MobileLedger>
+      ) : (
+        <>
+          <div className={styles.header}>
+            <div>
+              <h1 className={styles.title}>{groupName}</h1>
+              <span className={styles.subtitle}>{accountIds.length} accounts &middot; {formatAmount(totalBalance, locale, currency)} total</span>
+            </div>
+            <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
+            <button className={styles.pdfBtn} onClick={handleDownloadPdf}>PDF</button>
+          </div>
+
+          <SegmentedTabs tabs={TX_TABS} activeKey={typeFilter} onChange={setTypeFilter} />
+
+          <LedgerTable
+            rows={ledgerRows}
+            showBalance
+            desktop
+            onRowClick={handleRowClick}
+            sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
           />
-          {ledgerQuery && (
-            <button className={styles.searchClear} onClick={() => setLedgerQuery('')} aria-label="Clear search">
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M3 3l6 6M9 3l-6 6" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
 
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>{groupName}</h1>
-          <span className={styles.subtitle}>{accountIds.length} accounts &middot; {formatAmount(totalBalance, locale, currency)} total</span>
-        </div>
-        <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
-        <button className={styles.pdfBtn} onClick={handleDownloadPdf}>PDF</button>
-      </div>
-
-      <SegmentedTabs tabs={TX_TABS} activeKey={typeFilter} onChange={setTypeFilter} />
-
-      <LedgerTable
-        rows={ledgerRows}
-        showBalance
-        desktop
-        onRowClick={handleRowClick}
-        sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
-      />
-
-      {typeRows.length === 0 && <div className={styles.empty}>No entries found</div>}
+          {typeRows.length === 0 && <div className={styles.empty}>No entries found</div>}
+        </>
+      )}
     </div>
   );
 }
