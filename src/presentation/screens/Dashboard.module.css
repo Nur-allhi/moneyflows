@@ -803,4 +803,7 @@
 
 @media (max-width: 420px) {
   .metrics { grid-template-columns: 1fr; }
+  .monthSummary { flex-direction: column; gap: 8px; padding: 16px; }
+  .monthStat { padding: 8px 0; border-right: none; }
+  .monthStat:not(:last-child) { border-bottom: 1px solid var(--color-border); }
 }
