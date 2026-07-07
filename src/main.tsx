@@ -25,6 +25,10 @@ function Root() {
       .catch((err: unknown) => {
         setDbError(err instanceof Error ? err.message : 'Unknown database error');
       });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   }, []);
 
   if (dbError) {
