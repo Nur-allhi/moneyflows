@@ -523,6 +523,7 @@
     gap: 12px;
   }
 
+
   .metrics > .metricCard:first-child {
     grid-column: 1 / -1;
     text-align: center;
@@ -798,4 +799,8 @@
   .content {
     gap: 12px;
   }
+}
+
+@media (max-width: 420px) {
+  .metrics { grid-template-columns: 1fr; }
 }
