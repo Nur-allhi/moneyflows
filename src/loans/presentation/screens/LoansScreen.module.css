@@ -131,7 +131,6 @@
   .searchBar {
     display: block;
     margin-bottom: 4px;
-    padding: 0 16px;
   }
 
   .searchWrap {
@@ -213,9 +212,7 @@
     display: none;
   }
 
-  .grid {
-    padding: 0 16px 24px;
-  }
+
 
   .filterBtn {
     border-radius: 999px;
