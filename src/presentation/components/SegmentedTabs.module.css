@@ -10,7 +10,7 @@
   flex: 1;
   text-align: center;
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
@@ -20,6 +20,16 @@
   background: none;
   font-family: inherit;
   position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+@media (max-width: 420px) {
+  .tab {
+    padding: 10px 8px;
+  }
 }
 
 .tab:hover:not(.active) {
