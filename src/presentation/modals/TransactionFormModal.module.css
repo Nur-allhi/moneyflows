@@ -9,7 +9,7 @@
 .wizard {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 300;
   display: flex;
   flex-direction: column;
   background: rgba(0, 0, 0, 0.5);
@@ -324,14 +324,6 @@
   cursor: not-allowed;
 }
 
-.numpadArea {
-  padding: 12px 20px 24px;
-  flex-shrink: 0;
-  border-top: 1px solid var(--color-border);
-  margin-top: 8px;
-  background: oklch(18% 0.015 260);
-}
-
 /* Desktop modal */
 .desktopOverlay {
   position: fixed;
@@ -339,7 +331,7 @@
   background: oklch(0% 0 0 / 0.55);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 100;
+  z-index: 300;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -350,7 +342,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 101;
+  z-index: 301;
   width: 520px;
   max-width: 90vw;
   max-height: 85vh;
@@ -545,7 +537,7 @@
 .pickerOverlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 350;
   display: flex;
   align-items: center;
   justify-content: center;

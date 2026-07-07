@@ -540,6 +540,11 @@
 }
 
 /* ---- Responsive breakpoints ---- */
+@media (max-width: 1023px) {
+  .desktopOnly { display: none !important; }
+  .mobileOnly { display: block; }
+}
+
 @media (min-width: 1024px) {
   .mobileOnly {
     display: none;
@@ -774,7 +779,7 @@
   align-items: center;
   text-align: center;
   gap: 8px;
-  margin: 0;
+  margin: 0 0 12px;
   padding: 24px 20px;
   border-radius: 16px;
 }
@@ -787,63 +792,102 @@
   display: none;
 }
 
+/* ---- Mobile linked accounts ---- */
+.mobileLinkedAccounts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobileLinkedAccounts:hover {
+  border-color: var(--color-primary);
+}
+
+.mobileLinkedAccounts:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.linkedAccountsLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+
+.linkedAcctCount {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: oklch(100% 0 0 / 0.1);
+  padding: 1px 8px;
+  border-radius: 99px;
+  line-height: 1.6;
+}
+
+.linkedChevron {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
 /* ---- Mobile ledger ---- */
+
+/* ---- Mobile ledger (replaced - see below for full mobile tx styles) ---- */
 .mobileLedger {
   margin-top: 12px;
 }
 
-.ledgerSectionTitle {
-  font: 600 15px var(--font-display);
-  color: var(--color-text);
-  padding: 4px 0 12px;
-}
-
-.ledgerToolbar {
+.ledgerActions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-left: auto;
 }
 
-.ledgerSearchWrap {
-  flex: 1;
+.ledgerFilterBtn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 4px;
-}
-
-.ledgerSearchIcon {
-  color: var(--color-text-secondary);
-  flex-shrink: 0;
-  display: flex;
-}
-
-.ledgerSearchWrap input {
-  flex: 1;
-  background: transparent;
+  gap: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   border: none;
-  color: var(--color-text);
-  font: 400 13px var(--font-body);
-  outline: none;
-  -webkit-appearance: none;
+  background: oklch(100% 0 0 / 0.06);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.ledgerSearchWrap input::placeholder {
-  color: var(--color-text-secondary);
-  opacity: 0.6;
+.ledgerFilterBtn:active {
+  background: oklch(100% 0 0 / 0.12);
+  color: var(--color-text);
 }
 
 .downloadBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 10px;
   border: none;
-  background: transparent;
+  background: oklch(100% 0 0 / 0.06);
   color: var(--color-text-secondary);
-  display: grid;
-  place-items: center;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   flex-shrink: 0;
@@ -851,6 +895,314 @@
 }
 
 .downloadBtn:active {
-  background: oklch(100% 0 0 / 0.08);
+  background: oklch(100% 0 0 / 0.12);
   color: var(--color-text);
+}
+
+.filterLabel {
+  font: 500 9px var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filterTray {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  margin: 0;
+}
+
+.filterTrayOpen {
+  max-height: 200px;
+  opacity: 1;
+}
+
+.searchBar {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  margin: 0;
+}
+
+.searchBarOpen {
+  max-height: 60px;
+  opacity: 1;
+}
+
+.filterPills {
+  display: flex;
+  gap: 6px;
+  padding: 4px 0 10px;
+  flex-wrap: wrap;
+}
+
+.filterPill {
+  padding: 5px 14px;
+  border-radius: 99px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font: 500 12px var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.filterPill:active {
+  transform: scale(0.95);
+}
+
+.filterPillActive {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary, #fff);
+  border-color: var(--color-primary);
+}
+
+.ledgerSearchRow {
+  margin-bottom: 8px;
+}
+
+.searchClear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: oklch(100% 0 0 / 0.1);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.searchClear:active {
+  background: oklch(100% 0 0 / 0.18);
+}
+
+.searchClear svg {
+  width: 12px;
+  height: 12px;
+}
+
+.txRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.txRow:hover {
+  background: oklch(100% 0 0 / 0.04);
+}
+
+.txType {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: oklch(62% 0.18 30 / 0.2);
+  line-height: 1;
+}
+
+.txType[data-type="income"],
+.txType[data-type="loan_repayment"],
+.txType[data-type="repay"] {
+  background: oklch(65% 0.15 170 / 0.2);
+}
+
+.txType[data-type="expense"],
+.txType[data-type="loan_issue"],
+.txType[data-type="lend"] {
+  background: oklch(62% 0.18 30 / 0.2);
+}
+
+.txType[data-type="transfer"] {
+  background: oklch(62% 0.22 290 / 0.2);
+}
+
+.txDay {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.txMonth {
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.txDesc {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text);
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+}
+
+.txAmount {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.txCurrency {
+  font-size: 8px;
+  font-weight: 400;
+  opacity: 0.55;
+  margin-left: 2px;
+}
+
+.txArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.txArrowIn {
+  background: oklch(65% 0.15 150 / 0.15);
+  color: var(--color-teal);
+}
+
+.txArrowOut {
+  background: oklch(62% 0.18 30 / 0.15);
+  color: var(--color-coral);
+}
+
+.txArrow svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ledgerToolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: oklch(100% 0 0 / 0.04);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.ledgerSectionTitle {
+  font: 600 15px var(--font-display);
+  color: var(--color-text);
+}
+
+.ledgerSearchWrap {
+  flex: 1;
+  position: relative;
+}
+
+.ledgerSearchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.ledgerSearchWrap input {
+  width: 100%;
+  padding: 10px 32px 10px 36px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 400 13px var(--font-body);
+  outline: none;
+  -webkit-appearance: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.ledgerSearchWrap input:focus {
+  border-color: var(--color-primary);
+}
+
+.ledgerSearchWrap input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.txCountBadge {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: oklch(100% 0 0 / 0.06);
+  padding: 1px 8px;
+  border-radius: 99px;
+  line-height: 1.6;
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+}
+
+.skeletonSquare {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: oklch(100% 0 0 / 0.06);
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonBar {
+  flex: 1;
+  height: 14px;
+  border-radius: 6px;
+  background: oklch(100% 0 0 / 0.06);
+  animation: shimmer 1.2s ease-in-out infinite 0.1s;
+}
+
+.skeletonAmount {
+  width: 72px;
+  height: 14px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: oklch(100% 0 0 / 0.06);
+  animation: shimmer 1.2s ease-in-out infinite 0.2s;
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
 }

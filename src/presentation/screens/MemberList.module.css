@@ -120,19 +120,7 @@
   color: var(--color-income);
 }
 
-.cellAvatar {
-  display: none;
-}
-
-.deskAvatar {
-  display: flex;
-}
-
 .addCell {
-  display: none;
-}
-
-.mobHeader {
   display: none;
 }
 
@@ -153,51 +141,12 @@
 }
 
 @media (max-width: 768px) {
-  .page :global(.app-header) {
-    display: none;
-  }
-
   .page {
     gap: 0;
   }
 
   .header {
     display: none;
-  }
-
-  .mobHeader {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 4px;
-    min-height: 52px;
-  }
-
-  .backBtn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    backdrop-filter: blur(8px);
-    color: var(--color-text);
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    font-size: 20px;
-    flex-shrink: 0;
-    transition: transform 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .backBtn:active {
-    transform: scale(0.92);
-  }
-
-  .pageTitle {
-    font: 600 18px var(--font-display);
-    letter-spacing: -0.01em;
-    color: var(--color-text);
   }
 
   .searchBar {
@@ -320,49 +269,39 @@
   }
 
   .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 12px;
+    padding: 0 16px 24px;
   }
 
   .card {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    padding: 16px 8px;
-    border-radius: 16px;
-    min-height: 100px;
-    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    min-height: unset;
+    gap: 12px;
+    justify-content: space-between;
   }
 
   .cardLeft {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 6px;
-  }
-
-  .cellAvatar {
-    display: flex;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    align-items: center;
-    justify-content: center;
-    font: 700 18px var(--font-display);
-    color: #fff;
-    flex-shrink: 0;
-  }
-
-  .deskAvatar {
-    display: none;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
   }
 
   .cardInfo {
-    align-items: center;
+    align-items: flex-start;
+    min-width: 0;
+    flex: 1;
   }
 
   .cardName {
-    font: 500 13px var(--font-body);
-    text-align: center;
+    font: 600 15px var(--font-display);
+    text-align: left;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -370,31 +309,21 @@
   }
 
   .cardTag {
-    display: none;
+    display: block;
+    font-size: 11px;
+    color: var(--color-text-secondary);
   }
 
   .cardBalance {
-    font-size: 13px;
+    font-size: 15px;
     font-family: var(--font-mono);
     font-weight: 600;
     color: var(--color-teal);
+    flex-shrink: 0;
   }
 
   .addCell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 16px 8px;
-    border-radius: 16px;
-    border: 1px dashed var(--color-border);
-    background: oklch(22% 0.02 260 / 0.3);
-    cursor: pointer;
-    min-height: 100px;
-    transition: transform 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    font-family: inherit;
-    color: inherit;
+    display: none;
   }
 
   .addCell:active {

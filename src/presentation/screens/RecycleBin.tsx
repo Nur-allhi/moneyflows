@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { RecycleRow, GlassPanel } from '../components';
 import { useRecycleStore } from '../stores/useRecycleStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -18,7 +17,6 @@ function timeAgo(iso: string): string {
 }
 
 export function RecycleBin() {
-  const navigate = useNavigate();
   const { deletedItems, loading, error, fetchDeleted, restore, purge } = useRecycleStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
@@ -77,19 +75,6 @@ export function RecycleBin() {
 
   return (
     <div className={styles.recycle}>
-      <div className={styles.mobHeader}>
-        <button className={styles.backBtn} onClick={() => navigate('/')} aria-label="Back">
-          {'\u2190'}
-        </button>
-        <span className={styles.pageTitle}>Recycle Bin</span>
-        <button className={styles.refreshCircleBtn} onClick={() => fetchDeleted()} aria-label="Refresh">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="23 4 23 10 17 10"/>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-          </svg>
-        </button>
-      </div>
-
       <div className={styles.searchBar}>
         <div className={styles.searchWrap}>
           <span className={styles.searchIcon}>

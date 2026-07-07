@@ -11,7 +11,7 @@ import { useTransactionStore } from '../../../presentation/stores/useTransaction
 import { useModalStore } from '../../../presentation/stores/useModalStore';
 import { formatAmount, formatAmountParts } from '../../../presentation/utils/format';
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
-import { ProgressBar, LedgerTable, LedgerSearch } from '../../../presentation/components';
+import { ProgressBar, LedgerTable, LedgerSearch, MobileLedger } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import styles from './LoanDetailView.module.css';
 
@@ -36,11 +36,19 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const [endDate, setEndDate] = useState('');
   const [dateMode, setDateMode] = useState<'none' | 'month' | 'range'>('none');
   const [ledgerQuery, setLedgerQuery] = useState('');
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const filterRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchTransactions({ accountId: stack.debtorId });
   }, [stack]);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -106,6 +114,18 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     if (dateMode !== 'none') count++;
     return count;
   }, [txFilter, dateMode]);
+
+  const mobileFilteredTxs = useMemo(() => {
+    let result = sortedTxs;
+    if (txFilter === 'lend') {
+      result = result.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
+    } else if (txFilter === 'repay') {
+      result = result.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback');
+    }
+    const q = ledgerQuery.toLowerCase().trim();
+    if (q) result = result.filter((tx) => tx.description.toLowerCase().includes(q));
+    return result.sort((a, b) => b.date.localeCompare(a.date));
+  }, [sortedTxs, txFilter, ledgerQuery]);
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
     let running = 0;
@@ -293,69 +313,113 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         </div>
       )}
 
-      <div className={styles.ledgerSection}>
-        <div className={styles.ledgerHead}>
-          <h3 className={styles.ledgerTitle}>Transaction Ledger</h3>
-          <div className={styles.ledgerActions}>
-            <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF">
-              <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, flexShrink: 0 }}>
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg> <span className={styles.pdfBtnLabel}>Download PDF</span>
-            </button>
-            <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
-            <div className={styles.filterWrap} ref={filterRef}>
-              <button
-                className={`${styles.filterBtn} ${activeFilterCount > 0 ? styles.filterActive : ''}`}
-                onClick={() => setShowFilters((s) => !s)}
-              >
-                {'\u{1F50D}'} Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+      {!isDesktop ? (
+        <MobileLedger
+          title="Transaction Ledger"
+          count={mobileFilteredTxs.length}
+          filterOptions={[
+            { key: 'all', label: 'All' },
+            { key: 'lend', label: 'Lent' },
+            { key: 'repay', label: 'Repaid' },
+          ]}
+          activeFilter={txFilter}
+          onFilterChange={(k) => setTxFilter(k as TxFilter)}
+          searchQuery={ledgerQuery}
+          onSearchChange={setLedgerQuery}
+          onDownloadPdf={downloadPdf}
+          loadingMore={false}
+          sentinel={null}
+          empty={mobileFilteredTxs.length === 0 ? <p style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--color-text-secondary)', fontSize: 15 }}>No entries found</p> : undefined}
+        >
+          {mobileFilteredTxs.map((tx) => {
+            const isCredit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_received';
+            const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
+            return (
+              <div key={tx.id} className={styles.txRow} onClick={() => handleRowClick({ id: tx.id } as LedgerRow)}>
+                <span className={styles.txType} data-type={tx.type}>
+                  <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
+                  <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
+                </span>
+                <span className={styles.txDesc}>{tx.description}</span>
+                <span className={styles.txAmount}>
+                  <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>
+                    {isCredit ? (
+                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M2 6l4-4 4 4"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M2 6l4 4 4-4"/></svg>
+                    )}
+                  </span>
+                  {fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small>
+                </span>
+              </div>
+            );
+          })}
+        </MobileLedger>
+      ) : (
+        <div className={styles.ledgerSection}>
+          <div className={styles.ledgerHead}>
+            <h3 className={styles.ledgerTitle}>Transaction Ledger</h3>
+            <div className={styles.ledgerActions}>
+              <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF">
+                <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, flexShrink: 0 }}>
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg> <span className={styles.pdfBtnLabel}>Download PDF</span>
               </button>
-              {showFilters && (
-                <div className={styles.filterDropdown}>
-                  <div className={styles.filterGroup}>
-                    <span className={styles.filterGroupLabel}>Type</span>
-                    <div className={styles.filterPills}>
-                      {(['all', 'lend', 'repay'] as const).map((f) => (
-                        <button
-                          key={f}
-                          className={`${styles.pill} ${txFilter === f ? styles.pillActive : ''}`}
-                          onClick={() => setTxFilter(f)}
-                        >{f === 'all' ? 'All' : f === 'lend' ? 'Loans Issued' : 'Repayments'}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={styles.filterGroup}>
-                    <span className={styles.filterGroupLabel}>Date</span>
-                    <div className={styles.filterPills}>
-                      {(['none', 'month', 'range'] as const).map((d) => (
-                        <button
-                          key={d}
-                          className={`${styles.pill} ${dateMode === d ? styles.pillActive : ''}`}
-                          onClick={() => setDateMode(d)}
-                        >{d === 'none' ? 'All' : d === 'month' ? 'Month' : 'Range'}</button>
-                      ))}
-                    </div>
-                    {dateMode === 'month' && (
-                      <input type="month" className={styles.filterInput} value={month} onChange={(e) => setMonth(e.target.value)} />
-                    )}
-                    {dateMode === 'range' && (
-                      <div className={styles.dateRangeRow}>
-                        <input type="date" className={styles.filterInput} value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="Start" />
-                        <span className={styles.dateSep}>to</span>
-                        <input type="date" className={styles.filterInput} value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="End" />
+              <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
+              <div className={styles.filterWrap} ref={filterRef}>
+                <button
+                  className={`${styles.filterBtn} ${activeFilterCount > 0 ? styles.filterActive : ''}`}
+                  onClick={() => setShowFilters((s) => !s)}
+                >
+                  {'\u{1F50D}'} Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                </button>
+                {showFilters && (
+                  <div className={styles.filterDropdown}>
+                    <div className={styles.filterGroup}>
+                      <span className={styles.filterGroupLabel}>Type</span>
+                      <div className={styles.filterPills}>
+                        {(['all', 'lend', 'repay'] as const).map((f) => (
+                          <button
+                            key={f}
+                            className={`${styles.pill} ${txFilter === f ? styles.pillActive : ''}`}
+                            onClick={() => setTxFilter(f)}
+                          >{f === 'all' ? 'All' : f === 'lend' ? 'Loans Issued' : 'Repayments'}</button>
+                        ))}
                       </div>
-                    )}
+                    </div>
+                    <div className={styles.filterGroup}>
+                      <span className={styles.filterGroupLabel}>Date</span>
+                      <div className={styles.filterPills}>
+                        {(['none', 'month', 'range'] as const).map((d) => (
+                          <button
+                            key={d}
+                            className={`${styles.pill} ${dateMode === d ? styles.pillActive : ''}`}
+                            onClick={() => setDateMode(d)}
+                          >{d === 'none' ? 'All' : d === 'month' ? 'Month' : 'Range'}</button>
+                        ))}
+                      </div>
+                      {dateMode === 'month' && (
+                        <input type="month" className={styles.filterInput} value={month} onChange={(e) => setMonth(e.target.value)} />
+                      )}
+                      {dateMode === 'range' && (
+                        <div className={styles.dateRangeRow}>
+                          <input type="date" className={styles.filterInput} value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="Start" />
+                          <span className={styles.dateSep}>to</span>
+                          <input type="date" className={styles.filterInput} value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="End" />
+                        </div>
+                      )}
+                    </div>
+                    <button className={styles.clearBtn} onClick={clearFilters}>Clear Filters</button>
                   </div>
-                  <button className={styles.clearBtn} onClick={clearFilters}>Clear Filters</button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
+          <LedgerTable rows={ledgerRows} desktop showBalance onRowClick={handleRowClick} />
         </div>
-        <LedgerTable rows={ledgerRows} desktop showBalance onRowClick={handleRowClick} />
-      </div>
+      )}
     </div>
   );
 }

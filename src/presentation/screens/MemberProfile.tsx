@@ -13,9 +13,8 @@ import { useTransactionStore } from '../stores/useTransactionStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { Transaction } from '../../core/domain/Transaction';
 import { formatAmount, formatAmountParts } from '../utils/format';
-import { shortDate } from '../constants/dates';
+import { shortDate, MONTHS } from '../constants/dates';
 import { ACCOUNT_TYPE_GRADIENT_THREE, displayType } from '../constants/labels';
-import { ACCOUNT_CARD_WIDTH, CARD_GAP } from '../constants/config';
 import styles from './MemberProfile.module.css';
 
 const ledgerFilters = [
@@ -29,8 +28,6 @@ const ledgerFilters = [
 export function MemberProfile() {
   const { id: memberId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [activeDot, setActiveDot] = useState(0);
   const [ledgerFilter, setLedgerFilter] = useState('all');
   const [ledgerQuery, setLedgerQuery] = useState('');
 
@@ -50,8 +47,21 @@ export function MemberProfile() {
 
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [accountsOpen, setAccountsOpen] = useState(false);
-  const [displayLimit, setDisplayLimit] = useState(15);
+  const [displayLimit, setDisplayLimit] = useState(10);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const trayRef = useRef<HTMLDivElement>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     fetchMembers();
@@ -129,17 +139,33 @@ export function MemberProfile() {
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || displayLimit >= sortedTxs.length) return;
+    if (!el || displayLimit >= sortedTxs.length || loadingMore) return;
     const obs = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting) {
-        setDisplayLimit((prev) => Math.min(prev + 15, sortedTxs.length));
+      if (entries[0]?.isIntersecting && !loadingMoreRef.current) {
+        loadingMoreRef.current = true;
+        setLoadingMore(true);
+        setTimeout(() => {
+          setDisplayLimit((prev) => Math.min(prev + 10, sortedTxs.length));
+          setLoadingMore(false);
+          loadingMoreRef.current = false;
+        }, 250);
       }
     }, { rootMargin: '200px' });
     obs.observe(el);
     return () => obs.disconnect();
-  }, [displayLimit, sortedTxs.length]);
+  }, [displayLimit, sortedTxs.length, loadingMore]);
 
-
+  useEffect(() => {
+    if (!filterOpen && !searchOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (trayRef.current && !trayRef.current.contains(e.target as Node)) {
+        setFilterOpen(false);
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [filterOpen, searchOpen]);
 
   const showBalance = selectedAccountId !== null;
 
@@ -258,12 +284,28 @@ export function MemberProfile() {
     return rows;
   }, [ledgerRows, ledgerFilter, ledgerQuery]);
 
+  const filteredTxs = useMemo(() => {
+    let txs = [...displayedTxs];
+    if (ledgerFilter !== 'all') {
+      const map: Record<string, string[]> = { income: ['income'], expense: ['expense', 'loan_issue', 'lend'], transfer: ['transfer'], loan: ['loan_issue', 'loan_repayment', 'lend', 'repay'] };
+      const allowed = map[ledgerFilter] ?? [];
+      txs = txs.filter((tx) => allowed.includes(tx.type));
+    }
+    const q = ledgerQuery.toLowerCase().trim();
+    if (q) txs = txs.filter((tx) => tx.description.toLowerCase().includes(q));
+    return txs.sort((a, b) => b.date.localeCompare(a.date));
+  }, [displayedTxs, ledgerFilter, ledgerQuery]);
+
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) {
       const tx = transactions.find((t) => t.id === row.id);
       useModalStore.getState().open('transaction-detail', { transaction: tx });
     }
   }, [transactions]);
+
+  const handleTxClick = useCallback((tx: Transaction) => {
+    useModalStore.getState().open('transaction-detail', { transaction: tx });
+  }, []);
 
   const handleOpeningBalance = useCallback(() => {
     if (!selectedAccountId) return;
@@ -292,23 +334,13 @@ export function MemberProfile() {
     setAccountsOpen(false);
   }, []);
 
+  const handleSelectAccount = useCallback((acctId: string | null) => {
+    setSelectedAccountId(acctId);
+  }, []);
+
   const animTotalBalance = useAnimatedValue(totalBalance);
   const animTotalIncome = useAnimatedValue(totalIncome);
   const animTotalExpenses = useAnimatedValue(totalExpenses);
-
-  const handleScroll = useCallback(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const idx = Math.round(el.scrollLeft / (ACCOUNT_CARD_WIDTH + CARD_GAP));
-    setActiveDot(Math.min(idx, memberAccounts.length - 1));
-  }, [memberAccounts.length]);
-
-  useEffect(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', handleScroll, { passive: true });
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
 
   const loading = mLoading || aLoading || tLoading;
   const error = mError || aError || tError;
@@ -535,212 +567,263 @@ export function MemberProfile() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.mobileOnly}>
-        <div className={styles.profileCard}>
-          <Avatar initial={initial} seed={member.name} name={member.name} size={72} />
-          <div className={styles.profileName}>{member.name}</div>
-          <div className={styles.profileTag}>
-            {member.isExternal ? 'External' : 'Family'}
-          </div>
-          <div className={styles.balanceLabel}>Net Balance</div>
-          <div className={styles.balanceAmount}>{formatAmount(animTotalBalance, locale, currency)}</div>
-        </div>
-
-        <div className={styles.actionPills}>
-          <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form')}>
-            <span className={`${styles.pillIcon} ${styles.pillIncome}`}>{'+$'}</span>
-            <span className={styles.pillLabel}>Income</span>
-          </button>
-          <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form')}>
-            <span className={`${styles.pillIcon} ${styles.pillExpense}`}>{'-$'}</span>
-            <span className={styles.pillLabel}>Expense</span>
-          </button>
-          <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form')}>
-            <span className={`${styles.pillIcon} ${styles.pillTransfer}`}>{'$'}</span>
-            <span className={styles.pillLabel}>Transfer</span>
-          </button>
-        </div>
-
-        <div className={styles.sectionLabel}>
-          Accounts
-          <button className={styles.addAcctBtn} onClick={() => useModalStore.getState().open('add-account', { memberId })}>+ Add</button>
-        </div>
-        <div className={styles.carousel} ref={carouselRef}>
-          {memberAccounts.length === 0 ? (
-            <div className={styles.emptyState}>
-              <p className="empty-state-text">No accounts</p>
-              <button className={styles.emptyAddBtn} onClick={() => useModalStore.getState().open('add-account', { memberId })}>+ Add Account</button>
+      {isDesktop ? (
+        <div className={styles.desktopOnly}>
+          <div className={styles.profileHero}>
+            <div className={styles.heroLeft}>
+              <Avatar initial={initial} seed={member.name} name={member.name} size={72} />
+              <div className={styles.heroName}>{member.name} <button className={styles.heroEditBtn} onClick={() => useModalStore.getState().open('edit-member', { memberId: member.id })} aria-label="Edit member name">{'\u270E'}</button></div>
             </div>
-          ) : (
-            memberAccounts.map((acct) => (
-              <AccountCard
-                key={acct.id}
-                name={acct.name}
-                type={displayType(acct.type)}
-                balance={formatAmount(acct.balance, locale, currency)}
-                gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
-                showChip={acct.type === 'cash'}
-                onClick={() => handleAccountClick(acct.id)}
-                selected={selectedAccountId === acct.id}
-              />
-            ))
-          )}
-        </div>
-        <div className={styles.carouselDots}>
-          {memberAccounts.map((_, i) => (
-            <span
-              key={i}
-              className={`${styles.dot} ${i === activeDot ? styles.dotActive : ''}`}
-            />
-          ))}
-        </div>
-
-        <div className={styles.mobileLedger}>
-          <div className={styles.ledgerSectionTitle}>Transactions</div>
-          <div className={styles.ledgerToolbar}>
-            <div className={styles.ledgerSearchWrap}>
-              <svg className={styles.ledgerSearchIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                <circle cx="7" cy="7" r="5.5" />
-                <path d="M11 11l3.5 3.5" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search transactions..."
-                value={ledgerQuery}
-                onChange={(e) => setLedgerQuery(e.target.value)}
-              />
-            </div>
-            <button className={styles.downloadBtn} onClick={downloadPdf} aria-label="Download PDF">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            </button>
-          </div>
-          <SegmentedTabs
-            tabs={[
-              { key: 'all', label: 'All' },
-              { key: 'income', label: 'Income' },
-              { key: 'expense', label: 'Expense' },
-            ]}
-            activeKey={ledgerFilter}
-            onChange={setLedgerFilter}
-          />
-          <LedgerTable rows={filteredLedger} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} />
-        </div>
-      </div>
-
-      <div className={styles.desktopOnly}>
-        <div className={styles.profileHero}>
-          <div className={styles.heroLeft}>
-            <Avatar initial={initial} seed={member.name} name={member.name} size={72} />
-            <div className={styles.heroName}>{member.name} <button className={styles.heroEditBtn} onClick={() => useModalStore.getState().open('edit-member', { memberId: member.id })} aria-label="Edit member name">{'\u270E'}</button></div>
-          </div>
-          <div className={styles.heroActions}>
-            <button className={styles.heroActionBtn} onClick={() => useModalStore.getState().open('transaction-form')}>
-              <span className={styles.heroActionIcon}>+</span>
-              Transaction
-            </button>
-            <button className={styles.heroActionBtn} onClick={() => useModalStore.getState().open('add-account', { memberId })}>
-              <span className={styles.heroActionIcon}>+</span>
-              Account
-            </button>
-          </div>
-          <div className={styles.heroStats}>
-            <div className={styles.statItem}>
-              <div className={styles.statLabel}>Net Balance</div>
-              <div className={`${styles.statValue} ${styles.statTeal}`}>{formatAmount(animTotalBalance, locale, currency)}</div>
-            </div>
-            <div className={styles.statItem}>
-              <div className={styles.statLabel}>Total Income</div>
-              <div className={`${styles.statValue} ${styles.statTeal}`}>{formatAmount(animTotalIncome, locale, currency)}</div>
-            </div>
-            <div className={styles.statItem}>
-              <div className={styles.statLabel}>Total Expenses</div>
-              <div className={`${styles.statValue} ${styles.statCoral}`}>{formatAmount(animTotalExpenses, locale, currency)}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.accountsDropdown}>
-          <div className={styles.accountsDropdownHeader} onClick={() => setAccountsOpen((o) => !o)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setAccountsOpen((o) => !o)}>
-            <h2>Linked Accounts <span className={styles.acctCount}>{memberAccounts.length}</span></h2>
-            <span className={`${styles.accountsChevron} ${accountsOpen ? styles.chevronOpen : ''}`}>{'\u25BC'}</span>
-          </div>
-          <div className={`${styles.accountsSlide} ${accountsOpen ? styles.accountsOpen : ''}`}>
-            <div className={styles.accountsSlideInner}>
-            <div className={styles.accountsGrid}>
-              {memberAccounts.length === 0 ? (
-                <div className="empty-state">
-                  <p className="empty-state-text">No accounts</p>
-                </div>
-              ) : (
-                memberAccounts.map((acct) => (
-                  <AccountCard
-                    key={acct.id}
-                    name={acct.name}
-                    type={displayType(acct.type)}
-                    balance={formatAmount(acct.balance, locale, currency)}
-                    gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
-                    showChip={acct.type === 'cash'}
-                    onClick={() => handleAccountClick(acct.id)}
-                    selected={selectedAccountId === acct.id}
-                  />
-                ))
-              )}
-            </div>
-            </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.contentSplit}>
-        <div className={styles.ledgerPanel}>
-          <div className={styles.ledgerPanelHead}>
-            <h3>
-              {selectedAcct ? (
-                <>{selectedAcct.name} <span className={styles.ledgerBalance}>{formatAmount(selectedAcct.balance, locale, currency)}</span> <span className={styles.txCount}>{txCount}</span></>
-              ) : (
-                <>All Accounts Ledger <span className={styles.txCount}>{txCount}</span></>
-              )}
-            </h3>
-            <div className={styles.ledgerPanelFilter}>
-              <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF">
-                <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                <span className={styles.pdfBtnLabel}>Download PDF</span>
+            <div className={styles.heroActions}>
+              <button className={styles.heroActionBtn} onClick={() => useModalStore.getState().open('transaction-form')}>
+                <span className={styles.heroActionIcon}>+</span>
+                Transaction
               </button>
-              <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
-              <SegmentedTabs
-                tabs={ledgerFilters}
-                activeKey={ledgerFilter}
-                onChange={setLedgerFilter}
-              />
-              {selectedAccountId && (
-                <button className={styles.showAllBtn} onClick={() => setSelectedAccountId(null)}>All account</button>
-              )}
-              {selectedAccountId && (() => {
-                const hasObTx = transactions.some(
-                  (tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true,
-                );
-                const showAdd = hasObTx || memberAccounts.find((a) => a.id === selectedAccountId)?.balance === 0;
-                if (!showAdd) return null;
-                return (
-                  <button className={styles.obBtn} onClick={handleOpeningBalance}>
-                    {hasObTx ? 'Opening Balance' : 'Add Opening'}
-                  </button>
-                );
-              })()}
+              <button className={styles.heroActionBtn} onClick={() => useModalStore.getState().open('add-account', { memberId })}>
+                <span className={styles.heroActionIcon}>+</span>
+                Account
+              </button>
+            </div>
+            <div className={styles.heroStats}>
+              <div className={styles.statItem}>
+                <div className={styles.statLabel}>Net Balance</div>
+                <div className={`${styles.statValue} ${styles.statTeal}`}>{formatAmount(animTotalBalance, locale, currency)}</div>
+              </div>
+              <div className={styles.statItem}>
+                <div className={styles.statLabel}>Total Income</div>
+                <div className={`${styles.statValue} ${styles.statTeal}`}>{formatAmount(animTotalIncome, locale, currency)}</div>
+              </div>
+              <div className={styles.statItem}>
+                <div className={styles.statLabel}>Total Expenses</div>
+                <div className={`${styles.statValue} ${styles.statCoral}`}>{formatAmount(animTotalExpenses, locale, currency)}</div>
+              </div>
             </div>
           </div>
-          <LedgerTable rows={filteredLedger} desktop showBalance={showBalance} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} />
-        </div>
-      </div>
 
+          <div className={styles.accountsDropdown}>
+            <div className={styles.accountsDropdownHeader} onClick={() => setAccountsOpen((o) => !o)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setAccountsOpen((o) => !o)}>
+              <h2>Linked Accounts <span className={styles.acctCount}>{memberAccounts.length}</span></h2>
+              <span className={`${styles.accountsChevron} ${accountsOpen ? styles.chevronOpen : ''}`}>{'\u25BC'}</span>
+            </div>
+            <div className={`${styles.accountsSlide} ${accountsOpen ? styles.accountsOpen : ''}`}>
+              <div className={styles.accountsSlideInner}>
+              <div className={styles.accountsGrid}>
+                {memberAccounts.length === 0 ? (
+                  <div className="empty-state">
+                    <p className="empty-state-text">No accounts</p>
+                  </div>
+                ) : (
+                  memberAccounts.map((acct) => (
+                    <AccountCard
+                      key={acct.id}
+                      name={acct.name}
+                      type={displayType(acct.type)}
+                      balance={formatAmount(acct.balance, locale, currency)}
+                      gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
+                      showChip={acct.type === 'cash'}
+                      onClick={() => handleAccountClick(acct.id)}
+                      selected={selectedAccountId === acct.id}
+                    />
+                  ))
+                )}
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.contentSplit}>
+          <div className={styles.ledgerPanel}>
+            <div className={styles.ledgerPanelHead}>
+              <h3>
+                {selectedAcct ? (
+                  <>{selectedAcct.name} <span className={styles.ledgerBalance}>{formatAmount(selectedAcct.balance, locale, currency)}</span> <span className={styles.txCount}>{txCount}</span></>
+                ) : (
+                  <>All Accounts Ledger <span className={styles.txCount}>{txCount}</span></>
+                )}
+              </h3>
+              <div className={styles.ledgerPanelFilter}>
+                <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF">
+                  <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  <span className={styles.pdfBtnLabel}>Download PDF</span>
+                </button>
+                <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
+                <SegmentedTabs
+                  tabs={ledgerFilters}
+                  activeKey={ledgerFilter}
+                  onChange={setLedgerFilter}
+                />
+                {selectedAccountId && (
+                  <button className={styles.showAllBtn} onClick={() => setSelectedAccountId(null)}>All account</button>
+                )}
+                {selectedAccountId && (() => {
+                  const hasObTx = transactions.some(
+                    (tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true,
+                  );
+                  const showAdd = hasObTx || memberAccounts.find((a) => a.id === selectedAccountId)?.balance === 0;
+                  if (!showAdd) return null;
+                  return (
+                    <button className={styles.obBtn} onClick={handleOpeningBalance}>
+                      {hasObTx ? 'Opening Balance' : 'Add Opening'}
+                    </button>
+                  );
+                })()}
+              </div>
+            </div>
+            <LedgerTable rows={filteredLedger} desktop showBalance={showBalance} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} />
+          </div>
+        </div>
+        </div>
+      ) : (
+        <div className={styles.mobileOnly}>
+          <div className={styles.profileCard}>
+            <Avatar initial={initial} seed={member.name} name={member.name} size={72} />
+            <div className={styles.profileName}>{member.name}</div>
+            <div className={styles.profileTag}>
+              {member.isExternal ? 'External' : 'Family'}
+            </div>
+            <div className={styles.balanceLabel}>Net Balance</div>
+            <div className={styles.balanceAmount}>{formatAmount(animTotalBalance, locale, currency)}</div>
+          </div>
+
+          <div className={styles.actionPills}>
+            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'income' })}>
+              <span className={`${styles.pillIcon} ${styles.pillIncome}`}>{'+$'}</span>
+              <span className={styles.pillLabel}>Income</span>
+            </button>
+            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'expense' })}>
+              <span className={`${styles.pillIcon} ${styles.pillExpense}`}>{'-$'}</span>
+              <span className={styles.pillLabel}>Expense</span>
+            </button>
+            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'transfer' })}>
+              <span className={`${styles.pillIcon} ${styles.pillTransfer}`}>{'$'}</span>
+              <span className={styles.pillLabel}>Transfer</span>
+            </button>
+          </div>
+
+          <div className={styles.mobileLinkedAccounts} onClick={() => useModalStore.getState().open('select-account', { memberId, selectedAccountId, onSelect: handleSelectAccount })} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && useModalStore.getState().open('select-account', { memberId, selectedAccountId, onSelect: handleSelectAccount })}>
+            <div className={styles.linkedAccountsLabel}>
+              <span>Linked Accounts</span>
+              <span className={styles.linkedAcctCount}>{memberAccounts.length}</span>
+            </div>
+            <svg className={styles.linkedChevron} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+              <path d="M6 4l4 4-4 4" />
+            </svg>
+          </div>
+
+          <div className={styles.mobileLedger}>
+            <div ref={trayRef}>
+            <div className={styles.ledgerToolbar}>
+              <div className={styles.ledgerSectionTitle}>{selectedAcct ? selectedAcct.name : 'All Accounts'}</div>
+              <span className={styles.txCountBadge}>{filteredTxs.length}</span>
+              <div className={styles.ledgerActions}>
+                <button className={styles.ledgerFilterBtn} onClick={() => setFilterOpen((o) => !o)} aria-label="Filter">
+                  <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <path d="M2 4.5h14M4.5 9h9M7 13.5h4" />
+                    <circle cx="4.5" cy="4.5" r="1.5" fill="currentColor" stroke="none" />
+                    <circle cx="13.5" cy="9" r="1.5" fill="currentColor" stroke="none" />
+                    <circle cx="9" cy="13.5" r="1.5" fill="currentColor" stroke="none" />
+                  </svg>
+                </button>
+                <button className={styles.ledgerFilterBtn} onClick={() => setSearchOpen((o) => !o)} aria-label="Search">
+                  <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <circle cx="8" cy="8" r="5.5" />
+                    <path d="M12 12l4 4" />
+                  </svg>
+                </button>
+                <button className={styles.downloadBtn} onClick={downloadPdf} aria-label="Download PDF">
+                  <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <path d="M15 12v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2" />
+                    <polyline points="6 9 9 12 12 9" />
+                    <line x1="9" y1="3" x2="9" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className={`${styles.filterTray} ${filterOpen ? styles.filterTrayOpen : ''}`}>
+              <div className={styles.filterPills}>
+                {(['all', 'income', 'expense', 'loan'] as const).map((f) => (
+                  <button
+                    key={f}
+                    className={`${styles.filterPill} ${ledgerFilter === f ? styles.filterPillActive : ''}`}
+                    onClick={() => setLedgerFilter(f)}
+                  >
+                    {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={`${styles.searchBar} ${searchOpen ? styles.searchBarOpen : ''}`}>
+              <div className={styles.ledgerSearchWrap}>
+                <svg className={styles.ledgerSearchIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                  <circle cx="7" cy="7" r="5.5" />
+                  <path d="M11 11l3.5 3.5" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search transactions..."
+                  value={ledgerQuery}
+                  onChange={(e) => setLedgerQuery(e.target.value)}
+                />
+                {ledgerQuery && (
+                  <button className={styles.searchClear} onClick={() => setLedgerQuery('')} aria-label="Clear">
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                      <path d="M3 3l6 6M9 3l-6 6" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+            </div>
+
+            {filteredTxs.length === 0 ? (
+              <div className="empty-state" style={{ padding: '24px 0' }}>
+                <div className="empty-state-icon">{'\u{1F4CB}'}</div>
+                <p className="empty-state-text">No transactions yet</p>
+              </div>
+            ) : (
+              filteredTxs.map((tx) => {
+                const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
+                const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
+                return (
+                  <div key={tx.id} className={styles.txRow} onClick={() => handleTxClick(tx)}>
+                    <span className={styles.txType} data-type={tx.type}>
+                      <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
+                      <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
+                    </span>
+                    <span className={styles.txDesc}>{tx.description}</span>
+                    <span className={styles.txAmount}>
+                      <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>
+                        {isCredit ? (
+                          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M2 6l4-4 4 4"/></svg>
+                        ) : (
+                          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M2 6l4 4 4-4"/></svg>
+                        )}
+                      </span>
+                      {fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small>
+                    </span>
+                  </div>
+                );
+              })
+            )}
+            {loadingMore && sortedTxs.length > displayLimit && (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={`skel-${i}`} className={styles.skeletonRow}>
+                  <span className={styles.skeletonSquare} />
+                  <span className={styles.skeletonBar} />
+                  <span className={styles.skeletonAmount} />
+                </div>
+              ))
+            )}
+            <div ref={sentinelRef} style={{ height: 1 }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -4,7 +4,7 @@
   background: oklch(0% 0 0 / 0.55);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 100;
+  z-index: 300;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,7 +19,7 @@
 
 .modal {
   position: relative;
-  z-index: 101;
+  z-index: 301;
   width: 520px;
   max-width: 90vw;
   max-height: 85vh;
