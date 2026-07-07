@@ -90,13 +90,17 @@
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 @media (min-width: 600px) {
-  .grid { grid-template-columns: 1fr 1fr; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
 }
 
 /* ---- Mobile-only elements ---- */

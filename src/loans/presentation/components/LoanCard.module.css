@@ -28,6 +28,7 @@
 .top {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
 }
 
@@ -44,11 +45,18 @@
   flex-shrink: 0;
 }
 
+.leftGroup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
 .info {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
   min-width: 0;
 }
 
@@ -74,7 +82,7 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--color-expense);
-  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .meta {

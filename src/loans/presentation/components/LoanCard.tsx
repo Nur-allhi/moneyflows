@@ -16,10 +16,12 @@ export function LoanCard({ stack, locale, currency, onClick }: LoanCardProps) {
   return (
     <button className={styles.card} onClick={onClick}>
       <div className={styles.top}>
-        <div className={styles.avatar}>{initial}</div>
-        <div className={styles.info}>
-          <span className={styles.name}>{stack.debtorName}</span>
-          <span className={styles.badge}>{stackType}</span>
+        <div className={styles.leftGroup}>
+          <div className={styles.avatar}>{initial}</div>
+          <div className={styles.info}>
+            <span className={styles.name}>{stack.debtorName}</span>
+            <span className={styles.badge}>{stackType}</span>
+          </div>
         </div>
         <span className={styles.amount}>{formatAmount(stack.totalOutstanding, locale, currency)}</span>
       </div>
