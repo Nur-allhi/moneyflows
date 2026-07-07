@@ -48,7 +48,7 @@
 }
 
 .header {
-  padding: 0 20px 16px;
+  padding: 0 16px 16px;
   flex-shrink: 0;
 }
 
@@ -60,7 +60,7 @@
 }
 
 .body {
-  padding: 0 20px 20px;
+  padding: 0 16px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;

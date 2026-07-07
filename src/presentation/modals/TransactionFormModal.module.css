@@ -46,7 +46,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 20px 16px;
+  padding: 8px 16px 16px;
   flex-shrink: 0;
 }
 
@@ -93,16 +93,17 @@
 }
 
 .filterTabs {
-  margin: 0 20px 16px;
+  margin: 0 16px 16px;
   flex-shrink: 0;
 }
 
 .formBody {
-  padding: 0 20px;
+  padding: 0 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
 }
 
