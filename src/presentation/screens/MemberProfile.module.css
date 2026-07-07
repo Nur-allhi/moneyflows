@@ -38,13 +38,13 @@
 
 .profileName {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: var(--text-4xl);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .profileTag {
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -58,7 +58,7 @@
 }
 
 .balanceLabel {
-  font-size: 11px;
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
@@ -66,7 +66,7 @@
 
 .balanceAmount {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: var(--text-4xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
@@ -78,7 +78,7 @@
   align-items: center;
   gap: 10px;
   padding: 20px var(--space-4) 8px;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -92,7 +92,7 @@
   background: transparent;
   color: var(--color-primary);
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -117,7 +117,7 @@
   background: transparent;
   color: var(--color-primary);
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -214,7 +214,7 @@
 }
 
 .statLabel {
-  font-size: 11px;
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
@@ -222,7 +222,7 @@
 
 .statValue {
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: var(--text-5xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -254,7 +254,7 @@
   background: transparent;
   color: var(--color-primary);
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -273,7 +273,7 @@
 }
 
 .heroActionIcon {
-  font-size: 16px;
+  font-size: var(--text-2xl);
   font-weight: 300;
   line-height: 1;
 }
@@ -303,7 +303,7 @@
 
 .accountsDropdownHeader h2 {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-3xl);
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0;
@@ -314,7 +314,7 @@
 }
 
 .acctCount {
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-secondary);
   background: rgba(255,255,255,0.1);
@@ -329,7 +329,7 @@
 }
 
 .accountsChevron {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   transition: transform var(--transition-normal);
   line-height: 1;
@@ -387,7 +387,7 @@
 
 .ledgerPanelHead h3 {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: var(--text-xl);
   font-weight: 600;
   letter-spacing: -0.01em;
   display: flex;
@@ -397,7 +397,7 @@
 }
 
 .txCount {
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-secondary);
   background: rgba(255,255,255,0.1);
@@ -409,7 +409,7 @@
 
 .ledgerBalance {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
@@ -434,7 +434,7 @@
   background: transparent;
   color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
@@ -474,7 +474,7 @@
   max-width: 0;
   overflow: hidden;
   transition: opacity var(--transition-fast), max-width var(--transition-normal);
-  font-size: 12px;
+  font-size: var(--text-base);
   white-space: nowrap;
 }
 
@@ -485,7 +485,7 @@
   background: transparent;
   color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -510,7 +510,7 @@
   background: var(--color-primary);
   color: #fff;
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -582,7 +582,7 @@
 }
 
 .detailType {
-  font-size: 11px;
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-secondary);
@@ -591,13 +591,13 @@
 
 .detailAmount {
   font-family: var(--font-mono);
-  font-size: 28px;
+  font-size: var(--text-7xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .detailDesc {
-  font-size: 14px;
+  font-size: var(--text-lg);
   color: var(--color-text-secondary);
   margin-bottom: 12px;
 }
@@ -619,7 +619,7 @@
 }
 
 .detailLabel {
-  font-size: 11px;
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-secondary);
@@ -629,14 +629,14 @@
 }
 
 .detailValue {
-  font-size: 13px;
+  font-size: var(--text-md);
   text-align: right;
   font-weight: 500;
 }
 
 .detailMember {
   display: inline;
-  font-size: 11px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
   margin-left: 4px;
 }
@@ -659,7 +659,7 @@
   background: var(--color-surface);
   color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -682,7 +682,7 @@
 
 .detailIconBtnIcon {
   flex-shrink: 0;
-  font-size: 15px;
+  font-size: var(--text-xl);
   line-height: 1;
 }
 
@@ -691,14 +691,14 @@
   max-width: 0;
   overflow: hidden;
   transition: opacity var(--transition-fast), max-width var(--transition-normal);
-  font-size: 13px;
+  font-size: var(--text-md);
   white-space: nowrap;
 }
 
 .heroEditBtn {
   background: none;
   border: none;
-  font-size: 16px;
+  font-size: var(--text-2xl);
   cursor: pointer;
   color: var(--color-text-secondary);
   padding: 2px 6px;
@@ -749,7 +749,7 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 16px;
+  font-size: var(--text-2xl);
   font-weight: 600;
 }
 
@@ -769,7 +769,7 @@
 }
 
 .pillLabel {
-  font: 400 11px var(--font-body);
+  font: 400 var(--text-sm) var(--font-body);
   color: var(--color-text-secondary);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -823,14 +823,14 @@
   align-items: center;
   gap: 8px;
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: var(--text-xl);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--color-text);
 }
 
 .linkedAcctCount {
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-secondary);
   background: oklch(100% 0 0 / 0.1);
@@ -902,7 +902,7 @@
 }
 
 .filterLabel {
-  font: 500 9px var(--font-body);
+  font: 500 var(--text-2xs) var(--font-body);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -946,7 +946,7 @@
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text-secondary);
-  font: 500 12px var(--font-body);
+  font: 500 var(--text-base) var(--font-body);
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
@@ -1038,13 +1038,13 @@
 }
 
 .txDay {
-  font-size: 15px;
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-text);
 }
 
 .txMonth {
-  font-size: 8px;
+  font-size: var(--text-3xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -1053,7 +1053,7 @@
 
 .txDesc {
   flex: 1;
-  font-size: 14px;
+  font-size: var(--text-lg);
   color: var(--color-text);
   min-width: 0;
   display: -webkit-box;
@@ -1065,7 +1065,7 @@
 
 .txAmount {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -1077,7 +1077,7 @@
 }
 
 .txCurrency {
-  font-size: 8px;
+  font-size: var(--text-3xs);
   font-weight: 400;
   opacity: 0.55;
   margin-left: 2px;
@@ -1119,7 +1119,7 @@
 }
 
 .ledgerSectionTitle {
-  font: 600 15px var(--font-display);
+  font: 600 var(--text-xl) var(--font-display);
   color: var(--color-text);
 }
 
@@ -1144,7 +1144,7 @@
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text);
-  font: 400 13px var(--font-body);
+  font: 400 var(--text-md) var(--font-body);
   outline: none;
   -webkit-appearance: none;
   transition: border-color 0.2s;
@@ -1161,7 +1161,7 @@
 }
 
 .txCountBadge {
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
   background: oklch(100% 0 0 / 0.06);

@@ -25,7 +25,7 @@
 }
 
 .metricLabel {
-  font-size: 12px;
+  font-size: var(--text-base);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
@@ -34,7 +34,7 @@
 
 .metricValue {
   font-family: var(--font-mono);
-  font-size: 28px;
+  font-size: var(--text-7xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
@@ -42,7 +42,7 @@
 }
 
 .metricChange {
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -82,7 +82,7 @@
 .monthStat:last-child { padding-right: 0; }
 
 .monthStatLabel {
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
@@ -91,7 +91,7 @@
 
 .monthStatValue {
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: var(--text-3xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
@@ -112,7 +112,7 @@
 
 .panelHeader h2 {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: var(--text-lg);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -145,7 +145,7 @@
 
 .memberTotal {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
@@ -175,20 +175,20 @@
   justify-content: center;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 10px;
+  font-size: var(--text-xs);
   flex-shrink: 0;
   color: #fff;
 }
 
 .mname {
   font-weight: 500;
-  font-size: 13px;
+  font-size: var(--text-md);
   min-width: 0;
 }
 
 .currencyLabel {
   font-family: var(--font-body);
-  font-size: 8px;
+  font-size: var(--text-3xs);
   font-weight: 400;
   opacity: 0.55;
   margin-left: 2px;
@@ -245,14 +245,14 @@
 .acctName {
   flex: 1;
   min-width: 0;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 400;
   color: var(--color-text);
 }
 
 .acctBalance {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
@@ -295,7 +295,7 @@
 
 .loanDebtor {
   font-weight: 500;
-  font-size: 13px;
+  font-size: var(--text-md);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -315,7 +315,7 @@
 }
 
 .badge {
-  font-size: 9px;
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 2px 8px;
@@ -337,7 +337,7 @@
 
 .loanAmount {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-coral);
@@ -372,7 +372,7 @@
   display: flex;
   justify-content: space-between;
   margin-top: 4px;
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   letter-spacing: 0.02em;
 }
@@ -392,7 +392,7 @@
   -webkit-backdrop-filter: blur(12px);
   color: var(--color-text);
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   cursor: pointer;
   display: flex;
@@ -455,14 +455,14 @@
 .txArrow svg { width: 12px; height: 12px; }
 
 .txDate {
-  font-size: 11px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
   width: 65px;
   flex-shrink: 0;
 }
 
 .txType {
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-text-secondary);
@@ -476,7 +476,7 @@
 
 .txDesc {
   flex: 1;
-  font-size: 13px;
+  font-size: var(--text-md);
   color: var(--color-text);
   min-width: 0;
   display: -webkit-box;
@@ -488,7 +488,7 @@
 
 .txAmount {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -503,7 +503,7 @@
 }
 
 .txCurrency {
-  font-size: 8px;
+  font-size: var(--text-3xs);
   font-weight: 400;
   opacity: 0.55;
   margin-left: 2px;
@@ -537,14 +537,14 @@
   }
 
   .metrics > .metricCard:first-child .metricLabel {
-    font-size: 11px;
+    font-size: var(--text-sm);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-text-secondary);
   }
 
   .metrics > .metricCard:first-child .metricValue {
-    font-size: 24px;
+    font-size: var(--text-6xl);
   }
 
   .metrics > .metricCard:nth-child(2),
@@ -556,7 +556,7 @@
 
   .metrics > .metricCard:nth-child(2) .metricValue,
   .metrics > .metricCard:nth-child(3) .metricValue {
-    font-size: 20px;
+    font-size: var(--text-4xl);
   }
 
   .metrics > .metricCard:nth-child(2) .metricChange,
@@ -566,7 +566,7 @@
 
   .metrics > .metricCard:nth-child(2) .metricLabel,
   .metrics > .metricCard:nth-child(3) .metricLabel {
-    font-size: 11px;
+    font-size: var(--text-sm);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-text-secondary);
@@ -591,14 +591,14 @@
   }
 
   .monthSummary .monthStatLabel {
-    font-size: 11px;
+    font-size: var(--text-sm);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-text-secondary);
   }
 
   .monthSummary .monthStatValue {
-    font-size: 16px;
+    font-size: var(--text-2xl);
   }
 
   .monthSummary > .monthStat:last-child {
@@ -617,7 +617,7 @@
     display: block;
     text-align: center;
     margin-top: 8px;
-    font: 500 13px var(--font-mono);
+    font: 500 var(--text-md) var(--font-mono);
     font-variant-numeric: tabular-nums;
     color: var(--color-teal);
   }
@@ -632,7 +632,7 @@
   }
 
   .panelHeader h2 {
-    font-size: 15px;
+    font-size: var(--text-xl);
   }
 
   .memberHead {
@@ -684,11 +684,11 @@
   }
 
   .mname {
-    font-size: 14px;
+    font-size: var(--text-lg);
   }
 
   .memberTotal {
-    font-size: 14px;
+    font-size: var(--text-lg);
   }
 
   .txRow {
@@ -731,13 +731,13 @@
   }
 
   .txDay {
-    font-size: 15px;
+    font-size: var(--text-xl);
     font-weight: 700;
     color: var(--color-text);
   }
 
   .txMonth {
-    font-size: 8px;
+    font-size: var(--text-3xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -745,15 +745,15 @@
   }
 
   .txDesc {
-    font-size: 14px;
+    font-size: var(--text-lg);
   }
 
   .txAmount {
-    font-size: 14px;
+    font-size: var(--text-lg);
   }
 
   .txCurrency {
-    font-size: 8px;
+    font-size: var(--text-3xs);
   }
 
   .txArrow {
@@ -787,15 +787,15 @@
   }
 
   .loanDebtorName {
-    font-size: 14px;
+    font-size: var(--text-lg);
   }
 
   .loanAmount {
-    font-size: 14px;
+    font-size: var(--text-lg);
   }
 
   .loanMeta {
-    font-size: 11px;
+    font-size: var(--text-sm);
   }
 
   .content {

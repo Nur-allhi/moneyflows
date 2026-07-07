@@ -21,7 +21,7 @@
 
 .statNum {
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: var(--text-4xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
@@ -36,7 +36,7 @@
 }
 
 .statLabel {
-  font-size: 11px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -55,7 +55,7 @@
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   color: var(--color-text);
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
   cursor: pointer;
   font-family: var(--font-body);
@@ -100,7 +100,7 @@
 
 .tabBtn {
   padding: 12px 20px;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   color: var(--color-text-secondary);
   border: none;
@@ -117,7 +117,7 @@
 }
 
 .tabBadge {
-  font-size: 11px;
+  font-size: var(--text-sm);
   background: oklch(100% 0 0 / 0.08);
   padding: 1px 7px;
   border-radius: 999px;
@@ -146,7 +146,7 @@
   grid-template-columns: 36px 1fr 120px 100px 180px;
   gap: 12px;
   padding: 12px 24px;
-  font-size: 11px;
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
@@ -211,7 +211,7 @@
     background: var(--color-surface);
     backdrop-filter: blur(12px);
     color: var(--color-text);
-    font: 14px var(--font-body);
+    font: var(--text-lg) var(--font-body);
     outline: none;
     -webkit-appearance: none;
     transition: border-color 0.2s;
@@ -275,7 +275,7 @@
 
   .tabBtn {
     padding: 12px 14px;
-    font-size: 12px;
+    font-size: var(--text-base);
     white-space: nowrap;
   }
 
