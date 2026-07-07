@@ -29,6 +29,14 @@ function Root() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
     }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      (window as unknown as Record<string, unknown>).__installPrompt = e;
+    });
+    window.addEventListener('appinstalled', () => {
+      (window as unknown as Record<string, unknown>).__installPrompt = null;
+    });
   }, []);
 
   if (dbError) {

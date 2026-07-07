@@ -37,9 +37,22 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [fsPermission, setFsPermission] = useState<boolean | null>(null);
   const [backupFiles, setBackupFiles] = useState<{ name: string; lastModified: number }[]>([]);
   const [restoringFile, setRestoringFile] = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
 
   useEffect(() => {
-    if (isOpen) fetchMembers();
+    if (isOpen) {
+      fetchMembers();
+      const p = (window as unknown as Record<string, unknown>).__installPrompt;
+      if (p instanceof Event) setInstallPrompt(p);
+    }
+    const handler = (e: Event) => { e.preventDefault(); setInstallPrompt(e); };
+    const installed = () => setInstallPrompt(null);
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', installed);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', installed);
+    };
   }, [isOpen, fetchMembers]);
 
   useEffect(() => {
@@ -310,6 +323,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       )}
 
       <div className={fieldStyles.separator} />
+
+      {installPrompt && (
+        <div className={fieldStyles.statusRow}>
+          <span className={fieldStyles.statusDot} />
+          <span className={fieldStyles.statusText}>Install MoneyFlows on your device</span>
+          <button className={fieldStyles.restoreBtn} onClick={async () => {
+            (installPrompt as unknown as { prompt: () => Promise<void> }).prompt();
+            const result = await (installPrompt as unknown as { userChoice: Promise<{ outcome: string }> }).userChoice;
+            if (result.outcome === 'accepted') setInstallPrompt(null);
+          }}>
+            Install
+          </button>
+        </div>
+      )}
 
       <div className={fieldStyles.actionsRow}>
         <button className={fieldStyles.actionBtn} onClick={() => getDatabase().exportToFile()}>

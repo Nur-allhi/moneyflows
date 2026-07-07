@@ -2,6 +2,8 @@ const CACHE = 'moneyflows-v1';
 const ASSETS = [
   '/',
   '/index.html',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
 self.addEventListener('install', (e) => {
@@ -18,7 +20,6 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
-  if (e.request.url.includes('/manifest.json') || e.request.url.includes('/sw.js')) return;
 
   e.respondWith(
     caches.match(e.request).then((cached) => cached || fetch(e.request).then((res) => {
