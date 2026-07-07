@@ -127,6 +127,7 @@
   .searchBar {
     display: block;
     margin-bottom: 4px;
+    padding: 0 16px;
   }
 
   .searchWrap {
@@ -206,6 +207,10 @@
 
   .filterStrip::-webkit-scrollbar {
     display: none;
+  }
+
+  .grid {
+    padding: 0 16px 24px;
   }
 
   .filterBtn {
