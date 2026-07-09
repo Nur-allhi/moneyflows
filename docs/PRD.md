@@ -15,7 +15,7 @@ A privacy-first, dark-glassmorphism family finance app that replaces a fragile m
 
 | Persona | Role | Detail |
 |---------|------|--------|
-| **Efty** (Admin) | Primary user | Manages 6 personal/business accounts; issues/recover loans; oversees family finances |
+| **Efty** (Admin) *(example)* | Primary user | Manages personal/business accounts; issues/recover loans; oversees family finances. The primary member, currency, and locale are configurable in Settings — the seed data uses Efty as an illustration. |
 | **Azam (Abbu)** | Father | 4 accounts (Brac Bank 951K, Standard Bank, bKash, loans) |
 | **Nahar (Ammu)** | Mother | Standard Bank personal account |
 | **External Debtors** | Borrowers | BTC, Pavel, Sharif, Mainul — tracked with `is_external=true` |
@@ -46,11 +46,16 @@ A privacy-first, dark-glassmorphism family finance app that replaces a fragile m
 - **As Efty**, I want 4 segmented tabs: Income, Expense, Transfer, Loan — form fields change per tab.
 - **As Efty**, I want a 3×4 numeric keypad with Indian comma formatting (Intl.NumberFormat 'en-IN').
 - **As Efty**, I want source/destination fields that auto-filter to valid accounts (transfer requires different accounts).
-
 ### 3.5 Recycle Bin — Soft-Delete Safety Net
+
 - **As Efty**, I want to review all soft-deleted items in one place, tabbed by type (All, Transactions, Accounts).
 - **As Efty**, I want to restore or permanently delete items with confirmation.
 - **As Efty**, I want to see auto-purge countdown and an option to empty the bin.
+
+### 3.6 Groups — Account Collections
+
+- **As Efty**, I want to group related accounts (e.g., "Bank Accounts", "Mobile Wallets") into labeled collections so I can view a consolidated group ledger.
+- **As Efty**, I want to open a group and see its combined balances and a filtered transaction ledger for the accounts in that group.
 
 ---
 
@@ -64,7 +69,7 @@ A privacy-first, dark-glassmorphism family finance app that replaces a fragile m
 | NFR4 | Data integrity | Soft-delete on members, accounts, transactions, groups; audit log |
 | NFR5 | Migration path | JSON `metadata` columns on all tables for future Supabase sync |
 | NFR6 | File size per spec | Each code file ≤300 LOC |
-| NFR7 | Currency | BDT only (v1). Indian comma format via `Intl.NumberFormat('en-IN')` |
+| NFR7 | Currency | Configurable currency and locale (defaults: BDT, `en-IN`). Indian comma grouping via `Intl.NumberFormat`. Set once in Settings and applied app-wide. |
 
 ---
 
