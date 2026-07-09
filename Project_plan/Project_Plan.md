@@ -4,7 +4,7 @@
 
 ### 0.1 Project Scaffolding
 - [x] Create Vite + React project
-- [x] Install dependencies: zustand, better-sqlite3, uuid, date-fns
+- [x] Install dependencies: zustand, sql.js, uuid, date-fns
 - [x] Configure TypeScript, ESLint, Prettier
 - [x] Set up folder structure (clean architecture layers)
 - [ ] Configure build tooling & dev server

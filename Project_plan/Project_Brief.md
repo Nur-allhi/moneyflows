@@ -51,7 +51,7 @@ External debtors (BTC, External Debtor B, External Debtor C, External Debtor A) 
 | Frontend | Vite + React |
 | State | Zustand (optimistic updates, in-memory cache) |
 | Data Access | `IDatabaseService` interface (Repository Pattern) |
-| Database (Phase 1) | SQLite via `better-sqlite3` |
+| Database (Phase 1) | SQLite via `sql.js` (WASM, runs in-browser; persisted to localStorage) |
 | Database (Phase 2) | Supabase (PostgreSQL) |
 | Architecture | Clean Architecture — UI decoupled from data layer |
 
