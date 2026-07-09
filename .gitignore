@@ -1,7 +1,31 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+
+# Databases
 *.db
 *.db-journal
+
+# Environment
 .env
 .env.local
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Generated config output (source of truth is vite.config.ts)
+vite.config.js
+vite.config.d.ts
+
+# Test & tooling artifacts
+test-results/
+playwright-report/
 .playwright-mcp/
+
+# Local dev / debug scripts
+query_db.mjs
+query_trace.mjs
+trace_balance.mjs
+seed_db.cjs

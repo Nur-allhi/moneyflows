@@ -15,7 +15,7 @@ A privacy-first, dark-glassmorphism family finance app that replaces a fragile m
 
 | Persona | Role | Detail |
 |---------|------|--------|
-| **Admin** (Admin) | Primary user | Manages 6 personal/business accounts; issues/recover loans; oversees family finances |
+| **Admin** (Admin) *(example)* | Primary user | Manages personal/business accounts; issues/recover loans; oversees family finances. The primary member, currency, and locale are configurable in Settings — the seed data uses Admin as an illustration. |
 | **Father (Father)** | Father | 4 accounts (Brac Bank 951K, Standard Bank, bKash, loans) |
 | **Mother (Mother)** | Mother | Standard Bank personal account |
 | **External Debtors** | Borrowers | BTC, External Debtor B, External Debtor C, External Debtor A — tracked with `is_external=true` |
@@ -46,11 +46,16 @@ A privacy-first, dark-glassmorphism family finance app that replaces a fragile m
 - **As Admin**, I want 4 segmented tabs: Income, Expense, Transfer, Loan — form fields change per tab.
 - **As Admin**, I want a 3×4 numeric keypad with Indian comma formatting (Intl.NumberFormat 'en-IN').
 - **As Admin**, I want source/destination fields that auto-filter to valid accounts (transfer requires different accounts).
-
 ### 3.5 Recycle Bin — Soft-Delete Safety Net
+
 - **As Admin**, I want to review all soft-deleted items in one place, tabbed by type (All, Transactions, Accounts).
 - **As Admin**, I want to restore or permanently delete items with confirmation.
 - **As Admin**, I want to see auto-purge countdown and an option to empty the bin.
+
+### 3.6 Groups — Account Collections
+
+- **As Admin**, I want to group related accounts (e.g., "Bank Accounts", "Mobile Wallets") into labeled collections so I can view a consolidated group ledger.
+- **As Admin**, I want to open a group and see its combined balances and a filtered transaction ledger for the accounts in that group.
 
 ---
 
@@ -64,7 +69,7 @@ A privacy-first, dark-glassmorphism family finance app that replaces a fragile m
 | NFR4 | Data integrity | Soft-delete on members, accounts, transactions, groups; audit log |
 | NFR5 | Migration path | JSON `metadata` columns on all tables for future Supabase sync |
 | NFR6 | File size per spec | Each code file ≤300 LOC |
-| NFR7 | Currency | BDT only (v1). Indian comma format via `Intl.NumberFormat('en-IN')` |
+| NFR7 | Currency | Configurable currency and locale (defaults: BDT, `en-IN`). Indian comma grouping via `Intl.NumberFormat`. Set once in Settings and applied app-wide. |
 
 ---
 

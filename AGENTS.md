@@ -74,7 +74,7 @@ money_flows_v0.4/
 - TypeScript strict mode.
 - CSS Modules + CSS custom properties (no runtime CSS-in-JS).
 - React functional components with hooks.
-- Clean Architecture: UI never imports `better-sqlite3` directly.
+- Clean Architecture: UI never imports the SQLite driver (`sql.js`) directly.
 
 ### 3.5 Session Start Ritual
 - **At the start of EVERY session**, read `session_log.md` (last entry for current position) and this file §5 (current ticket).
