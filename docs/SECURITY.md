@@ -9,30 +9,21 @@
 
 | Threat | Impact | Mitigation |
 |--------|--------|------------|
-| Local SQLite DB file theft | Full financial data exposure | OS-level file permissions; `money_flows.db` in user app data directory; no cloud storage |
+| Local database extraction from browser storage | Full financial data exposure | Data lives in the browser (sql.js WASM DB persisted to `localStorage`); no cloud storage, no network calls; end-user controls their own device |
 | SQL injection via form fields | DB corruption / data leak | Parameterized queries only in `SQLiteDatabaseService`; never concatenate SQL strings |
-| XSS via description/name fields | Script execution in UI | React auto-escapes JSX; CSP headers if packaged in Tauri; sanitize on read |
-| Accidental permanent data loss | Irrecoverable financial records | Soft-delete on all entities (30-day auto-purge window); Recycle Bin |
-| Balance corruption from partial writes | Incorrect financial state | Transactions wrapped in `BEGIN/COMMIT` for double-entry writes; rollback on error |
+| XSS via description/name fields | Script execution in UI | React auto-escapes JSX; no `dangerouslySetInnerHTML`; sanitize on read |
+| Accidental permanent data loss | Irrecoverable financial records | Soft-delete on all entities (30-day auto-purge window); Recycle Bin; automatic restore-point backups |
+| Balance corruption from partial writes | Incorrect financial state | Transactions wrapped in a single transaction for double-entry writes; rollback on error |
 | Tampering with `deleted_at` timestamps | Data integrity bypass | Application-layer enforcement; no direct DB writes from UI |
-| Race condition on concurrent writes (Electron/Tauri) | Stale balance reads | Wrapped DB operations; serialize writes via SQLite WAL mode |
+| Data loss from cleared browser storage / device change | Irrecoverable financial records | Manual export/import and optional Folder Sync (File System Access API) for off-device backup |
 
 ---
 
-## 2. Authorization Levels
+## 2. Authorization Model
 
-This is a single-device family app with no user authentication. Authorization is **role-based by convention**:
+This is a single-device, single-user family app with **no user authentication** and **no role-based access control**. All actions (read, create, edit, delete, restore, purge) are available to whoever operates the device — there is no login, no password, and no admin/viewer distinction.
 
-| Level | Scope | Who |
-|-------|-------|-----|
-| **Admin** | Full CRUD: members, accounts, transactions, loans, recycle bin | Efty (hardcoded as primary user) |
-| **Viewer** | Read-only: dashboard, member profile, loan stacks | Azam, Nahar (family viewers) |
-
-**Implementation:**
-- `activeProfile` stored in Zustand (`useAuthStore`), persist to localStorage.
-- Admin actions (delete, restore, purge, add/remove members) check `activeProfile.role === 'admin'` before rendering action buttons.
-- Viewer mode hides: delete buttons, edit triggers, recycle bin purge, member add/remove.
-- No password gate in v1 (local-only app; future Supabase auth for Phase 2).
+> Note: this section intentionally replaces an earlier design that described a `useAuthStore` with Admin/Viewer roles. That role system was never implemented; the shipped app treats every user as having full access. If multi-user access is needed later (e.g., via Supabase in Phase 2), role-based authorization would be introduced there.
 
 ---
 
@@ -99,10 +90,10 @@ All validation runs **client-side** (immediate feedback) and **server-side** (in
 - [ ] Transaction writes wrapped in `BEGIN/COMMIT/ROLLBACK`
 - [ ] Balance checks happen inside the same transaction as the write
 - [ ] No secrets, API keys, or tokens in client-side code
-- [ ] `localStorage` only stores UI preferences (active profile, theme) — never raw transaction data
+- [ ] `localStorage` only stores UI preferences (currency, locale, primary member, theme) and the persisted DB — never transmits data over the network
 - [ ] `parseInt/parseFloat` with radix; validate `isFinite` on all numeric inputs
 - [ ] React components sanitize on render (JSX auto-escapes); no `dangerouslySetInnerHTML`
-- [ ] File permissions on `money_flows.db`: owner read/write only (OS-level)
+- [ ] No network requests leave the app — all data access is local (sql.js in-browser)
 - [ ] Zustand stores never cache deleted/sensitive raw data beyond session scope
 
 ---

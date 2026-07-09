@@ -17,7 +17,7 @@ src/
 └── presentation/         # React components, Zustand stores, hooks
 ```
 
-**Rule:** UI never imports `better-sqlite3` directly. All DB access goes through `IDatabaseService`.
+**Rule:** UI never imports the SQLite driver (`sql.js`) directly. All DB access goes through `IDatabaseService`.
 
 ---
 
