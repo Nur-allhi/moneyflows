@@ -37,8 +37,6 @@ function validateForm(
   source: string,
   destination: string,
   accounts: Account[],
-  locale: string,
-  currency: string,
   loanAction: string,
   selectedBorrowerId: string,
 ): ValidationErrors {
@@ -86,12 +84,6 @@ function validateForm(
       }
     }
 
-    if (source && tab !== 'income' && !isNaN(amountNum) && amountNum > 0) {
-      const srcAcct = accounts.find((a) => a.id === source);
-      if (srcAcct && amountNum > srcAcct.balance) {
-        next.amount = `Insufficient balance (${formatAmount(srcAcct.balance, locale, currency)} available)`;
-      }
-    }
   }
 
   return next;
@@ -176,6 +168,15 @@ export function TransactionFormModal({
 
   const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
 
+  const insufficientWarning = useMemo(() => {
+    if (tab === 'income' || !source) return null;
+    const amt = parseInt(rawAmount, 10);
+    if (isNaN(amt) || amt <= 0) return null;
+    const acct = accounts.find((a) => a.id === source);
+    if (!acct || amt <= acct.balance) return null;
+    return { available: acct.balance, deficit: amt - acct.balance };
+  }, [tab, source, rawAmount, accounts]);
+
   const repayStackOptions = useMemo(() => {
     return loanStacks
       .filter((s) => s.totalOutstanding > 0)
@@ -186,10 +187,10 @@ export function TransactionFormModal({
   }, [loanStacks, locale, currency]);
 
   const validate = useCallback((): boolean => {
-    const next = validateForm(tab, rawAmount, description, source, destination, accounts, locale, currency, loanAction, selectedBorrowerId);
+    const next = validateForm(tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId);
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, accounts, locale, currency, loanAction, selectedBorrowerId]);
+  }, [tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId]);
 
   const clearError = useCallback((field: string) => {
     setErrors((prev) => {
@@ -468,6 +469,19 @@ export function TransactionFormModal({
         />
       </div>
       {errors.amount && <span className={styles.errorText}>{errors.amount}</span>}
+
+      {insufficientWarning && (
+        <div className={styles.insufficientWarning}>
+          <span className={styles.warningIcon}>{'\u26A0'}</span>
+          <div className={styles.warningBody}>
+            <span className={styles.warningTitle}>Low balance</span>
+            <span className={styles.warningText}>
+              Only {formatAmount(insufficientWarning.available, locale, currency)} available.
+              Account will go negative by {formatAmount(insufficientWarning.deficit, locale, currency)} if you proceed.
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className={styles.fieldGroup}>
         <span className={styles.fieldLabel}>Date</span>
