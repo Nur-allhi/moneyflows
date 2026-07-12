@@ -164,6 +164,28 @@ export class LoanService {
     await this.loanDb.saveLoan(loan);
   }
 
+  async reverseRepayment(borrowerAccountId: string, amount: number): Promise<void> {
+    const allLoans = await this.loanDb.getLoansByBorrower(borrowerAccountId);
+    const loans = allLoans
+      .filter((l) => !l.deletedAt)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+    let remaining = amount;
+    for (let i = loans.length - 1; i >= 0; i--) {
+      if (remaining <= 0) break;
+      const loan = loans[i]!;
+      const room = loan.principal - loan.outstanding;
+      if (room <= 0) continue;
+      const addBack = Math.min(remaining, room);
+      loan.outstanding += addBack;
+      remaining -= addBack;
+      loan.outstanding = Math.min(loan.outstanding, loan.principal);
+      loan.status = loan.outstanding > 0 ? 'active' : 'settled';
+      loan.updatedAt = new Date().toISOString();
+      await this.loanDb.saveLoan(loan);
+    }
+  }
+
   async deleteLoan(loanId: string): Promise<void> {
     const txs = await this.db.getTransactions({ loanRef: loanId });
     for (const tx of txs) {

@@ -169,13 +169,15 @@ export function TransactionFormModal({
   const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
 
   const insufficientWarning = useMemo(() => {
-    if (tab === 'income' || !source) return null;
+    if (tab === 'income') return null;
+    const accountId = (tab === 'loan' && loanAction === 'repay') ? selectedBorrowerId : source;
+    if (!accountId) return null;
     const amt = parseInt(rawAmount, 10);
     if (isNaN(amt) || amt <= 0) return null;
-    const acct = accounts.find((a) => a.id === source);
+    const acct = accounts.find((a) => a.id === accountId);
     if (!acct || amt <= acct.balance) return null;
-    return { available: acct.balance, deficit: amt - acct.balance };
-  }, [tab, source, rawAmount, accounts]);
+    return { available: acct.balance, deficit: amt - acct.balance, accountId };
+  }, [tab, loanAction, source, selectedBorrowerId, rawAmount, accounts]);
 
   const repayStackOptions = useMemo(() => {
     return loanStacks
@@ -479,6 +481,9 @@ export function TransactionFormModal({
               Only {formatAmount(insufficientWarning.available, locale, currency)} available.
               Account will go negative by {formatAmount(insufficientWarning.deficit, locale, currency)} if you proceed.
             </span>
+            <button className={styles.addTxBtn} onClick={handleClose}>
+              + Add Transaction
+            </button>
           </div>
         </div>
       )}
