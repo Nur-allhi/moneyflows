@@ -119,6 +119,16 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
+  white-space: nowrap;
+}
+
+.currencyLabel {
+  font-family: var(--font-body);
+  font-size: 0.7em;
+  font-weight: 400;
+  opacity: 0.55;
+  margin-left: 2px;
+  letter-spacing: 0.04em;
 }
 
 .addCell {
@@ -321,6 +331,12 @@
     font-weight: 600;
     color: var(--color-teal);
     flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .currencyLabel {
+    font-size: 0.7em;
+    margin-left: 2px;
   }
 
   .addCell {

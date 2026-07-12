@@ -6,7 +6,7 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { Member } from '../../core/domain/Member';
-import { formatAmount } from '../utils/format';
+import { formatAmountParts } from '../utils/format';
 import { useSearchStore } from '../stores/useSearchStore';
 import styles from './MemberList.module.css';
 
@@ -132,7 +132,7 @@ export function MemberList() {
                 <span className={styles.cardTag}>Member</span>
               </div>
             </div>
-            <span className={styles.cardBalance}>{formatAmount(getBalance(m.id), locale, currency)}</span>
+            <span className={styles.cardBalance}>{formatAmountParts(getBalance(m.id), locale, currency).amount}<span className={styles.currencyLabel}>{formatAmountParts(getBalance(m.id), locale, currency).currency}</span></span>
           </button>
           ))
         )}
