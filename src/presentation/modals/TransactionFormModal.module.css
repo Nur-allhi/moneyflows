@@ -481,6 +481,24 @@
   line-height: 1.4;
 }
 
+.addTxBtn {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid oklch(55% 0.15 60 / 0.35);
+  border-radius: 6px;
+  background: oklch(55% 0.15 60 / 0.08);
+  color: oklch(75% 0.12 60);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.addTxBtn:hover {
+  background: oklch(55% 0.15 60 / 0.18);
+}
+
 .closing .sheet {
   animation: slideDown 0.3s ease-in forwards;
 }

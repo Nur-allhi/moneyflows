@@ -40,6 +40,7 @@ interface LoanState {
   createGivenLoan: (params: { sourceAccount: string; destAccount: string; amount: number; description: string; date: string; memberId: string }) => Promise<void>;
   createReceivedLoan: (params: { sourceAccount: string; destAccount: string; amount: number; description: string; date: string; memberId: string }) => Promise<void>;
   recordPayback: (params: { sourceAccount: string; destAccount: string; amount: number; loanRef: string; description: string; date: string; memberId: string }) => Promise<void>;
+  reverseRepayment: (borrowerAccountId: string, amount: number) => Promise<void>;
 }
 
 const getService = () => new LoanService(getDatabase());
@@ -175,6 +176,18 @@ export const useLoanStore = create<LoanState>((set) => ({
     } catch (err) {
       set({ error: (err as Error).message });
       throw err;
+    }
+  },
+
+  reverseRepayment: async (borrowerAccountId: string, amount: number) => {
+    set({ error: null, loading: true });
+    try {
+      const service = getService();
+      await service.reverseRepayment(borrowerAccountId, amount);
+      const loanStacks = await service.getLoanStacks();
+      set({ loanStacks, loading: false });
+    } catch (err) {
+      set({ error: (err as Error).message, loading: false });
     }
   },
 

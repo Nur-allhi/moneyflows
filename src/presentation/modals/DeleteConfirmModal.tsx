@@ -1,6 +1,7 @@
 import { Modal, BottomSheet } from '../components';
 import { useState, useEffect } from 'react';
 import { useTransactionStore } from '../stores/useTransactionStore';
+import { useLoanStore } from '../../loans/presentation/stores/useLoanStore';
 
 interface DeleteConfirmModalProps {
   txId: string;
@@ -9,6 +10,7 @@ interface DeleteConfirmModalProps {
 
 export function DeleteConfirmModal({ txId, onClose }: DeleteConfirmModalProps) {
   const softDeleteTransaction = useTransactionStore((s) => s.softDeleteTransaction);
+  const reverseRepayment = useLoanStore((s) => s.reverseRepayment);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -17,7 +19,11 @@ export function DeleteConfirmModal({ txId, onClose }: DeleteConfirmModalProps) {
   }, []);
 
   const handleDelete = async () => {
+    const tx = useTransactionStore.getState().transactions.find((t) => t.id === txId);
     await softDeleteTransaction(txId);
+    if (tx && tx.type === 'repay' && tx.sourceAccount) {
+      await reverseRepayment(tx.sourceAccount, tx.amount);
+    }
     onClose();
   };
 
