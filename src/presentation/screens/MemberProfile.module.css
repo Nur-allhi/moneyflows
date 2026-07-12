@@ -375,6 +375,15 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.ledgerTableInner {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  border-radius: 0 !important;
 }
 
 .ledgerPanelHead {
@@ -1207,4 +1216,32 @@
   0% { opacity: 0.4; }
   50% { opacity: 1; }
   100% { opacity: 0.4; }
+}
+
+.loadMoreBtn {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.loadMoreBtn:hover {
+  background: oklch(100% 0 0 / 0.06);
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+.loadMoreBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }

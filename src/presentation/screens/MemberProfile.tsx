@@ -25,6 +25,15 @@ const ledgerFilters = [
   { key: 'loan', label: 'Loan' },
 ];
 
+function getScrollParent(node: HTMLElement | null): HTMLElement {
+  let el = node?.parentElement ?? null;
+  while (el) {
+    if (getComputedStyle(el).overflowY === 'scroll') return el;
+    el = el.parentElement;
+  }
+  return document.documentElement;
+}
+
 export function MemberProfile() {
   const { id: memberId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -51,8 +60,6 @@ export function MemberProfile() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const trayRef = useRef<HTMLDivElement>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const loadingMoreRef = useRef(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
@@ -137,23 +144,24 @@ export function MemberProfile() {
     [sortedTxs, displayLimit],
   );
 
+  const handleReachEnd = useCallback(() => {
+    setDisplayLimit((prev) => Math.min(prev + 10, sortedTxs.length));
+  }, [sortedTxs.length]);
+
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || displayLimit >= sortedTxs.length || loadingMore) return;
-    const obs = new IntersectionObserver((entries) => {
-      if (entries[0]?.isIntersecting && !loadingMoreRef.current) {
-        loadingMoreRef.current = true;
-        setLoadingMore(true);
-        setTimeout(() => {
-          setDisplayLimit((prev) => Math.min(prev + 10, sortedTxs.length));
-          setLoadingMore(false);
-          loadingMoreRef.current = false;
-        }, 250);
-      }
-    }, { rootMargin: '200px' });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [displayLimit, sortedTxs.length, loadingMore]);
+    if (!el || displayLimit >= sortedTxs.length) return;
+    const root = getScrollParent(el);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting) handleReachEnd();
+      },
+      { root, rootMargin: '100px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [displayLimit, sortedTxs.length, handleReachEnd]);
 
   useEffect(() => {
     if (!filterOpen && !searchOpen) return;
@@ -275,7 +283,7 @@ export function MemberProfile() {
       };
     });
     return rows.reverse();
-  }, [sortedTxs, displayedTxs, locale, showBalance, memberAccounts, selectedAccountId]);
+  }, [displayedTxs, sortedTxs, locale, showBalance, memberAccounts, selectedAccountId]);
 
   const filteredLedger = useMemo(() => {
     const q = ledgerQuery.toLowerCase().trim();
@@ -673,7 +681,12 @@ export function MemberProfile() {
                 })()}
               </div>
             </div>
-            <LedgerTable rows={filteredLedger} desktop showBalance={showBalance} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} />
+            <LedgerTable rows={filteredLedger} className={styles.ledgerTableInner} desktop showBalance={showBalance} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} />
+            {displayLimit < sortedTxs.length && (
+              <button type="button" className={styles.loadMoreBtn} onClick={handleReachEnd}>
+                Load more ({sortedTxs.length - displayLimit} remaining)
+              </button>
+            )}
           </div>
         </div>
         </div>
@@ -811,14 +824,10 @@ export function MemberProfile() {
                 );
               })
             )}
-            {loadingMore && sortedTxs.length > displayLimit && (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={`skel-${i}`} className={styles.skeletonRow}>
-                  <span className={styles.skeletonSquare} />
-                  <span className={styles.skeletonBar} />
-                  <span className={styles.skeletonAmount} />
-                </div>
-              ))
+            {displayLimit < sortedTxs.length && (
+              <button type="button" className={styles.loadMoreBtn} onClick={handleReachEnd}>
+                Load more ({sortedTxs.length - displayLimit} remaining)
+              </button>
             )}
             <div ref={sentinelRef} style={{ height: 1 }} />
           </div>
