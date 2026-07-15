@@ -128,33 +128,41 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   }, [sortedTxs, txFilter, ledgerQuery]);
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
-    let running = 0;
-    return filteredTxs.map((tx) => {
-      const isCredit = tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_received';
-      const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback';
-      if (isCredit) running += tx.amount;
-      if (isDebit) running -= tx.amount;
+    const isCredit = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue' || t.type === 'loan_received';
+    const isDebit = (t: typeof filteredTxs[0]) => t.type === 'repay' || t.type === 'loan_repayment' || t.type === 'loan_paidback';
+    const total = filteredTxs.reduce((s, tx) => {
+      if (isCredit(tx)) s += tx.amount;
+      if (isDebit(tx)) s -= tx.amount;
+      return s;
+    }, 0);
+    let running = Math.max(0, total);
+    return [...filteredTxs].reverse().map((tx) => {
+      const cr = isCredit(tx);
+      const dr = isDebit(tx);
+      const balance = running;
+      if (cr) running = Math.max(0, running - tx.amount);
+      if (dr) running = Math.max(0, running + tx.amount);
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
       const dstMember = dstAcct?.memberId ? memberById[dstAcct.memberId] : undefined;
-      const bracket = isCredit
+      const bracket = cr
         ? (srcMember && srcAcct ? `${srcMember.name} - ${srcAcct.name}` : undefined)
         : (dstMember && dstAcct ? `${dstMember.name} - ${dstAcct.name}` : undefined);
       return {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: bracket ? `${tx.description} [${bracket}]` : tx.description,
-        credit: isCredit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-        debit: isDebit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-        balance: formatAmountParts(running, locale, currency).amount,
+        credit: cr ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        debit: dr ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        balance: formatAmountParts(balance, locale, currency).amount,
         currencyLabel: currency,
-        type: isCredit ? 'expense' as const : 'income' as const,
+        type: cr ? 'expense' as const : 'income' as const,
         typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' :
                    tx.type === 'loan_received' ? 'Received' :
                    tx.type === 'repay' || tx.type === 'loan_repayment' ? 'Repayment' : 'Paid Back',
       };
-    }).reverse();
+    });
   }, [filteredTxs, locale, currency, accountById, memberById]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
@@ -177,13 +185,15 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     const isCredit = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue' || t.type === 'loan_received';
+    const isDebit = (t: typeof filteredTxs[0]) => t.type === 'repay' || t.type === 'loan_repayment' || t.type === 'loan_paidback';
     let running = 0;
     let totalCreditVal = 0;
     let totalDebitVal = 0;
     const pdfRows = filteredTxs.map((tx) => {
       const cr = isCredit(tx);
+      const dr = isDebit(tx);
       if (cr) { running += tx.amount; totalCreditVal += tx.amount; }
-      else { running -= tx.amount; totalDebitVal += tx.amount; }
+      if (dr) { running = Math.max(0, running - tx.amount); totalDebitVal += tx.amount; }
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
