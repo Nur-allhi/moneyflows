@@ -76,7 +76,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   }, [stack.debtorId]);
 
   const sortedTxs = useMemo(() => {
-    const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback']);
+    const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment']);
     return [...txns]
       .filter((tx) => loanTypes.has(tx.type))
       .sort((a, b) => {
@@ -92,7 +92,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     if (txFilter === 'lend') {
       result = result.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
     } else if (txFilter === 'repay') {
-      result = result.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback');
+      result = result.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment');
     }
 
     if (dateMode === 'month' && month) {
@@ -120,7 +120,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     if (txFilter === 'lend') {
       result = result.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
     } else if (txFilter === 'repay') {
-      result = result.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback');
+      result = result.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment');
     }
     const q = ledgerQuery.toLowerCase().trim();
     if (q) result = result.filter((tx) => tx.description.toLowerCase().includes(q));
@@ -128,41 +128,31 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   }, [sortedTxs, txFilter, ledgerQuery]);
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
-    const isCredit = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue' || t.type === 'loan_received';
-    const isDebit = (t: typeof filteredTxs[0]) => t.type === 'repay' || t.type === 'loan_repayment' || t.type === 'loan_paidback';
-    const total = filteredTxs.reduce((s, tx) => {
-      if (isCredit(tx)) s += tx.amount;
-      if (isDebit(tx)) s -= tx.amount;
-      return s;
-    }, 0);
-    let running = Math.max(0, total);
-    return [...filteredTxs].reverse().map((tx) => {
-      const cr = isCredit(tx);
-      const dr = isDebit(tx);
-      const balance = running;
-      if (cr) running = Math.max(0, running - tx.amount);
-      if (dr) running = Math.max(0, running + tx.amount);
+    const cr = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue';
+    const dr = (t: typeof filteredTxs[0]) => t.type === 'repay' || t.type === 'loan_repayment';
+    let running = 0;
+    return filteredTxs.map((tx) => {
+      if (cr(tx)) running += tx.amount;
+      if (dr(tx)) running -= tx.amount;
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
       const dstMember = dstAcct?.memberId ? memberById[dstAcct.memberId] : undefined;
-      const bracket = cr
+      const bracket = cr(tx)
         ? (srcMember && srcAcct ? `${srcMember.name} - ${srcAcct.name}` : undefined)
         : (dstMember && dstAcct ? `${dstMember.name} - ${dstAcct.name}` : undefined);
       return {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: bracket ? `${tx.description} [${bracket}]` : tx.description,
-        credit: cr ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-        debit: dr ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-        balance: formatAmountParts(balance, locale, currency).amount,
+        credit: cr(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        debit: dr(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        balance: formatAmountParts(Math.max(0, running), locale, currency).amount,
         currencyLabel: currency,
-        type: cr ? 'expense' as const : 'income' as const,
-        typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' :
-                   tx.type === 'loan_received' ? 'Received' :
-                   tx.type === 'repay' || tx.type === 'loan_repayment' ? 'Repayment' : 'Paid Back',
+        type: cr(tx) ? 'expense' as const : 'income' as const,
+        typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' : 'Repayment',
       };
-    });
+    }).reverse();
   }, [filteredTxs, locale, currency, accountById, memberById]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
@@ -184,16 +174,14 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const downloadPdf = useCallback(() => {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
-    const isCredit = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue' || t.type === 'loan_received';
-    const isDebit = (t: typeof filteredTxs[0]) => t.type === 'repay' || t.type === 'loan_repayment' || t.type === 'loan_paidback';
     let running = 0;
     let totalCreditVal = 0;
     let totalDebitVal = 0;
     const pdfRows = filteredTxs.map((tx) => {
-      const cr = isCredit(tx);
-      const dr = isDebit(tx);
+      const cr = tx.type === 'lend' || tx.type === 'loan_issue';
+      const dr = tx.type === 'repay' || tx.type === 'loan_repayment';
       if (cr) { running += tx.amount; totalCreditVal += tx.amount; }
-      if (dr) { running = Math.max(0, running - tx.amount); totalDebitVal += tx.amount; }
+      if (dr) { running -= tx.amount; totalDebitVal += tx.amount; }
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
@@ -207,7 +195,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         bracket ? `${tx.description} (${bracket})` : tx.description,
         cr ? formatAmount(tx.amount, locale, currency) : '',
         cr ? '' : formatAmount(tx.amount, locale, currency),
-        formatAmount(running, locale, currency),
+        formatAmount(Math.max(0, running), locale, currency),
       ];
     });
 
