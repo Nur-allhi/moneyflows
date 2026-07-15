@@ -247,11 +247,11 @@ export class LoanService {
     let totalRepaid = 0;
 
     const rows: LoanReportRow[] = sorted.map((tx) => {
-      const isDebit = tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_paidback';
-      const isCredit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_received';
+      const isCredit = tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_received';
+      const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback';
 
-      if (isDebit) { running += tx.amount; totalLent += tx.amount; }
-      if (isCredit) { running -= tx.amount; totalRepaid += tx.amount; }
+      if (isCredit) { running += tx.amount; totalLent += tx.amount; }
+      if (isDebit) { running -= tx.amount; totalRepaid += tx.amount; }
 
       const srcAcct = tx.sourceAccount ? accountMap.get(tx.sourceAccount) : undefined;
       const dstAcct = tx.destAccount ? accountMap.get(tx.destAccount) : undefined;
@@ -259,7 +259,7 @@ export class LoanService {
       return {
         id: tx.id,
         date: tx.date,
-        type: (isDebit ? 'lend' : 'repay') as 'lend' | 'repay',
+        type: (isCredit ? 'lend' : 'repay') as 'lend' | 'repay',
         typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' :
                    tx.type === 'loan_received' ? 'Received' :
                    tx.type === 'repay' || tx.type === 'loan_repayment' ? 'Repayment' : 'Paid Back',
