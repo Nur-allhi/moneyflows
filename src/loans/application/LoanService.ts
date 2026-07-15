@@ -221,15 +221,15 @@ export class LoanService {
     }
 
     let txs = await this.db.getTransactions(txFilter);
-    const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback']);
+    const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment']);
 
     txs = txs.filter((tx) => loanTypes.has(tx.type));
 
     if (filter.type && filter.type !== 'all') {
       if (filter.type === 'lend') {
-        txs = txs.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_received');
+        txs = txs.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
       } else {
-        txs = txs.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback');
+        txs = txs.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment');
       }
     }
 
@@ -247,8 +247,8 @@ export class LoanService {
     let totalRepaid = 0;
 
     const rows: LoanReportRow[] = sorted.map((tx) => {
-      const isCredit = tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_received';
-      const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback';
+      const isCredit = tx.type === 'lend' || tx.type === 'loan_issue';
+      const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment';
 
       if (isCredit) { running += tx.amount; totalLent += tx.amount; }
       if (isDebit) { running -= tx.amount; totalRepaid += tx.amount; }
@@ -260,14 +260,12 @@ export class LoanService {
         id: tx.id,
         date: tx.date,
         type: (isCredit ? 'lend' : 'repay') as 'lend' | 'repay',
-        typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' :
-                   tx.type === 'loan_received' ? 'Received' :
-                   tx.type === 'repay' || tx.type === 'loan_repayment' ? 'Repayment' : 'Paid Back',
+        typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' : 'Repayment',
         description: tx.description,
         lenderAccount: srcAcct?.name ?? tx.sourceAccount ?? '',
         borrowerAccount: dstAcct?.name ?? tx.destAccount ?? '',
         amount: tx.amount,
-        runningBalance: running,
+        runningBalance: Math.max(0, running),
       };
     });
 
