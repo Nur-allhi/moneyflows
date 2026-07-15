@@ -130,27 +130,28 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const ledgerRows: LedgerRow[] = useMemo(() => {
     let running = 0;
     return filteredTxs.map((tx) => {
-      const isDebit = tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_paidback';
-      const isCredit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_received';
-      if (isDebit) running += tx.amount;
-      if (isCredit) running -= tx.amount;
+      const isCredit = tx.type === 'lend' || tx.type === 'loan_issue' || tx.type === 'loan_received';
+      const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback';
+      if (isCredit) running += tx.amount;
+      if (isDebit) running -= tx.amount;
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
       const dstMember = dstAcct?.memberId ? memberById[dstAcct.memberId] : undefined;
-      const bracket = isDebit
+      const bracket = isCredit
         ? (srcMember && srcAcct ? `${srcMember.name} - ${srcAcct.name}` : undefined)
         : (dstMember && dstAcct ? `${dstMember.name} - ${dstAcct.name}` : undefined);
       return {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: bracket ? `${tx.description} [${bracket}]` : tx.description,
-        debit: isDebit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
         credit: isCredit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        debit: isDebit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
         balance: formatAmountParts(running, locale, currency).amount,
         currencyLabel: currency,
-        type: isDebit ? 'expense' as const : 'income' as const,
+        type: isCredit ? 'expense' as const : 'income' as const,
         typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' :
+                   tx.type === 'loan_received' ? 'Received' :
                    tx.type === 'repay' || tx.type === 'loan_repayment' ? 'Repayment' : 'Paid Back',
       };
     }).reverse();
@@ -175,27 +176,27 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const downloadPdf = useCallback(() => {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
-    const isLend = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue' || t.type === 'loan_paidback';
+    const isCredit = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue' || t.type === 'loan_received';
     let running = 0;
-    let totalDebit = 0;
-    let totalCredit = 0;
+    let totalCreditVal = 0;
+    let totalDebitVal = 0;
     const pdfRows = filteredTxs.map((tx) => {
-      const d = isLend(tx);
-      if (d) { running += tx.amount; totalDebit += tx.amount; }
-      else { running -= tx.amount; totalCredit += tx.amount; }
+      const cr = isCredit(tx);
+      if (cr) { running += tx.amount; totalCreditVal += tx.amount; }
+      else { running -= tx.amount; totalDebitVal += tx.amount; }
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
       const dstMember = dstAcct?.memberId ? memberById[dstAcct.memberId] : undefined;
-      const bracket = d
+      const bracket = cr
         ? (srcMember && srcAcct ? `${srcMember.name} / ${srcAcct.name}` : undefined)
         : (dstMember && dstAcct ? `${dstMember.name} / ${dstAcct.name}` : undefined);
       return [
         shortDate(tx.date, locale),
-        d ? 'Lent' : 'Repayment',
+        cr ? 'Lent' : 'Repayment',
         bracket ? `${tx.description} (${bracket})` : tx.description,
-        d ? formatAmount(tx.amount, locale, currency) : '',
-        d ? '' : formatAmount(tx.amount, locale, currency),
+        cr ? formatAmount(tx.amount, locale, currency) : '',
+        cr ? '' : formatAmount(tx.amount, locale, currency),
         formatAmount(running, locale, currency),
       ];
     });
@@ -228,22 +229,22 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     doc.setFont('helvetica', 'normal');
     doc.text(obVal, rightX, 28, { align: 'right' });
 
-    const lentVal = formatAmount(totalDebit, locale, currency);
-    const lentValW = doc.getTextWidth(lentVal);
+    const creditVal = formatAmount(totalCreditVal, locale, currency);
+    const creditValW = doc.getTextWidth(creditVal);
     doc.setFont('helvetica', 'bold');
-    doc.text('Total Lent:', rightX - lentValW - gap, 36, { align: 'right' });
+    doc.text('Total Credit:', rightX - creditValW - gap, 36, { align: 'right' });
     doc.setFont('helvetica', 'normal');
-    doc.text(lentVal, rightX, 36, { align: 'right' });
+    doc.text(creditVal, rightX, 36, { align: 'right' });
 
-    const repaidVal = formatAmount(totalCredit, locale, currency);
-    const repaidValW = doc.getTextWidth(repaidVal);
+    const debitVal = formatAmount(totalDebitVal, locale, currency);
+    const debitValW = doc.getTextWidth(debitVal);
     doc.setFont('helvetica', 'bold');
-    doc.text('Total Repaid:', rightX - repaidValW - gap, 44, { align: 'right' });
+    doc.text('Total Debit:', rightX - debitValW - gap, 44, { align: 'right' });
     doc.setFont('helvetica', 'normal');
-    doc.text(repaidVal, rightX, 44, { align: 'right' });
+    doc.text(debitVal, rightX, 44, { align: 'right' });
 
     autoTable(doc, {
-      head: [['Date', 'Type', 'Description', 'Lent', 'Repaid', 'Balance']],
+      head: [['Date', 'Type', 'Description', 'Credit', 'Debit', 'Balance']],
       body: pdfRows,
       startY: 52,
       styles: { fontSize: 8, cellPadding: 2, halign: 'center', overflow: 'linebreak' },
