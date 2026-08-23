@@ -26,7 +26,10 @@ function Root() {
     initDatabase()
       .then(async () => {
         await getDatabase().recalculateBalances();
-        if (!cancelled) setReady(true);
+        if (!cancelled) {
+          setDbError(null); // clears a watchdog message if init finished late
+          setReady(true);
+        }
       })
       .catch((err: unknown) => {
         if (!cancelled) setDbError(err instanceof Error ? err.message : 'Unknown database error');

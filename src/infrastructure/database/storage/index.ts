@@ -50,7 +50,7 @@ export async function createStorageAdapter(config: {
   if (OpfsAdapter.supported()) {
     try {
       const local = new LocalStorageAdapter(config);
-      const opfs = new OpfsAdapter({ maxSnapshots: config.maxSnapshots, mirror: local });
+      const opfs = new OpfsAdapter({ maxSnapshots: config.maxSnapshots });
       await opfs.init();
 
       let migrated = false;
@@ -70,6 +70,13 @@ export async function createStorageAdapter(config: {
         } catch {
           // Legacy copy unreadable: start fresh on OPFS, leave LS untouched for manual recovery.
         }
+      }
+      // Mirror only when the legacy copy still holds decodable data — protects it
+      // from being clobbered by fresh/recovery flushes.
+      if (localStorageSupported()) {
+        try {
+          if (await local.readMain()) opfs.enableMirror(local);
+        } catch { /* leave mirror off */ }
       }
       try { localStorage.setItem(STORAGE_VERSION_FLAG, 'v2-opfs'); } catch { /* private mode etc. */ }
       return { adapter: opfs, backend: 'opfs', migratedFromLocalStorage: migrated };

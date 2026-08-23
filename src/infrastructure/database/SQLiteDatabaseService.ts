@@ -108,8 +108,13 @@ export class SQLiteDatabaseService implements IDatabaseService {
       this.db = new this.SQL.Database();
       this.db.run(SCHEMA);
     }
-    this.dirty = true;
-    await this.flush();
+    if (loaded) {
+      // Fresh installs skip the initial flush: an empty-schema write must never
+      // clobber a mirror/legacy copy, and the first real mutation persists anyway.
+      await this.flush();
+    } else {
+      this.markDirty();
+    }
     this._registerLifecycleFlush();
   }
 

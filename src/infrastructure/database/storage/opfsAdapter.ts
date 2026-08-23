@@ -4,19 +4,22 @@ export interface OpfsAdapterOptions {
   mainFileName?: string;
   snapshotDirName?: string;
   maxSnapshots: number;
-  /** When set, every successful writeMain is mirrored best-effort (transition safety net). */
-  mirror?: IPersistenceAdapter;
 }
 
 /**
  * OPFS backend: stores the database as a real binary file plus a snapshots/
  * directory. Writes are exclusive-locked by the browser, quota is the normal
  * disk pool instead of the tiny localStorage budget.
+ *
+ * The optional transition mirror is OFF until `enableMirror()` is called after
+ * a verified legacy import — so fresh installs or recovery flushes can never
+ * overwrite the untouched localStorage copy with empty data.
  */
 export class OpfsAdapter implements IPersistenceAdapter {
   readonly backend: StorageBackend = 'opfs';
   private root: FileSystemDirectoryHandle | null = null;
   private snapshotsDir: FileSystemDirectoryHandle | null = null;
+  private mirrorAdapter: IPersistenceAdapter | null = null;
 
   constructor(private readonly options: OpfsAdapterOptions) {}
 
@@ -53,6 +56,16 @@ export class OpfsAdapter implements IPersistenceAdapter {
     }
   }
 
+  /** Activate the localStorage transition mirror (after verified legacy import/load). */
+  enableMirror(adapter: IPersistenceAdapter): void {
+    this.mirrorAdapter = adapter;
+  }
+
+  private async mirrorWrite(data: Uint8Array): Promise<void> {
+    if (!this.mirrorAdapter) return;
+    try { await this.mirrorAdapter.writeMain(data); } catch { /* best-effort */ }
+  }
+
   async writeMain(data: Uint8Array): Promise<void> {
     const handle = await this.mainFile();
     const writable = await handle.createWritable({ keepExistingData: false });
@@ -63,9 +76,7 @@ export class OpfsAdapter implements IPersistenceAdapter {
       try { await writable.abort(); } catch { /* already closed */ }
       throw e;
     }
-    if (this.options.mirror) {
-      try { await this.options.mirror.writeMain(data); } catch { /* transition mirror is best-effort */ }
-    }
+    await this.mirrorWrite(data);
   }
 
   async clearAll(): Promise<void> {
