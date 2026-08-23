@@ -4,6 +4,7 @@ import { DatePicker } from '../../components/ui/date-picker';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { Transaction } from '../../core/domain/Transaction';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
+import styles from './TransactionEditModal.module.css';
 
 interface TransactionEditModalProps {
   txId: string;
@@ -32,9 +33,8 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
     }
   }, [transaction]);
 
-  if (!transaction) return null;
-
   const handleSave = useCallback(async () => {
+    if (!transaction) return;
     const [y, m, d] = date.split('-');
     const now = new Date();
     const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
@@ -63,9 +63,11 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
       } catch { /* best-effort */ }
     }
     onClose();
-  }, [transaction, amount, desc, date, txType, updateTransaction]);
+  }, [transaction, amount, desc, date, txType, updateTransaction, onClose]);
 
-  const showTypeToggle = editableTypes.includes(transaction.type as typeof editableTypes[number]) && !isOpeningBalance;
+  const showTypeToggle = editableTypes.includes(transaction?.type as typeof editableTypes[number]) && !isOpeningBalance;
+
+  if (!transaction) return null;
 
   return (
     <Modal isOpen onClose={onClose} title="Edit Transaction" saveLabel="Save" onSave={handleSave}>
@@ -75,26 +77,16 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
           <DatePicker value={date} onChange={setDate} />
         </FormField>
       {showTypeToggle && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <div className={styles.typeToggle}>
           <button
             onClick={() => setTxType('income')}
-            style={{
-              flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
-              fontWeight: 600, fontSize: 14,
-              background: txType === 'income' ? '#22c55e' : 'var(--bg-secondary, #2a2a2a)',
-              color: txType === 'income' ? '#fff' : 'var(--text-secondary, #aaa)',
-            }}
+            className={`${styles.typeBtn} ${styles.income} ${txType === 'income' ? styles.active : ''}`}
           >
             Income (Credit)
           </button>
           <button
             onClick={() => setTxType('expense')}
-            style={{
-              flex: 1, padding: '10px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
-              fontWeight: 600, fontSize: 14,
-              background: txType === 'expense' ? '#ef4444' : 'var(--bg-secondary, #2a2a2a)',
-              color: txType === 'expense' ? '#fff' : 'var(--text-secondary, #aaa)',
-            }}
+            className={`${styles.typeBtn} ${styles.expense} ${txType === 'expense' ? styles.active : ''}`}
           >
             Expense (Debit)
           </button>

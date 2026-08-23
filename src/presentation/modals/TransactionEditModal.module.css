@@ -1,0 +1,27 @@
+.typeToggle {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.typeBtn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  background: var(--bg-secondary, #2a2a2a);
+  color: var(--text-secondary, #aaa);
+}
+
+.typeBtn.income.active {
+  background: #22c55e;
+  color: #fff;
+}
+
+.typeBtn.expense.active {
+  background: #ef4444;
+  color: #fff;
+}
