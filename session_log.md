@@ -1300,3 +1300,22 @@
 ### Status
 - Balance bug RESOLVED and browser-verified. Vite dev server left running at localhost:3000 for user manual check. Next: T-086..T-088 lint-error tickets.
 
+
+## Session 2026-08-23 22:55
+
+### Changes
+- T-086..T-089 + T-090 executed; lint gate restored to --max-warnings 0 (was 4 errors / 21 warnings, now 0/0)
+- [dev] d5290b3 docs: CHANGELOG.md created (Keep-a-Changelog) + personal filename scrubbed from audit
+- [dev] 37af73a fix(edit-modal): early return moved below hooks (crash), inline toggle styles -> CSS module
+- [dev] 2cb2fdb fix(transaction-form): primaryMemberId setting now drives tx owner; counterparty errors shown inline
+- [dev] fba9a81 refactor(modals): typed registry via satisfies + getModalComponent (no any)
+- [dev] 2b60181 refactor(app): purgeExpiredItems called through port (cast removed)
+- [dev] 87d5328 chore(lint): dep arrays fixed across screens; intentional patterns carry scoped disables with reasons; Dashboard type sets hoisted to module scope
+- Gates: typecheck PASS, tests 10/10, build PASS, lint exit 0
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, senior-backend, gitnexus detect_changes
+
+### Status
+- All pre-merge gaps closed. AWAITING USER APPROVAL to merge dev -> master (no tag). Branches kept.
+
