@@ -1,83 +1,60 @@
-# MoneyFlows — Product Requirement Document (PRD)
+# MoneyFlows — Product Requirement Document
 
 **Target Skill:** `skill-creator`
-**Version:** 1.0
+**Version:** 2.0 · 2026-08-23
+**Source of truth:** `Project_plan/Project_Brief.md`, `DESIGN_FILES/`
 
 ---
 
-## 1. Product Vision
+## 1. Vision
 
-A privacy-first, dark-glassmorphism family finance app that replaces a fragile multi-sheet Excel workbook with a structured, real-time, and beautifully crafted personal finance tracker for the Bengali family. All data lives locally. No cloud dependency. No spreadsheets.
+A beautifully crafted, privacy-first family finance app that makes tracking money flows as intuitive as messaging. Premium dark-glassmorphism aesthetics meet clean-architecture reliability — for the family, by the family. Replaces a fragile 7-sheet Excel workbook (15+ accounts, 4 members, 5+ external debtors, ~1.14M BDT assets, ~776K BDT outstanding loans) with structured data and real-time UX.
 
----
+## 2. Users
 
-## 2. Target Users
+| Role | Description |
+|------|-------------|
+| **Admin** | Family admin. Personal + business accounts; issues and recovers loans. |
+| **Father (Father)** | Father. Brac Bank, Standard Bank, bKash; loan relationships. |
+| **Mother (Mother)** | Mother. Standard Bank personal. |
+| **External debtors** | BTC, External Debtor B, External Debtor C, External Debtor A — members with `is_external = true`. |
 
-| Persona | Role | Detail |
-|---------|------|--------|
-| **Admin** (Admin) *(example)* | Primary user | Manages personal/business accounts; issues/recover loans; oversees family finances. The primary member, currency, and locale are configurable in Settings — the seed data uses Admin as an illustration. |
-| **Father (Father)** | Father | 4 accounts (Brac Bank 951K, Standard Bank, bKash, loans) |
-| **Mother (Mother)** | Mother | Standard Bank personal account |
-| **External Debtors** | Borrowers | BTC, External Debtor B, External Debtor C, External Debtor A — tracked with `is_external=true` |
+Single-device, single-admin app (see SECURITY.md). No multi-user auth in v1.
 
----
+## 3. Core Features (shipped)
 
-## 3. User Stories & Target Workflows
+| # | Feature | Status |
+|---|---------|--------|
+| F1 | Dashboard — total assets, cash-in-hand, active loans, net worth, grouped balances, recent feed | ✅ |
+| F2 | Member Profile — account cards (credit-card style), ledger with running balance, scroll-load | ✅ |
+| F3 | Loan Receivables — debtor stacks by funding source, progress bars, status | ✅ |
+| F4 | Unified Loan System — one `loans` table; lend/borrow both directions; ledger per stack; PDF export | ✅ |
+| F5 | Transaction Wizard — Income / Expense / Transfer / Loan tabs, numpad, insufficient-balance warning | ✅ |
+| F6 | Recycle Bin — soft-delete all entities, restore, permanent delete, auto-purge (30d) | ✅ |
+| F7 | Backup & Safety — ring-buffer restore points, SHA-256 integrity hash, folder sync (File System Access API) | ✅ |
+| F8 | Settings — locale-aware formatting, dynamic currency, primary member, wizard constants | ✅ |
+| F9 | Mobile-first UI — bottom sheets, bottom nav, responsive tables/cards at ≤768px | ✅ |
 
-### 3.1 Dashboard — Family Financial Snapshot
-- **As Admin**, I want to see total family assets, cash-in-hand, active loans, and net worth at a glance so I know our financial position in 5 seconds.
-- **As Admin**, I want to see combined balances grouped by account type (Bank, Mobile Wallet, Cash, Savings) with group totals.
-- **As Admin**, I want a scrollable feed of the last 20 global transactions, color-coded by type (teal=income, coral=expense).
-- **As any member**, I want to tap a profile avatar to navigate to my account details.
+## 4. Target Workflows
 
-### 3.2 Member Profile — Per-Person Ledger
-- **As Admin**, I want to see each family member's linked accounts rendered as premium credit-card-style glass cards with balances.
-- **As Admin**, I want a full debit/credit ledger with running balance, filterable by (All, Income, Expenses, Transfers).
-- **As Admin**, I want quick action buttons: Add Income, Log Expense, Transfer Money.
-- **On desktop**, I want a side panel showing spending breakdown, monthly budgets, and savings goals.
+1. **Record a transaction** → Wizard (FAB/header) → type tab → amount (numpad) → description/date → submit → balances update optimistically.
+2. **Issue / track a loan** → Loans screen → unified LoanForm (lender, borrower counterparty, principal) → stack appears with progress bar → repayments logged from same form.
+3. **Monthly review** → Dashboard totals → drill into member profile → ledger filters (type/month) → export PDF report.
+4. **Recover mistakes** → Recycle Bin → restore or purge → auto-purge after 30 days.
+5. **Disaster recovery** → Settings → Restore Points list → restore from ring buffer or synced folder copy; integrity verified via SHA-256 before load.
 
-### 3.3 Loan Receivables — Debtor Management
-- **As Admin**, I want a summary card per debtor: name, total outstanding, repayment progress bar.
-- **As Admin**, I want loan stacks grouped by funding source, expandable to see individual installments with status (Active / On Track).
-- **As Admin**, I want the progress bar to animate when a repayment is logged.
+## 5. Non-Goals (v1)
 
-### 3.4 Transaction Wizard — Single Entry Point
-- **As Admin**, I want a single modal/sheet to log any transaction in under 10 seconds.
-- **As Admin**, I want 4 segmented tabs: Income, Expense, Transfer, Loan — form fields change per tab.
-- **As Admin**, I want a 3×4 numeric keypad with Indian comma formatting (Intl.NumberFormat 'en-IN').
-- **As Admin**, I want source/destination fields that auto-filter to valid accounts (transfer requires different accounts).
-### 3.5 Recycle Bin — Soft-Delete Safety Net
+- Multi-currency (BDT default, but currency is now a setting — no conversion engine)
+- Cloud sync / Supabase (schema keeps JSON `metadata` columns for future migration)
+- Multi-user auth & roles
+- Budgets/goals beyond what exists in Member Profile
 
-- **As Admin**, I want to review all soft-deleted items in one place, tabbed by type (All, Transactions, Accounts).
-- **As Admin**, I want to restore or permanently delete items with confirmation.
-- **As Admin**, I want to see auto-purge countdown and an option to empty the bin.
+## 6. Success Criteria
 
-### 3.6 Groups — Account Collections
-
-- **As Admin**, I want to group related accounts (e.g., "Bank Accounts", "Mobile Wallets") into labeled collections so I can view a consolidated group ledger.
-- **As Admin**, I want to open a group and see its combined balances and a filtered transaction ledger for the accounts in that group.
-
----
-
-## 4. Non-Functional Requirements
-
-| # | Requirement | Target |
-|---|-------------|--------|
-| NFR1 | Local-first architecture | All core features work fully offline; SQLite `money_flows.db` |
-| NFR2 | Responsive | 9 breakpoints (360px→1920px), no horizontal scroll |
-| NFR3 | Performance | Route code-splitting; virtualized ledger if >100 rows; 60fps animations |
-| NFR4 | Data integrity | Soft-delete on members, accounts, transactions, groups; audit log |
-| NFR5 | Migration path | JSON `metadata` columns on all tables for future Supabase sync |
-| NFR6 | File size per spec | Each code file ≤300 LOC |
-| NFR7 | Currency | Configurable currency and locale (defaults: BDT, `en-IN`). Indian comma grouping via `Intl.NumberFormat`. Set once in Settings and applied app-wide. |
-
----
-
-## 5. Out of Scope (v1)
-
-- Multi-currency support
-- Cloud sync / Supabase (Phase 2)
-- Push notifications
-- Recurring transactions / auto-scheduling
-- PDF/bank statement import
-- User authentication (single-device, single-user family app)
+1. Pixel fidelity to `DESIGN_FILES/*.html` at all 9 breakpoints (360–1920px), zero horizontal scroll.
+2. All balance math correct under filtering (running balance computed from full history — see audit BUG-5 lesson).
+3. Zero data loss: every destructive action reversible via recycle bin or restore point.
+4. App usable one-handed on 360px viewport; desktop layouts unchanged ≥769px.
+5. Lint/typecheck/build gates green (`--max-warnings 0`).
+6. No user financial data ever committed to git (see SECURITY.md §5).

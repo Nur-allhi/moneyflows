@@ -1123,3 +1123,74 @@ All follow bottom sheet pattern from T-068:
 **Design:** `modals.js` (full file, 180 lines) + respective HTML files
 **Acceptance:** All modals render as bottom sheets; form validation works; create/update/delete operations succeed.
 
+
+---
+
+# Phase 10: Audit Remediation & Hardening (2026-08-23)
+
+Source: docs/audit/FINDINGS.md. Do in order; commit after each ticket.
+
+### T-084 - Commit pending running-balance fix
+**Skill:** gitnexus
+**Effort:** S
+**File(s):** src/loans/application/LoanService.ts, src/loans/presentation/components/LoanDetailView.tsx
+**Content:** Working tree holds verified balance-from-full-history fix. Run detect_changes(), commit as ix(loan-ledger): compute running balance from full transaction history.
+**Acceptance:** Clean git status for src/; build green.
+
+### T-085 - Gitignore sensitive/debug artifacts
+**Skill:** gitnexus, code-reviewer
+**Effort:** S
+**File(s):** .gitignore
+**Content:** Add USER_DATA/, db_b64.txt, iew_db.cjs, dashboard. Verify none are tracked (git ls-files). Per SECURITY.md §5.
+**Acceptance:** git status no longer lists them; SECURITY.md checklist passes.
+
+### T-086 - Fix conditional hook crash in TransactionEditModal (BUG-1)
+**Skill:** senior-frontend, code-reviewer
+**Effort:** S
+**File(s):** src/presentation/modals/TransactionEditModal.tsx
+**Content:** Move early return below all hooks; guard inside handleSave. Also replace inline styles on toggle buttons with CSS module classes (HYG-4).
+**Acceptance:** Lint error gone; deleting a tx while its edit modal is open no longer crashes.
+
+### T-087 - Wire primaryMemberId into TransactionFormModal (BUG-2)
+**Skill:** senior-frontend
+**Effort:** M
+**File(s):** TransactionFormModal.tsx, useSettingsStore.ts
+**Content:** Replace hardcoded 'Admin' fallback chain with settings.primaryMemberId lookup; fall back to first non-external member when unset/stale. Remove ny from modals/registry.ts via discriminated union props map.
+**Acceptance:** Changing primary member in Settings changes tx ownership; lint errors E2/E3 gone.
+
+### T-088 - Surface counterparty creation errors (BUG-3)
+**Skill:** senior-frontend, ui-ux-pro-max
+**Effort:** S
+**File(s):** TransactionFormModal.tsx
+**Content:** Replace empty catch at :231 with inline field error under the counterparty input; keep sheet open on failure.
+**Acceptance:** Forcing an error shows visible message; success path unchanged.
+
+### T-089 - Add purgeExpiredItems to DB port (BUG-4)
+**Skill:** senior-backend, code-reviewer
+**Effort:** S
+**File(s):** core/ports/*, infrastructure/database/SQLiteDatabaseService.ts, App.tsx
+**Content:** Optional purgeExpiredItems?(days): Promise<void> on port; remove (db as any) cast + 'in' check from App.tsx.
+**Acceptance:** No ny casts on db usage; behavior identical.
+
+### T-090 - Clear remaining actionable hook-dep warnings
+**Skill:** senior-frontend
+**Effort:** M
+**File(s):** MemberProfile.tsx, Dashboard.tsx, others per FINDINGS.md inventory
+**Content:** Fix correctness-relevant deps (MemberProfile:286 currency; Dashboard:179/184/193 type lists). Fetch-on-mount warnings: standardize one documented pattern (eslint-disable-line with reason) OR wrap fetches in stable callbacks - pick ONE approach repo-wide.
+**Acceptance:** 
+pm run lint exits 0 with --max-warnings 0.
+
+### T-091 - Vitest foundation + loan-balance regression tests (HYG-5)
+**Skill:** senior-backend, code-reviewer
+**Effort:** L
+**File(s):** new itest.config.ts, src/loans/application/__tests__/LoanService.test.ts, package.json script, README update (same commit - REPO_RULES.md)
+**Content:** Install vitest; test generateReport runningBalance against mixed lend/repay/legacy-type fixtures incl. filtered views; test syncLoanTransaction amount-edit path.
+**Acceptance:** 
+pm test green in CI-able fresh clone; balance math locked by tests.
+
+### T-092 - Split oversized files (HYG-3) [optional, touch-when-next-edited]
+**Skill:** senior-frontend, ui-ux-pro-max
+**Effort:** XL - defer
+**File(s):** MemberProfile (764), TransactionFormModal (734), SQLiteDatabaseService (592), Dashboard (487)
+**Content:** Extract subcomponents/hooks per FRONTEND_SPEC conventions; keep each extraction atomic; run detect_changes() before commit.
+**Acceptance:** All touched files <=300 LOC; no behavior change.

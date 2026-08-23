@@ -1,168 +1,81 @@
 # MoneyFlows — Frontend Spec Document
 
 **Target Skills:** `ui-ux-pro-max`, `frontend-design`, `senior-frontend`
-**Version:** 1.0
+**Version:** 2.0 · 2026-08-23
 
-> **Design reference:** Open the corresponding HTML file in `DESIGN_FILES/` for each screen you implement. The HTML files are the pixel-perfect visual spec — match their layout, colors, spacing, typography, component states, and responsive behavior.
+> **Design reference:** `DESIGN_FILES/*.html` are the pixel-perfect source of truth for each screen. `DESIGN.md` derives tokens from them. Match layout, color, spacing, typography, and component states exactly.
 
 ---
 
 ## 1. Design System
 
-### 1.1 Visual Style
+### 1.1 Aesthetic
+Premium dark glassmorphism: frosted panels (`backdrop-filter: blur(20px)`), 1px `rgba(255,255,255,0.06)` borders, violet glow on hover, obsidian base `#0a0a12` with radial corner glow. Radius 12px panels / 8px cards / 9999px pills. Depth shadow `0 8px 32px rgba(0,0,0,.4)`.
 
-- **Aesthetic:** Premium dark glassmorphism — frosted glass panels with `backdrop-filter: blur(20px)`, thin 1px `rgba(255,255,255,0.06)` borders, subtle violet glow on hover
-- **Background:** Obsidian base (`#0a0a12`), subtle radial gradient corner glow
-- **Radius:** `12px` panels, `8px` cards, `9999px` pills/badges
-- **Shadows:** `0 8px 32px rgba(0,0,0,0.4)` for glass depth
+### 1.2 Tokens (CSS custom properties — no runtime CSS-in-JS)
 
-### 1.2 Color Tokens
+| Token | Value | Use |
+|-------|-------|-----|
+| `--color-bg` | `#0a0a12` | page |
+| `--color-surface` | `rgba(255,255,255,.04)` | glass base |
+| `--color-border` | `rgba(255,255,255,.06)` | glass border |
+| `--color-primary` / `-glow` | `#8b5cf6` / `rgba(139,92,246,.3)` | accent |
+| `--color-income` | `#14b8a6` | teal credit |
+| `--color-expense` | `#f43f5e` | coral debit |
+| `--color-cash` | `#f59e0b` | gold cash |
+| `--color-text` / `-secondary` | `#f1f5f9` / `#94a3b8` | text |
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--color-bg` | `#0a0a12` | Page background |
-| `--color-surface` | `rgba(255,255,255,0.04)` | Glass panel base |
-| `--color-border` | `rgba(255,255,255,0.06)` | Glass borders |
-| `--color-primary` | `#8b5cf6` | Violet accent (buttons, active states) |
-| `--color-primary-glow` | `rgba(139,92,246,0.3)` | Violet glow on hover |
-| `--color-income` | `#14b8a6` | Teal (income, positive) |
-| `--color-expense` | `#f43f5e` | Coral (expense, negative) |
-| `--color-cash` | `#f59e0b` | Gold (cash accounts) |
-| `--color-text` | `#f1f5f9` | Primary text |
-| `--color-text-secondary` | `#94a3b8` | Secondary text |
-| `--color-success` | `#22c55e` | On Track / recovered |
+Typography: Outfit (display, 600/700), system-ui (body), JetBrains Mono (all numerics). Breakpoints: mobile-first single column ≤768px (bottom nav + bottom sheets); sidebar + multi-column ≥769px; max-width 1440px at 1920px. Full 9-step matrix in DESIGN.md.
 
-### 1.3 Typography
+### 1.3 Code conventions
+- CSS Modules only; inline `style={{…}}` is banned (sole exception: shadcn `select.tsx`). Regression watchlist: `TransactionEditModal.tsx`.
+- Shared constants live in `presentation/constants/`: `dates.ts`, `labels.ts` (account/tx type labels, gradients, icons), `config.ts` (wizard bounds).
+- Formatting via `formatAmount()` + `useFormatNumber()` reading locale/currency from settings — hardcoded `'BDT'` forbidden.
 
-| Element | Font | Weight | Size |
-|---------|------|--------|------|
-| Display / Headings | `'Outfit', sans-serif` | 600 / 700 | `clamp(1.5rem, 4vw, 2.5rem)` |
-| Body text | `system-ui, -apple-system, sans-serif` | 400 | `0.875rem` / `1rem` |
-| Numeric / Mono | `'JetBrains Mono', monospace` | 500 | `1.25rem` (amounts), `0.875rem` (ledger) |
-| Labels / Chips | `system-ui` | 500 | `0.75rem` |
-
-### 1.4 Breakpoints
-
-| Name | Width | Layout Changes |
-|------|-------|----------------|
-| Mobile compact | 360px | Single col, bottom nav |
-| Mobile standard | 390px | Single col, bottom nav |
-| Mobile large | 430px | Single col, bottom nav |
-| Foldable | 600px | Single col, wider cards |
-| Tablet portrait | 820px | Two-col dashboard, sidebar nav |
-| Tablet landscape | 1024px | Two-col, sidebar visible |
-| Laptop | 1366px | Three-col dashboard, full layout |
-| Desktop | 1440px | Three-col + side panels |
-| Wide | 1920px | Max-width centered container (1440px) |
-
----
-
-## 2. Navigation Map
+## 2. Routes & Navigation
 
 ```
-/                   → Dashboard
-/member/:id         → Member Profile (mobile: screen-per-member)
-/loans              → Loan Receivables (debtor list)
-/loans/:debtorId    → Loan Stack detail
-/transaction        → Transaction Wizard (modal/sheet overlay)
-/recycle            → Recycle Bin
+/                    Dashboard            (sidebar + header, breadcrumb on member)
+/member              Member list
+/member/:id          Member profile       (ledger, scroll-load via IntersectionObserver)
+/loans               Loan receivables     (debtor stack list)
+/loans/:debtorId     Loan detail view     (ledger rows, filters, PDF export)
+/recycle             Recycle bin          (tabs All/Txs/Accounts)
+/settings            Settings modal overlay
 ```
 
-**Navigation components:**
-- **Desktop:** Vertical sidebar (220–240px, fixed left) with icons + labels
-- **Mobile (≤768px):** Bottom tab bar (4 tabs: Dashboard, Members, Loans, Recycle)
-- **Header bar:** Logo + current date + notifications bell (desktop); back button + title (mobile sub-pages)
-- **Routing:** React Router v6 with nested routes for `/member/:id` and `/loans/:debtorId`
+Chrome: Sidebar (desktop) / BottomNav (mobile) swap at 768px; Header carries back button, title from `routeTitles`, global search toggle, FAB → transaction wizard.
 
----
+## 3. Screen Specs (state → behavior)
 
-## 3. Screen Specifications
+### Dashboard `/`
+Loading skeleton → metrics row (Total Assets, Cash-in-Hand, Active Loans, Net Worth) → grouped balances by account group → recent transactions feed (limit from `config.ts`). Empty state per section. Error = toast + retry.
 
-### 3.1 Dashboard (`/`)
+### Member Profile `/member/:id`
+Account cards styled as credit cards (gradient by `ACCOUNT_TYPE_GRADIENT`) → ledger table with type/month filters and **running balance from full history** (BUG-5 memo-deps fix pending) → infinite scroll + explicit button fallback (8d90b1f).
 
-**Layout:**
-- Header: Admin + Father + Mother avatars (36px, circular, active ring on the selected member)
-- Metric row (4 cards in a row → 2 → 1 column on mobile)
-  - Total Assets (teal accent)
-  - Cash in Hand (gold accent)
-  - Active Loans (coral accent)
-  - Net Worth (violet accent)
-- Quick action strip: New Transaction, Transfer, Reports, Settings (icon+label)
-- Combined Balances section: account rows grouped by `account_groups`, each with bank icon + name + balance
-- Recent Transactions: scrollable list of last 20, each row: icon + description + amount (colored) + date
+### Loans `/loans`, `/loans/:debtorId`
+Debtors as progress-bar stacks (repaid/principal, status pill Active/On Track) → detail: filter chips (All/Lent/Repaid), ledger rows (date, party, description, credit/debit/balance), summary card, Download PDF (jspdf autotable, filename `loan_ledger_<name>_<date>.pdf`). Balance identical rules as Member Profile.
 
-**States:** Loading (skeleton shimmer on glass panels), empty (no transactions → "No recent activity"), error (DB error → "Could not load data" + retry button)
+### Transaction Wizard (modal registry key `transaction-form`)
+Mobile: bottom sheet w/ drag handle; Desktop: centered modal. Segmented tabs Income/Expense/Transfer/Loan; numpad with Indian comma grouping (`numpadMaxDigits` bound); fields per tab (source⇄dest swap); counterparty inline-create for loans; insufficient-balance warning non-blocking. Submit → optimistic store update → close animation 300ms.
 
-### 3.2 Member Profile (`/member/:id`)
+### Detail / Edit modals
+Detail: icon+type+amount hero, field grid, actions Ledger/Edit/Delete; Edit: amount/description/date/type-toggle (income⇄expense swaps accounts). **Rules-of-hooks violation pending fix (BUG-1)**: early return currently precedes `useCallback`.
 
-**Mobile:**
-- Back button + name in header
-- Profile card: avatar (48px), name, role tag, net balance
-- Account cards: horizontal scroll carousel, credit-card-style, gradient backgrounds per account type, snap scrolling + dot indicators
-- Ledger table: compact scrollable rows (date, description, debit/credit columns, running balance)
-- Filter tabs: All, Income, Expenses, Transfers
+### Recycle Bin `/recycle`
+Tabs with counts → rows show type badge, label, deleted-at countdown → Restore / Delete-forever (confirm modal) → auto-purge note (30d).
 
-**Desktop (1024px+):**
-- Sidebar (hidden ≤768) + breadcrumb top bar
-- Profile hero: 72px avatar, name, meta chips (accounts count, member since), stat items
-- Quick action strip: 4 buttons (Add Income, Log Expense, Transfer Money, View Loans)
-- Account cards: 3-column grid with glass cards, gold chip for cash accounts
-- Split content: Ledger (left 65%) + Side Panel (right 35%)
-  - Side panel: spending breakdown (pie/donut), monthly budget bars, savings goals list
+## 4. Component Inventory (shared)
 
-### 3.3 Loan Receivables (`/loans`, `/loans/:debtorId`)
+| Component | Notes |
+|-----------|-------|
+| `Modal` / `BottomSheet` | responsive pair; sheets ≤768px, modals above; closing animations 200–300ms |
+| `LedgerTable` | virtualization not needed at current scale; sticky header |
+| `AmountInput`, `FormField`, `Numpad`, `SegmentedTabs` | wizard kit; mono font for amounts |
+| `ProgressBar`, `GlassPanel`, `Avatar` | design-system primitives |
+| Modal registry (`modals/registry.ts`) | lazy-loaded map keyed `transaction-form/detail/edit`, `delete-confirm`, `edit-member`, `add-account`, `settings`, `select-account`; props typed via discriminated union (removes `any` — T-087) |
 
-- Summary card per debtor: avatar, name, "Active" badge, total outstanding amount (large mono), progress bar (teal gradient, glossy)
-- Progress bar: animated width on mount/update, 600ms ease-out
-- Loan stacks accordion: single-open
-  - Stack header: funding source icon + source name + total amount + installment count + chevron
-  - Stack body (expanded): ledger rows with date, description, amount, status pill (Active=amber, On Track=green)
-- Responsive: on ≤768px, stack body hides date/status columns
+## 5. Interaction States (mandatory everywhere)
 
-### 3.4 Transaction Wizard (`/transaction`)
-
-**Mobile (overlay bottom sheet, 92vh max):**
-- Background dims with backdrop blur
-- Slide-up from bottom (300ms ease-out), handle bar at top
-- Segmented tabs: Income | Expense | Transfer | Loan
-- Amount field: large JetBrains Mono input, BDT prefix, placeholder 0
-- Dynamic form (fields change per tab):
-  - Income: Source member + Amount + Description + Date
-  - Expense: Source account + Amount + Description + Date
-  - Transfer: Source account + Destination account + Amount + Description + Date
-  - Loan: Debtor + Source account + Amount + Description + Date
-- Numeric keypad: 3×4 grid (1-9, 0, backspace), Indian comma formatting
-- Submit button: violet gradient, full-width, "Add Income" / "Log Expense" etc.
-
-**Desktop (centered modal, 520px max-width):**
-- Fade-in overlay (0.25s ease-out)
-- Same segmented tabs
-- Side-by-side selects for source/destination (form-row)
-- Cancel (ghost) + Save (primary gradient) buttons
-
-### 3.5 Recycle Bin (`/recycle`)
-
-- Header: title + Refresh icon + Empty Bin (danger pill button, red)
-- Stats bar: "X items | Y total BDT | Auto-purge in Z days"
-- Tabs: All Items (count) | Transactions (count) | Accounts (count)
-- Item list rows: icon + name/description + amount + date deleted + restore + permanent delete buttons
-- Restore action: confirm dialog → item slides out (300ms) → removed from list
-- Delete action: confirm dialog → item slides out → removed from list
-- Responsive: at ≤800px, hide amount column
-
----
-
-## 4. Component States
-
-Every interactive component must implement:
-
-| State | Visual | Example |
-|-------|--------|---------|
-| **Default** | Normal styling | Glass panel with standard opacity |
-| **Hover** | Violet glow (`box-shadow: 0 0 20px var(--color-primary-glow)`) | Glass cards, buttons, rows |
-| **Focus** | Violet ring (`outline: 2px solid var(--color-primary)`) | Inputs, form fields, numpad keys |
-| **Active/Pressed** | Surface lightens (`rgba(255,255,255,0.08)`) | Numpad keys, buttons |
-| **Disabled** | Opacity 0.5, cursor not-allowed | Submit button when form invalid |
-| **Loading** | Skeleton shimmer: `background: linear-gradient(...)` + `animation: shimmer 1.5s infinite` | Glass panels, metric cards |
-| **Empty** | Centered icon + message | "No transactions yet" |
-| **Error** | Red border + message | Failed DB operation |
+hover (glow + lift), focus-visible (2px violet ring), active (scale .98), disabled (.5 opacity, no events), loading (skeleton shimmer, never spinners on glass), empty (icon + one-line hint), error (coral text + retry).

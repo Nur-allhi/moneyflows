@@ -1215,3 +1215,53 @@
 
 ### Status
 - All Phase 9 tickets T-065 through T-083 complete. **Next phase TBD.**
+
+## Session 2026-07-15 current
+
+### Changes
+- Fixed running balance in loan ledger: balance was computed from `filteredTxs` (visible rows only), so when a type filter like "Repaid" was active, all visible rows were debits → running went negative → `Math.max(0, running)` = 0 for every row.
+- **Root cause**: `Math.max(0, running)` with only debit entries always produces 0.
+- **Fix**: Pre-compute running balance from ALL loan transactions (`sortedTxs` / `allSorted`), store in a `Map<id, balance>`, then look up each filtered row's balance from that map.
+- Files changed:
+  - `LoanDetailView.tsx` — `ledgerRows` and `downloadPdf` now compute balance from `sortedTxs` via `balanceMap`
+  - `LoanService.ts` — `generateReport()` restructured: computes balance from all loan txs first, then applies type filter for display only
+
+### Skill(s) Used
+- `senior-frontend` — debugging running balance computation across filtered/all transaction sets
+
+### Status
+- Running balance fix applied. Hard refresh browser to verify.
+
+## Session 2026-08-23 (project audit)
+
+### Changes
+- Full-project analysis: typecheck PASS, build PASS, lint FAIL (4 errors / 21 warnings), 0 circular imports, zero tests.
+- Documented all findings in new docs/audit/ folder:
+  - docs/audit/PROJECT_ANALYSIS_2026-08-23.md — full report
+  - docs/audit/FINDINGS.md — findings register (BUG-1..5, HYG-1..5, lint inventory)
+- Key bugs: conditional hook in TransactionEditModal (crash), hardcoded 'Admin' + dead primaryMemberId setting, silent catch on counterparty create, DB port bypass via s any, stale memo deps.
+- Hygiene: USER_DATA/ + db_b64.txt untracked and NOT gitignored (privacy risk); running-balance fix still uncommitted.
+
+### Skill(s) Used
+- GitNexus (check/cycles), eslint/tsc/vite build, manual code review
+
+### Status
+- Audit documented. Next: commit pending balance fix, gitignore data files, then fix BUG-1..BUG-5.
+
+## Session 2026-08-23 14:30
+
+### Changes
+- [docs/PRD.md] v2.0 - shipped features F1-F9, current workflows/success criteria
+- [docs/TAD.md] v2.0 - actual architecture: loans module, unified loans table, backup pipeline, service contracts, invariants
+- [docs/SECURITY.md] v2.0 - local-first threat model, no-auth stance, repo privacy guardrails
+- [docs/FRONTEND_SPEC.md] v2.0 - tokens/routes/screen states/component inventory as built
+- [docs/REPO_RULES.md] NEW - branch strategy (master/dev), conventional commits, merge rules, README/CHANGELOG/versioning
+- [docs/TICKETS.md] Appended Phase 10 (T-084..T-092) from audit findings
+- [AGENTS.md] structure updated with REPO_RULES.md + docs/audit/
+
+### Skill(s) Used
+- skill-creator, senior-backend, code-reviewer, ui-ux-pro-max, frontend-design, senior-frontend, gitnexus
+
+### Status
+- 6 foundational docs generated/updated. Next ticket: T-084 (commit pending balance fix).
+
