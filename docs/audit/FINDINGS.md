@@ -151,3 +151,13 @@ array. This - not the balance math - is why T-084-era fixes never resolved the u
 Contract test added (sortLoanTransactions must not mutate input).
 **Fix:** commit 3921f1e on dev; verified end-to-end via Playwright against real DB
 (Home EXP: 34230/35230/44230/49230/54230/39230/41230).
+
+### BUG-7 - PWA freeze on delete: splash screen hangs forever (CRITICAL) · Status: IN PROGRESS (Phase 11)
+**Reported:** deleting a transfer transaction froze installed PWA; only killing tab recovered.
+**Root-cause cluster:** (1) run() persists entire DB per SQL statement -> churn + quota pressure;
+(2) save() silently gives up on QuotaExceededError and snapshot shift-loop is unguarded ->
+partial/corrupt persisted state; (3) boot recovery calls blocking window.confirm() which is
+invisible in standalone PWA -> main thread blocked forever behind splash overlay;
+(4) crypto.subtle missing on insecure origins silently disables integrity layer.
+**Fix plan:** docs/plans/STORAGE_OPFS_MIGRATION.md (OPFS migration, coalesced writes,
+typed-error recovery with splash watchdog, SHA-256 fallback).
