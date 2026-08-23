@@ -102,6 +102,23 @@ money_flows_v0.4/
 ### 3.9 AGENTS.md Management
 - Check this file (§3 and §5) at the start of every conversation.
 - Update if new conventions or files are introduced.
+
+### 3.10 Decision-Making & Confirmation Protocol
+- Whenever a choice exists (architecture, library, pattern, data model, naming, UI approach), do NOT silently pick one: surface the decision with at least 2 genuinely viable options — what it is, why it could be right, its main downside — and state which you'd lean toward and why. Final call is the user's.
+- No file is created/edited/deleted, no code written or refactored, no dependency added until the user explicitly confirms the specific approach ("yes, go with X"). Silence or topic-change is NOT confirmation.
+- Confirm the overall approach once per task; re-confirm before any NEW decision point not already agreed.
+- Minor mechanical actions within an approved task need no re-confirmation.
+
+### 3.11 Bug Tracking Protocol
+- The moment a bug is identified/reported/discovered, log it in `docs/BUGS.md` BEFORE anything else (discussion is not a substitute for logging).
+- Do not fix in the same breath as finding: log first, then follow §3.10 to agree a fix approach — unless the user explicitly says fix immediately.
+- Entry format and ordering rules live at the top of `docs/BUGS.md`. Keep `open`/`in-progress` sorted above `fixed`/`wontfix`; within same status sort severity (`critical→low`) then found-date (oldest first). Fixed entries stay as history at the bottom.
+- Every session touching a bug logs a line in `session_log.md` referencing the BUG-<id>.
+- A merged bug fix updates, in the SAME commit: CHANGELOG `Fixed`, BUGS.md Status/Resolved fields.
+
+### 3.12 Merge Confirmation
+- Merges into `dev` or `master` ALWAYS require explicit user confirmation at merge time — even when all REPO_RULES criteria are satisfied (criteria make a merge *eligible*, not *approved*).
+- Before requesting confirmation, summarize: what's being merged, ticket(s) closed, included README/CHANGELOG updates.
 - Update §5 to the next ticket after completing each ticket.
 
 ## 4. Session Logs
