@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- app entry point: renders only, exports nothing */
 import React, { useCallback, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';

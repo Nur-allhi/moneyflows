@@ -32,6 +32,9 @@ export function useAnimatedValue(target: number, duration = ANIMATION_DURATION):
     };
     rafRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafRef.current);
+    // `current` is read via startValueRef at animation start; including it would
+    // restart the rAF loop on every frame it advances.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target, duration]);
 
   return current;

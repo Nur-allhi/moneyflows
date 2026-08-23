@@ -24,7 +24,7 @@ export function LoansScreen() {
   useEffect(() => {
     fetchLoanStacks();
     fetchAccounts();
-  }, []);
+  }, [fetchLoanStacks, fetchAccounts]);
 
   const selectedStack = useMemo(() => {
     if (!routeBorrowerId || loanStacks.length === 0) return null;

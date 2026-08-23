@@ -207,7 +207,7 @@ export function GroupLedgerScreen() {
       if (typeFilter === 'loan') return r.type === 'loan';
       return r.type === typeFilter;
     });
-  }, [searchFilteredTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay]);
+  }, [searchFilteredTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay, displayedTxs]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     const tx = txs.find((t) => t.id === row.id);

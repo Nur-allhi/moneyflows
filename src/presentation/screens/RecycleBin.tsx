@@ -24,7 +24,7 @@ export function RecycleBin() {
 
   useEffect(() => {
     fetchDeleted();
-  }, []);
+  }, [fetchDeleted]);
 
   const [activeTab, setActiveTab] = useState('all');
 

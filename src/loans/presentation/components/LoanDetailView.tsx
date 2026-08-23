@@ -42,7 +42,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
 
   useEffect(() => {
     fetchTransactions({ accountId: stack.debtorId });
-  }, [stack]);
+  }, [stack, fetchTransactions]);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -256,7 +256,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
 
     const label = stack.debtorName.replace(/\s+/g, '_').toLowerCase();
     doc.save(`loan_ledger_${label}_${new Date().toISOString().slice(0, 10)}.pdf`);
-  }, [filteredTxs, sortedTxs, locale, currency, stack.debtorName, dateMode, month, startDate, endDate]);
+  }, [filteredTxs, sortedTxs, locale, currency, stack.debtorName, dateMode, month, startDate, endDate, accountById, memberById]);
 
   return (
     <div className={styles.container}>

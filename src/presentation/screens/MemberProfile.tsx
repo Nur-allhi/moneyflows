@@ -72,14 +72,14 @@ export function MemberProfile() {
 
   useEffect(() => {
     fetchMembers();
-  }, []);
+  }, [fetchMembers]);
 
   useEffect(() => {
     if (memberId) {
       fetchAccounts();
       fetchTransactions();
     }
-  }, [memberId]);
+  }, [memberId, fetchAccounts, fetchTransactions]);
 
   const member = useMemo(
     () => members.find((m) => m.id === memberId) ?? null,
@@ -97,7 +97,7 @@ export function MemberProfile() {
     if (acctParam && memberAccounts.some((a) => a.id === acctParam)) {
       setSelectedAccountId(acctParam);
     }
-  }, [memberAccounts]);
+  }, [memberAccounts, searchParams]);
 
   const totalBalance = useMemo(
     () => memberAccounts.reduce((s, a) => s + a.balance, 0),
@@ -283,7 +283,7 @@ export function MemberProfile() {
       };
     });
     return rows.reverse();
-  }, [displayedTxs, sortedTxs, locale, showBalance, memberAccounts, selectedAccountId]);
+  }, [displayedTxs, sortedTxs, locale, currency, showBalance, memberAccounts, selectedAccountId, resolveAccountDisplay]);
 
   const filteredLedger = useMemo(() => {
     const q = ledgerQuery.toLowerCase().trim();
@@ -540,7 +540,7 @@ export function MemberProfile() {
 
     const fileName = `Transaction_Report_${member?.name ?? 'Unknown'}_${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(fileName);
-  }, [sortedTxs, showBalance, ledgerFilter, locale, currency, memberAccounts, selectedAccountId, member, ledgerQuery]);
+  }, [sortedTxs, showBalance, ledgerFilter, locale, currency, memberAccounts, selectedAccountId, member, ledgerQuery, selectedAcct]);
 
   if (loading) {
     return (
