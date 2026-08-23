@@ -63,13 +63,13 @@ function AppLayout() {
 
   useEffect(() => {
     if (searchOpen) { setSearchOpen(false); setSearchClosing(false); }
+    // Intentionally keyed on route change only; adding searchOpen would close the
+    // overlay the moment it opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   useEffect(() => {
-    const db = getDatabase();
-    if ('purgeExpiredItems' in db) {
-      (db as any).purgeExpiredItems(30).catch(() => {});
-    }
+    getDatabase().purgeExpiredItems(30).catch(() => {});
   }, []);
 
   const [searchOpen, setSearchOpen] = useState(false);
