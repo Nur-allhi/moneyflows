@@ -1265,3 +1265,21 @@
 ### Status
 - 6 foundational docs generated/updated. Next ticket: T-084 (commit pending balance fix).
 
+
+## Session 2026-08-23 22:05
+
+### Changes
+- Root-caused persistent ledger balance bug: service worker (cache-first, v1) served stale bundles - fixes never reached browser
+- [dev] 8af1417 chore(repo): gitignore USER_DATA/, db_b64.txt, view_db.cjs, dashboard (T-085)
+- [dev] 90355e0 fix(loan-ledger): compute running balance from full transaction history (T-084)
+- [dev] 1c1ebcc docs: foundational docs refresh + audit register + REPO_RULES
+- [fix/ledger-balance-sw] e29d788 fix(pwa): network-first SW, cache v2, hashed assets stay cache-first
+- [fix/ledger-balance-sw] 32f4b2f refactor(loans): computeRunningBalances/sortLoanTransactions util; LoanDetailView + generateReport now share it; totals from FULL history (caught: filtered report showed totalRepaid=0); negatives no longer clamped (user decision)
+- [fix/ledger-balance-sw] 41df326 test(loans): vitest + 9 regression tests incl. user scenario 5000/12000/8000 and real Home EXP fixture; npm test script; README updated same commit
+
+### Skill(s) Used
+- senior-backend, senior-frontend, code-reviewer, gitnexus (detect_changes before each commit)
+
+### Status
+- Branch verified: 9/9 tests, typecheck, build green; lint = 4 pre-existing audit errors only. Awaiting user approval to squash-merge fix/ledger-balance-sw into dev.
+
