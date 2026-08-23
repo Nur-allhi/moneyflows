@@ -154,6 +154,25 @@ See `session_log.md` for complete session history.
 
 **Phase 9: Mobile Screen UI** — 19 tickets (T-065–T-083). All **Complete**.
 
+**Phase 10: Audit Remediation & Hardening** (source: `docs/audit/FINDINGS.md`)
+
+| Ticket | Description | Status |
+|--------|-------------|--------|
+| T-084 | Commit running-balance fix | **Complete** (`90355e0`) |
+| T-085 | Gitignore sensitive/debug artifacts | **Complete** (`8af1417`) |
+| T-086 | TransactionEditModal hooks crash + inline styles | **Complete** (`37af73a`) |
+| T-087 | primaryMemberId wiring + typed modal registry | **Complete** (`2cb2fdb`, `fba9a81`) |
+| T-088 | Surface counterparty creation errors | **Complete** (`2cb2fdb`) |
+| T-089 | purgeExpiredItems on DB port, drop `as any` | **Complete** (`2b60181`) |
+| T-090 | Clear all lint warnings → `--max-warnings 0` green | **Complete** (`87d5328`) |
+| T-091 | Vitest foundation + loan-balance regression tests | **Complete** (10 tests) |
+| T-092 | Split oversized files (>300 LOC) | Deferred — touch when next edited |
+
+**Extra (not ticketed):** BUG-6 root cause fixed — `mobileFilteredTxs` sorted the shared
+array in place, reversing it before balances were computed; this masked all earlier
+balance fixes. Service worker switched to network-first (v2) so updates reach clients.
+Merged to `master` as `02ce3cf` and pushed; branches kept.
+
 **Next phase TBD.**
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
