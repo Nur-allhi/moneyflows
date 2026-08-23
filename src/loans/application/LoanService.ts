@@ -4,6 +4,7 @@ import { Account } from '../../core/domain/Account';
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
 import type { Loan, LoanStack, LoanReport, LoanReportFilter, LoanReportRow, LoanReportSummary } from '../domain/types';
 import { LoanDatabase } from '../infrastructure/LoanDatabase';
+import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from './computeRunningBalances';
 import { SQLiteDatabaseService } from '../../infrastructure/database/SQLiteDatabaseService';
 
 export class LoanService {
@@ -220,32 +221,15 @@ export class LoanService {
       txFilter.endDate = endDate.toISOString().slice(0, 10);
     }
 
-    const allTxs = await this.db.getTransactions(txFilter);
-    const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment']);
-    const allLoanTxs = allTxs.filter((tx) => loanTypes.has(tx.type));
-
-    const allSorted = [...allLoanTxs].sort((a, b) => {
-      const c = a.date.localeCompare(b.date);
-      if (c !== 0) return c;
-      return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
-    });
-
-    let running = 0;
-    const balanceMap = new Map<string, number>();
-    for (const tx of allSorted) {
-      const isCredit = tx.type === 'lend' || tx.type === 'loan_issue';
-      const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment';
-      if (isCredit) running += tx.amount;
-      if (isDebit) running -= tx.amount;
-      balanceMap.set(tx.id, running);
-    }
+    const allSorted = sortLoanTransactions(await this.db.getTransactions(txFilter));
+    const balanceMap = computeRunningBalances(allSorted);
 
     let displayTxs = allSorted;
     if (filter.type && filter.type !== 'all') {
       if (filter.type === 'lend') {
-        displayTxs = displayTxs.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
+        displayTxs = displayTxs.filter((tx) => LOAN_CREDIT_TYPES.has(tx.type));
       } else {
-        displayTxs = displayTxs.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment');
+        displayTxs = displayTxs.filter((tx) => LOAN_DEBIT_TYPES.has(tx.type));
       }
     }
 
@@ -254,14 +238,14 @@ export class LoanService {
 
     let totalLent = 0;
     let totalRepaid = 0;
+    for (const tx of allSorted) {
+      if (LOAN_CREDIT_TYPES.has(tx.type)) totalLent += tx.amount;
+      if (LOAN_DEBIT_TYPES.has(tx.type)) totalRepaid += tx.amount;
+    }
 
     const rows: LoanReportRow[] = displayTxs.map((tx) => {
-      const isCredit = tx.type === 'lend' || tx.type === 'loan_issue';
-      const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment';
+      const isCredit = LOAN_CREDIT_TYPES.has(tx.type);
       const bal = balanceMap.get(tx.id) ?? 0;
-
-      if (isCredit) totalLent += tx.amount;
-      if (isDebit) totalRepaid += tx.amount;
 
       const srcAcct = tx.sourceAccount ? accountMap.get(tx.sourceAccount) : undefined;
       const dstAcct = tx.destAccount ? accountMap.get(tx.destAccount) : undefined;
@@ -270,23 +254,25 @@ export class LoanService {
         id: tx.id,
         date: tx.date,
         type: (isCredit ? 'lend' : 'repay') as 'lend' | 'repay',
-        typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' : 'Repayment',
+        typeLabel: isCredit ? 'Lent' : 'Repayment',
         description: tx.description,
         lenderAccount: srcAcct?.name ?? tx.sourceAccount ?? '',
         borrowerAccount: dstAcct?.name ?? tx.destAccount ?? '',
         amount: tx.amount,
-        runningBalance: Math.max(0, bal),
+        runningBalance: bal,
       };
     });
 
     const borrowerAcct = filter.borrowerAccountId ? accountMap.get(filter.borrowerAccountId) : undefined;
     const lenderAccts = [...new Set(allSorted.map((tx) => tx.sourceAccount ?? '').filter(Boolean))];
     const lenderNames = lenderAccts.map((id) => accountMap.get(id)?.name ?? id);
+    const lastTx = allSorted[allSorted.length - 1];
+    const outstanding = lastTx ? balanceMap.get(lastTx.id) ?? 0 : 0;
 
     const summary: LoanReportSummary = {
       totalLent,
       totalRepaid,
-      outstanding: running,
+      outstanding,
       transactionCount: rows.length,
       lenderName: lenderNames.join(', ') || 'All',
       borrowerName: borrowerAcct?.name ?? 'All Accounts',
