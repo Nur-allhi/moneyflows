@@ -1336,3 +1336,22 @@
 ### Status
 - BUG-7 fix implemented and verified. Branch feature/opfs-storage NOT merged - awaiting user testing/approval.
 
+
+## Session 2026-08-24 01:20
+
+### Changes
+- [docs/BUGS.md] NEW - bug tracker initialized per BUG TRACKING PROTOCOL (empty, no known bugs; historical BUG-6/7 noted in FINDINGS.md)
+- [docs/PRD.md] v3.0 - F10 durable storage engine, recovery workflow, updated success criteria
+- [docs/TAD.md] v3.0 - storage adapter architecture, write lifecycle, port additions, invariants update
+- [docs/SECURITY.md] v3.0 - boot-hang threat, digest caveat, no-blocking-dialogs guardrail, review checklist
+- [docs/FRONTEND_SPEC.md] v3.0 - boot/recovery states, Settings storage row, status-dot tokens
+- [docs/TICKETS.md] v3.0 - consolidated phase index, deferred items (T-092, mirror removal, PWA toast), ticket template
+- [docs/REPO_RULES.md] v2.0 - eligible-vs-approved merges, bug-fix tie-in, confirmation checklist
+- [AGENTS.md] added sections 3.10 Decision & Confirmation Protocol, 3.11 Bug Tracking Protocol, 3.12 Merge Confirmation
+
+### Skill(s) Used
+- skill-creator, code-reviewer, senior-backend, senior-frontend, ui-ux-pro-max, gitnexus
+
+### Status
+- All 7 foundational documents generated/updated on dev (committed). Next phase TBD.
+

@@ -1,53 +1,57 @@
 # MoneyFlows — Security & Access Document
 
 **Target Skills:** `senior-backend` (design) & `code-reviewer` (enforcement)
-**Version:** 2.0 · 2026-08-23
+**Version:** 3.0 · 2026-08-24
 
 ---
 
 ## 1. Threat Model
 
-MoneyFlows is a **single-device, offline-first, client-only** app holding real family financial data (~1.14M BDT scope). There is no server, no network I/O, no telemetry. The realistic threats are:
+Single-device, offline-first, client-only app holding real family financial data (~1.14M BDT scope). No server, no network I/O, no telemetry.
 
 | Threat | Vector | Mitigation |
 |--------|--------|------------|
-| Data loss / corruption | bad write, browser eviction, disk failure | ring-buffer restore points, SHA-256 integrity hash, folder sync |
+| Data loss/corruption | bad write, quota exhaustion, browser eviction, disk failure | OPFS primary storage, ring-buffer restore points, integrity digests, folder sync |
 | Accidental destruction | user deletes tx/account/member | soft-delete + Recycle Bin + 30-day auto-purge |
-| Privacy leak via git | exports/dumps committed to repo | §5 guardrails (already violated once — see audit) |
-| Malicious web page interference | none meaningful — no auth, no cookies, no tokens; nothing worth stealing remotely | N/A |
+| Boot hang / invisible dialogs | corrupt storage meets blocking UI | watchdog (15 s) + typed errors → visible recovery screen (BUG-7 lesson) |
+| Privacy leak via git | exports/dumps committed | §5 guardrails (violated once historically — commit `68f3771`) |
+| Remote attack | nothing worth stealing remotely — no auth, cookies, tokens | N/A |
 
 ## 2. Authentication & Authorization
 
-- **None by design.** Single-admin local app; whoever unlocks the device has full access.
-- No passwords, tokens, sessions, or secrets exist in the codebase. Do not add any without a PRD change.
-- If cloud sync (Supabase) is ever approved, auth + RLS policies become mandatory and this document gets a v3.
+**None by design.** Single-admin local app; device unlock = access. No passwords/tokens/sessions/secrets exist. Do not add any without a PRD change. Cloud sync, if approved, mandates auth + RLS → this doc gets v4.
 
 ## 3. Data Guardrails
 
-1. **Soft delete everywhere** (`deleted_at` on members, accounts, transactions, loans). Hard delete only via Recycle Bin purge or `purgeExpiredItems(30)`.
-2. **Restore before destroy**: `save()` writes a restore point first; integrity hash verified before load. A corrupt DB never silently overwrites a good one.
-3. **Balance invariants** (see TAD §4): running balance from full history; loan `outstanding` re-synced on edit/delete of linked transactions.
-4. **Amount validation**: `amount > 0` at DB level; wizard warns (not blocks) on insufficient balance per product decision (3e2ab85).
+1. **Soft delete everywhere** (`deleted_at`). Hard delete only via Recycle Bin purge or `purgeExpiredItems(30)`.
+2. **Restore-before-destroy**: flush writes main DB; snapshots rotate on cooldown with per-slot guards; a failed write prunes snapshots and retries before surfacing an error — never silently gives up.
+3. **Balance invariants** (TAD §4): running balance from full history; loan `outstanding` re-synced on edit/delete.
+4. **Amount validation**: `amount > 0` at DB level; wizard warns non-blocking on insufficient balance.
+5. **No blocking dialogs anywhere on boot/mutation paths** — all failures surface through the Database Error screen or store error state.
 
-## 4. Input Handling
+## 4. Input Handling & Storage
 
-- All SQL parameterized (`$named` params through sql.js prepared statements) — no string interpolation into SQL anywhere. `code-reviewer` rejects any concatenation.
-- PDF export runs client-side via jspdf; no external fetches. HTML sanitization not applicable (React escapes by default; no `dangerouslySetInnerHTML` permitted).
-- File System Access API: user explicitly grants a directory; `FolderSync` only writes the db file it manages.
+- All SQL parameterized (`$named` params via prepared statements); string-concatenated SQL is rejected in review.
+- React escapes by default; `dangerouslySetInnerHTML` banned.
+- File System Access API: user explicitly grants directory; `FolderSync` writes only its own db files.
+- **Digest caveat**: on insecure origins (LAN http) integrity uses FNV fingerprint (`f:` prefix) — detects accidental corruption but is NOT collision-resistant. Accepted because plain-http transport is already outside the threat model. Do not rely on it for tamper evidence.
 
 ## 5. Repository Privacy Guardrails (CRITICAL)
 
 This repo contains a real product with **real financial data**. Enforced by `code-reviewer` on every PR:
 
-1. `.gitignore` MUST cover: `USER_DATA/`, `db_b64.txt`, `*.db`, env files, debug dump scripts. *(Gap found in audit 2026-08-23 — fix ticketed as HYG-1/T-086.)*
-2. Never commit: exported PDFs, base64/db dumps, screenshots containing names/amounts, seed data from the real spreadsheet (use fixtures with fake names).
-3. If sensitive data lands in history: rotate/remove is impossible for personal data — treat as leaked, purge via filter-repo AND force-push coordination, then re-audit `.gitignore`. Precedent: commit `68f3771`.
-4. `main`/`master` must always build green from a fresh clone with no user data required to run.
+1. `.gitignore` MUST cover `USER_DATA/`, `db_b64.txt`, debug dump scripts, `*.db`, env files. *(Hardened in Phase 10 after near-miss.)*
+2. Never commit: exported PDFs, base64/db dumps, screenshots with names/amounts, real spreadsheet seed data (fixtures use fake names).
+3. If sensitive data lands in history: treat as leaked — purge via filter-repo + coordinated force-push, then re-audit `.gitignore`.
+4. `master` must build and pass tests on a fresh clone with zero user data required.
+5. Docs must not contain real person names tied to financial figures (scrub on sight).
 
 ## 6. Review Checklist Additions (`code-reviewer`)
 
-- [ ] No new direct `sql.js` imports outside infrastructure
+- [ ] No direct `sql.js`/adapter imports outside infrastructure
 - [ ] No `(db as any)` casts bypassing the port
-- [ ] New destructive flows write a restore point first
-- [ ] Balance math uses full-history computation
-- [ ] Diff touches no data files; `.gitignore` updated if new artifact types introduced
+- [ ] Mutating ops await `flush()`; no new silent-catch around persistence
+- [ ] Balance math uses full-history computation via shared utils
+- [ ] Destructive flows reversible (soft-delete/restore point)
+- [ ] Diff touches no data files; `.gitignore` updated when new artifact types appear
+- [ ] Bug fixes update BUGS.md status + CHANGELOG in the same commit
