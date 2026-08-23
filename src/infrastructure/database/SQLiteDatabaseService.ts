@@ -3,9 +3,13 @@ import { Member } from '../../core/domain/Member';
 import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
-import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo } from '../../core/ports/IDatabaseService';
+import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
 import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
+import { createStorageAdapter, withStorageLock } from './storage';
+import type { IPersistenceAdapter, SnapshotRecord } from './storage/types';
+import { StorageCorruptError, StorageWriteError } from './storage/types';
+import { digestHex } from './storage/sha256';
 
 const SCHEMA = [
   "CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY,name TEXT NOT NULL,short_name TEXT,email TEXT,phone TEXT,avatar_url TEXT,is_external INTEGER NOT NULL DEFAULT 0,metadata TEXT DEFAULT '{}',created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT);",
@@ -65,6 +69,12 @@ function rowToGroup(r: Record<string, unknown>): AccountGroup {
 export class SQLiteDatabaseService implements IDatabaseService {
   private db: SqlJsDb | null = null;
   private SQL: Awaited<ReturnType<typeof initSqlJs>> | null = null;
+  private storage: IPersistenceAdapter | null = null;
+  private dirty = false;
+  private flushScheduled = false;
+  private lastFlushAt = 0;
+  private lastFlushFailed = false;
+  private lifecycleRegistered = false;
   private lastSnapshotTime = 0;
   private lastFolderSyncTime = 0;
 
@@ -72,50 +82,74 @@ export class SQLiteDatabaseService implements IDatabaseService {
 
   async init(): Promise<void> {
     this.SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' });
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const { adapter } = await createStorageAdapter({
+      mainKey: STORAGE_KEY,
+      snapshotPrefix: SNAPSHOT_PREFIX,
+      maxSnapshots: MAX_SNAPSHOTS,
+    });
+    this.storage = adapter;
+
+    const saved = await this.storage.readMain().catch((e) => {
+      if (e instanceof StorageCorruptError) return null;
+      throw e;
+    });
+    let loaded = false;
     if (saved) {
       try {
-        const buffer = Uint8Array.from(atob(saved), (c) => c.charCodeAt(0));
-        this.db = new this.SQL.Database(buffer);
+        this.db = new this.SQL.Database(saved);
         await this._migrate();
+        loaded = true;
       } catch {
-        await this._trySnapshotRecovery();
+        this.db = null;
       }
+      if (!loaded) await this._recoverFromSnapshots();
     }
     if (!this.db) {
       this.db = new this.SQL.Database();
       this.db.run(SCHEMA);
     }
-    this.save();
+    if (loaded) {
+      // Fresh installs skip the initial flush: an empty-schema write must never
+      // clobber a mirror/legacy copy, and the first real mutation persists anyway.
+      await this.flush();
+    } else {
+      this.markDirty();
+    }
+    this._registerLifecycleFlush();
   }
 
-  private async _trySnapshotRecovery(): Promise<void> {
+  /** Snapshot recovery without blocking dialogs — failures surface to the dbError UI. */
+  private async _recoverFromSnapshots(): Promise<void> {
     const SQL = this.SQL!;
     for (let i = 0; i < MAX_SNAPSHOTS; i++) {
-      const raw = localStorage.getItem(`${SNAPSHOT_PREFIX}${i}`);
-      if (!raw) continue;
       try {
-        const snap = JSON.parse(raw);
-        if (snap?.data && snap?.hash) {
-          const hash = await this.sha256(snap.data);
-          if (hash === snap.hash) {
-            const buffer = Uint8Array.from(atob(snap.data), (c) => c.charCodeAt(0));
-            this.db = new SQL.Database(buffer);
-            await this._migrate();
-            return;
-          }
-        }
-      } catch { /* skip */ }
+        const snap = await this.storage!.readSnapshot(i);
+        if (!snap) continue;
+        const hash = await digestHex(snap.data);
+        if (hash !== snap.hash) continue;
+        this.db = new SQL.Database(snap.data);
+        await this._migrate();
+        return;
+      } catch (e) {
+        if (e instanceof StorageCorruptError || e instanceof StorageWriteError) continue;
+        throw e;
+      }
     }
-    const msg =
-      'Your database file could not be loaded and no valid backup was found.\n\n' +
-      'Click OK to start fresh (your data will be lost).\n' +
-      'Click Cancel to keep the corrupt file for manual recovery.';
-    if (window.confirm(msg)) {
-      localStorage.removeItem(STORAGE_KEY);
-    } else {
-      throw new Error('Database corrupt — user declined reset');
-    }
+    throw new Error(
+      'Your database file is corrupt and no valid backup was found.\n\n' +
+      '"Start Fresh" resets the app with empty data. Your existing file stays in storage ' +
+      'for manual recovery via Settings > Export.',
+    );
+  }
+
+  private _registerLifecycleFlush(): void {
+    if (this.lifecycleRegistered || typeof document === 'undefined') return;
+    this.lifecycleRegistered = true;
+    const flushIfDirty = () => { if (this.dirty) void this.flush().catch(() => {}); };
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushIfDirty();
+    });
+    window.addEventListener('pagehide', flushIfDirty);
   }
 
   private async _migrate(): Promise<void> {
@@ -159,7 +193,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
       const stmt = this.db!.prepare("UPDATE accounts SET metadata = '{\"counterpartyType\":\"debtor\"}' WHERE id = $id");
       for (const row of untaggedCp) { stmt.bind({ $id: row.id }); stmt.step(); stmt.reset(); }
       stmt.free();
-      this.save();
+      this.markDirty();
     }
     const loansRefAccounts = this.db.exec("SELECT sql FROM sqlite_master WHERE type='table' AND name='loans' AND sql LIKE '%REFERENCES accounts%'");
     if (loansRefAccounts.length === 0 || !loansRefAccounts[0] || loansRefAccounts[0].values.length === 0) {
@@ -197,111 +231,140 @@ export class SQLiteDatabaseService implements IDatabaseService {
     }
   }
 
-  private save(): void {
-    if (!this.db) return;
+  /** Marks pending changes; a microtask-coalesced write follows (see plan §3). */
+  private markDirty(): void {
+    this.dirty = true;
+    this._scheduleFlush();
+  }
+
+  private _scheduleFlush(): void {
+    if (this.flushScheduled) return;
+    this.flushScheduled = true;
+    queueMicrotask(() => { void this.flush().catch(() => {}); });
+  }
+
+  /** Writes the current database state through the storage adapter. Throws on real failures. */
+  async flush(): Promise<void> {
+    if (!this.db || !this.storage) return;
     const data = this.db.export();
-    const binary = Array.from(data).map((b) => String.fromCharCode(b)).join('');
     try {
-      localStorage.setItem(STORAGE_KEY, btoa(binary));
-    } catch (e) {
-      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-        this._freeSnapshotSlot();
+      await withStorageLock(async () => {
         try {
-          localStorage.setItem(STORAGE_KEY, btoa(binary));
-        } catch { /* give up — data at risk */ }
-      }
+          await this.storage!.writeMain(data);
+        } catch (e) {
+          if (!(e instanceof StorageWriteError)) throw e;
+          await this._pruneSnapshotsForSpace();
+          await this.storage!.writeMain(data);
+        }
+      });
+      this.dirty = false;
+      this.lastFlushFailed = false;
+      this.lastFlushAt = Date.now();
+      void this._maybeSnapshot(data).catch(() => {});
+      void this._maybeFolderSync(data).catch(() => {});
+    } catch (e) {
+      this.lastFlushFailed = true;
+      throw e instanceof StorageWriteError ? e : new StorageWriteError(e instanceof Error ? e.message : String(e));
     }
-    this._maybeSnapshot(data).catch(() => {});
-    this._maybeFolderSync(data).catch(() => {});
   }
 
-  private _freeSnapshotSlot(): void {
-    localStorage.removeItem(`${SNAPSHOT_PREFIX}${MAX_SNAPSHOTS - 1}`);
-  }
-
-  private async sha256(str: string): Promise<string> {
-    const enc = new TextEncoder().encode(str);
-    const buf = await crypto.subtle.digest('SHA-256', enc);
-    return Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
+  private async _pruneSnapshotsForSpace(): Promise<void> {
+    for (let i = MAX_SNAPSHOTS - 1; i >= 1; i--) {
+      await this.storage!.deleteSnapshot(i).catch(() => {});
+    }
   }
 
   private async _maybeSnapshot(data: Uint8Array): Promise<void> {
-    const now = Date.now();
-    if (now - this.lastSnapshotTime < SNAPSHOT_COOLDOWN_MS) return;
-    this.lastSnapshotTime = now;
-    const base64 = btoa(Array.from(data).map((b) => String.fromCharCode(b)).join(''));
-    const hash = await this.sha256(base64);
-    const snapshot = JSON.stringify({ data: base64, time: new Date().toISOString(), hash });
+    const t = Date.now();
+    if (t - this.lastSnapshotTime < SNAPSHOT_COOLDOWN_MS) return;
+    this.lastSnapshotTime = t;
+    const record: SnapshotRecord = { data, hash: await digestHex(data), time: new Date().toISOString() };
     for (let i = MAX_SNAPSHOTS - 2; i >= 0; i--) {
-      const val = localStorage.getItem(`${SNAPSHOT_PREFIX}${i}`);
-      if (val !== null) localStorage.setItem(`${SNAPSHOT_PREFIX}${i + 1}`, val);
+      try {
+        const slot = await this.storage!.readSnapshot(i);
+        if (!slot) continue;
+        await this.storage!.writeSnapshot(i + 1, slot);
+      } catch { /* leave gap, newest slot still gets written below */ }
     }
     try {
-      localStorage.setItem(`${SNAPSHOT_PREFIX}0`, snapshot);
-    } catch (e) {
-      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-        localStorage.removeItem(`${SNAPSHOT_PREFIX}${MAX_SNAPSHOTS - 1}`);
-        localStorage.setItem(`${SNAPSHOT_PREFIX}0`, snapshot);
-      }
+      await this.storage!.writeSnapshot(0, record);
+    } catch {
+      // Quota-style failure: drop the oldest slot and retry once with the new snapshot.
+      await this.storage!.deleteSnapshot(MAX_SNAPSHOTS - 1).catch(() => {});
+      await this.storage!.deleteSnapshot(0).catch(() => {});
+      await this.storage!.writeSnapshot(0, record).catch(() => {});
     }
   }
 
   private async _maybeFolderSync(data: Uint8Array): Promise<void> {
-    const now = Date.now();
-    if (now - this.lastFolderSyncTime < FOLDER_SYNC_COOLDOWN_MS) return;
-    this.lastFolderSyncTime = now;
+    const nowMs = Date.now();
+    if (nowMs - this.lastFolderSyncTime < FOLDER_SYNC_COOLDOWN_MS) return;
+    this.lastFolderSyncTime = nowMs;
     if (await folderSync.hasPermission()) {
       await folderSync.sync(data);
     }
   }
 
-  getSnapshots(): SnapshotInfo[] {
+  async getSnapshots(): Promise<SnapshotInfo[]> {
     const result: SnapshotInfo[] = [];
     for (let i = 0; i < MAX_SNAPSHOTS; i++) {
       try {
-        const raw = localStorage.getItem(`${SNAPSHOT_PREFIX}${i}`);
-        if (raw) {
-          const snap = JSON.parse(raw);
-          if (snap?.time && snap?.hash) result.push({ time: snap.time, hash: snap.hash });
-        }
-      } catch { /* skip corrupt entries */ }
+        const snap = await this.storage!.readSnapshot(i);
+        if (snap) result.push({ time: snap.time, hash: snap.hash });
+      } catch { /* skip damaged slots */ }
     }
     return result;
   }
 
+  /** Loads the requested snapshot (falling back to older ones). Caller decides on UI refresh. */
   async restoreSnapshot(index: number): Promise<void> {
-    const corrupted: number[] = [];
     for (let i = index; i >= 0; i--) {
-      const raw = localStorage.getItem(`${SNAPSHOT_PREFIX}${i}`);
-      if (!raw) continue;
-      let snap: { data: string; time: string; hash: string };
-      try { snap = JSON.parse(raw); } catch {
-        corrupted.push(i);
-        continue;
+      try {
+        const snap = await this.storage!.readSnapshot(i);
+        if (!snap) continue;
+        const hash = await digestHex(snap.data);
+        if (hash !== snap.hash) continue;
+        if (!this.SQL) throw new Error('Database engine not ready');
+        this.db = new this.SQL.Database(snap.data);
+        await this._migrate();
+        this.dirty = true;
+        await this.flush();
+        return;
+      } catch (e) {
+        if (e instanceof StorageCorruptError || e instanceof StorageWriteError) continue;
+        throw e;
       }
-      if (!snap.data || !snap.time || !snap.hash) {
-        corrupted.push(i);
-        continue;
-      }
-      const computedHash = await this.sha256(snap.data);
-      if (computedHash !== snap.hash) {
-        corrupted.push(i);
-        continue;
-      }
-      const buffer = Uint8Array.from(atob(snap.data), (c) => c.charCodeAt(0));
-      if (this.SQL) {
-        this.db = new this.SQL.Database(buffer);
-        this.save();
-        window.location.reload();
-      }
-      return;
     }
-    const msg = corrupted.length > 0
-      ? `All snapshots corrupted (slots ${corrupted.join(', ')})`
-      : 'No snapshots available to restore';
-    throw new Error(msg);
+    throw new Error('No valid snapshots available to restore');
+  }
+
+  /** Restores the newest verifiable snapshot. Returns false when none qualify. */
+  async restoreNewestSnapshot(): Promise<boolean> {
+    for (let i = 0; i < MAX_SNAPSHOTS; i++) {
+      try {
+        await this.restoreSnapshot(i);
+        return true;
+      } catch { /* try next */ }
+    }
+    return false;
+  }
+
+  /** Wipes persisted state (main + snapshots); next flush starts from an empty schema. */
+  async resetStorage(): Promise<void> {
+    if (!this.storage) return;
+    await this.storage.clearAll();
+    this.db = new this.SQL!.Database();
+    this.db.run(SCHEMA);
+    this.dirty = true;
+    await this.flush();
+  }
+
+  getStorageHealth(): StorageHealth {
+    return {
+      backend: this.storage?.backend ?? 'localStorage',
+      lastFlushAt: this.lastFlushAt,
+      lastFlushFailed: this.lastFlushFailed,
+    };
   }
 
   async exportToFile(): Promise<void> {
@@ -330,9 +393,15 @@ export class SQLiteDatabaseService implements IDatabaseService {
     });
     if (!file) return;
     const buffer = await file.arrayBuffer();
-    this.db = new sql.Database(new Uint8Array(buffer));
-    this.save();
-    window.location.reload();
+    await this.importFromBytes(new Uint8Array(buffer));
+  }
+
+  async importFromBytes(data: Uint8Array): Promise<void> {
+    if (!this.SQL) throw new Error('Database engine not ready');
+    this.db = new this.SQL.Database(data);
+    await this._migrate();
+    this.dirty = true;
+    await this.flush();
   }
 
   /** Reset database — clears all data and starts fresh */
@@ -342,7 +411,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
 
   private run(sql: string, params?: Record<string, string | number | null>): void {
     this.db!.run(sql, params as Parameters<SqlJsDb['run']>[1]);
-    this.save();
+    this.markDirty();
   }
 
   private query<T>(sql: string, params?: Record<string, string | number | null>): T[] {
@@ -369,7 +438,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     return Promise.resolve(r ? rowToMember(r) : null);
   }
 
-  saveMember(member: Member): Promise<void> {
+  async saveMember(member: Member): Promise<void> {
     this.run(`INSERT INTO members (id,name,short_name,email,phone,avatar_url,is_external,metadata,created_at,updated_at)
       VALUES ($id,$name,$short,$email,$phone,$avatar,$ext,$meta,$created,$updated)
       ON CONFLICT(id) DO UPDATE SET name=$name,short_name=$short,email=$email,phone=$phone,
@@ -377,12 +446,12 @@ export class SQLiteDatabaseService implements IDatabaseService {
       { $id: member.id, $name: member.name, $short: member.shortName ?? null, $email: member.email ?? null,
         $phone: member.phone ?? null, $avatar: member.avatarUrl ?? null, $ext: member.isExternal ? 1 : 0,
         $meta: JSON.stringify(member.metadata), $created: member.createdAt, $updated: now() });
-    return Promise.resolve();
+    await this.flush();
   }
 
-  softDeleteMember(id: string): Promise<void> { this.run('UPDATE members SET deleted_at=$now,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); return Promise.resolve(); }
-  restoreMember(id: string): Promise<void> { this.run('UPDATE members SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); return Promise.resolve(); }
-  purgeMember(id: string): Promise<void> { this.run('DELETE FROM members WHERE id=$id',{$id:id}); return Promise.resolve(); }
+  async softDeleteMember(id: string): Promise<void> { this.run('UPDATE members SET deleted_at=$now,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); await this.flush(); }
+  async restoreMember(id: string): Promise<void> { this.run('UPDATE members SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); await this.flush(); }
+  async purgeMember(id: string): Promise<void> { this.run('DELETE FROM members WHERE id=$id',{$id:id}); await this.flush(); }
 
   getAccounts(memberId?: string): Promise<Account[]> {
     let sql = 'SELECT * FROM accounts WHERE deleted_at IS NULL';
@@ -396,7 +465,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     return Promise.resolve(r ? rowToAccount(r) : null);
   }
 
-  saveAccount(account: Account): Promise<void> {
+  async saveAccount(account: Account): Promise<void> {
     this.run(`INSERT INTO accounts (id,member_id,name,type,balance,currency,icon,color,is_active,metadata,created_at,updated_at)
       VALUES ($id,$mid,$name,$type,$bal,$cur,$icon,$color,$active,$meta,$created,$updated)
       ON CONFLICT(id) DO UPDATE SET member_id=$mid,name=$name,type=$type,balance=$bal,
@@ -405,12 +474,12 @@ export class SQLiteDatabaseService implements IDatabaseService {
         $cur: account.currency, $icon: account.icon ?? null, $color: account.color ?? null,
         $active: account.isActive ? 1 : 0, $meta: JSON.stringify(account.metadata),
         $created: account.createdAt, $updated: now() });
-    return Promise.resolve();
+    await this.flush();
   }
 
-  softDeleteAccount(id: string): Promise<void> { this.run('UPDATE accounts SET deleted_at=$now,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); return Promise.resolve(); }
-  restoreAccount(id: string): Promise<void> { this.run('UPDATE accounts SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); return Promise.resolve(); }
-  purgeAccount(id: string): Promise<void> { this.run('DELETE FROM accounts WHERE id=$id',{$id:id}); return Promise.resolve(); }
+  async softDeleteAccount(id: string): Promise<void> { this.run('UPDATE accounts SET deleted_at=$now,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); await this.flush(); }
+  async restoreAccount(id: string): Promise<void> { this.run('UPDATE accounts SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()}); await this.flush(); }
+  async purgeAccount(id: string): Promise<void> { this.run('DELETE FROM accounts WHERE id=$id',{$id:id}); await this.flush(); }
 
   getTransactions(filters?: TransactionFilter): Promise<Transaction[]> {
     let sql = 'SELECT * FROM transactions WHERE deleted_at IS NULL';
@@ -491,14 +560,14 @@ export class SQLiteDatabaseService implements IDatabaseService {
         $date: tx.date, $meta: JSON.stringify(tx.metadata), $created: tx.createdAt, $updated: now() });
   }
 
-  saveTransaction(tx: Transaction): Promise<void> {
+  async saveTransaction(tx: Transaction): Promise<void> {
     this.validateTransaction(tx);
     this.saveTransactionToDb(tx);
     this.applyBalanceChange(tx.type, tx.amount, tx.sourceAccount, tx.destAccount);
-    return Promise.resolve();
+    await this.flush();
   }
 
-  updateTransaction(id: string, tx: Transaction): Promise<void> {
+  async updateTransaction(id: string, tx: Transaction): Promise<void> {
     const old = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id', { $id: id });
     if (old) {
       const oldTx = rowToTransaction(old);
@@ -506,28 +575,28 @@ export class SQLiteDatabaseService implements IDatabaseService {
     }
     this.saveTransactionToDb(tx);
     this.applyBalanceChange(tx.type, tx.amount, tx.sourceAccount, tx.destAccount);
-    return Promise.resolve();
+    await this.flush();
   }
 
-  softDeleteTransaction(id: string): Promise<void> {
+  async softDeleteTransaction(id: string): Promise<void> {
     const tx = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id AND deleted_at IS NULL', { $id: id });
     if (tx) {
       const t = rowToTransaction(tx);
       this.applyBalanceChange(t.type, -t.amount, t.sourceAccount, t.destAccount);
     }
     this.run('UPDATE transactions SET deleted_at=$now,updated_at=$now WHERE id=$id',{$id:id,$now:now()});
-    return Promise.resolve();
+    await this.flush();
   }
-  restoreTransaction(id: string): Promise<void> {
+  async restoreTransaction(id: string): Promise<void> {
     const tx = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id AND deleted_at IS NOT NULL', { $id: id });
     if (tx) {
       const t = rowToTransaction(tx);
       this.applyBalanceChange(t.type, t.amount, t.sourceAccount, t.destAccount);
     }
     this.run('UPDATE transactions SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()});
-    return Promise.resolve();
+    await this.flush();
   }
-  purgeTransaction(id: string): Promise<void> { this.run('DELETE FROM transactions WHERE id=$id',{$id:id}); return Promise.resolve(); }
+  async purgeTransaction(id: string): Promise<void> { this.run('DELETE FROM transactions WHERE id=$id',{$id:id}); await this.flush(); }
 
   private applyBalanceChange(type: string, amount: number, sourceAccount?: string, destAccount?: string): void {
     if (type === 'income' && destAccount) {
@@ -556,29 +625,29 @@ export class SQLiteDatabaseService implements IDatabaseService {
     }));
   }
 
-  saveAccountGroup(group: AccountGroup): Promise<void> {
+  async saveAccountGroup(group: AccountGroup): Promise<void> {
     this.run(`INSERT INTO account_groups (id,name,sort_order,metadata)
       VALUES ($id,$name,$sort,$meta)
       ON CONFLICT(id) DO UPDATE SET name=$name,sort_order=$sort,metadata=$meta`,
       { $id: group.id, $name: group.name, $sort: group.sortOrder, $meta: JSON.stringify(group.metadata) });
-    return Promise.resolve();
+    await this.flush();
   }
 
-  softDeleteAccountGroup(id: string): Promise<void> {
+  async softDeleteAccountGroup(id: string): Promise<void> {
     this.run('UPDATE account_groups SET deleted_at=$now WHERE id=$id',{$id:id,$now:now()});
-    return Promise.resolve();
+    await this.flush();
   }
 
-  addGroupAccount(groupId: string, accountId: string): Promise<void> {
+  async addGroupAccount(groupId: string, accountId: string): Promise<void> {
     this.run('INSERT OR IGNORE INTO account_group_mappings (id,account_group_id,account_id) VALUES ($id,$gid,$aid)',
       { $id: `${groupId}_${accountId}`, $gid: groupId, $aid: accountId });
-    return Promise.resolve();
+    await this.flush();
   }
 
-  removeGroupAccount(groupId: string, accountId: string): Promise<void> {
+  async removeGroupAccount(groupId: string, accountId: string): Promise<void> {
     this.run('DELETE FROM account_group_mappings WHERE account_group_id=$gid AND account_id=$aid',
       { $gid: groupId, $aid: accountId });
-    return Promise.resolve();
+    await this.flush();
   }
 
   getGroupAccountIds(groupId: string): Promise<string[]> {
@@ -610,7 +679,8 @@ export class SQLiteDatabaseService implements IDatabaseService {
       const result = this.db!.exec(`DELETE FROM ${table} WHERE deleted_at IS NOT NULL AND deleted_at < '${cutoff}'`);
       if (result[0]) count += result[0].values.length;
     }
-    this.save();
+    this.markDirty();
+    await this.flush();
     return count;
   }
 
@@ -636,7 +706,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     ));
   }
 
-  recalculateBalances(): Promise<void> {
+  async recalculateBalances(): Promise<void> {
     this.run('UPDATE accounts SET balance=0,updated_at=$now',{ $now: now() });
     const rows = this.query<Record<string, unknown>>(
       "SELECT type,amount,source_account,dest_account FROM transactions WHERE deleted_at IS NULL ORDER BY created_at,rowid",
@@ -649,6 +719,6 @@ export class SQLiteDatabaseService implements IDatabaseService {
         (row.dest_account as string) ?? undefined,
       );
     }
-    return Promise.resolve();
+    await this.flush();
   }
 }

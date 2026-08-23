@@ -1319,3 +1319,20 @@
 ### Status
 - All pre-merge gaps closed. AWAITING USER APPROVAL to merge dev -> master (no tag). Branches kept.
 
+
+## Session 2026-08-24 00:55
+
+### Changes
+- Phase 11 storage overhaul on feature/opfs-storage (plan: docs/plans/STORAGE_OPFS_MIGRATION.md)
+- [8a6495e] docs: plan + CHANGELOG
+- [32035d5] feat(storage): IPersistenceAdapter (OPFS + hardened LS), LS->OPFS migration w/ mirror, coalesced flush lifecycle, quota prune-retry, FNV digest fallback, confirm-free recovery + port methods restoreNewestSnapshot/resetStorage/getStorageHealth/importFromBytes
+- [next] feat(app): 15s splash watchdog, dbError actions (Restore Latest Backup / Start Fresh), Settings Storage health row, importFromBytes kills as-any cluster
+- Verified in browser (real DB): migration imported 213KB into OPFS + 3 snapshots; transfer delete persisted across reload; poisoned main+snapshots boots to error screen in ~1s with working actions - NO HANG
+- Gates: typecheck/lint(0)/build PASS, tests 19/19
+
+### Skill(s) Used
+- senior-backend, senior-frontend, code-reviewer, playwright browser verification
+
+### Status
+- BUG-7 fix implemented and verified. Branch feature/opfs-storage NOT merged - awaiting user testing/approval.
+
