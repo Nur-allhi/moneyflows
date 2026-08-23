@@ -6,8 +6,10 @@ let instance: IDatabaseService | null = null;
 export async function initDatabase(): Promise<IDatabaseService> {
   if (!instance) {
     const db = new SQLiteDatabaseService();
-    await db.init();
+    // Register before awaiting init so recovery UI can call
+    // restoreNewestSnapshot()/resetStorage() even when boot fails.
     instance = db;
+    await db.init();
   }
   return instance;
 }
