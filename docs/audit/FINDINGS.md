@@ -141,3 +141,13 @@ this file). Fold into BUG-1 fix since same file.
 ### HYG-5 — Zero test coverage · Status: OPEN
 No test runner configured. Recommend Vitest + tests for `LoanService.generateReport()`
 balance math and `useLoanStore` flows before further ledger changes.
+
+### BUG-6 - In-place sort mutated shared tx array (CRITICAL) · Status: FIXED 2026-08-23
+**Location:** LoanDetailView.tsx mobileFilteredTxs memo
+**Root cause:** let result = sortedTxs (no copy) + esult.sort(desc) mutated the shared
+array whenever no filter was active, so ledgerRows/PDF computed balances over a REVERSED
+array. This - not the balance math - is why T-084-era fixes never resolved the user's symptom.
+**Lesson:** balance math was verified correct in isolation twice; aliasing bug hid it.
+Contract test added (sortLoanTransactions must not mutate input).
+**Fix:** commit 3921f1e on dev; verified end-to-end via Playwright against real DB
+(Home EXP: 34230/35230/44230/49230/54230/39230/41230).

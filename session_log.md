@@ -1283,3 +1283,20 @@
 ### Status
 - Branch verified: 9/9 tests, typecheck, build green; lint = 4 pre-existing audit errors only. Awaiting user approval to squash-merge fix/ledger-balance-sw into dev.
 
+
+## Session 2026-08-23 22:25
+
+### Changes
+- Merged fix/ledger-balance-sw -> dev as squash 01d4a1e (branch kept)
+- Browser-tested dev against REAL db (injected db_b64.txt via localStorage) - balances STILL wrong
+- Instrumented running app: sortedTxs ASC but computeRunningBalances received DESC
+- TRUE ROOT CAUSE: mobileFilteredTxs reused sortedTxs ref + in-place .sort(desc) reversed shared array before ledgerRows ran (aliasing bug - invisible to unit tests)
+- [dev] 3921f1e fix(loan-ledger): copy array before sort + no-mutation contract test
+- Verified live: Home EXP ledger now 34230..41230 chronological, matches summary card
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, playwright browser debugging
+
+### Status
+- Balance bug RESOLVED and browser-verified. Vite dev server left running at localhost:3000 for user manual check. Next: T-086..T-088 lint-error tickets.
+
