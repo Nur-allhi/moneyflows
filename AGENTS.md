@@ -173,6 +173,25 @@ array in place, reversing it before balances were computed; this masked all earl
 balance fixes. Service worker switched to network-first (v2) so updates reach clients.
 Merged to `master` as `02ce3cf` and pushed; branches kept.
 
+**Phase 11: Storage Overhaul — OPFS Migration & BUG-7 Freeze Fix** (source: `docs/plans/STORAGE_OPFS_MIGRATION.md`)
+
+| Ticket | Description | Status |
+|--------|-------------|--------|
+| T-093 | Plan doc + FINDINGS BUG-7 + CHANGELOG | **Complete** |
+| T-094 | Persistence adapter abstraction + hardened LS adapter | **Complete** |
+| T-095 | OpfsAdapter + one-time migration + transition mirror | **Complete** |
+| T-096 | Write coalescing (flush lifecycle) | **Complete** |
+| T-097 | Typed recovery + 15s splash watchdog + dbError actions | **Complete** |
+| T-098 | Digest fallback (FNV on insecure origins) + tests | **Complete** |
+| T-099 | Snapshot ring via adapters, quota prune-retry | **Complete** |
+| T-100 | Storage health row in SettingsModal | **Complete** |
+| T-101 | E2E verification (migration, delete-persist, corrupt-boot) | **Complete** |
+
+**Extra hardening:** init-promise memoization (StrictMode race), mirror activates only
+after verified load, fresh installs skip empty-schema initial flush.
+Persistence now: OPFS primary (`money_flows.db` + `snapshots/`), localStorage fallback;
+19 vitest tests; all gates green.
+
 **Next phase TBD.**
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.

@@ -1189,8 +1189,27 @@ pm run lint exits 0 with --max-warnings 0.
 pm test green in CI-able fresh clone; balance math locked by tests.
 
 ### T-092 - Split oversized files (HYG-3) [optional, touch-when-next-edited]
-**Skill:** senior-frontend, ui-ux-pro-max
+**Skill:** `senior-frontend`, `ui-ux-pro-max`
 **Effort:** XL - defer
 **File(s):** MemberProfile (764), TransactionFormModal (734), SQLiteDatabaseService (592), Dashboard (487)
 **Content:** Extract subcomponents/hooks per FRONTEND_SPEC conventions; keep each extraction atomic; run detect_changes() before commit.
 **Acceptance:** All touched files <=300 LOC; no behavior change.
+
+---
+
+# Phase 11: Storage Overhaul — OPFS Migration & BUG-7 Freeze Fix (2026-08-24)
+
+Source: `docs/plans/STORAGE_OPFS_MIGRATION.md`, `docs/audit/FINDINGS.md` BUG-7.
+
+### T-093 - Document plan + findings register + CHANGELOG — **Complete**
+### T-094 - Persistence adapter abstraction + hardened LocalStorageAdapter — **Complete**
+### T-095 - OpfsAdapter + one-time LS->OPFS migration + transition mirror — **Complete**
+### T-096 - Write coalescing (dirty-flag microtask flush + op-end awaits + pagehide flush) — **Complete**
+### T-097 - Recovery rework: typed errors, no blocking confirm, 15s splash watchdog, dbError actions — **Complete**
+### T-098 - Digest fallback (FNV fingerprint on insecure origins) + vectors/determinism tests — **Complete**
+### T-099 - Snapshot ring via adapters with per-slot guards and quota prune-retry — **Complete**
+### T-100 - Storage health row in SettingsModal (backend, last save, failure warning) — **Complete**
+### T-101 - E2E verification: migration import, transfer-delete persists across reload, corrupt-boot error screen (no hang); gates green — **Complete**
+
+**Extra hardening found during verification:** init-promise memoization (StrictMode double-mount race caused "Database not initialized" crash), mirror activates only after verified legacy load, fresh installs skip empty-schema initial flush.
+
