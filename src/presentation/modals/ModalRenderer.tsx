@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { useModalStore } from '../stores/useModalStore';
-import { modalRegistry } from './registry';
+import { getModalComponent } from './registry';
 import styles from './ModalRenderer.module.css';
 
 function ModalFallback() {
@@ -17,7 +17,7 @@ export function ModalRenderer() {
   return (
     <>
       {modals.map((m) => {
-        const Component = modalRegistry[m.type];
+        const Component = getModalComponent(m.type);
         if (!Component) return null;
         const isClosing = closingIds.includes(m.id);
         return (
