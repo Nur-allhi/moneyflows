@@ -131,9 +131,14 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     const cr = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue';
     const dr = (t: typeof filteredTxs[0]) => t.type === 'repay' || t.type === 'loan_repayment';
     let running = 0;
-    return filteredTxs.map((tx) => {
+    const balanceMap = new Map<string, number>();
+    for (const tx of sortedTxs) {
       if (cr(tx)) running += tx.amount;
       if (dr(tx)) running -= tx.amount;
+      balanceMap.set(tx.id, running);
+    }
+    return filteredTxs.map((tx) => {
+      const bal = balanceMap.get(tx.id) ?? 0;
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
@@ -147,13 +152,13 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         description: bracket ? `${tx.description} [${bracket}]` : tx.description,
         credit: cr(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
         debit: dr(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-        balance: formatAmountParts(Math.max(0, running), locale, currency).amount,
+        balance: formatAmountParts(Math.max(0, bal), locale, currency).amount,
         currencyLabel: currency,
         type: cr(tx) ? 'expense' as const : 'income' as const,
         typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' : 'Repayment',
       };
     }).reverse();
-  }, [filteredTxs, locale, currency, accountById, memberById]);
+  }, [filteredTxs, sortedTxs, locale, currency, accountById, memberById]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) {
@@ -177,11 +182,20 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     let running = 0;
     let totalCreditVal = 0;
     let totalDebitVal = 0;
+    const pdfBalanceMap = new Map<string, number>();
+    for (const tx of sortedTxs) {
+      const cr = tx.type === 'lend' || tx.type === 'loan_issue';
+      const dr = tx.type === 'repay' || tx.type === 'loan_repayment';
+      if (cr) { running += tx.amount; }
+      if (dr) { running -= tx.amount; }
+      pdfBalanceMap.set(tx.id, running);
+    }
     const pdfRows = filteredTxs.map((tx) => {
       const cr = tx.type === 'lend' || tx.type === 'loan_issue';
       const dr = tx.type === 'repay' || tx.type === 'loan_repayment';
-      if (cr) { running += tx.amount; totalCreditVal += tx.amount; }
-      if (dr) { running -= tx.amount; totalDebitVal += tx.amount; }
+      if (cr) totalCreditVal += tx.amount;
+      if (dr) totalDebitVal += tx.amount;
+      const bal = pdfBalanceMap.get(tx.id) ?? 0;
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
@@ -195,7 +209,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         bracket ? `${tx.description} (${bracket})` : tx.description,
         cr ? formatAmount(tx.amount, locale, currency) : '',
         cr ? '' : formatAmount(tx.amount, locale, currency),
-        formatAmount(Math.max(0, running), locale, currency),
+        formatAmount(Math.max(0, bal), locale, currency),
       ];
     });
 
@@ -261,7 +275,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
 
     const label = stack.debtorName.replace(/\s+/g, '_').toLowerCase();
     doc.save(`loan_ledger_${label}_${new Date().toISOString().slice(0, 10)}.pdf`);
-  }, [filteredTxs, locale, currency, stack.debtorName, dateMode, month, startDate, endDate]);
+  }, [filteredTxs, sortedTxs, locale, currency, stack.debtorName, dateMode, month, startDate, endDate]);
 
   return (
     <div className={styles.container}>

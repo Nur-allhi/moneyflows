@@ -220,38 +220,48 @@ export class LoanService {
       txFilter.endDate = endDate.toISOString().slice(0, 10);
     }
 
-    let txs = await this.db.getTransactions(txFilter);
+    const allTxs = await this.db.getTransactions(txFilter);
     const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment']);
+    const allLoanTxs = allTxs.filter((tx) => loanTypes.has(tx.type));
 
-    txs = txs.filter((tx) => loanTypes.has(tx.type));
-
-    if (filter.type && filter.type !== 'all') {
-      if (filter.type === 'lend') {
-        txs = txs.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
-      } else {
-        txs = txs.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment');
-      }
-    }
-
-    const accounts = await this.db.getAccounts();
-    const accountMap = new Map(accounts.map((a) => [a.id, a]));
-
-    const sorted = [...txs].sort((a, b) => {
+    const allSorted = [...allLoanTxs].sort((a, b) => {
       const c = a.date.localeCompare(b.date);
       if (c !== 0) return c;
       return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
     });
 
     let running = 0;
+    const balanceMap = new Map<string, number>();
+    for (const tx of allSorted) {
+      const isCredit = tx.type === 'lend' || tx.type === 'loan_issue';
+      const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment';
+      if (isCredit) running += tx.amount;
+      if (isDebit) running -= tx.amount;
+      balanceMap.set(tx.id, running);
+    }
+
+    let displayTxs = allSorted;
+    if (filter.type && filter.type !== 'all') {
+      if (filter.type === 'lend') {
+        displayTxs = displayTxs.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
+      } else {
+        displayTxs = displayTxs.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment');
+      }
+    }
+
+    const accounts = await this.db.getAccounts();
+    const accountMap = new Map(accounts.map((a) => [a.id, a]));
+
     let totalLent = 0;
     let totalRepaid = 0;
 
-    const rows: LoanReportRow[] = sorted.map((tx) => {
+    const rows: LoanReportRow[] = displayTxs.map((tx) => {
       const isCredit = tx.type === 'lend' || tx.type === 'loan_issue';
       const isDebit = tx.type === 'repay' || tx.type === 'loan_repayment';
+      const bal = balanceMap.get(tx.id) ?? 0;
 
-      if (isCredit) { running += tx.amount; totalLent += tx.amount; }
-      if (isDebit) { running -= tx.amount; totalRepaid += tx.amount; }
+      if (isCredit) totalLent += tx.amount;
+      if (isDebit) totalRepaid += tx.amount;
 
       const srcAcct = tx.sourceAccount ? accountMap.get(tx.sourceAccount) : undefined;
       const dstAcct = tx.destAccount ? accountMap.get(tx.destAccount) : undefined;
@@ -265,12 +275,12 @@ export class LoanService {
         lenderAccount: srcAcct?.name ?? tx.sourceAccount ?? '',
         borrowerAccount: dstAcct?.name ?? tx.destAccount ?? '',
         amount: tx.amount,
-        runningBalance: Math.max(0, running),
+        runningBalance: Math.max(0, bal),
       };
     });
 
     const borrowerAcct = filter.borrowerAccountId ? accountMap.get(filter.borrowerAccountId) : undefined;
-    const lenderAccts = [...new Set(txs.map((tx) => tx.sourceAccount ?? '').filter(Boolean))];
+    const lenderAccts = [...new Set(allSorted.map((tx) => tx.sourceAccount ?? '').filter(Boolean))];
     const lenderNames = lenderAccts.map((id) => accountMap.get(id)?.name ?? id);
 
     const summary: LoanReportSummary = {
