@@ -41,6 +41,12 @@ export interface SnapshotInfo {
   hash: string;
 }
 
+export interface StorageHealth {
+  backend: 'opfs' | 'localStorage';
+  lastFlushAt: number;
+  lastFlushFailed: boolean;
+}
+
 export interface IDatabaseService {
   init(): Promise<void>;
   getSqlJsDb(): unknown;
@@ -80,15 +86,20 @@ export interface IDatabaseService {
   purgeItem(id: string, type: 'transaction' | 'account'): Promise<void>;
   purgeExpiredItems(daysRetained: number): Promise<number>;
 
+  getSnapshots(): Promise<SnapshotInfo[]>;
+  restoreSnapshot(index: number): Promise<void>;
+  restoreNewestSnapshot(): Promise<boolean>;
+  resetStorage(): Promise<void>;
+  getStorageHealth(): StorageHealth;
+
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;
   getAccountGroupBalances(): Promise<GroupBalance[]>;
 
   exportToFile(): Promise<void>;
   importFromFile(): Promise<void>;
+  /** Replaces the in-memory database with the given .db bytes and persists it. */
+  importFromBytes(data: Uint8Array): Promise<void>;
 
   recalculateBalances(): Promise<void>;
-
-  getSnapshots(): SnapshotInfo[];
-  restoreSnapshot(index: number): Promise<void>;
 }

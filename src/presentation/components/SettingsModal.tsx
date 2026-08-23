@@ -4,7 +4,7 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { isFsaSupported, folderSync } from '../../infrastructure/database/FolderSync';
-import type { SnapshotInfo } from '../../core/ports/IDatabaseService';
+import type { SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
   DESCRIPTION_MAX_LENGTH_MAX,
@@ -31,6 +31,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [numpadMaxDigits, setNumpadMaxDigits] = useState(settings.numpadMaxDigits);
   const [dashboardTxLimit, setDashboardTxLimit] = useState(settings.dashboardTxLimit);
   const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
+  const [storageHealth, setStorageHealth] = useState<StorageHealth | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [folderName, setFolderName] = useState<string | null>(null);
@@ -66,7 +67,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   useEffect(() => {
     if (isOpen) {
-      setSnapshots(getDatabase().getSnapshots());
+      (async () => {
+        setSnapshots(await getDatabase().getSnapshots());
+        setStorageHealth(getDatabase().getStorageHealth());
+      })();
       setRestoreError(null);
       (async () => {
         const handle = await folderSync.getFolderHandle();
@@ -93,6 +97,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     setRestoreError(null);
     try {
       await getDatabase().restoreSnapshot(index);
+      window.location.reload();
     } catch (e) {
       setRestoreError(e instanceof Error ? e.message : 'Restore failed');
       setRestoring(false);
@@ -145,12 +150,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       const data = await folderSync.loadFile(name);
       if (!data) throw new Error('Failed to read backup file');
       const db = getDatabase();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const SQL = (db as any).SQL;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (db as any).db = new SQL.Database(data);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (db as any).save();
+      await db.importFromBytes(data);
       window.location.reload();
     } catch (e) {
       setRestoreError(e instanceof Error ? e.message : 'Restore failed');
@@ -319,6 +319,24 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               );
             })
           )}
+        </div>
+      )}
+
+      <div className={fieldStyles.separator} />
+
+      <div className={fieldStyles.sectionTitle}>Storage</div>
+      {storageHealth && (
+        <div className={fieldStyles.statusRow}>
+          <span className={storageHealth.lastFlushFailed ? fieldStyles.statusWarnDot : fieldStyles.statusDot} />
+          <span className={fieldStyles.statusText}>
+            {storageHealth.backend === 'opfs' ? 'OPFS (fast local file)' : 'Browser storage'}
+            {' — '}
+            {storageHealth.lastFlushFailed
+              ? 'last save failed; check disk space'
+              : storageHealth.lastFlushAt
+                ? `saved ${new Date(storageHealth.lastFlushAt).toLocaleTimeString(settings.locale, { hour: '2-digit', minute: '2-digit' })}`
+                : 'ready'}
+          </span>
         </div>
       )}
 
