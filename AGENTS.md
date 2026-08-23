@@ -24,7 +24,9 @@ money_flows_v0.4/
 │   ├── TAD.md               — Technical Architecture Document
 │   ├── SECURITY.md           — Security & Access Document
 │   ├── FRONTEND_SPEC.md      — Frontend Spec Document
-│   └── TICKETS.md            — Feature Ticket List
+│   ├── TICKETS.md            — Feature Ticket List
+│   ├── REPO_RULES.md          — Repo Management Document (branch/commit/merge rules)
+│   └── audit/                 — Project audit reports + findings register
 ├── src/
 │   ├── core/
 │   │   ├── domain/
@@ -91,7 +93,13 @@ money_flows_v0.4/
 - Each entry MUST clearly state what was completed and what the next ticket is.
 - This is the primary handoff mechanism for fresh sessions — make it thorough.
 
-### 3.8 AGENTS.md Management
+### 3.8 Merge Restriction
+- All coding and fixes happen **outside master** (on `dev` or feature branches).
+- Committing and pushing to those branches is permitted without asking.
+- **Merging to `master` is NEVER permitted without explicit user approval.**
+- This applies to every merge, even fast-forward merges — always ask first.
+
+### 3.9 AGENTS.md Management
 - Check this file (§3 and §5) at the start of every conversation.
 - Update if new conventions or files are introduced.
 - Update §5 to the next ticket after completing each ticket.
@@ -153,7 +161,7 @@ See `session_log.md` for complete session history.
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **money_flows_v0.4** (1278 symbols, 2537 relationships, 78 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **moneyflows** (1786 symbols, 3620 relationships, 134 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -177,10 +185,10 @@ This project is indexed by GitNexus as **money_flows_v0.4** (1278 symbols, 2537 
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/money_flows_v0.4/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/money_flows_v0.4/clusters` | All functional areas |
-| `gitnexus://repo/money_flows_v0.4/processes` | All execution flows |
-| `gitnexus://repo/money_flows_v0.4/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/moneyflows/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/moneyflows/clusters` | All functional areas |
+| `gitnexus://repo/moneyflows/processes` | All execution flows |
+| `gitnexus://repo/moneyflows/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 

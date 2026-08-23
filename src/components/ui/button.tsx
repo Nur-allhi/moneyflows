@@ -55,4 +55,6 @@ function Button({
   )
 }
 
+// shadcn convention: variants export lives next to the component; not a Fast Refresh boundary we need.
+// eslint-disable-next-line react-refresh/only-export-components
 export { Button, buttonVariants }

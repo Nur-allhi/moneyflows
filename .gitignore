@@ -29,3 +29,11 @@ query_db.mjs
 query_trace.mjs
 trace_balance.mjs
 seed_db.cjs
+view_db.cjs
+
+# User data exports / dumps (NEVER commit - see docs/SECURITY.md §5)
+USER_DATA/
+db_b64.txt
+
+# Misc debug artifacts
+dashboard

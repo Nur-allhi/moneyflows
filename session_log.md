@@ -1215,3 +1215,107 @@
 
 ### Status
 - All Phase 9 tickets T-065 through T-083 complete. **Next phase TBD.**
+
+## Session 2026-07-15 current
+
+### Changes
+- Fixed running balance in loan ledger: balance was computed from `filteredTxs` (visible rows only), so when a type filter like "Repaid" was active, all visible rows were debits → running went negative → `Math.max(0, running)` = 0 for every row.
+- **Root cause**: `Math.max(0, running)` with only debit entries always produces 0.
+- **Fix**: Pre-compute running balance from ALL loan transactions (`sortedTxs` / `allSorted`), store in a `Map<id, balance>`, then look up each filtered row's balance from that map.
+- Files changed:
+  - `LoanDetailView.tsx` — `ledgerRows` and `downloadPdf` now compute balance from `sortedTxs` via `balanceMap`
+  - `LoanService.ts` — `generateReport()` restructured: computes balance from all loan txs first, then applies type filter for display only
+
+### Skill(s) Used
+- `senior-frontend` — debugging running balance computation across filtered/all transaction sets
+
+### Status
+- Running balance fix applied. Hard refresh browser to verify.
+
+## Session 2026-08-23 (project audit)
+
+### Changes
+- Full-project analysis: typecheck PASS, build PASS, lint FAIL (4 errors / 21 warnings), 0 circular imports, zero tests.
+- Documented all findings in new docs/audit/ folder:
+  - docs/audit/PROJECT_ANALYSIS_2026-08-23.md — full report
+  - docs/audit/FINDINGS.md — findings register (BUG-1..5, HYG-1..5, lint inventory)
+- Key bugs: conditional hook in TransactionEditModal (crash), hardcoded 'Admin' + dead primaryMemberId setting, silent catch on counterparty create, DB port bypass via s any, stale memo deps.
+- Hygiene: USER_DATA/ + db_b64.txt untracked and NOT gitignored (privacy risk); running-balance fix still uncommitted.
+
+### Skill(s) Used
+- GitNexus (check/cycles), eslint/tsc/vite build, manual code review
+
+### Status
+- Audit documented. Next: commit pending balance fix, gitignore data files, then fix BUG-1..BUG-5.
+
+## Session 2026-08-23 14:30
+
+### Changes
+- [docs/PRD.md] v2.0 - shipped features F1-F9, current workflows/success criteria
+- [docs/TAD.md] v2.0 - actual architecture: loans module, unified loans table, backup pipeline, service contracts, invariants
+- [docs/SECURITY.md] v2.0 - local-first threat model, no-auth stance, repo privacy guardrails
+- [docs/FRONTEND_SPEC.md] v2.0 - tokens/routes/screen states/component inventory as built
+- [docs/REPO_RULES.md] NEW - branch strategy (master/dev), conventional commits, merge rules, README/CHANGELOG/versioning
+- [docs/TICKETS.md] Appended Phase 10 (T-084..T-092) from audit findings
+- [AGENTS.md] structure updated with REPO_RULES.md + docs/audit/
+
+### Skill(s) Used
+- skill-creator, senior-backend, code-reviewer, ui-ux-pro-max, frontend-design, senior-frontend, gitnexus
+
+### Status
+- 6 foundational docs generated/updated. Next ticket: T-084 (commit pending balance fix).
+
+
+## Session 2026-08-23 22:05
+
+### Changes
+- Root-caused persistent ledger balance bug: service worker (cache-first, v1) served stale bundles - fixes never reached browser
+- [dev] 8af1417 chore(repo): gitignore USER_DATA/, db_b64.txt, view_db.cjs, dashboard (T-085)
+- [dev] 90355e0 fix(loan-ledger): compute running balance from full transaction history (T-084)
+- [dev] 1c1ebcc docs: foundational docs refresh + audit register + REPO_RULES
+- [fix/ledger-balance-sw] e29d788 fix(pwa): network-first SW, cache v2, hashed assets stay cache-first
+- [fix/ledger-balance-sw] 32f4b2f refactor(loans): computeRunningBalances/sortLoanTransactions util; LoanDetailView + generateReport now share it; totals from FULL history (caught: filtered report showed totalRepaid=0); negatives no longer clamped (user decision)
+- [fix/ledger-balance-sw] 41df326 test(loans): vitest + 9 regression tests incl. user scenario 5000/12000/8000 and real Home EXP fixture; npm test script; README updated same commit
+
+### Skill(s) Used
+- senior-backend, senior-frontend, code-reviewer, gitnexus (detect_changes before each commit)
+
+### Status
+- Branch verified: 9/9 tests, typecheck, build green; lint = 4 pre-existing audit errors only. Awaiting user approval to squash-merge fix/ledger-balance-sw into dev.
+
+
+## Session 2026-08-23 22:25
+
+### Changes
+- Merged fix/ledger-balance-sw -> dev as squash 01d4a1e (branch kept)
+- Browser-tested dev against REAL db (injected db_b64.txt via localStorage) - balances STILL wrong
+- Instrumented running app: sortedTxs ASC but computeRunningBalances received DESC
+- TRUE ROOT CAUSE: mobileFilteredTxs reused sortedTxs ref + in-place .sort(desc) reversed shared array before ledgerRows ran (aliasing bug - invisible to unit tests)
+- [dev] 3921f1e fix(loan-ledger): copy array before sort + no-mutation contract test
+- Verified live: Home EXP ledger now 34230..41230 chronological, matches summary card
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, playwright browser debugging
+
+### Status
+- Balance bug RESOLVED and browser-verified. Vite dev server left running at localhost:3000 for user manual check. Next: T-086..T-088 lint-error tickets.
+
+
+## Session 2026-08-23 22:55
+
+### Changes
+- T-086..T-089 + T-090 executed; lint gate restored to --max-warnings 0 (was 4 errors / 21 warnings, now 0/0)
+- [dev] d5290b3 docs: CHANGELOG.md created (Keep-a-Changelog) + personal filename scrubbed from audit
+- [dev] 37af73a fix(edit-modal): early return moved below hooks (crash), inline toggle styles -> CSS module
+- [dev] 2cb2fdb fix(transaction-form): primaryMemberId setting now drives tx owner; counterparty errors shown inline
+- [dev] fba9a81 refactor(modals): typed registry via satisfies + getModalComponent (no any)
+- [dev] 2b60181 refactor(app): purgeExpiredItems called through port (cast removed)
+- [dev] 87d5328 chore(lint): dep arrays fixed across screens; intentional patterns carry scoped disables with reasons; Dashboard type sets hoisted to module scope
+- Gates: typecheck PASS, tests 10/10, build PASS, lint exit 0
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, senior-backend, gitnexus detect_changes
+
+### Status
+- All pre-merge gaps closed. AWAITING USER APPROVAL to merge dev -> master (no tag). Branches kept.
+

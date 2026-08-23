@@ -1,107 +1,53 @@
 # MoneyFlows — Security & Access Document
 
-**Target Skills:** `senior-backend`, `code-reviewer`
-**Version:** 1.0
+**Target Skills:** `senior-backend` (design) & `code-reviewer` (enforcement)
+**Version:** 2.0 · 2026-08-23
 
 ---
 
 ## 1. Threat Model
 
-| Threat | Impact | Mitigation |
+MoneyFlows is a **single-device, offline-first, client-only** app holding real family financial data (~1.14M BDT scope). There is no server, no network I/O, no telemetry. The realistic threats are:
+
+| Threat | Vector | Mitigation |
 |--------|--------|------------|
-| Local database extraction from browser storage | Full financial data exposure | Data lives in the browser (sql.js WASM DB persisted to `localStorage`); no cloud storage, no network calls; end-user controls their own device |
-| SQL injection via form fields | DB corruption / data leak | Parameterized queries only in `SQLiteDatabaseService`; never concatenate SQL strings |
-| XSS via description/name fields | Script execution in UI | React auto-escapes JSX; no `dangerouslySetInnerHTML`; sanitize on read |
-| Accidental permanent data loss | Irrecoverable financial records | Soft-delete on all entities (30-day auto-purge window); Recycle Bin; automatic restore-point backups |
-| Balance corruption from partial writes | Incorrect financial state | Transactions wrapped in a single transaction for double-entry writes; rollback on error |
-| Tampering with `deleted_at` timestamps | Data integrity bypass | Application-layer enforcement; no direct DB writes from UI |
-| Data loss from cleared browser storage / device change | Irrecoverable financial records | Manual export/import and optional Folder Sync (File System Access API) for off-device backup |
+| Data loss / corruption | bad write, browser eviction, disk failure | ring-buffer restore points, SHA-256 integrity hash, folder sync |
+| Accidental destruction | user deletes tx/account/member | soft-delete + Recycle Bin + 30-day auto-purge |
+| Privacy leak via git | exports/dumps committed to repo | §5 guardrails (already violated once — see audit) |
+| Malicious web page interference | none meaningful — no auth, no cookies, no tokens; nothing worth stealing remotely | N/A |
 
----
+## 2. Authentication & Authorization
 
-## 2. Authorization Model
-
-This is a single-device, single-user family app with **no user authentication** and **no role-based access control**. All actions (read, create, edit, delete, restore, purge) are available to whoever operates the device — there is no login, no password, and no admin/viewer distinction.
-
-> Note: this section intentionally replaces an earlier design that described a `useAuthStore` with Admin/Viewer roles. That role system was never implemented; the shipped app treats every user as having full access. If multi-user access is needed later (e.g., via Supabase in Phase 2), role-based authorization would be introduced there.
-
----
+- **None by design.** Single-admin local app; whoever unlocks the device has full access.
+- No passwords, tokens, sessions, or secrets exist in the codebase. Do not add any without a PRD change.
+- If cloud sync (Supabase) is ever approved, auth + RLS policies become mandatory and this document gets a v3.
 
 ## 3. Data Guardrails
 
-### 3.1 Soft-Delete System
+1. **Soft delete everywhere** (`deleted_at` on members, accounts, transactions, loans). Hard delete only via Recycle Bin purge or `purgeExpiredItems(30)`.
+2. **Restore before destroy**: `save()` writes a restore point first; integrity hash verified before load. A corrupt DB never silently overwrites a good one.
+3. **Balance invariants** (see TAD §4): running balance from full history; loan `outstanding` re-synced on edit/delete of linked transactions.
+4. **Amount validation**: `amount > 0` at DB level; wizard warns (not blocks) on insufficient balance per product decision (3e2ab85).
 
-```
-┌─────────────────────────────────────────────┐
-│  Every DELETE from UI sets deleted_at = now  │
-│  Queries filter WHERE deleted_at IS NULL     │
-│  Recycle Bin queries WHERE deleted_at NOT NULL│
-│  Auto-purge after 30 days (cron on app start) │
-└─────────────────────────────────────────────┘
-```
+## 4. Input Handling
 
-- All tables: `members`, `accounts`, `transactions`, `account_groups` have `deleted_at TEXT`.
-- `IDatabaseService.getMembers(includeDeleted?)` — default `includeDeleted=false`.
-- `RecycleService.purgeExpiredItems()` runs on app startup and deletes items where `deleted_at < datetime('now', '-30 days')`.
+- All SQL parameterized (`$named` params through sql.js prepared statements) — no string interpolation into SQL anywhere. `code-reviewer` rejects any concatenation.
+- PDF export runs client-side via jspdf; no external fetches. HTML sanitization not applicable (React escapes by default; no `dangerouslySetInnerHTML` permitted).
+- File System Access API: user explicitly grants a directory; `FolderSync` only writes the db file it manages.
 
-### 3.2 Double-Entry Transaction Integrity
+## 5. Repository Privacy Guardrails (CRITICAL)
 
-```
-createExpense(tx):
-  BEGIN TRANSACTION
-    INSERT INTO transactions (...) VALUES (...)
-    UPDATE accounts SET balance = balance - tx.amount WHERE id = tx.source_account
-  COMMIT
-```
+This repo contains a real product with **real financial data**. Enforced by `code-reviewer` on every PR:
 
-- Every `TransactionService` method wraps balance updates + transaction insert in one SQLite transaction.
-- `source_account` balance decreases for expense; `dest_account` balance increases.
-- For transfers: both accounts updated in same transaction.
-- For loan issue: source_account balance decreases; debtor's loan aggregate increases (no separate balance table — computed from transactions).
-- **Validation** before write: source account must exist, must be active, must have sufficient balance (for expense/transfer/loan_issue).
+1. `.gitignore` MUST cover: `USER_DATA/`, `db_b64.txt`, `*.db`, env files, debug dump scripts. *(Gap found in audit 2026-08-23 — fix ticketed as HYG-1/T-086.)*
+2. Never commit: exported PDFs, base64/db dumps, screenshots containing names/amounts, seed data from the real spreadsheet (use fixtures with fake names).
+3. If sensitive data lands in history: rotate/remove is impossible for personal data — treat as leaked, purge via filter-repo AND force-push coordination, then re-audit `.gitignore`. Precedent: commit `68f3771`.
+4. `main`/`master` must always build green from a fresh clone with no user data required to run.
 
-### 3.3 Input Validation Rules
+## 6. Review Checklist Additions (`code-reviewer`)
 
-| Field | Rule | Error |
-|-------|------|-------|
-| `amount` | `> 0`, `isFinite()`, not NaN | "Amount must be a positive number" |
-| `description` | `length >= 1 && length <= 200` | "Description is required (max 200 chars)" |
-| `source_account` | Required for expense/transfer/loan_issue; must exist and be active | "Select a source account" |
-| `dest_account` | Required for income/transfer; must differ from source (transfer only) | "Select a destination account" |
-| `date` | Valid ISO date string; `<= now` | "Date cannot be in the future" |
-| `member_id` | Required; must reference valid member | "Select a member" |
-| `debtor_id` | Required for loan_issue/loan_repayment; must be external member | "Select a debtor" |
-
-All validation runs **client-side** (immediate feedback) and **server-side** (in `TransactionService` before DB write).
-
-### 3.4 Metadata JSON Safety
-
-- `metadata` column stores arbitrary JSON for future Supabase compat.
-- Always validated: `JSON.parse()` on read; `JSON.stringify()` on write.
-- Default: `'{}'`.
-- Never query by metadata values (no indexed JSON fields in SQLite).
-
----
-
-## 4. Secure Coding Checklist (for code-reviewer)
-
-- [ ] All SQL queries use `?` parameterized placeholders — no string interpolation
-- [ ] `DELETE` is never used on core entities; only `UPDATE deleted_at = now`
-- [ ] Transaction writes wrapped in `BEGIN/COMMIT/ROLLBACK`
-- [ ] Balance checks happen inside the same transaction as the write
-- [ ] No secrets, API keys, or tokens in client-side code
-- [ ] `localStorage` only stores UI preferences (currency, locale, primary member, theme) and the persisted DB — never transmits data over the network
-- [ ] `parseInt/parseFloat` with radix; validate `isFinite` on all numeric inputs
-- [ ] React components sanitize on render (JSX auto-escapes); no `dangerouslySetInnerHTML`
-- [ ] No network requests leave the app — all data access is local (sql.js in-browser)
-- [ ] Zustand stores never cache deleted/sensitive raw data beyond session scope
-
----
-
-## 5. Future Security Roadmap (Phase 2 — Supabase)
-
-- Row-Level Security (RLS) policies on all tables
-- Supabase Auth with email/password per family member
-- Audit log table for all admin actions
-- Encrypted `metadata` fields (client-side encryption key)
-- Rate limiting on sync API
+- [ ] No new direct `sql.js` imports outside infrastructure
+- [ ] No `(db as any)` casts bypassing the port
+- [ ] New destructive flows write a restore point first
+- [ ] Balance math uses full-history computation
+- [ ] Diff touches no data files; `.gitignore` updated if new artifact types introduced

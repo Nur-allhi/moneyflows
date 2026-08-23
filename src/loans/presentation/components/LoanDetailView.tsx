@@ -11,6 +11,7 @@ import { useTransactionStore } from '../../../presentation/stores/useTransaction
 import { useModalStore } from '../../../presentation/stores/useModalStore';
 import { formatAmount, formatAmountParts } from '../../../presentation/utils/format';
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
+import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from '../../application/computeRunningBalances';
 import { ProgressBar, LedgerTable, LedgerSearch, MobileLedger } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import styles from './LoanDetailView.module.css';
@@ -41,7 +42,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
 
   useEffect(() => {
     fetchTransactions({ accountId: stack.debtorId });
-  }, [stack]);
+  }, [stack, fetchTransactions]);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -75,16 +76,10 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     });
   }, [stack.debtorId]);
 
-  const sortedTxs = useMemo(() => {
-    const loanTypes = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment']);
-    return [...txns]
-      .filter((tx) => loanTypes.has(tx.type))
-      .sort((a, b) => {
-        const c = a.date.localeCompare(b.date);
-        if (c !== 0) return c;
-        return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
-      });
-  }, [txns]);
+  const sortedTxs = useMemo(
+    () => sortLoanTransactions(txns),
+    [txns]
+  );
 
   const filteredTxs = useMemo(() => {
     let result = sortedTxs;
@@ -116,7 +111,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   }, [txFilter, dateMode]);
 
   const mobileFilteredTxs = useMemo(() => {
-    let result = sortedTxs;
+    let result = [...sortedTxs];
     if (txFilter === 'lend') {
       result = result.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
     } else if (txFilter === 'repay') {
@@ -128,12 +123,11 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   }, [sortedTxs, txFilter, ledgerQuery]);
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
-    const cr = (t: typeof filteredTxs[0]) => t.type === 'lend' || t.type === 'loan_issue';
-    const dr = (t: typeof filteredTxs[0]) => t.type === 'repay' || t.type === 'loan_repayment';
-    let running = 0;
+    const cr = (t: typeof filteredTxs[0]) => LOAN_CREDIT_TYPES.has(t.type);
+    const dr = (t: typeof filteredTxs[0]) => LOAN_DEBIT_TYPES.has(t.type);
+    const balanceMap = computeRunningBalances(sortedTxs);
     return filteredTxs.map((tx) => {
-      if (cr(tx)) running += tx.amount;
-      if (dr(tx)) running -= tx.amount;
+      const bal = balanceMap.get(tx.id) ?? 0;
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
@@ -147,13 +141,13 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         description: bracket ? `${tx.description} [${bracket}]` : tx.description,
         credit: cr(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
         debit: dr(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-        balance: formatAmountParts(Math.max(0, running), locale, currency).amount,
+        balance: formatAmountParts(bal, locale, currency).amount,
         currencyLabel: currency,
         type: cr(tx) ? 'expense' as const : 'income' as const,
         typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' : 'Repayment',
       };
     }).reverse();
-  }, [filteredTxs, locale, currency, accountById, memberById]);
+  }, [filteredTxs, sortedTxs, locale, currency, accountById, memberById]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) {
@@ -174,14 +168,15 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const downloadPdf = useCallback(() => {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
-    let running = 0;
     let totalCreditVal = 0;
     let totalDebitVal = 0;
+    const pdfBalanceMap = computeRunningBalances(sortedTxs);
     const pdfRows = filteredTxs.map((tx) => {
-      const cr = tx.type === 'lend' || tx.type === 'loan_issue';
-      const dr = tx.type === 'repay' || tx.type === 'loan_repayment';
-      if (cr) { running += tx.amount; totalCreditVal += tx.amount; }
-      if (dr) { running -= tx.amount; totalDebitVal += tx.amount; }
+      const cr = LOAN_CREDIT_TYPES.has(tx.type);
+      const dr = LOAN_DEBIT_TYPES.has(tx.type);
+      if (cr) totalCreditVal += tx.amount;
+      if (dr) totalDebitVal += tx.amount;
+      const bal = pdfBalanceMap.get(tx.id) ?? 0;
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
@@ -195,7 +190,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         bracket ? `${tx.description} (${bracket})` : tx.description,
         cr ? formatAmount(tx.amount, locale, currency) : '',
         cr ? '' : formatAmount(tx.amount, locale, currency),
-        formatAmount(Math.max(0, running), locale, currency),
+        formatAmount(bal, locale, currency),
       ];
     });
 
@@ -261,7 +256,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
 
     const label = stack.debtorName.replace(/\s+/g, '_').toLowerCase();
     doc.save(`loan_ledger_${label}_${new Date().toISOString().slice(0, 10)}.pdf`);
-  }, [filteredTxs, locale, currency, stack.debtorName, dateMode, month, startDate, endDate]);
+  }, [filteredTxs, sortedTxs, locale, currency, stack.debtorName, dateMode, month, startDate, endDate, accountById, memberById]);
 
   return (
     <div className={styles.container}>

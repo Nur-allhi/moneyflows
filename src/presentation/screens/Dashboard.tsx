@@ -102,6 +102,9 @@ const ACCOUNT_ICONS: Record<string, ReactNode> = {
   counterparty: <PersonIcon />,
 };
 
+const INCOME_TYPES = new Set(['income', 'loan_repayment', 'repay', 'loan_received']);
+const EXPENSE_TYPES = new Set(['expense', 'loan_issue', 'lend', 'loan_paidback']);
+
 export function Dashboard() {
   const navigate = useNavigate();
   const openWizard = () => useModalStore.getState().open('transaction-form');
@@ -117,7 +120,7 @@ export function Dashboard() {
     fetchTransactions({});
     fetchLoanStacks();
     fetchMembers();
-  }, []);
+  }, [fetchAccounts, fetchTransactions, fetchLoanStacks, fetchMembers]);
 
   const loading = acctLoading || txLoading;
   const error = acctError || txError;
@@ -161,8 +164,6 @@ export function Dashboard() {
   lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
   const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
 
-  const incomeTypes = new Set(['income', 'loan_repayment', 'repay', 'loan_received']);
-  const expenseTypes = new Set(['expense', 'loan_issue', 'lend', 'loan_paidback']);
 
   const thisMonthTxs = useMemo(
     () => transactions.filter((tx) => tx.date.startsWith(thisMonth)),
@@ -175,20 +176,20 @@ export function Dashboard() {
   );
 
   const thisMonthIncome = useMemo(
-    () => thisMonthTxs.filter((tx) => incomeTypes.has(tx.type)).reduce((s, tx) => s + tx.amount, 0),
+    () => thisMonthTxs.filter((tx) => INCOME_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0),
     [thisMonthTxs],
   );
 
   const thisMonthExpenses = useMemo(
-    () => thisMonthTxs.filter((tx) => expenseTypes.has(tx.type)).reduce((s, tx) => s + tx.amount, 0),
+    () => thisMonthTxs.filter((tx) => EXPENSE_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0),
     [thisMonthTxs],
   );
 
   const thisMonthNet = thisMonthIncome - thisMonthExpenses;
 
   const lastMonthNet = useMemo(() => {
-    const inc = lastMonthTxs.filter((tx) => incomeTypes.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
-    const exp = lastMonthTxs.filter((tx) => expenseTypes.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
+    const inc = lastMonthTxs.filter((tx) => INCOME_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
+    const exp = lastMonthTxs.filter((tx) => EXPENSE_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
     return inc - exp;
   }, [lastMonthTxs]);
 
@@ -535,3 +536,4 @@ export function Dashboard() {
     </div>
   );
 }
+

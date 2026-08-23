@@ -24,7 +24,7 @@ export function MemberList() {
   useEffect(() => {
     fetchMembers();
     fetchAccounts();
-  }, []);
+  }, [fetchMembers, fetchAccounts]);
 
   const familyMembers = members.filter((m) => !m.isExternal);
   const effectiveQuery = mobileSearch.toLowerCase().trim() || searchQuery;

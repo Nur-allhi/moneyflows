@@ -10,7 +10,12 @@ const AddAccountModal = lazy(() => import('./AddAccountModal').then(m => ({ defa
 const SettingsModalWrapper = lazy(() => import('./SettingsModalWrapper').then(m => ({ default: m.SettingsModalWrapper })));
 const SelectAccountModal = lazy(() => import('./SelectAccountModal').then(m => ({ default: m.SelectAccountModal })));
 
-export const modalRegistry: Record<string, ComponentType<any>> = {
+/**
+ * Modal props come from useModalStore as Record<string, unknown> and are spread
+ * onto the component by ModalRenderer. Each modal validates its own props, so
+ * the registry erases concrete prop types once, here, instead of using `any`.
+ */
+export const modalRegistry = {
   'transaction-form': TransactionFormModal,
   'transaction-detail': TransactionDetailModal,
   'transaction-edit': TransactionEditModal,
@@ -19,4 +24,11 @@ export const modalRegistry: Record<string, ComponentType<any>> = {
   'add-account': AddAccountModal,
   'settings': SettingsModalWrapper,
   'select-account': SelectAccountModal,
-};
+} satisfies Record<string, ComponentType<never>>;
+
+export type ModalRegistryKey = keyof typeof modalRegistry;
+
+export function getModalComponent(key: string): ComponentType<Record<string, unknown>> | null {
+  const entry = modalRegistry[key as ModalRegistryKey];
+  return entry ? (entry as unknown as ComponentType<Record<string, unknown>>) : null;
+}

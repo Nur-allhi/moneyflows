@@ -1,328 +1,109 @@
 # MoneyFlows — Technical Architecture Document (TAD)
 
 **Target Skill:** `senior-backend`
-**Version:** 1.0
+**Version:** 2.0 · 2026-08-23
+**Reality check:** reflects the codebase as built (Phases 1–9 complete), not the original plan.
 
 ---
 
-## 1. Clean Architecture Layers
+## 1. Architecture — Clean, Local-First, Client-Only
 
 ```
 src/
-├── core/
-│   ├── domain/           # Entities + Value Objects (plain TS classes)
-│   ├── application/      # Use cases (TransactionService, LoanService, etc.)
-│   └── ports/            # IDatabaseService interface
-├── infrastructure/       # Adapters: SQLiteDatabaseService, Repositories
-└── presentation/         # React components, Zustand stores, hooks
-```
-
-**Rule:** UI never imports the SQLite driver (`sql.js`) directly. All DB access goes through `IDatabaseService`.
-
----
-
-## 2. Database Schema (SQLite)
-
-### 2.1 `members`
-
-```sql
-CREATE TABLE members (
-  id          TEXT PRIMARY KEY,          -- UUID v4
-  name        TEXT NOT NULL,
-  short_name  TEXT,                      -- "Admin", "Father", "Mother"
-  email       TEXT,
-  phone       TEXT,
-  avatar_url  TEXT,
-  is_external INTEGER NOT NULL DEFAULT 0,-- 1 for debtors (BTC, External Debtor B, etc.)
-  metadata    TEXT DEFAULT '{}',          -- JSON blob (future supabase compat)
-  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
-  deleted_at  TEXT                        -- soft-delete timestamp
-);
-
-CREATE INDEX idx_members_deleted ON members(deleted_at);
-```
-
-### 2.2 `accounts`
-
-```sql
-CREATE TABLE accounts (
-  id          TEXT PRIMARY KEY,
-  member_id   TEXT NOT NULL REFERENCES members(id),
-  name        TEXT NOT NULL,              -- "bKash", "Brac Bank Savings", "Cash"
-  type        TEXT NOT NULL CHECK(type IN (
-                'bank', 'mobile_wallet', 'cash', 'savings', 'business'
-              )),
-  balance     REAL NOT NULL DEFAULT 0,
-  currency    TEXT NOT NULL DEFAULT 'BDT',
-  icon        TEXT,                       -- icon identifier
-  color       TEXT,                       -- hex for gradient
-  is_active   INTEGER NOT NULL DEFAULT 1,
-  metadata    TEXT DEFAULT '{}',
-  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
-  deleted_at  TEXT
-);
-
-CREATE INDEX idx_accounts_member ON accounts(member_id);
-CREATE INDEX idx_accounts_deleted ON accounts(deleted_at);
-CREATE INDEX idx_accounts_type ON accounts(type);
-```
-
-### 2.3 `transactions`
-
-```sql
-CREATE TABLE transactions (
-  id              TEXT PRIMARY KEY,
-  type            TEXT NOT NULL CHECK(type IN (
-                    'income', 'expense', 'transfer', 'loan_issue', 'loan_repayment'
-                  )),
-  description     TEXT NOT NULL,
-  amount          REAL NOT NULL CHECK(amount > 0),
-  source_account  TEXT REFERENCES accounts(id),
-  dest_account    TEXT REFERENCES accounts(id),
-  member_id       TEXT NOT NULL REFERENCES members(id),
-  -- For loan transactions:
-  debtor_id       TEXT REFERENCES members(id),
-  loan_ref        TEXT,                    -- grouping key for loan stacks
-  -- Timestamps
-  date            TEXT NOT NULL,           -- user-entered date (YYYY-MM-DD)
-  created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
-  deleted_at      TEXT,
-  metadata        TEXT DEFAULT '{}'
-);
-
-CREATE INDEX idx_transactions_member ON transactions(member_id);
-CREATE INDEX idx_transactions_date ON transactions(date);
-CREATE INDEX idx_transactions_type ON transactions(type);
-CREATE INDEX idx_transactions_account ON transactions(source_account);
-CREATE INDEX idx_transactions_deleted ON transactions(deleted_at);
-CREATE INDEX idx_transactions_debtor ON transactions(debtor_id);
-CREATE INDEX idx_transactions_loan_ref ON transactions(loan_ref);
-```
-
-### 2.4 `account_groups`
-
-```sql
-CREATE TABLE account_groups (
-  id          TEXT PRIMARY KEY,
-  name        TEXT NOT NULL,              -- "Bank Accounts", "Mobile Wallets", etc.
-  sort_order  INTEGER NOT NULL DEFAULT 0,
-  metadata    TEXT DEFAULT '{}',
-  deleted_at  TEXT
-);
-```
-
-### 2.5 `account_group_mappings`
-
-```sql
-CREATE TABLE account_group_mappings (
-  id              TEXT PRIMARY KEY,
-  account_group_id TEXT NOT NULL REFERENCES account_groups(id),
-  account_id      TEXT NOT NULL REFERENCES accounts(id),
-  UNIQUE(account_group_id, account_id)
-);
-```
-
----
-
-## 3. `IDatabaseService` Interface (Port)
-
-```typescript
-interface IDatabaseService {
-  // Members
-  getMembers(includeDeleted?: boolean): Promise<Member[]>;
-  getMemberById(id: string): Promise<Member | null>;
-  saveMember(member: Member): Promise<void>;
-  softDeleteMember(id: string): Promise<void>;
-
-  // Accounts
-  getAccounts(memberId?: string): Promise<Account[]>;
-  getAccountById(id: string): Promise<Account | null>;
-  saveAccount(account: Account): Promise<void>;
-  softDeleteAccount(id: string): Promise<void>;
-
-  // Transactions
-  getTransactions(filters?: TransactionFilter): Promise<Transaction[]>;
-  getTransactionById(id: string): Promise<Transaction | null>;
-  saveTransaction(tx: Transaction): Promise<void>;
-  softDeleteTransaction(id: string): Promise<void>;
-
-  // Loans
-  getLoanStacks(): Promise<LoanStack[]>;
-  getLoanStackByDebtor(debtorId: string): Promise<LoanStack>;
-
-  // Recycle Bin
-  getDeletedItems(type?: 'transaction' | 'account'): Promise<DeletedItem[]>;
-  restoreItem(id: string, type: 'transaction' | 'account'): Promise<void>;
-  purgeItem(id: string, type: 'transaction' | 'account'): Promise<void>;
-  purgeExpiredItems(): Promise<number>;
-
-  // Aggregations
-  getFamilySummary(): Promise<FamilySummary>;
-  getMemberBalance(memberId: string): Promise<number>;
-  getAccountGroupBalances(): Promise<GroupBalance[]>;
-}
-```
-
----
-
-## 4. Domain Entities
-
-```typescript
-// core/domain/Member.ts
-class Member {
-  id: string;
-  name: string;
-  shortName?: string;
-  isExternal: boolean;
-  metadata: Record<string, unknown>;
-  createdAt: string;
-  deletedAt?: string;
-}
-
-// core/domain/Account.ts
-class Account {
-  id: string;
-  memberId: string;
-  name: string;
-  type: 'bank' | 'mobile_wallet' | 'cash' | 'savings' | 'business';
-  balance: number;
-  currency: string; // 'BDT'
-  icon?: string;
-  color?: string;
-  isActive: boolean;
-}
-
-// core/domain/Transaction.ts
-class Transaction {
-  id: string;
-  type: 'income' | 'expense' | 'transfer' | 'loan_issue' | 'loan_repayment';
-  description: string;
-  amount: number;
-  sourceAccount?: string;
-  destAccount?: string;
-  memberId: string;
-  debtorId?: string;
-  loanRef?: string;
-  date: string;
-}
-
-// core/domain/LoanStack.ts
-interface LoanStack {
-  debtorId: string;
-  debtorName: string;
-  totalOutstanding: number;
-  totalRecovered: number;
-  progressPercent: number;
-  loans: LoanItem[];
-}
-
-interface LoanItem {
-  id: string;
-  fundingSource: string;   // account name
-  amount: number;
-  recovered: number;
-  status: 'active' | 'on_track';
-  date: string;
-}
-```
-
----
-
-## 5. Application Services (Use Cases)
-
-| Service | Key Methods | Responsibility |
-|---------|------------|----------------|
-| `TransactionService` | `createIncome()`, `createExpense()`, `createTransfer()`, `createLoanIssue()`, `createLoanRepayment()` | Double-entry: updates both account balances + creates transaction record |
-| `LoanService` | `getLoanStacks()`, `getDebtorSummary()`, `calculateProgress()` | Aggregates loan transactions into stacks |
-| `BalanceService` | `getFamilySummary()`, `getMemberBalance()`, `getGroupBalances()` | Pre-calculated dashboard aggregates |
-| `RecycleService` | `getDeletedItems()`, `restoreItem()`, `purgeItem()`, `purgeExpiredItems()` | Manages soft-delete lifecycle |
-
----
-
-## 6. Zustand Stores (State Management)
-
-| Store | State | Key Actions |
-|-------|-------|-------------|
-| `useMemberStore` | `members[]`, `activeMemberId` | `fetchMembers`, `setActiveMember` |
-| `useAccountStore` | `accounts[]`, `byMember` | `fetchAccounts`, `getByMember` |
-| `useTransactionStore` | `transactions[]`, `filters` | `fetchTransactions`, `addTransaction` (optimistic) |
-| `useLoanStore` | `loanStacks[]` | `fetchLoanStacks` |
-| `useRecycleStore` | `deletedItems[]` | `fetchDeleted`, `restore`, `purge` |
-
-**Optimistic update pattern:** On `addTransaction`, update account balance in-memory + push to DB in background. Rollback on error.
-
----
-
-## 7. File Organization (≤300 LOC per file)
-
-```
-src/
-├── core/
-│   ├── domain/
-│   │   ├── Member.ts
-│   │   ├── Account.ts
-│   │   ├── Transaction.ts
-│   │   ├── AccountGroup.ts
-│   │   └── Loan.ts
-│   ├── application/
-│   │   ├── TransactionService.ts
-│   │   ├── LoanService.ts
-│   │   ├── RecycleService.ts
-│   │   └── BalanceService.ts
-│   └── ports/
-│       └── IDatabaseService.ts
+├── core/                    # framework-free domain + use cases + ports
+│   ├── domain/              # entities: Transaction, Member, Account, AppSettings...
+│   ├── application/         # services orchestrating use cases
+│   └── ports/               # IDatabaseService interface (the ONLY DB contract)
 ├── infrastructure/
-│   ├── database/
-│   │   ├── SQLiteDatabaseService.ts
-│   │   ├── schema.sql
-│   │   └── seed.ts
-│   └── repositories/
-│       ├── MemberRepository.ts
-│       ├── AccountRepository.ts
-│       └── TransactionRepository.ts
-└── presentation/
-    ├── components/
-    │   ├── GlassPanel.tsx
-    │   ├── Avatar.tsx
-    │   ├── MetricCard.tsx
-    │   ├── AccountCard.tsx
-    │   ├── AccountRow.tsx
-    │   ├── TransactionRow.tsx
-    │   ├── LedgerTable.tsx
-    │   ├── QuickActionCard.tsx
-    │   ├── LoanStack.tsx
-    │   ├── ProgressBar.tsx
-    │   ├── SegmentedTabs.tsx
-    │   ├── FormField.tsx
-    │   ├── Numpad.tsx
-    │   ├── BottomSheet.tsx
-    │   ├── Modal.tsx
-    │   ├── TabBar.tsx
-    │   └── RecycleRow.tsx
-    ├── screens/
-    │   ├── Dashboard.tsx
-    │   ├── MemberProfile.tsx
-    │   ├── Loans.tsx
-    │   ├── TransactionWizard.tsx
-    │   └── RecycleBin.tsx
-    ├── hooks/
-    │   ├── useAccounts.ts
-    │   ├── useTransactions.ts
-    │   └── useLoans.ts
-    ├── stores/
-    │   ├── useMemberStore.ts
-    │   ├── useAccountStore.ts
-    │   ├── useTransactionStore.ts
-    │   ├── useLoanStore.ts
-    │   └── useRecycleStore.ts
-    ├── styles/
-    │   ├── tokens.css
-    │   ├── glassmorphism.css
-    │   ├── typography.css
-    │   └── reset.css
-    ├── App.tsx
-    └── main.tsx
+│   ├── database/            # SQLiteDatabaseService (sql.js WASM), FolderSync.ts
+│   └── repositories/        # repository implementations over the port
+├── loans/                   # unified loan system (Phase 7) — self-contained module
+│   ├── domain/types.ts      # Loan, LoanItem, LoanStack
+│   ├── application/LoanService.ts
+│   ├── infrastructure/LoanDatabase.ts
+│   └── presentation/        # LoansScreen, LoanDetailView, LoanForm, AddCounterparty, useLoanStore
+├── presentation/            # screens, components, modals (lazy registry), stores, hooks, constants, styles
+└── components/ui/           # shadcn-style primitives (button, calendar, select)
 ```
+
+**Rules**
+1. UI never imports `sql.js` — everything crosses `IDatabaseService` (port). *(Audit gap: `App.tsx:71` casts `(db as any)` for `purgeExpiredItems` — must move to port, see TICKETS Phase 10.)*
+2. Each file ≤300 LOC. Current violations tracked in `docs/audit/FINDINGS.md` HYG-3.
+3. One simple solution; write only to spec.
+
+**API routes:** none. The app is client-only and offline-first; there is no server. "Contracts" are TypeScript interfaces (`IDatabaseService`, `LoanService` public methods, Zustand store APIs). Supabase remains a non-goal until a sync phase is approved.
+
+---
+
+## 2. Persistence
+
+Single SQLite database (`money_flows.db`) via `sql.js` in-browser, serialized to localStorage/OPFS on every `save()`. Every mutation path ends in `save()` which additionally: pushes to a ring buffer of restore points (T-060), verifies SHA-256 integrity (T-062), and optionally mirrors to a user-chosen folder via File System Access API (`FolderSync.ts`, T-064).
+
+### 2.1 Core tables
+
+```sql
+members(id PK, name, short_name, email, phone, avatar_url,
+        is_external INT DEFAULT 0, metadata JSON, created_at, updated_at, deleted_at)
+
+accounts(id PK, member_id FK→members, name,
+         type CHECK(type IN ('bank','mobile_wallet','cash','savings','business')),
+         balance REAL DEFAULT 0, currency TEXT DEFAULT 'BDT',
+         icon, color, is_active INT DEFAULT 1, metadata JSON,
+         created_at, updated_at, deleted_at)
+
+transactions(id PK, type CHECK(type IN ('income','expense','transfer',
+                     'loan_issue','loan_repayment')),
+             description, amount REAL CHECK(amount > 0),
+             source_account FK→accounts NULLABLE, dest_account FK→accounts NULLABLE,
+             member_id FK→members, debtor_id FK→members NULLABLE,
+             loan_ref TEXT NULLABLE,          -- legacy grouping key; unified system uses loans table
+             date TEXT NOT NULL,              -- user-entered YYYY-MM-DD
+             created_at, updated_at, deleted_at, metadata JSON)
+
+account_groups(id PK, name, sort_order, metadata JSON, deleted_at)
+account_group_mappings(account_id FK, group_id FK)
+```
+
+Indexes: `member_id`, `date`, `type`, `source_account`, `dest_account`, `debtor_id`, `deleted_at` on transactions; `member_id`/`deleted_at` on accounts/members.
+
+### 2.2 Unified loan tables (Phase 7)
+
+```sql
+loans(id PK,
+      lender_account_id   FK→accounts NOT NULL,
+      borrower_account_id FK→accounts NOT NULL,
+      principal REAL NOT NULL,
+      outstanding REAL NOT NULL,
+      status TEXT NOT NULL,                -- 'active' | 'settled'
+      description TEXT DEFAULT '',
+      metadata JSON, created_at, updated_at, deleted_at)
+
+-- loan movements are rows in `transactions` with type 'loan_issue' | 'loan_repayment',
+-- linked to the loan via metadata.legacy loan_ref OR metadata.loanId (see LoanService.syncLoanTransaction)
+```
+
+Legacy types `'lend' | 'repay'` still exist in historical rows and MUST be treated as credits/debits in every balance computation (audit lesson f9f802a: orphan legacy types broke running balance).
+
+### 2.3 Settings
+
+Not in SQLite — `AppSettings` (locale, currency, primaryMemberId, wizard constants) persists to `localStorage` via `useSettingsStore`. `primaryMemberId` is currently written but never read (BUG-2, fix scheduled).
+
+---
+
+## 3. Service Layer Contracts
+
+| Contract | Key methods |
+|----------|-------------|
+| `IDatabaseService` (port) | getMembers/Accounts/Transactions, saveTransaction, softDelete, restore, purge, purgeExpiredItems*(to add)* |
+| `LoanService` | createLoan, recordMovement, syncLoanTransaction(oldAmount→newAmount on edit), generateReport(filter) → summary+rows with runningBalance from FULL history |
+| `FolderSync` | chooseFolder(), mirror(dbBytes), verifySha256() |
+| Zustand stores | `useTransactionStore`, `useLoanStore`, `useSettingsStore`, `useModalStore` (lazy modal registry: transaction-form/detail/edit, delete-confirm, edit-member, add-account, settings, select-account) |
+
+## 4. Invariants (enforced by review + future tests)
+
+1. **Running balance is computed from ALL transactions of a scope, then filtered for display** — never from the filtered set.
+2. Balance floors at 0 via `Math.max(0, …)` only at display time.
+3. Deleting a repayment updates loan `outstanding` (057a9b4).
+4. Editing amount/type re-syncs the linked loan (`syncLoanTransaction`).
+5. Soft-delete everywhere; hard delete only via Recycle Bin purge.
+6. Optimistic UI updates; store re-fetches on mount (deliberate pattern).

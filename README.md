@@ -107,6 +107,7 @@ npm run preview   # preview the production build
 ### Quality gates
 
 ```bash
+npm run test       # Vitest unit tests
 npm run lint       # ESLint (max-warnings 0)
 npm run typecheck  # tsc --noEmit
 ```

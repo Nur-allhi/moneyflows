@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **money_flows_v0.4** (1278 symbols, 2537 relationships, 78 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **moneyflows** (1786 symbols, 3620 relationships, 134 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -25,10 +25,10 @@ This project is indexed by GitNexus as **money_flows_v0.4** (1278 symbols, 2537 
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/money_flows_v0.4/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/money_flows_v0.4/clusters` | All functional areas |
-| `gitnexus://repo/money_flows_v0.4/processes` | All execution flows |
-| `gitnexus://repo/money_flows_v0.4/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/moneyflows/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/moneyflows/clusters` | All functional areas |
+| `gitnexus://repo/moneyflows/processes` | All execution flows |
+| `gitnexus://repo/moneyflows/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 

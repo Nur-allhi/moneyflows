@@ -127,7 +127,7 @@ export function TransactionFormModal({
     fetchAccounts();
     fetchMembers();
     fetchLoanStacks();
-  }, []);
+  }, [fetchAccounts, fetchMembers, fetchLoanStacks]);
 
   const memberLookup = useMemo(
     () => Object.fromEntries(members.map((m) => [m.id, m])),
@@ -228,13 +228,16 @@ export function TransactionFormModal({
       setDestination(result.accountId);
       setShowAddCp(false);
       setNewCpName('');
-    } catch { }
+    } catch (e) {
+      setErrors({ destination: e instanceof Error ? e.message : 'Could not create counterparty. Try again.' });
+    }
   };
 
   const handleSubmit = async () => {
     if (!validate()) return;
     const amount = parseInt(rawAmount, 10);
-    const txMemberId = members.find((m) => !m.isExternal && m.shortName === 'Admin')?.id
+    const primaryMemberId = useSettingsStore.getState().settings.primaryMemberId;
+    const txMemberId = (primaryMemberId && members.find((m) => m.id === primaryMemberId && !m.isExternal)?.id)
       ?? members.find((m) => !m.isExternal)?.id
       ?? members[0]?.id
       ?? '';
@@ -775,9 +778,12 @@ export function TransactionFormModal({
                   className={styles.inputField}
                   placeholder="Person name"
                   value={newCpName}
-                  onChange={(e) => setNewCpName(e.target.value)}
+                  onChange={(e) => { setNewCpName(e.target.value); if (errors.destination) setErrors((p) => ({ ...p, destination: '' })); }}
                   autoFocus
                 />
+                {errors.destination && (
+                  <span className={styles.errorText}>{errors.destination}</span>
+                )}
                 <div className={styles.createCpActions}>
                   <button className={styles.cancelBtn} onClick={() => { setShowAddCp(false); setNewCpName(''); }}>Cancel</button>
                   <button className={styles.saveBtn} onClick={handleCreateCp}>Create</button>
