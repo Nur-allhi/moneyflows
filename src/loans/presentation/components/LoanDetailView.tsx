@@ -111,7 +111,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   }, [txFilter, dateMode]);
 
   const mobileFilteredTxs = useMemo(() => {
-    let result = sortedTxs;
+    let result = [...sortedTxs];
     if (txFilter === 'lend') {
       result = result.filter((tx) => tx.type === 'lend' || tx.type === 'loan_issue');
     } else if (txFilter === 'repay') {

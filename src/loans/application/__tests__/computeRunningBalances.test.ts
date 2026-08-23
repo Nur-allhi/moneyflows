@@ -31,6 +31,13 @@ describe('sortLoanTransactions', () => {
     expect(sorted[0]?.amount).toBe(2);
     expect(sorted[1]?.amount).toBe(1);
   });
+
+  it('never mutates the input array (callers rely on shared references)', () => {
+    const input = [tx('lend', 7000, '2026-07-03'), tx('lend', 5000, '2026-07-01')];
+    const before = input.map((t) => t.date);
+    sortLoanTransactions(input);
+    expect(input.map((t) => t.date)).toEqual(before);
+  });
 });
 
 describe('computeRunningBalances', () => {
