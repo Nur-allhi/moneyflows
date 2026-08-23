@@ -89,7 +89,7 @@ Untracked files in repo root, **none covered by `.gitignore`**:
 
 | Path | Contents | Risk |
 |---|---|---|
-| `USER_DATA/loan_ledger_..._father_2026-07-15 (1).pdf` | Real user financial data (exported ledger PDF) | Privacy leak if committed |
+| `USER_DATA/loan_ledger_<name>_<date>.pdf` | Real user financial data (exported ledger PDF) | Privacy leak if committed |
 | `db_b64.txt` | 284 KB base64 dump = **entire database contents** | Full financial-data leak if committed |
 | `dashboard` | debug artifact | clutter |
 | `view_db.cjs` | debug script | clutter |
