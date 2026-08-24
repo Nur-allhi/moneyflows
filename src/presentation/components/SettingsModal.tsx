@@ -108,7 +108,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const d = new Date(iso);
     const now = new Date();
     const isToday = d.toDateString() === now.toDateString();
-    const time = d.toLocaleTimeString(settings.locale, { hour: '2-digit', minute: '2-digit' } as const);
+    const time = d.toLocaleTimeString(settings.locale, { hour: 'numeric', minute: '2-digit', hour12: true } as const);
     if (isToday) return `Today ${time}`;
     const date = d.toLocaleDateString(settings.locale, { month: 'short', day: 'numeric' } as const);
     return `${date} ${time}`;
@@ -334,7 +334,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {storageHealth.lastFlushFailed
               ? 'last save failed; check disk space'
               : storageHealth.lastFlushAt
-                ? `saved ${new Date(storageHealth.lastFlushAt).toLocaleTimeString(settings.locale, { hour: '2-digit', minute: '2-digit' })}`
+                ? `saved ${new Date(storageHealth.lastFlushAt).toLocaleTimeString(settings.locale, { hour: 'numeric', minute: '2-digit', hour12: true })}`
                 : 'ready'}
           </span>
         </div>
