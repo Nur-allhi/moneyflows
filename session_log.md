@@ -1416,3 +1416,18 @@
 ### Status
 - Complete on dev.
 
+
+## Session 2026-08-24 05:40
+
+### Changes
+- [package.json] version 0.2.0 -> 1.0.0 (first stable tag; reflects Phases 1-11 scope)
+- [whatsNew.ts] release notes re-keyed to 1.0.0
+- [CHANGELOG.md] consolidated Unreleased into [1.0.0] - 2026-08-24 heading
+- Release flow: commit dev -> merge dev->master -> tag v1.0.0 on master -> sync dev
+
+### Skill(s) Used
+- gitnexus, code-reviewer
+
+### Status
+- v1.0.0 tagged on master; settings footer auto-shows new version.
+

@@ -7,7 +7,7 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
-    version: '0.2.0',
+    version: '1.0.0',
     items: [
       'Your data now lives in a safer place inside your browser — saving is faster and more reliable.',
       'Backups got smarter: restore points clean themselves up when storage gets tight.',
