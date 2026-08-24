@@ -1,7 +1,7 @@
 # PII / Hardcoded-Name Audit — Full Project Scan
 
 **Date:** 2026-08-24 · **Requested by:** owner ("is any hardcoded family person's name available?")
-**Method:** case-insensitive pattern scan (`admin|father|father|mother|mother|father|external debtor a|external debtor b|external debtor c|bagdad|<owner>`) across every tracked file, filenames, and git pickaxe history probes; plus manual review of untracked local artifacts.
+**Method:** case-insensitive scan of the family-name pattern list (see BUGS.md BUG-1) across every tracked file, filenames, and git pickaxe history probes; plus manual review of untracked local artifacts. Names below are shown post-scrub as role placeholders; pre-scrub values are documented only in the backup bundle.
 **Companion register:** `docs/BUGS.md` BUG-1.
 
 ---
@@ -103,8 +103,15 @@ Recommended sequence: **C immediately → A in next docs pass → B as its own a
 ## 6. Re-run commands (appendix)
 
 ```bash
-git grep -i -n -E "admin|father|father|mother|mother|father|external debtor a|external debtor b|external debtor c|bagdad" -- .
-git grep -i -c -E "…" -- Project_plan
+# PATTERN = the family-name list documented in BUGS.md BUG-1
+git grep -i -n -E "<PATTERN>" -- .
 git log --all --oneline --diff-filter=A -- "USER_DATA/*"
-git rev-list master --count -- "USER_DATA/*"
+git rev-list master --count -- "USER_DATA/*"   # -> 0 after 2026-08-24 rewrite
 ```
+
+## 7. Resolution record
+
+2026-08-24: full history rewritten via `git filter-repo` on a mirror clone (backup bundle `C:\Dev_Projects\moneyflows-backup-pre-rewrite.bundle`). USER_DATA paths purged; all family/counterparty names replaced with role placeholders across every commit; all branch refs force-pushed to origin.
+
+GitHub caveat: orphaned pre-rewrite objects may remain fetchable by exact SHA until platform garbage-collection. For absolute certainty, delete + recreate the repository or request a server-side GC. Any clones on other machines must be re-cloned (old clones would push leaked objects back).
+

@@ -1369,3 +1369,20 @@
 ### Status
 - Audit complete + BUG-1 logged. Awaiting decision on Option A/B/C.
 
+
+## Session 2026-08-24 02:20
+
+### Changes
+- BUG-1 remediation executed (owner-approved Option B2): full git history rewrite via git filter-repo on mirror clone C:\Dev_Projects\moneyflows_rewrite.git
+- USER_DATA pdf purged from all refs; 37 name-replacement rules applied across every commit (family members -> role placeholders: Admin/Father/Mother; external counterparties -> External Debtor A-D)
+- All 7 branches force-pushed to origin; working repo re-pointed onto rewritten SHAs; origin tracking restored
+- Post-scan: 0 tracked files with real names; audit report redacted (owner handle) + resolution record added
+- BUGS.md BUG-1 -> fixed; gates re-run green (typecheck, tests 19/19)
+- Backup: C:\Dev_Projects\moneyflows-backup-pre-rewrite.bundle (contains OLD history incl. leaked PDF - keep private or delete once satisfied)
+
+### Skill(s) Used
+- code-reviewer, senior-backend, gitnexus
+
+### Status
+- BUG-1 fixed. GitHub caveat: orphaned old objects may linger by SHA until GC; other-machine clones must re-clone. Master sync of closure commit pending user approval.
+
