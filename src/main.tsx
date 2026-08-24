@@ -7,6 +7,7 @@ import { WhatsNewModal } from './presentation/components/WhatsNewModal';
 import { whatsNewFor } from './presentation/constants/whatsNew';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
+import { APP_VERSION } from './presentation/constants/appVersion';
 import './presentation/styles/tailwind.css';
 import './presentation/styles/reset.css';
 import './presentation/styles/tokens.css';
@@ -24,9 +25,9 @@ function Root() {
   React.useEffect(() => {
     if (!showApp) return;
     const { settings, updateSettings } = useSettingsStore.getState();
-    if (settings.lastSeenVersion !== __APP_VERSION__) {
+    if (settings.lastSeenVersion !== APP_VERSION) {
       // Any change (including first install) surfaces the latest notes once.
-      setWhatsNew(whatsNewFor(__APP_VERSION__));
+      setWhatsNew(whatsNewFor(APP_VERSION));
       updateSettings({ lastSeenVersion: __APP_VERSION__ });
     }
   }, [showApp]);
