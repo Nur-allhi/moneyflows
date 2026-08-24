@@ -3,6 +3,9 @@ import React, { useCallback, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import { SplashScreen } from './presentation/components/SplashScreen';
+import { WhatsNewModal } from './presentation/components/WhatsNewModal';
+import { whatsNewFor } from './presentation/constants/whatsNew';
+import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
 import './presentation/styles/tailwind.css';
 import './presentation/styles/reset.css';
@@ -14,8 +17,19 @@ function Root() {
   const [ready, setReady] = useState(false);
   const [showApp, setShowApp] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
+  const [whatsNew, setWhatsNew] = useState<{ version: string; items: string[] } | null>(null);
 
   const handleFinish = useCallback(() => setShowApp(true), []);
+
+  React.useEffect(() => {
+    if (!showApp) return;
+    const { settings, updateSettings } = useSettingsStore.getState();
+    if (settings.lastSeenVersion !== __APP_VERSION__) {
+      // Any change (including first install) surfaces the latest notes once.
+      setWhatsNew(whatsNewFor(__APP_VERSION__));
+      updateSettings({ lastSeenVersion: __APP_VERSION__ });
+    }
+  }, [showApp]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -89,7 +103,19 @@ function Root() {
   }
 
   if (showApp) {
-    return <App />;
+    return (
+      <>
+        <App />
+        {whatsNew && (
+          <WhatsNewModal
+            isOpen
+            version={whatsNew.version}
+            items={whatsNew.items}
+            onClose={() => setWhatsNew(null)}
+          />
+        )}
+      </>
+    );
   }
 
   return <SplashScreen ready={ready} onFinish={handleFinish} />;

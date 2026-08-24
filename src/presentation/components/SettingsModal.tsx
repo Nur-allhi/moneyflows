@@ -5,6 +5,8 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { isFsaSupported, folderSync } from '../../infrastructure/database/FolderSync';
 import type { SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
+import { WhatsNewModal } from './WhatsNewModal';
+import { whatsNewFor } from '../constants/whatsNew';
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
   DESCRIPTION_MAX_LENGTH_MAX,
@@ -32,6 +34,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [dashboardTxLimit, setDashboardTxLimit] = useState(settings.dashboardTxLimit);
   const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
   const [storageHealth, setStorageHealth] = useState<StorageHealth | null>(null);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [folderName, setFolderName] = useState<string | null>(null);
@@ -364,6 +367,21 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           ↑ Import Database
         </button>
       </div>
+
+      <div className={fieldStyles.statusRow}>
+        <span className={fieldStyles.statusDot} />
+        <span className={fieldStyles.statusText}>See what&apos;s new in v{__APP_VERSION__}</span>
+        <button className={fieldStyles.restoreBtn} onClick={() => setWhatsNewOpen(true)}>View</button>
+      </div>
+
+      <div className={fieldStyles.versionLine}>MoneyFlows v{__APP_VERSION__}</div>
+
+      <WhatsNewModal
+        isOpen={whatsNewOpen}
+        version={__APP_VERSION__}
+        items={whatsNewFor(__APP_VERSION__)?.items ?? []}
+        onClose={() => setWhatsNewOpen(false)}
+      />
     </Modal>
   );
 }
