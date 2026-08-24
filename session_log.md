@@ -1399,3 +1399,20 @@
 ### Status
 - Complete on dev.
 
+
+## Session 2026-08-24 05:20
+
+### Changes
+- [vite.config.ts] inject __APP_VERSION__ from package.json; [vite-env.d.ts] declaration
+- [AppSettings.ts] lastSeenVersion field; [whatsNew.ts] plain-English release notes constant
+- [WhatsNewModal.tsx/.module.css] NEW simple modal: top-left cross close, Got-it button
+- [main.tsx] auto-open once per version change (first install included); [SettingsModal] v0.2.0 footer + See-what's-new row reopening modal
+- package.json bumped to 0.2.0
+- Verified live: auto-open on update, close via cross, no reopen after reload, settings View reopens; gates green
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max
+
+### Status
+- Complete on dev.
+
