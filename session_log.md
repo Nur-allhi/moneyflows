@@ -1431,3 +1431,5 @@
 ### Status
 - v1.0.0 tagged on master; settings footer auto-shows new version.
 
+- Follow-up: APP_VERSION moved to guarded constants/appVersion.ts module after dev-server define edge case crashed Root; verified v1.0.0 footer + notes row live.
+
