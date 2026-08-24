@@ -1387,3 +1387,15 @@
 - BUG-1 fixed. GitHub caveat: orphaned old objects may linger by SHA until GC; other-machine clones must re-clone. Master sync of closure commit pending user approval.
 
 - Follow-up: scrubbed name tokens from this session's own log entry (self-referential leak caught by post-scan); amended dev commit, force-pushed.
+
+## Session 2026-08-24 03:05
+
+### Changes
+- [SettingsModal.tsx] Snapshot restore rows + Storage health 'saved' timestamp now render 12-hour clock with AM/PM via hour12:true (device-local timezone, e.g. BST); locale-aware output preserved
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Complete on dev.
+
