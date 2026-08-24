@@ -1355,3 +1355,17 @@
 ### Status
 - All 7 foundational documents generated/updated on dev (committed). Next phase TBD.
 
+
+## Session 2026-08-24 01:45
+
+### Changes
+- Full PII/name audit across all tracked+untracked files and git history -> docs/audit/PII_NAMES_AUDIT_2026-08-24.md
+- KEY FINDING (BUG-1, logged in docs/BUGS.md): real-name loan PDF blob reachable from master history (added f9f802a, removed at HEAD by 68f3771); Financial_Review.md ties full names to balances; src/ is clean
+- Remediation options documented (A scrub / B filter-repo rewrite / C private stopgap) - awaiting owner decision; no fixes executed per protocol
+
+### Skill(s) Used
+- code-reviewer, gitnexus (pickaxe/history probes)
+
+### Status
+- Audit complete + BUG-1 logged. Awaiting decision on Option A/B/C.
+

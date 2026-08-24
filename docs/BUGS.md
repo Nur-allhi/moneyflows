@@ -26,6 +26,13 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
-*No known bugs. 🎉*
+## BUG-1: Real family names and financial PDF persist in tracked docs and git history
 
-*(Historical pre-protocol bug analyses live in `docs/audit/FINDINGS.md` — BUG-6 loan-ledger aliasing and BUG-7 PWA freeze were both fixed before this tracker existed.)*
+- **Status:** open
+- **Severity:** high
+- **Found:** 2026-08-24 (during: full-project PII name audit requested by owner)
+- **Location:** `Project_plan/Financial_Review.md` (25 hits), `Project_plan/Project_Brief.md`, `Project_plan/System_Design.md`, `Project_plan/Unified_Loan_System_Plan.md`, `Project_plan/Project_Plan.md`, `DESIGN_FILES/*.html` (~40 hits across mockups), `DESIGN.md`, `docs/PRD.md`, `AGENTS.md`, `session_log.md`, and **git history**: PDF blob `USER_DATA/loan_ledger_home_exp_-_father_2026-07-15 (1).pdf` added in `f9f802a`, removed at HEAD by `68f3771`, still reachable from `master`
+- **Description:** SECURITY.md §5 forbids real person names tied to financial figures in the repo. Full names present include "Admin", "Father", "Mother", "Mother", plus external counterparties (External Debtor A, External Debtor B, External Debtor C, External Debtor D). Worst offender: `Financial_Review.md` ties full real names directly to account balances and loan amounts. Additionally, an exported loan-ledger PDF containing a real name and amounts was accidentally committed (`f9f802a`) and, though deleted at HEAD (`68f3771`), remains extractable from history on `master`. Runtime code is clean — `src/` has zero name hardcodes since T-087.
+- **Root Cause:** Original scaffolding documents were authored from the family's real spreadsheet audit; design mockups reused real member names as sample data; a data PDF slipped into one fix commit before `.gitignore` covered `USER_DATA/`.
+- **Fix Approach:** pending owner decision (options in `docs/audit/PII_NAMES_AUDIT_2026-08-24.md` §Remediation)
+- **Resolved:** —
