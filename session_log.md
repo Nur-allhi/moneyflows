@@ -1387,3 +1387,47 @@
 - BUG-1 fixed. GitHub caveat: orphaned old objects may linger by SHA until GC; other-machine clones must re-clone. Master sync of closure commit pending user approval.
 
 - Follow-up: scrubbed name tokens from this session's own log entry (self-referential leak caught by post-scan); amended dev commit, force-pushed.
+
+## Session 2026-08-24 03:05
+
+### Changes
+- [SettingsModal.tsx] Snapshot restore rows + Storage health 'saved' timestamp now render 12-hour clock with AM/PM via hour12:true (device-local timezone, e.g. BST); locale-aware output preserved
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Complete on dev.
+
+
+## Session 2026-08-24 05:20
+
+### Changes
+- [vite.config.ts] inject __APP_VERSION__ from package.json; [vite-env.d.ts] declaration
+- [AppSettings.ts] lastSeenVersion field; [whatsNew.ts] plain-English release notes constant
+- [WhatsNewModal.tsx/.module.css] NEW simple modal: top-left cross close, Got-it button
+- [main.tsx] auto-open once per version change (first install included); [SettingsModal] v0.2.0 footer + See-what's-new row reopening modal
+- package.json bumped to 0.2.0
+- Verified live: auto-open on update, close via cross, no reopen after reload, settings View reopens; gates green
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max
+
+### Status
+- Complete on dev.
+
+
+## Session 2026-08-24 05:40
+
+### Changes
+- [package.json] version 0.2.0 -> 1.0.0 (first stable tag; reflects Phases 1-11 scope)
+- [whatsNew.ts] release notes re-keyed to 1.0.0
+- [CHANGELOG.md] consolidated Unreleased into [1.0.0] - 2026-08-24 heading
+- Release flow: commit dev -> merge dev->master -> tag v1.0.0 on master -> sync dev
+
+### Skill(s) Used
+- gitnexus, code-reviewer
+
+### Status
+- v1.0.0 tagged on master; settings footer auto-shows new version.
+

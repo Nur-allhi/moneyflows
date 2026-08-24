@@ -8,5 +8,6 @@ export class AppSettings {
     public descriptionMaxLength: number = DEFAULT_DESCRIPTION_MAX_LENGTH,
     public numpadMaxDigits: number = DEFAULT_NUMPAD_MAX_DIGITS,
     public dashboardTxLimit: number = DEFAULT_DASHBOARD_TX_LIMIT,
+    public lastSeenVersion?: string,
   ) {}
 }
