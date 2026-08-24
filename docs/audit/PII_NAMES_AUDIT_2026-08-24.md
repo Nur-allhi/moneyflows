@@ -1,7 +1,7 @@
 # PII / Hardcoded-Name Audit — Full Project Scan
 
 **Date:** 2026-08-24 · **Requested by:** owner ("is any hardcoded family person's name available?")
-**Method:** case-insensitive pattern scan (`admin|father|father|mother|mother|father|external debtor a|external debtor b|external debtor c|bagdad|nur-allhi`) across every tracked file, filenames, and git pickaxe history probes; plus manual review of untracked local artifacts.
+**Method:** case-insensitive pattern scan (`admin|father|father|mother|mother|father|external debtor a|external debtor b|external debtor c|bagdad|<owner>`) across every tracked file, filenames, and git pickaxe history probes; plus manual review of untracked local artifacts.
 **Companion register:** `docs/BUGS.md` BUG-1.
 
 ---
@@ -67,7 +67,7 @@ git rev-list master --count -- "USER_DATA/*"   # → 2  (blob still reachable fr
 git log --all -S "Father"               # → d5290b3, 1c1ebcc (doc scrub left history traces)
 ```
 
-Remote: `github.com/Nur-allhi/moneyflows`. Exposure depends on repo visibility (private vs public) — **owner to confirm**; if public or ever made public, §3 history becomes an active leak.
+Remote: `github.com/<owner>/moneyflows`. Exposure depends on repo visibility (private vs public) — **owner to confirm**; if public or ever made public, §3 history becomes an active leak.
 
 ---
 
