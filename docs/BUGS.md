@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-2: App "restarts" while creating a new account under a member
+
+- **Status:** open
+- **Severity:** high
+- **Found:** 2026-08-24 (during: user manual test report)
+- **Location:** Add-Account flow (MemberProfile → AddAccountModal → `saveAccount`)
+- **Description:** User reports the app appeared to restart/reload while creating a new account under a member. Expected: account created in-place, no reload. Observed: app seemingly restarted (exact conditions unknown — possibly dev-server reloads during recent heavy editing vs a real runtime defect).
+- **Root Cause:** unknown — reproduction in progress
+- **Fix Approach:** pending diagnosis + owner confirmation
+- **Resolved:** —
+
+---
+
 ## BUG-1: Real family names and financial PDF persist in tracked docs and git history
 
 - **Status:** fixed
