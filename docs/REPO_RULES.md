@@ -47,7 +47,7 @@ A merged bug fix updates, in the SAME commit: CHANGELOG entry under `Fixed`, and
 
 ## 7. Versioning
 
-Tag releases on `master` (semver). Tag message summarizes covered CHANGELOG entries. Pre-1.0: breaking-ish → minor bump; fixes → patch.
+`docs/VERSIONING.md` is the agent-enforceable single source for when and how to bump `package.json:4` → `__APP_VERSION__` → `Settings` + `whatsNew.ts` + `CHANGELOG.md`. Tag releases on `master` (semver). Tag message summarizes covered CHANGELOG entries.
 
 ## 8. Housekeeping
 

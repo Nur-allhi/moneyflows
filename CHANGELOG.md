@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Placeholder for upcoming changes.
+
+## [1.2.0] - 2026-08-26
+
+### Added
+- Unified search: dashboard searches **all** transactions (`description + amount + type + account + member + tags + date`) via shared `matchesTx`, debounced `200ms`, with violet `Highlight` (`<mark>`). Each ledger (`MemberProfile`, `GroupLedger`, `LoanDetail`, `TagLedger`) has its own ledger-scoped search (same fields, highlighted) with pagination fixed (search **before** slice so no hidden hits). Groups/Loans/Members/Recycle lists decoupled from global `useSearchStore` (`effectiveSearch = mobileSearch` only) and highlight their names.
+- Shared search utils: `highlight.tsx` + `search.ts` + `useDebouncedValue.ts`; token `--color-primary-mark` `/0.28`.
+- Single app logo: header `MoneyFlows` gradient transplanted into sidebar `brandSlot`; header off-dashboard shows `Back + breadcrumb` (header owns navigation, sidebar owns brand).
+- Splash `36px` now matches sidebar `22px` logo (`135deg primary→income` gradient `Money` + `500` secondary `Flows`).
+
+### Changed
+- Playwright harness: `@playwright/test 1.54`, `playwright.config.ts` with `reuseExistingServer`, `workers:4`, `auth.setup.ts` tiny deterministic DB (`12` txs) via `seedTinyB64`, `storageState` reuse — `12s` parallel vs `2min` MCP serial.
+- Layout gaps tightened so every section gets more room: outer frame `24→16`, header→content & content children `24→12`, dashboard duplicate date column removed (desktop hides `txType` badge, keeps `shortDate`).
+- Header search hidden off-dashboard (`isDashboard && searchWrap`), blank center `flex:1` filler keeps `right` at edge.
+
+## [1.1.0] - 2026-08-24
+
+### Added
 - **Account editing and deletion** (T-102/T-103): pencil action on every account card
   (desktop + mobile selector) opens an edit modal — rename, change type, or delete.
   Deletion is a soft-delete into the Recycle Bin with an inline confirm that shows how

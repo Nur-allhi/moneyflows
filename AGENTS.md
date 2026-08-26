@@ -25,6 +25,7 @@ money_flows_v0.4/
 │   ├── SECURITY.md           — Security & Access Document
 │   ├── FRONTEND_SPEC.md      — Frontend Spec Document
 │   ├── DESIGN_IDENTITY.md    — Canonical design rules (must pass §17 to merge)
+│   ├── VERSIONING.md         — Version bump rules (agent auto-applies §2→§3)
 │   ├── TICKETS.md            — Feature Ticket List
 │   ├── REPO_RULES.md          — Repo Management Document (branch/commit/merge rules)
 │   └── audit/                 — Project audit reports + findings register
@@ -80,6 +81,7 @@ money_flows_v0.4/
 - React functional components with hooks.
 - Clean Architecture: UI never imports the SQLite driver (`sql.js`) directly.
 - Design identity: no `style={{}}` (except shadcn), no hex/literal spacing, no hardcoded currency/locale — see `docs/DESIGN_IDENTITY.md` §2, §14, §16.
+- Versioning: `package.json:4` is the single source — `docs/VERSIONING.md` §2→§3 tells the agent when/how to bump it (four files in one commit) so `Settings` + `whatsNew` + `CHANGELOG` stay in sync.
 
 ### 3.5 Session Start Ritual
 - **At the start of EVERY session**, read `session_log.md` (last entry for current position) and this file §5 (current ticket).
