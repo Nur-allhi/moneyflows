@@ -279,7 +279,7 @@ export function MemberProfile() {
         };
       })
       .reverse();
-  }, [displayedTxs, sortedTxs, tagFilteredTxs, locale, currency, showBalance, memberAccounts, selectedAccountId, resolveAccountDisplay]);
+  }, [sortedTxs, tagFilteredTxs, locale, currency, showBalance, memberAccounts, selectedAccountId, resolveAccountDisplay]);
 
   const filteredLedger = useMemo(() => {
     const q = ledgerQuery.toLowerCase().trim();
@@ -298,7 +298,7 @@ export function MemberProfile() {
     const q = ledgerQuery.toLowerCase().trim();
     if (q) txs = txs.filter((tx) => tx.description.toLowerCase().includes(q));
     return txs.sort((a, b) => b.date.localeCompare(a.date));
-  }, [displayedTxs, ledgerFilter, ledgerQuery]);
+  }, [tagFilteredTxs, ledgerFilter, ledgerQuery]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) {

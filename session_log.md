@@ -1534,3 +1534,23 @@
 ### Status
 - Fixed on dev.
 
+
+## Session 2026-08-26 12:40
+
+### Changes
+- Tags feature (T-109..T-111) per owner decisions B/single/member-first+family-wide/editable:
+  - [useTagStore.ts] NEW persisted tag registry
+  - [TransactionFormModal] Tag field w/ datalist autocomplete; saved into metadata.tags; registry grows on submit
+  - [TransactionEditModal] tag seeded/saved/cleared + registry growth; css additions
+  - [MemberProfile] ledger tag dropdown (registry U in-view tags) + family-wide jump button
+  - [TagLedgerScreen.tsx/.module.css] NEW /tags + /tags/:tag cross-member views w/ In/Out totals
+  - [App.tsx] routes added
+- E2E: edit-tag save verified in store+registry; /tags lists QA Tag(1); detail shows member/account/amount row
+- Wizard create-path tagging code-reviewed (automation blocked by animated dual-tree DOM; manual check recommended)
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, playwright
+
+### Status
+- Complete on dev. Master sync pending.
+

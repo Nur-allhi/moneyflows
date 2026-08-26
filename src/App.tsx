@@ -14,7 +14,7 @@ const MemberProfile = lazy(() => import('./presentation/screens/MemberProfile').
 const Loans = lazy(() => import('./loans/presentation/screens/LoansScreen').then(m => ({ default: m.LoansScreen })));
 const RecycleBin = lazy(() => import('./presentation/screens/RecycleBin').then(m => ({ default: m.RecycleBin })));
 const GroupsListScreen = lazy(() => import('./presentation/screens/GroupsListScreen').then(m => ({ default: m.GroupsListScreen })));
-const GroupLedgerScreen = lazy(() => import('./presentation/screens/GroupLedgerScreen').then(m => ({ default: m.GroupLedgerScreen })));
+const TagLedgerScreen = lazy(() => import('./presentation/screens/TagLedgerScreen').then(m => ({ default: m.TagLedgerScreen })));const GroupLedgerScreen = lazy(() => import('./presentation/screens/GroupLedgerScreen').then(m => ({ default: m.GroupLedgerScreen })));
 
 function Svg({ d, children }: { d?: string; children?: JSX.Element }) {
   return (
@@ -125,6 +125,8 @@ export function App() {
           <Route path="/member/:id" element={<MemberProfile />} />
           <Route path="/groups" element={<GroupsListScreen />} />
           <Route path="/groups/:groupId" element={<GroupLedgerScreen />} />
+          <Route path="/tags" element={<TagLedgerScreen />} />
+          <Route path="/tags/:tag" element={<TagLedgerScreen />} />
           <Route path="/loans" element={<Loans />} />
           <Route path="/loans/:debtorId" element={<Loans />} />
           <Route path="/recycle" element={<RecycleBin />} />
