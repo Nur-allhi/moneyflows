@@ -1713,3 +1713,14 @@
 ### Status
 - Complete on dev. Single logo stays in sidebar, header shows Back + routes on all non-dashboard pages, search hidden off-dashboard, blank center reserved.
 
+## Session 2026-08-26 17:20 — Splash matches sidebar logo
+
+### Changes
+- **Splash** `SplashScreen.module.css:24-38` wordmark now uses same treatment as sidebar `Sidebar.module.css:22-37` — `Money` gradient `135deg primary→income` clipped text `700`, `Flows` `500` `secondary` (`-webkit-text-fill-color` preserved). Typing split at 5 still `base=Money` gradient, `accent=Flows` secondary, cursor `primary` unchanged. Opening animation now shows the single app logo (36px vs sidebar 22px, same gradient) — no second logo treatment.
+
+### Skill(s) Used
+- frontend-design
+
+### Status
+- Complete on dev. Opening animation and sidebar share one logo identity.
+

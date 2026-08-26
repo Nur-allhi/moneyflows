@@ -29,11 +29,16 @@
 }
 
 .base {
-  color: var(--color-text);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-income));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .accent {
-  color: var(--color-primary);
+  color: var(--color-text-secondary);
+  -webkit-text-fill-color: var(--color-text-secondary);
+  font-weight: 500;
 }
 
 .cursor {
