@@ -14,8 +14,8 @@
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 24px;
+  gap: 12px;
+  padding: 16px;
   min-width: 0;
   padding-bottom: 80px;
 }
@@ -71,22 +71,23 @@
 .content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 }
 
 @media (min-width: 1024px) {
   .sidebar {
     display: flex;
     position: fixed;
-    left: 24px;
-    top: 24px;
-    bottom: 24px;
+    left: 16px;
+    top: 16px;
+    bottom: 16px;
     z-index: 100;
   }
 
   .main {
-    padding: 24px;
-    padding-left: calc(220px + 24px + 24px);
+    padding: 16px;
+    padding-left: calc(220px + 16px + 16px);
+    padding-bottom: 16px;
   }
 }
 
