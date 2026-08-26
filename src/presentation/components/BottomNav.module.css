@@ -14,7 +14,12 @@
   left: 0;
   right: 0;
   z-index: 200;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 2px;
 }
+
+.nav::-webkit-scrollbar { display: none; }
 
 .item {
   display: flex;
