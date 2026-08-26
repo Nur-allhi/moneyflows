@@ -8,6 +8,7 @@ import { whatsNewFor } from './presentation/constants/whatsNew';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
 import { APP_VERSION } from './presentation/constants/appVersion';
+import { logger } from './core/logging';
 import './presentation/styles/tailwind.css';
 import './presentation/styles/reset.css';
 import './presentation/styles/tokens.css';
@@ -33,6 +34,18 @@ function Root() {
   }, [showApp]);
 
   React.useEffect(() => {
+    logger.info('app', 'boot', { version: APP_VERSION, route: window.location.pathname });
+    const onErr = (e: ErrorEvent) => logger.error('app', e.message, { filename: e.filename, lineno: e.lineno } as unknown as Record<string, unknown>, (e.error as Error)?.stack);
+    const onRej = (e: PromiseRejectionEvent) => logger.error('app', String((e.reason as Error)?.message ?? e.reason), {}, (e.reason as Error)?.stack);
+    window.addEventListener('error', onErr);
+    window.addEventListener('unhandledrejection', onRej);
+    return () => {
+      window.removeEventListener('error', onErr);
+      window.removeEventListener('unhandledrejection', onRej);
+    };
+  }, []);
+
+  React.useEffect(() => {
     let cancelled = false;
     // Splash watchdog: never hang forever if a boot step stalls (BUG-7).
     const watchdog = window.setTimeout(() => {
@@ -47,6 +60,7 @@ function Root() {
         }
       })
       .catch((err: unknown) => {
+        logger.error('storage', 'init failed', {}, err instanceof Error ? err.stack : String(err));
         if (!cancelled) setDbError(err instanceof Error ? err.message : 'Unknown database error');
       })
       .finally(() => window.clearTimeout(watchdog));

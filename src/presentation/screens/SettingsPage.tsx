@@ -7,6 +7,8 @@ import type { SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseServ
 import { WhatsNewModal } from '../components/WhatsNewModal';
 import { whatsNewFor } from '../constants/whatsNew';
 import { APP_VERSION } from '../constants/appVersion';
+import { logger } from '../../core/logging';
+import type { LogEntry } from '../../core/logging';
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
   DESCRIPTION_MAX_LENGTH_MAX,
@@ -17,11 +19,12 @@ import {
 } from '../constants/config';
 import styles from './SettingsPage.module.css';
 
-type Tab = 'general' | 'dashboard' | 'backup' | 'storage' | 'about';
+type Tab = 'general' | 'dashboard' | 'activity' | 'backup' | 'storage' | 'about';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'general', label: 'General' },
   { key: 'dashboard', label: 'Dashboard' },
+  { key: 'activity', label: 'Activity' },
   { key: 'backup', label: 'Backup' },
   { key: 'storage', label: 'Storage' },
   { key: 'about', label: 'About' },
@@ -51,6 +54,11 @@ export function SettingsPage() {
   const [restoringFile, setRestoringFile] = useState<string | null>(null);
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
   const [saved, setSaved] = useState(false);
+  const [verbose, setVerbose] = useState(() => {
+    try { return localStorage.getItem('moneyflows_logs_verbose') === '1'; } catch { return false; }
+  });
+  const [activityLogs, setActivityLogs] = useState<LogEntry[]>([]);
+  const [appLogs, setAppLogs] = useState<LogEntry[]>([]);
 
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
@@ -173,6 +181,35 @@ export function SettingsPage() {
     setTimeout(() => setSaved(false), 1500);
   };
 
+  useEffect(() => {
+    if (activeTab === 'activity') setActivityLogs(logger.getEntries({ cat: 'activity', limit: 100 }));
+    if (activeTab === 'about') setAppLogs(logger.getEntries({ limit: 100 }));
+  }, [activeTab]);
+
+  const handleExportLogs = () => {
+    const ndjson = logger.export();
+    const blob = new Blob([ndjson], { type: 'application/x-ndjson' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `moneyflows-logs-${new Date().toISOString().slice(0, 10)}.ndjson`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleClearLogs = () => {
+    if (!window.confirm('Clear all logs?')) return;
+    logger.clear();
+    setActivityLogs([]);
+    setAppLogs([]);
+  };
+
+  const toggleVerbose = () => {
+    const next = !verbose;
+    logger.setVerbose(next);
+    setVerbose(next);
+  };
+
   const internalMembers = members.filter((m) => !m.isExternal);
 
   return (
@@ -272,6 +309,28 @@ export function SettingsPage() {
                   <span className={styles.knob} />
                 </button>
               </label>
+            </div>
+          )}
+
+          {activeTab === 'activity' && (
+            <div className={styles.card}>
+              <div className={styles.cardHead}>
+                <h2>Activity</h2>
+                <span>Your recent actions — last 100</span>
+              </div>
+              {activityLogs.length === 0 ? (
+                <div className={styles.emptyState}>No activity yet — add a transaction to see it here.</div>
+              ) : (
+                <div className={styles.snapshotList}>
+                  {activityLogs.map((e) => (
+                    <div key={e.id} className={styles.snapshotRow}>
+                      <span className={styles.snapshotTime}>{new Date(e.ts).toLocaleString(settings.locale, { hour: 'numeric', minute: '2-digit', hour12: true } as const)} — {new Date(e.ts).toLocaleDateString(settings.locale, { month: 'short', day: 'numeric' } as const)}</span>
+                      <span className={styles.snapshotLabel}>{e.msg}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button className={styles.restoreBtn} onClick={() => setActivityLogs(logger.getEntries({ cat: 'activity', limit: 100 }))}>Refresh</button>
             </div>
           )}
 
@@ -380,6 +439,30 @@ export function SettingsPage() {
                   }}>Install</button>
                 </div>
               )}
+              <div className={styles.separator} />
+              <div className={styles.sectionTitle}>Logs — backdoor for dev</div>
+              <label className={styles.toggleRow}>
+                <span>Verbose debug logs</span>
+                <button role="switch" aria-checked={verbose} className={`${styles.switch} ${verbose ? styles.switchOn : ''}`} onClick={toggleVerbose}>
+                  <span className={styles.knob} />
+                </button>
+              </label>
+              <div className={styles.actionsRow}>
+                <button className={styles.actionBtn} onClick={handleExportLogs}>↓ Export Logs</button>
+                <button className={styles.actionBtn} onClick={handleClearLogs}>Clear Logs</button>
+              </div>
+              {appLogs.length > 0 && (
+                <div className={styles.snapshotList}>
+                  {appLogs.slice(0, 20).map((e) => (
+                    <div key={e.id} className={styles.snapshotRow}>
+                      <span className={e.level === 'error' ? styles.statusWarnDot : styles.statusDot} />
+                      <span className={styles.snapshotTime}>{e.level}/{e.cat}</span>
+                      <span className={styles.snapshotLabel}>{e.msg}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className={styles.separator} />
               <div className={styles.statusRow}>
                 <span className={styles.statusDot} />
                 <span className={styles.statusText}>See what&apos;s new in v{APP_VERSION}</span>
