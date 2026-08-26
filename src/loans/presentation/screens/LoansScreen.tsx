@@ -5,7 +5,6 @@ import { useAccountStore } from '../../../presentation/stores/useAccountStore';
 import { useSettingsStore } from '../../../presentation/stores/useSettingsStore';
 import { useModalStore } from '../../../presentation/stores/useModalStore';
 import { formatAmount } from '../../../presentation/utils/format';
-import { useSearchStore } from '../../../presentation/stores/useSearchStore';
 import { GlassPanel } from '../../../presentation/components';
 import { LoanCard } from '../components/LoanCard';
 import { LoanDetailView } from '../components/LoanDetailView';
@@ -17,7 +16,6 @@ export function LoansScreen() {
   const { loanStacks, loading, error, fetchLoanStacks } = useLoanStore();
   const { loading: acctLoading, fetchAccounts } = useAccountStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
-  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
   const [filter, setFilter] = useState<'active' | 'settled' | 'all'>('active');
   const [mobileSearch, setMobileSearch] = useState('');
 
@@ -35,11 +33,11 @@ export function LoansScreen() {
     const byStatus = filter === 'active' ? loanStacks.filter((s) => !s.isSettled)
       : filter === 'settled' ? loanStacks.filter((s) => s.isSettled)
       : loanStacks;
-    const q = mobileSearch.toLowerCase().trim() || searchQuery;
+    const q = mobileSearch.trim().toLowerCase();
     return q
       ? byStatus.filter((s) => s.debtorName.toLowerCase().includes(q))
       : byStatus;
-  }, [loanStacks, filter, searchQuery, mobileSearch]);
+  }, [loanStacks, filter, mobileSearch]);
 
   const totals = useMemo(() => ({
     active: loanStacks.filter((s) => !s.isSettled).reduce((s, x) => s + x.totalOutstanding, 0),
@@ -142,7 +140,7 @@ export function LoansScreen() {
         <GlassPanel padding="lg">
           <div className="empty-state">
             <div className="empty-state-icon">{'\u{1F4B5}'}</div>
-            <p className="empty-state-text">{mobileSearch || searchQuery ? 'No loans match your search' : `No ${filter} loans`}</p>
+            <p className="empty-state-text">{mobileSearch ? `No loans match "${mobileSearch}"` : `No ${filter} loans`}</p>
           </div>
         </GlassPanel>
       ) : (
@@ -154,6 +152,7 @@ export function LoansScreen() {
               locale={locale}
               currency={currency}
               onClick={() => navigate(`/loans/${stack.debtorId}`)}
+              searchQuery={mobileSearch}
             />
           ))}
         </div>

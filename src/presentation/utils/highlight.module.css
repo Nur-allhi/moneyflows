@@ -1,0 +1,8 @@
+.mark {
+  background: var(--color-primary-mark);
+  color: var(--color-text);
+  border-radius: 3px;
+  padding: 0 2px;
+  font-weight: 600;
+  box-shadow: 0 0 8px var(--color-primary-glow);
+}

@@ -7,7 +7,7 @@ import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { Member } from '../../core/domain/Member';
 import { formatAmountParts } from '../utils/format';
-import { useSearchStore } from '../stores/useSearchStore';
+import { Highlight } from '../utils/highlight';
 import styles from './MemberList.module.css';
 
 export function MemberList() {
@@ -15,7 +15,6 @@ export function MemberList() {
   const { members, loading, error, fetchMembers, saveMember } = useMemberStore();
   const { accounts, fetchAccounts } = useAccountStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
-  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
   const [showModal, setShowModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newShortName, setNewShortName] = useState('');
@@ -27,9 +26,9 @@ export function MemberList() {
   }, [fetchMembers, fetchAccounts]);
 
   const familyMembers = members.filter((m) => !m.isExternal);
-  const effectiveQuery = mobileSearch.toLowerCase().trim() || searchQuery;
+  const effectiveQuery = mobileSearch.trim();
   const filteredMembers = useMemo(
-    () => effectiveQuery ? familyMembers.filter((m) => m.name.toLowerCase().includes(effectiveQuery)) : familyMembers,
+    () => effectiveQuery ? familyMembers.filter((m) => m.name.toLowerCase().includes(effectiveQuery.toLowerCase())) : familyMembers,
     [familyMembers, effectiveQuery],
   );
 
@@ -128,7 +127,7 @@ export function MemberList() {
                 size={48}
               />
               <div className={styles.cardInfo}>
-                <span className={styles.cardName}>{m.name}</span>
+                <span className={styles.cardName}><Highlight text={m.name} query={effectiveQuery} /></span>
                 <span className={styles.cardTag}>Member</span>
               </div>
             </div>

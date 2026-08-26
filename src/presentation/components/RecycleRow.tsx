@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Highlight } from '../utils/highlight';
 import styles from './RecycleRow.module.css';
 
 type IconVariant = 'warning' | 'account';
@@ -14,6 +15,7 @@ interface RecycleRowProps {
   onRestore?: () => void;
   onDelete?: () => void;
   className?: string;
+  searchQuery?: string;
 }
 
 const iconClassMap: Record<IconVariant, string> = {
@@ -32,12 +34,13 @@ export function RecycleRow({
   onRestore,
   onDelete,
   className = '',
+  searchQuery = '',
 }: RecycleRowProps) {
   return (
     <div className={`${styles.row} ${className}`}>
       <div className={`${styles.icon} ${iconClassMap[iconVariant]}`}>{icon}</div>
       <div className={styles.info}>
-        <div className={styles.name}>{name}</div>
+        <div className={styles.name}><Highlight text={name} query={searchQuery} /></div>
         <div className={styles.meta}>{meta}</div>
       </div>
       <span className={styles.amount} style={{ '--amount-color': amountColor ?? 'var(--color-text)' } as React.CSSProperties}>{amount}</span>
