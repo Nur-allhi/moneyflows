@@ -7,6 +7,7 @@ const TransactionEditModal = lazy(() => import('./TransactionEditModal').then(m 
 const DeleteConfirmModal = lazy(() => import('./DeleteConfirmModal').then(m => ({ default: m.DeleteConfirmModal })));
 const EditMemberModal = lazy(() => import('./EditMemberModal').then(m => ({ default: m.EditMemberModal })));
 const AddAccountModal = lazy(() => import('./AddAccountModal').then(m => ({ default: m.AddAccountModal })));
+const EditAccountModal = lazy(() => import('./EditAccountModal').then(m => ({ default: m.EditAccountModal })));
 const SettingsModalWrapper = lazy(() => import('./SettingsModalWrapper').then(m => ({ default: m.SettingsModalWrapper })));
 const SelectAccountModal = lazy(() => import('./SelectAccountModal').then(m => ({ default: m.SelectAccountModal })));
 
@@ -22,6 +23,7 @@ export const modalRegistry = {
   'delete-confirm': DeleteConfirmModal,
   'edit-member': EditMemberModal,
   'add-account': AddAccountModal,
+  'edit-account': EditAccountModal,
   'settings': SettingsModalWrapper,
   'select-account': SelectAccountModal,
 } satisfies Record<string, ComponentType<never>>;

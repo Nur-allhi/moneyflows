@@ -124,7 +124,7 @@ export class LoanDatabase {
     if (loans.length === 0) return null;
 
     const borrowerAcct = accountMap.get(borrowerId);
-    const acctName = borrowerAcct?.name as string ?? 'Unknown';
+    const acctName = (borrowerAcct?.name as string ?? '(deleted account)');
     const stackType = borrowerAcct?.type === 'counterparty' ? 'external' : 'internal';
     const memberId = borrowerAcct?.member_id as string | undefined;
     const name = stackType === 'internal' && memberId && memberMap.has(memberId)

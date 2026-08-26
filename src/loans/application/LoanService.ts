@@ -256,8 +256,8 @@ export class LoanService {
         type: (isCredit ? 'lend' : 'repay') as 'lend' | 'repay',
         typeLabel: isCredit ? 'Lent' : 'Repayment',
         description: tx.description,
-        lenderAccount: srcAcct?.name ?? tx.sourceAccount ?? '',
-        borrowerAccount: dstAcct?.name ?? tx.destAccount ?? '',
+        lenderAccount: srcAcct?.name ?? (tx.sourceAccount ? '(deleted account)' : ''),
+        borrowerAccount: dstAcct?.name ?? (tx.destAccount ? '(deleted account)' : ''),
         amount: tx.amount,
         runningBalance: bal,
       };

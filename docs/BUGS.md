@@ -26,6 +26,32 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-3: Accounts list shows stale balance (0) right after Add-Account
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-08-24 (during: BUG-2 reproduction testing)
+- **Location:** `AddAccountModal.tsx` handleSave → `useAccountStore.accounts`
+- **Description:** After creating an account with an initial balance, the in-memory accounts store still reported the pre-transaction snapshot (balance 0) because only the transactions store was updated; the UI corrected itself on next remount/refetch.
+- **Root Cause:** Modal awaited `saveAccount` + `addTransaction` but never re-fetched accounts.
+- **Fix Approach:** owner-approved — call `fetchAccounts()` after the opening-balance transaction in `handleSave`.
+- **Resolved:** 2026-08-24 — commit adds `await fetchAccounts()`; verified live (immediate balance 777 visible post-save, no reload).
+
+---
+
+## BUG-2: App "restarts" while creating a new account under a member
+
+- **Status:** wontfix
+- **Severity:** high
+- **Found:** 2026-08-24 (during: user manual test report)
+- **Location:** Add-Account flow (MemberProfile → AddAccountModal)
+- **Description:** App appeared to restart while creating an account under a member.
+- **Root Cause:** Could not reproduce in current build (v1.0.0+): scripted E2E run created an account under a member with **no reload** (page marker survived), correct member link, and correct persistence (opening balance 500 + Opening Balance transaction verified after reload). Strongest explanation: Vite dev-server auto-restarts/full-reloads during the recent heavy editing sessions — browser tabs auto-refreshed mid-action, which looks exactly like an app restart. Production/PWA builds have no such trigger.
+- **Fix Approach:** none required for the app. If it recurs outside dev-server sessions, capture the time + console state and reopen.
+- **Resolved:** 2026-08-24 — closed as dev-environment artifact; see BUG-3 for the real (minor) issue found during this investigation.
+
+---
+
 ## BUG-1: Real family names and financial PDF persist in tracked docs and git history
 
 - **Status:** fixed

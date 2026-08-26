@@ -1433,3 +1433,49 @@
 
 - Follow-up: APP_VERSION moved to guarded constants/appVersion.ts module after dev-server define edge case crashed Root; verified v1.0.0 footer + notes row live.
 
+
+## Session 2026-08-24 06:00
+
+### Changes
+- BUG-2 investigation: scripted E2E of Add-Account under member (Md Iqbal azam profile)
+- Result: NO reload (marker survived), account created + persisted correctly (balance 500, Opening Balance tx in ledger after reload) -> closed as dev-server artifact (wontfix)
+- Found real minor issue during test -> BUG-3 logged: accounts store stale (balance 0) right after add; fix proposed = fetchAccounts() after save in AddAccountModal - awaiting owner confirmation
+
+### Skill(s) Used
+- senior-frontend, playwright E2E verification, code-reviewer
+
+### Status
+- BUG-2 wontfix(closed), BUG-3 open awaiting fix approval.
+
+
+## Session 2026-08-24 06:15
+
+### Changes
+- BUG-3 fixed (owner-approved): AddAccountModal.handleSave now awaits fetchAccounts() after opening-balance tx
+- Verified live: immediate balance 777 visible post-save, no reload
+- Same-commit updates: BUGS.md BUG-3 -> fixed, CHANGELOG [Unreleased] Fixed entry
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, playwright verification
+
+### Status
+- Complete on dev.
+
+
+## Session 2026-08-24 06:50
+
+### Changes
+- Feature: account edit + delete (T-104)
+  - [EditAccountModal.tsx/.module.css] NEW - rename/type + danger-zone delete w/ tx & loan-movement counts, two-step confirm, soft-delete
+  - [AccountCard] optional actions slot (top-right overlay, click-isolated); used by MemberProfile grid + SelectAccountModal grid (pencil opens edit-account via registry)
+  - [registry.ts] edit-account entry
+- T-105: '(deleted account)' fallbacks in MemberProfile/GroupLedger/GroupsList/TransactionDetail/LoanService/LoanDatabase name resolvers
+- v1.1.0: package.json bump; whatsNew.ts 1.1.0 notes; CHANGELOG [Unreleased] Added entries; TICKETS Phase 12 section
+- E2E verified live: rename+type change persisted (balance kept), delete->bin->restore roundtrip, fallback label in detail modal, no reloads
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, code-reviewer, playwright verification
+
+### Status
+- Complete on dev. Master sync pending user go-ahead.
+
