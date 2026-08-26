@@ -1567,3 +1567,16 @@
 ### Status
 - Complete on dev.
 
+
+## Session 2026-08-26 12:30
+
+### Changes
+- T-112: [App.tsx] sidebar 'Tags' nav under Loans (tag icon) + routeTitles entry; bottom nav untouched
+- Verified: sidebar order Dashboard..Loans,Tags,Recycle; click -> /tags; active state applies
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Complete on dev.
+

@@ -29,6 +29,7 @@ const sidebarItems = [
   { path: '/member', label: 'Members', icon: <Svg d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /> },
   { path: '/groups', label: 'Groups', icon: <Svg d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /> },
   { path: '/loans', label: 'Loans', icon: <Svg d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /> },
+  { path: '/tags', label: 'Tags', icon: <Svg d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" /> },
   { path: '/recycle', label: 'Recycle Bin', icon: <Svg d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /> },
 ];
 
@@ -45,6 +46,7 @@ const routeTitles: Record<string, string> = {
   '/member': 'Members',
   '/groups': 'Groups',
   '/loans': 'Loans',
+  '/tags': 'Tags',
   '/recycle': 'Recycle Bin',
 };
 
