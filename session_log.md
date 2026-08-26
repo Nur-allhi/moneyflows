@@ -1580,3 +1580,16 @@
 ### Status
 - Complete on dev.
 
+
+## Session 2026-08-26 13:00
+
+### Changes
+- T-112: full tag management UI on /tags: inline create, per-card rename (propagates through transaction metadata), two-step delete (strips from txs); useTagStore.renameTag added; Settings chips section removed; sidebar Tags nav item
+- E2E verified: create QA Alpha -> rename to QA Beta (registry + UI) -> delete; stale dev-server transform diagnosed (restart fixed) explaining earlier flakiness
+
+### Skill(s) Used
+- senior-frontend, playwright verification
+
+### Status
+- Complete on dev. Master sync pending user go-ahead.
+
