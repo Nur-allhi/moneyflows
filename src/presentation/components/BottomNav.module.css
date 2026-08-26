@@ -14,12 +14,15 @@
   left: 0;
   right: 0;
   z-index: 200;
-  overflow-x: auto;
-  scrollbar-width: none;
+  overflow: visible;
   gap: 2px;
+  transform: translateY(0);
+  transition: transform 0.25s ease;
 }
 
-.nav::-webkit-scrollbar { display: none; }
+.navHidden {
+  transform: translateY(calc(100% + env(safe-area-inset-bottom)));
+}
 
 .item {
   display: flex;
@@ -71,7 +74,14 @@
   flex-shrink: 0;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s, margin-top 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+
+.homePoppedScrolled {
+  width: 44px;
+  height: 44px;
+  margin-top: 0;
+  box-shadow: 0 2px 12px oklch(62% 0.22 290 / 0.25);
 }
 
 .homePopped:active {
@@ -84,6 +94,7 @@
 
 .homeIcon { display: grid; place-items: center; }
 .homeIcon svg { width: 22px; height: 22px; }
+.homePoppedScrolled .homeIcon svg { width: 20px; height: 20px; }
 
 .moreGrid {
   display: grid;

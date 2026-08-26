@@ -103,7 +103,7 @@ function AppLayout() {
     <div className={styles.layout}>
       <RippleGlow />
       <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
-      <div className={styles.main}>
+      <div className={styles.main} id="app-main">
         <Header title={title} breadcrumb={breadcrumb} className="app-header" searchActive={searchOpen} onSearchToggle={toggleSearch} />
         {isDashboard && searchOpen && (
           <div className={`${styles.searchRow} ${searchClosing ? styles.searchPopin : styles.searchPopout}`}>

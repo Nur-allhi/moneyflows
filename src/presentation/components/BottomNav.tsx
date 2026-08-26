@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { BottomSheet } from './BottomSheet';
 import styles from './BottomNav.module.css';
@@ -32,7 +32,29 @@ const others: BottomNavItem[] = [
 
 export function BottomNav({ items, className = '' }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const main = document.getElementById('app-main') as HTMLElement | null;
+    if (!main) return;
+    let lastY = main.scrollTop;
+    const onScroll = () => {
+      const y = main.scrollTop;
+      setScrolled(y > 10);
+      if (moreOpen) {
+        lastY = y;
+        return;
+      }
+      // Long scroll: hide on down beyond 80, show on up
+      if (y > 80 && y > lastY + 6) setHidden(true);
+      else if (y < lastY - 6 || y < 80) setHidden(false);
+      lastY = y;
+    };
+    main.addEventListener('scroll', onScroll, { passive: true });
+    return () => main.removeEventListener('scroll', onScroll);
+  }, [moreOpen]);
 
   // Expect items = Members, Groups, Home, Loans — Home is popped, More is 5th
   const homeItem = items.find((it) => it.path === '/');
@@ -44,7 +66,7 @@ export function BottomNav({ items, className = '' }: BottomNavProps) {
 
   return (
     <>
-      <nav className={`${styles.nav} ${className}`}>
+      <nav className={`${styles.nav} ${hidden ? styles.navHidden : ''} ${className}`}>
         {left.map((item) => (
           <NavLink
             key={item.path}
@@ -60,7 +82,9 @@ export function BottomNav({ items, className = '' }: BottomNavProps) {
           <NavLink
             to={homeItem.path}
             end
-            className={({ isActive }) => `${styles.homePopped} ${isActive ? styles.homeActive : ''}`}
+            className={({ isActive }) =>
+              `${styles.homePopped} ${scrolled ? styles.homePoppedScrolled : ''} ${isActive ? styles.homeActive : ''}`
+            }
             aria-label="Home"
           >
             <span className={styles.homeIcon}>{homeItem.icon}</span>
