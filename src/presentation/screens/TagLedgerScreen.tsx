@@ -165,10 +165,14 @@ export function TagLedgerScreen() {
                   </div>
                 ) : deleting === name ? (
                   <div className={styles.deleteRow}>
-                    <span className={styles.deleteText}>Remove from {count} transaction{count === 1 ? '' : 's'}?</span>
-                    <div className={styles.renameActions}>
-                      <button className={styles.actBtnDanger} onClick={() => void handleDelete(name)}>Yes</button>
-                      <button className={styles.actBtn} onClick={() => setDeleting(null)}>No</button>
+                    <span className={styles.deleteText}>
+                      {count === 0
+                        ? 'Delete this unused tag?'
+                        : `Remove this tag from ${count} transaction${count === 1 ? '' : 's'}?`}
+                    </span>
+                    <div className={styles.deleteActions}>
+                      <button className={styles.cancelBtn} onClick={() => setDeleting(null)}>No</button>
+                      <button className={styles.confirmBtn} onClick={() => void handleDelete(name)}>Yes, remove</button>
                     </div>
                   </div>
                 ) : (

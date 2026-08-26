@@ -336,3 +336,10 @@
   justify-content: flex-end;
   width: 100%;
 }
+
+.deleteActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  width: 100%;
+}
