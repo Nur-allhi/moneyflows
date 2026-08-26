@@ -126,7 +126,21 @@ export function TagLedgerScreen() {
         ) : (
           <div className={styles.tagGrid}>
             {tagCounts.map(([name, count]) => (
-              <div key={name} className={styles.tagCard}>
+              <div
+                key={name}
+                className={`${styles.tagCard} ${styles.tagCardClickable}`}
+                onClick={() => {
+                  if (renaming === name || deleting === name || count === 0) return;
+                  navigate(`/tags/${encodeURIComponent(name)}`);
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && renaming !== name && deleting !== name && count > 0) {
+                    navigate(`/tags/${encodeURIComponent(name)}`);
+                  }
+                }}
+              >
                 {renaming === name ? (
                   <div className={styles.renameRow}>
                     <input
@@ -135,42 +149,49 @@ export function TagLedgerScreen() {
                       maxLength={30}
                       autoFocus
                       onChange={(e) => setRenameValue(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
                       onKeyDown={(e) => { if (e.key === 'Enter') void handleRename(name); if (e.key === 'Escape') setRenaming(null); }}
                     />
-                    <button className={styles.iconBtn} onClick={() => void handleRename(name)} aria-label="Save name">✓</button>
-                    <button className={styles.iconBtn} onClick={() => setRenaming(null)} aria-label="Cancel">✕</button>
+                    <div className={styles.renameActions}>
+                      <button className={styles.actBtn} aria-label="Save name" title="Save"
+                        onClick={(e) => { e.stopPropagation(); void handleRename(name); }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </button>
+                      <button className={styles.actBtn} aria-label="Cancel" title="Cancel"
+                        onClick={(e) => { e.stopPropagation(); setRenaming(null); }}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                ) : deleting === name ? (
+                  <div className={styles.deleteRow}>
+                    <span className={styles.deleteText}>Remove from {count} transaction{count === 1 ? '' : 's'}?</span>
+                    <div className={styles.renameActions}>
+                      <button className={styles.actBtnDanger} onClick={() => void handleDelete(name)}>Yes</button>
+                      <button className={styles.actBtn} onClick={() => setDeleting(null)}>No</button>
+                    </div>
                   </div>
                 ) : (
                   <>
-                    {deleting === name ? (
-                      <div className={styles.deleteRow}>
-                        <span className={styles.deleteText}>Remove from {count} transaction{count === 1 ? '' : 's'}?</span>
-                        <button className={styles.confirmBtn} onClick={() => void handleDelete(name)}>Yes</button>
-                        <button className={styles.cancelBtn} onClick={() => setDeleting(null)}>No</button>
-                      </div>
-                    ) : (
-                      <>
-                        <span className={styles.tagName}>{name}</span>
-                        <span className={styles.tagCount}>{count} transaction{count === 1 ? '' : 's'}</span>
-                        <div className={styles.cardActions}>
-                          <button
-                            className={styles.openBtn}
-                            onClick={() => navigate(`/tags/${encodeURIComponent(name)}`)}
-                            disabled={count === 0}
-                          >
-                            Open ledger
-                          </button>
-                          <button className={styles.iconBtn} title="Rename" aria-label={`Rename ${name}`}
-                            onClick={() => { setRenaming(name); setRenameValue(name); }}>
-                            ✎
-                          </button>
-                          <button className={styles.iconBtnDanger} title="Delete tag" aria-label={`Delete ${name}`}
-                            onClick={() => setDeleting(name)}>
-                            🗑
-                          </button>
-                        </div>
-                      </>
-                    )}
+                    <span className={styles.tagName}>{name}</span>
+                    <span className={styles.tagCount}>{count} transaction{count === 1 ? '' : 's'}</span>
+                    <div className={styles.cardActions}>
+                      <button
+                        className={styles.openBtn}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/tags/${encodeURIComponent(name)}`); }}
+                        disabled={count === 0}
+                      >
+                        Open ledger
+                      </button>
+                      <button className={styles.actBtn} title="Rename" aria-label={`Rename ${name}`}
+                        onClick={(e) => { e.stopPropagation(); setRenaming(name); setRenameValue(name); }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                      </button>
+                      <button className={`${styles.actBtn} ${styles.actDanger}`} title="Delete tag" aria-label={`Delete ${name}`}
+                        onClick={(e) => { e.stopPropagation(); setDeleting(name); }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      </button>
+                    </div>
                   </>
                 )}
               </div>

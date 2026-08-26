@@ -214,14 +214,15 @@
 
 .renameRow {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
 }
 
 .renameInput {
-  flex: 1;
+  width: 100%;
   min-width: 0;
-  padding: 6px 10px;
+  padding: 7px 10px;
   border-radius: 8px;
   border: 1px solid var(--color-primary, #8b5cf6);
   background: transparent;
@@ -232,6 +233,8 @@
 .renameInput:focus {
   outline: none;
 }
+
+
 
 .deleteRow {
   display: flex;
@@ -276,4 +279,60 @@
   font-size: inherit;
   text-decoration: underline;
   padding: 0;
+}
+
+.tagCardClickable {
+  cursor: pointer;
+  transition: border-color var(--transition-fast, 0.15s), transform var(--transition-fast, 0.15s);
+}
+
+.tagCardClickable:hover {
+  border-color: var(--color-primary, #8b5cf6);
+  transform: translateY(-1px);
+}
+
+.tagCardClickable:focus-visible {
+  outline: none;
+  border-color: var(--color-primary, #8b5cf6);
+}
+
+.actBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #94a3b8);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.actBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text, #f1f5f9);
+}
+
+.actBtn:active {
+  background: oklch(100% 0 0 / 0.06);
+}
+
+.actDanger {
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.actDanger:hover {
+  color: var(--color-expense, #f43f5e);
+  background: oklch(62% 0.18 30 / 0.12);
+}
+
+
+.renameActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  width: 100%;
 }
