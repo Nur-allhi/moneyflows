@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
@@ -9,6 +10,7 @@ import { whatsNewFor } from '../constants/whatsNew';
 import { APP_VERSION } from '../constants/appVersion';
 import { logger } from '../../core/logging';
 import type { LogEntry } from '../../core/logging';
+import { ProgressBar } from '../components/ProgressBar';
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
   DESCRIPTION_MAX_LENGTH_MAX,
@@ -31,6 +33,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 export function SettingsPage() {
+  const navigate = useNavigate();
   const { settings, updateSettings } = useSettingsStore();
   const { members, fetchMembers } = useMemberStore();
 
@@ -62,6 +65,8 @@ export function SettingsPage() {
   const [activityPage, setActivityPage] = useState(1);
   const [appPage, setAppPage] = useState(1);
   const PAGE_SIZE = 10;
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
 
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
@@ -219,6 +224,46 @@ export function SettingsPage() {
     const next = !verbose;
     logger.setVerbose(next);
     setVerbose(next);
+  };
+
+  const handleImport = async () => {
+    setImporting(true);
+    setImportProgress(10);
+    try {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.db';
+      const file = await new Promise<File | null>((resolve) => {
+        input.onchange = () => resolve(input.files?.[0] ?? null);
+        input.addEventListener('cancel', () => resolve(null), { once: true });
+        input.click();
+        // Fallback for browsers without cancel event — check after focus returns
+        const onFocus = () => {
+          setTimeout(() => {
+            if (!input.files?.length) resolve(null);
+          }, 300);
+          window.removeEventListener('focus', onFocus);
+        };
+        window.addEventListener('focus', onFocus, { once: true });
+      });
+      if (!file) {
+        setImporting(false);
+        setImportProgress(0);
+        return;
+      }
+      setImportProgress(30);
+      const buffer = await file.arrayBuffer();
+      setImportProgress(60);
+      await getDatabase().importFromBytes(new Uint8Array(buffer));
+      setImportProgress(100);
+      setTimeout(() => {
+        navigate('/');
+        window.location.reload();
+      }, 400);
+    } catch {
+      setImporting(false);
+      setImportProgress(0);
+    }
   };
 
   const internalMembers = members.filter((m) => !m.isExternal);
@@ -435,7 +480,7 @@ export function SettingsPage() {
               )}
               <div className={styles.actionsRow}>
                 <button className={styles.actionBtn} onClick={() => getDatabase().exportToFile()}>↓ Export Database</button>
-                <button className={styles.actionBtn} onClick={() => getDatabase().importFromFile()}>↑ Import Database</button>
+                <button className={styles.actionBtn} onClick={handleImport} disabled={importing}>↑ Import Database</button>
               </div>
             </div>
           )}
@@ -506,6 +551,15 @@ export function SettingsPage() {
           )}
         </div>
       </div>
+      {importing && (
+        <div className={styles.importOverlay}>
+          <div className={styles.importModal}>
+            <div className={styles.importTitle}>Importing database…</div>
+            <ProgressBar percent={importProgress} />
+            <div className={styles.importSub}>Please wait — refreshing to dashboard</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
