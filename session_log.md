@@ -1447,3 +1447,17 @@
 ### Status
 - BUG-2 wontfix(closed), BUG-3 open awaiting fix approval.
 
+
+## Session 2026-08-24 06:15
+
+### Changes
+- BUG-3 fixed (owner-approved): AddAccountModal.handleSave now awaits fetchAccounts() after opening-balance tx
+- Verified live: immediate balance 777 visible post-save, no reload
+- Same-commit updates: BUGS.md BUG-3 -> fixed, CHANGELOG [Unreleased] Fixed entry
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, playwright verification
+
+### Status
+- Complete on dev.
+

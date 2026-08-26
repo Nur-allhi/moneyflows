@@ -16,6 +16,7 @@ interface AddAccountModalProps {
 
 export function AddAccountModal({ memberId, onClose }: AddAccountModalProps) {
   const saveAccount = useAccountStore((s) => s.saveAccount);
+  const fetchAccounts = useAccountStore((s) => s.fetchAccounts);
   const addTransaction = useTransactionStore((s) => s.addTransaction);
   const [name, setName] = useState('');
   const [type, setType] = useState<AccountType>('bank');
@@ -36,6 +37,7 @@ export function AddAccountModal({ memberId, onClose }: AddAccountModalProps) {
       );
       await addTransaction(tx);
     }
+    await fetchAccounts();
     onClose();
   };
 

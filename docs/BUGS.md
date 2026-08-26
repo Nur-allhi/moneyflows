@@ -28,14 +28,14 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ## BUG-3: Accounts list shows stale balance (0) right after Add-Account
 
-- **Status:** open
+- **Status:** fixed
 - **Severity:** low
 - **Found:** 2026-08-24 (during: BUG-2 reproduction testing)
 - **Location:** `AddAccountModal.tsx` handleSave → `useAccountStore.accounts`
-- **Description:** After creating an account with an initial balance, the in-memory accounts store still reports the pre-transaction snapshot (balance 0) because only the transactions store is updated; the UI corrects itself on next remount/refetch. Expected: new balance visible immediately.
-- **Root Cause:** Modal awaits `saveAccount` + `addTransaction` but never re-fetches accounts.
-- **Fix Approach:** proposed (await owner confirmation): call `fetchAccounts()` after the opening-balance transaction in `handleSave`.
-- **Resolved:** —
+- **Description:** After creating an account with an initial balance, the in-memory accounts store still reported the pre-transaction snapshot (balance 0) because only the transactions store was updated; the UI corrected itself on next remount/refetch.
+- **Root Cause:** Modal awaited `saveAccount` + `addTransaction` but never re-fetched accounts.
+- **Fix Approach:** owner-approved — call `fetchAccounts()` after the opening-balance transaction in `handleSave`.
+- **Resolved:** 2026-08-24 — commit adds `await fetchAccounts()`; verified live (immediate balance 777 visible post-save, no reload).
 
 ---
 
