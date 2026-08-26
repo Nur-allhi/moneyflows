@@ -24,6 +24,7 @@ money_flows_v0.4/
 │   ├── TAD.md               — Technical Architecture Document
 │   ├── SECURITY.md           — Security & Access Document
 │   ├── FRONTEND_SPEC.md      — Frontend Spec Document
+│   ├── DESIGN_IDENTITY.md    — Canonical design rules (must pass §17 to merge)
 │   ├── TICKETS.md            — Feature Ticket List
 │   ├── REPO_RULES.md          — Repo Management Document (branch/commit/merge rules)
 │   └── audit/                 — Project audit reports + findings register
@@ -65,7 +66,8 @@ money_flows_v0.4/
 ### 3.2 Design Reference
 - **`DESIGN_FILES/`** is the visual source of truth. Each HTML file in that folder is the exact pixel spec for its screen.
 - `DESIGN.md` at the project root is the derived design system reference — keep it in sync with `DESIGN_FILES/`.
-- When building a screen, open its corresponding HTML file in `DESIGN_FILES/` first to match layout, colors, spacing, typography, and component states.
+- **`docs/DESIGN_IDENTITY.md`** is the canonical, review-enforceable ruleset for scaling the UI (tokens, surfaces, interactive states, modals/sheets/dropdowns, icons, motion, responsive, checklist). **Every new component, modal, dropdown, icon, or screen MUST satisfy `DESIGN_IDENTITY.md` §17 before merge** — a failing checklist blocks merge. Treat divergences as defects.
+- When building a screen, open its corresponding HTML file in `DESIGN_FILES/` first to match layout, colors, spacing, typography, and component states, then validate against `docs/DESIGN_IDENTITY.md`.
 
 ### 3.3 Document Conventions
 - All docs live in `docs/` folder.
@@ -77,6 +79,7 @@ money_flows_v0.4/
 - CSS Modules + CSS custom properties (no runtime CSS-in-JS).
 - React functional components with hooks.
 - Clean Architecture: UI never imports the SQLite driver (`sql.js`) directly.
+- Design identity: no `style={{}}` (except shadcn), no hex/literal spacing, no hardcoded currency/locale — see `docs/DESIGN_IDENTITY.md` §2, §14, §16.
 
 ### 3.5 Session Start Ritual
 - **At the start of EVERY session**, read `session_log.md` (last entry for current position) and this file §5 (current ticket).

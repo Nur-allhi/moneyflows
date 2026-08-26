@@ -377,6 +377,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -905,4 +907,32 @@
 
 .pickerCreateBtn:active {
   opacity: 0.85;
+}
+
+.tagPickerCreate {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tagPickerCreate .inputField {
+  flex: 1;
+  min-width: 0;
+}
+
+.tagPickerAdd {
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tagPickerAdd:disabled {
+  opacity: 0.45;
+  cursor: default;
 }

@@ -1,9 +1,9 @@
 # MoneyFlows — Frontend Spec Document
 
 **Target Skills:** `ui-ux-pro-max`, `frontend-design`, `senior-frontend`
-**Version:** 3.0 · 2026-08-24
+**Version:** 3.1 · 2026-08-26
 
-> **Design reference:** `DESIGN_FILES/*.html` are the pixel-perfect source of truth per screen. `DESIGN.md` derives tokens from them.
+> **Design reference:** `DESIGN_FILES/*.html` are the pixel-perfect source of truth per screen. `DESIGN.md` derives tokens from them. `docs/DESIGN_IDENTITY.md` is the canonical, review-enforceable ruleset — every new component, modal, dropdown, or icon must satisfy its checklist (§17) before merge.
 
 ---
 
@@ -29,7 +29,7 @@ Premium dark glassmorphism: frosted panels (`backdrop-filter: blur(20px)`), 1px 
 Typography: Outfit display 600/700 · system-ui body · JetBrains Mono numerics. Breakpoints: single column ≤768px (bottom nav + sheets); sidebar + columns ≥769px; max-width 1440px @1920px. Full matrix in DESIGN.md.
 
 ### 1.3 Code conventions
-CSS Modules only; inline `style={{…}}` banned (exception: shadcn primitives). Shared constants in `presentation/constants/`. Formatting via `formatAmount()`/`useFormatNumber()` from settings — hardcoded `'BDT'` forbidden.
+CSS Modules only; inline `style={{…}}` banned (exception: shadcn primitives). Shared constants in `presentation/constants/`. Formatting via `formatAmount()`/`useFormatNumber()` from settings — hardcoded `'BDT'` forbidden. **Design identity is mandatory:** tokens, surfaces, states, modal/sheet/dropdown placement, icons, motion, and responsive rules live in `docs/DESIGN_IDENTITY.md` — new UI that diverges from that file is a defect.
 
 ## 2. Routes & Navigation
 
@@ -75,15 +75,22 @@ Status row under Cloud Backup: colored dot (ok/fail) + text `OPFS (fast local fi
 
 ## 4. Component Inventory
 
-| Component | Notes |
-|-----------|-------|
-| `Modal`/`BottomSheet` | responsive pair ≤/>768px; 200–300 ms close animations |
-| `LedgerTable` | virtualized rows; sticky header; balance column optional |
-| Wizard kit | `AmountInput`, `FormField`, `Numpad`, `SegmentedTabs`; mono amounts |
-| Primitives | `ProgressBar`, `GlassPanel`, `Avatar` |
-| Modal registry | lazy map keyed by name; props typed via registry boundary (no `any`) |
-| Splash | typed-logo animation; watchdog-aware (see §3.1) |
+| Component | Notes | Identity ref |
+|-----------|-------|--------------|
+| `Modal`/`BottomSheet` | responsive pair ≤/>768px; 200–300 ms close animations | `DESIGN_IDENTITY.md §9` |
+| `LedgerTable` | virtualized rows; sticky header; balance column optional | `DESIGN_IDENTITY.md §10` |
+| Wizard kit | `AmountInput`, `FormField`, `Numpad`, `SegmentedTabs`; mono amounts | `DESIGN_IDENTITY.md §8` |
+| Primitives | `ProgressBar`, `GlassPanel`, `Avatar` | `DESIGN_IDENTITY.md §4, §10` |
+| Modal registry | lazy map keyed by name; props typed via registry boundary (no `any`) | `DESIGN_IDENTITY.md §14` |
+| Splash | typed-logo animation; watchdog-aware (see §3.1) | `DESIGN_IDENTITY.md §9` |
+| **New dropdown/picker** | **Modal picker** `trigger 14/10 → overlay z350 → 360/85vw blur24` — native `FormSelect` is deprecated | `DESIGN_IDENTITY.md §9` |
+
+> Inventory is not permission to invent variants — every new entry must reuse the tokens/surfaces/states/motion prescribed in `DESIGN_IDENTITY.md`. Validate with the checklist in `DESIGN_IDENTITY.md §17`.
 
 ## 5. Interaction States (mandatory everywhere)
 
-hover (glow + lift) · focus-visible (2px violet ring) · active (scale .98) · disabled (.5 opacity) · loading (skeleton shimmer, never spinners on glass) · empty (icon + one-line hint) · error (coral text + retry).
+hover (glow + lift) · focus-visible (2px violet ring) · active (scale .98) · disabled (.5 opacity) · loading (skeleton shimmer, never spinners on glass) · empty (icon + one-line hint) · error (coral text + retry). **Full spec + recipes:** `docs/DESIGN_IDENTITY.md §6, §12`.
+
+## 6. Design Identity Gate
+
+Every UI PR **MUST** paste and check `docs/DESIGN_IDENTITY.md §17` (11-item checklist) — no hex/literal spacing, money in `JetBrains Mono` via `formatAmount`, all 4 states, modal/sheet pair or `blur4 z300` overlay, modal picker for dropdowns, `stroke 1.8` icons, `0.2–0.35s` motion, 9 viewports with no horizontal overflow. A failing checklist blocks merge.

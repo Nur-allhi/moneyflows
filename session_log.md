@@ -1534,3 +1534,115 @@
 ### Status
 - Fixed on dev.
 
+
+## Session 2026-08-26 12:40
+
+### Changes
+- Tags feature (T-109..T-111) per owner decisions B/single/member-first+family-wide/editable:
+  - [useTagStore.ts] NEW persisted tag registry
+  - [TransactionFormModal] Tag field w/ datalist autocomplete; saved into metadata.tags; registry grows on submit
+  - [TransactionEditModal] tag seeded/saved/cleared + registry growth; css additions
+  - [MemberProfile] ledger tag dropdown (registry U in-view tags) + family-wide jump button
+  - [TagLedgerScreen.tsx/.module.css] NEW /tags + /tags/:tag cross-member views w/ In/Out totals
+  - [App.tsx] routes added
+- E2E: edit-tag save verified in store+registry; /tags lists QA Tag(1); detail shows member/account/amount row
+- Wizard create-path tagging code-reviewed (automation blocked by animated dual-tree DOM; manual check recommended)
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, playwright
+
+### Status
+- Complete on dev. Master sync pending.
+
+
+## Session 2026-08-26 12:55
+
+### Changes
+- BUG (user report): transaction wizard stuck - submit/cancel unreachable + tag input inaccessible on desktop. Root cause: .modalBody lacked flex/min-height so extra Tag field overflowed fixed-height desktopModal (overflow:hidden clipped actions). Fixed via flex:1/min-height:0; verified at 700px window height.
+- Feature: tag management UI - Settings > Transaction Tags chips w/ remove (useTagStore.removeTag); registry deletions don't alter existing tx metadata.
+
+### Skill(s) Used
+- frontend-design, senior-frontend, playwright verification
+
+### Status
+- Complete on dev.
+
+
+## Session 2026-08-26 12:30
+
+### Changes
+- T-112: [App.tsx] sidebar 'Tags' nav under Loans (tag icon) + routeTitles entry; bottom nav untouched
+- Verified: sidebar order Dashboard..Loans,Tags,Recycle; click -> /tags; active state applies
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Complete on dev.
+
+
+## Session 2026-08-26 13:00
+
+### Changes
+- T-112: full tag management UI on /tags: inline create, per-card rename (propagates through transaction metadata), two-step delete (strips from txs); useTagStore.renameTag added; Settings chips section removed; sidebar Tags nav item
+- E2E verified: create QA Alpha -> rename to QA Beta (registry + UI) -> delete; stale dev-server transform diagnosed (restart fixed) explaining earlier flakiness
+
+### Skill(s) Used
+- senior-frontend, playwright verification
+
+### Status
+- Complete on dev. Master sync pending user go-ahead.
+
+
+## Session 2026-08-26 13:20
+
+### Changes
+- Tags page fixes (user-reported): renameInput overflowed card -> column layout w/ min-width:0; whole tag card clickable to open its ledger (inner clicks stopPropagation); edit/delete icons swapped to TransactionDetails-modal pencil/trash svgs w/ matching hover/active animation
+
+### Skill(s) Used
+- frontend-design, playwright verification
+
+### Status
+- Complete on dev.
+
+
+## Session 2026-08-26 13:35
+
+### Changes
+- Tags page delete-confirm: Yes/No buttons were rendering bare (actBtn transparent classes from rewrite) -> switched to confirmBtn/cancelBtn styles w/ .deleteActions row; count=0 wording now 'Delete this unused tag?'
+
+### Skill(s) Used
+- ui-ux-pro-max, playwright verification
+
+### Status
+- Complete on dev.
+
+
+## Session 2026-08-26 14:10
+
+### Changes
+- T-109 follow-up: wizard Tag field converted from datalist input to standard picker dropdown (trigger + overlay w/ No-tag option + inline create-new), matching Source/Destination picker design identity
+- Live verified: dropdown opens/lists/creates/selects (trigger label updates to Travel)
+
+### Skill(s) Used
+- ui-ux-pro-max, senior-frontend
+
+### Status
+- Complete on dev.
+
+## Session 2026-08-26 14:30
+
+### Changes
+- **Design identity — documented + wired:**
+  - Created `docs/DESIGN_IDENTITY.md` v1.0 (170-line canonical): tokens (OKLCH, spacing, radii, shadows, typography, breakpoints, motion), 7 principles, surfaces (glass recipe), typography, 4 required interactive states + shimmer/empty/error, navigation (Sidebar/Header/BottomNav/FAB/SegmentedTabs), forms (FormField/AmountInput + deprecated native select → modal picker), modals/sheets/overlays/dropdowns (responsive pair 768, overlay 0.55 blur4 z300, picker 360/85vw blur24, closing 0.25-0.35s), ledger/cards/progress, icons (stroke 1.8, 16/18/20/24, emoji via TX_TYPE_ICON), motion, responsive (9 viewports), content constraints, recipes, banned patterns, §17 11-item pre-merge checklist.
+  - Updated `DESIGN.md` header + added §7 (enforceable companion + gate table).
+  - Updated `docs/FRONTEND_SPEC.md` v3.0 → 3.1: banner + §1.3 mandatory sentence + §4 table identity refs + §5 → §6 gate section.
+  - Updated `AGENTS.md`: project tree lists DESIGN_IDENTITY.md, §3.2 promotes it to canonical review-enforceable, §3.4 bans `style{{}}`/hex/hardcoded locale and points to §§2/14/16.
+- Gates: `build` PASS, `lint --max-warnings 0` PASS.
+
+### Skill(s) Used
+- ui-ux-pro-max, frontend-design, senior-frontend
+
+### Status
+- Complete on dev. Every future component/modal/dropdown/icon must pass `DESIGN_IDENTITY.md §17` before merge.
+

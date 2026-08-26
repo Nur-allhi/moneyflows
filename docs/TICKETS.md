@@ -39,6 +39,24 @@ Add-Account refreshes the accounts store so the new balance displays immediately
 ### T-107 - Wizard pre-fills open ledger account — **Complete** (v1.1.1)
 All four transaction-form entry points in MemberProfile pass `initialSource=selectedAccountId`; Income/Expense/Transfer pills also pin their tab. Verified: Bkash ledger → wizard opens with Source=Bkash.
 
+### T-108 - Loan-ledger PDF export detail chooser — **Complete**
+Download PDF opens a radio chooser (All details / Just description); choice persists via `settings.reportDetailMode`. Verified: both modes export, content checked, chooser readable on opaque panel.
+
+### T-109 - Transaction tags: create + edit with autocomplete — **Complete**
+Single optional tag stored in `metadata.tags`; typed with datalist suggestions from the persisted tag registry (`useTagStore`); editable in TransactionEditModal. Loan-movement tabs untagged for now.
+
+### T-110 - Member ledger tag filter — **Complete**
+Tag dropdown in the ledger toolbar (options = registry ∪ tags present in view); filters rows only, balance math untouched.
+
+### T-111 - Family-wide tag browser (`/tags`, `/tags/:tag`) — **Complete**
+Cross-member ledger per tag with member/account/description/amount and In/Out totals; reachable from the member toolbar once a tag is selected and via the new sidebar **Tags** nav item.
+
+### T-112 - Tag management UI on the Tags page — **Complete** (v1.1.1)
+Create / rename / delete directly on `/tags`: inline create row, per-card ✎ rename (rewrites the tag across all carrying transactions) and 🗑 two-step delete (strips it from transactions). Removed the interim Settings chips section. Sidebar gains a Tags item under Loans.
+
+### T-107 - Wizard pre-fills open ledger account — **Complete** (v1.1.1)
+All four transaction-form entry points in MemberProfile pass `initialSource=selectedAccountId`; Income/Expense/Transfer pills also pin their tab. Verified: Bkash ledger → wizard opens with Source=Bkash.
+
 
 ## Deferred / Open Items
 

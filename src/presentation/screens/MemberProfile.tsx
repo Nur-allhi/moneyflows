@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -11,6 +11,7 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useTagStore } from '../stores/useTagStore';
 import { Transaction } from '../../core/domain/Transaction';
 import { formatAmount, formatAmountParts } from '../utils/format';
 import { shortDate, MONTHS } from '../constants/dates';
@@ -36,9 +37,12 @@ function getScrollParent(node: HTMLElement | null): HTMLElement {
 
 export function MemberProfile() {
   const { id: memberId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [ledgerFilter, setLedgerFilter] = useState('all');
   const [ledgerQuery, setLedgerQuery] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
+  const knownTags = useTagStore((s) => s.tags);
 
   const {
     members, loading: mLoading, error: mError,
@@ -144,6 +148,21 @@ export function MemberProfile() {
     [sortedTxs, displayLimit],
   );
 
+  /** Tag filter applies to the ledger lists; balance math stays untouched. */
+  const tagFilteredTxs = useMemo(() => {
+    if (!tagFilter) return displayedTxs;
+    return displayedTxs.filter((tx) => Array.isArray(tx.metadata?.tags) && (tx.metadata.tags as string[]).includes(tagFilter));
+  }, [displayedTxs, tagFilter]);
+
+  const ledgerTagOptions = useMemo(() => {
+    const inLedger = new Set<string>();
+    displayedTxs.forEach((tx) => {
+      if (Array.isArray(tx.metadata?.tags)) (tx.metadata.tags as string[]).forEach((t) => inLedger.add(t));
+    });
+    knownTags.forEach((t) => inLedger.add(t));
+    return [...inLedger].sort((a, b) => a.localeCompare(b));
+  }, [displayedTxs, knownTags]);
+
   const handleReachEnd = useCallback(() => {
     setDisplayLimit((prev) => Math.min(prev + 10, sortedTxs.length));
   }, [sortedTxs.length]);
@@ -209,26 +228,7 @@ export function MemberProfile() {
   }, [accountMap, memberMap]);
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
-    if (!showBalance) {
-      return [...displayedTxs].reverse().map((tx) => {
-        const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
-        const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' || tx.type === 'lend' || tx.type === 'repay' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
-        return {
-          id: tx.id,
-          date: shortDate(tx.date, locale),
-          description: tx.description,
-          account: resolveAccountDisplay(tx),
-          debit: isCredit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
-          credit: isCredit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-          currencyLabel: currency,
-          type: displayType,
-        };
-      });
-    }
     const selectedAcct = memberAccounts.find((a) => a.id === selectedAccountId);
-    const hasOpeningTx = sortedTxs.some(
-      (tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true,
-    );
 
     function isTxCredit(tx: Transaction): boolean {
       const loanLike = ['transfer', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback', 'lend', 'repay'];
@@ -236,54 +236,50 @@ export function MemberProfile() {
       return tx.type === 'income';
     }
 
-    if (hasOpeningTx) {
-      let running = 0;
-      const rows: LedgerRow[] = sortedTxs.map((tx) => {
+    if (!showBalance) {
+      return [...tagFilteredTxs].reverse().map((tx) => ({
+        id: tx.id,
+        date: shortDate(tx.date, locale),
+        description: tx.description,
+        account: resolveAccountDisplay(tx),
+        debit: isTxCredit(tx) ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
+        credit: isTxCredit(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
+        currencyLabel: currency,
+        type: (['loan_issue', 'loan_repayment', 'lend', 'repay'].includes(tx.type) ? 'loan' : tx.type) as 'loan' | 'income' | 'expense' | 'transfer',
+      }));
+    }
+
+    // Full-history running balance per transaction id (tag filter changes which
+    // rows are shown, never the math).
+    const hasOpeningTx = sortedTxs.some(
+      (tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true,
+    );
+    const accountBalance = selectedAcct?.balance ?? 0;
+    const netChange = sortedTxs.reduce((sum, tx) => sum + (isTxCredit(tx) ? tx.amount : -tx.amount), 0);
+    let running = hasOpeningTx ? 0 : accountBalance - netChange;
+    const balMap = new Map<string, number>();
+    for (const tx of sortedTxs) {
+      running += isTxCredit(tx) ? tx.amount : -tx.amount;
+      balMap.set(tx.id, running);
+    }
+
+    return [...tagFilteredTxs]
+      .map((tx) => {
         const credit = isTxCredit(tx);
-        if (credit) running += tx.amount;
-        else running -= tx.amount;
-
-        const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' || tx.type === 'lend' || tx.type === 'repay' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
-
+        const displayType = ['loan_issue', 'loan_repayment', 'lend', 'repay'].includes(tx.type) ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
         return {
           id: tx.id,
           date: shortDate(tx.date, locale),
           description: tx.description,
           debit: credit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
           credit: credit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-          balance: formatAmountParts(running, locale, currency).amount,
+          balance: formatAmountParts(balMap.get(tx.id) ?? 0, locale, currency).amount,
           currencyLabel: currency,
           type: displayType,
         };
-      });
-      return rows.reverse();
-    }
-
-    const accountBalance = selectedAcct?.balance ?? 0;
-    const netChange = sortedTxs.reduce((sum, tx) => {
-      return isTxCredit(tx) ? sum + tx.amount : sum - tx.amount;
-    }, 0);
-    let running = accountBalance - netChange;
-    const rows: LedgerRow[] = sortedTxs.map((tx) => {
-      const credit = isTxCredit(tx);
-      if (credit) running += tx.amount;
-      else running -= tx.amount;
-
-      const displayType = tx.type === 'loan_issue' || tx.type === 'loan_repayment' || tx.type === 'lend' || tx.type === 'repay' ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
-
-      return {
-        id: tx.id,
-        date: shortDate(tx.date, locale),
-        description: tx.description,
-        debit: credit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
-        credit: credit ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
-        balance: formatAmountParts(running, locale, currency).amount,
-        currencyLabel: currency,
-        type: displayType,
-      };
-    });
-    return rows.reverse();
-  }, [displayedTxs, sortedTxs, locale, currency, showBalance, memberAccounts, selectedAccountId, resolveAccountDisplay]);
+      })
+      .reverse();
+  }, [sortedTxs, tagFilteredTxs, locale, currency, showBalance, memberAccounts, selectedAccountId, resolveAccountDisplay]);
 
   const filteredLedger = useMemo(() => {
     const q = ledgerQuery.toLowerCase().trim();
@@ -293,7 +289,7 @@ export function MemberProfile() {
   }, [ledgerRows, ledgerFilter, ledgerQuery]);
 
   const filteredTxs = useMemo(() => {
-    let txs = [...displayedTxs];
+    let txs = [...tagFilteredTxs];
     if (ledgerFilter !== 'all') {
       const map: Record<string, string[]> = { income: ['income'], expense: ['expense', 'loan_issue', 'lend'], transfer: ['transfer'], loan: ['loan_issue', 'loan_repayment', 'lend', 'repay'] };
       const allowed = map[ledgerFilter] ?? [];
@@ -302,7 +298,7 @@ export function MemberProfile() {
     const q = ledgerQuery.toLowerCase().trim();
     if (q) txs = txs.filter((tx) => tx.description.toLowerCase().includes(q));
     return txs.sort((a, b) => b.date.localeCompare(a.date));
-  }, [displayedTxs, ledgerFilter, ledgerQuery]);
+  }, [tagFilteredTxs, ledgerFilter, ledgerQuery]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) {
@@ -745,6 +741,29 @@ export function MemberProfile() {
               <div className={styles.ledgerSectionTitle}>{selectedAcct ? selectedAcct.name : 'All Accounts'}</div>
               <span className={styles.txCountBadge}>{filteredTxs.length}</span>
               <div className={styles.ledgerActions}>
+                {(ledgerTagOptions.length > 0 || tagFilter) && (
+                  <>
+                    <select
+                      className={styles.tagSelect}
+                      value={tagFilter}
+                      onChange={(e) => setTagFilter(e.target.value)}
+                      aria-label="Filter by tag"
+                    >
+                      <option value="">All tags</option>
+                      {ledgerTagOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    {tagFilter && (
+                      <button
+                        className={styles.ledgerFilterBtn}
+                        onClick={() => navigate(`/tags/${encodeURIComponent(tagFilter)}`)}
+                        title="View this tag across all members"
+                        aria-label="View tag family-wide"
+                      >
+                        {'\u{1F3E0}'}
+                      </button>
+                    )}
+                  </>
+                )}
                 <button className={styles.ledgerFilterBtn} onClick={() => setFilterOpen((o) => !o)} aria-label="Filter">
                   <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                     <path d="M2 4.5h14M4.5 9h9M7 13.5h4" />

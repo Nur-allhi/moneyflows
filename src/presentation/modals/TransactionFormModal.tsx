@@ -7,6 +7,7 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useLoanStore } from '../stores/useLoanStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useTagStore } from '../stores/useTagStore';
 import { formatAmount } from '../utils/format';
 import { handleFormFocus } from '../utils/focus';
 import { Transaction } from '../../core/domain/Transaction';
@@ -121,6 +122,10 @@ export function TransactionFormModal({
   const [selectedBorrowerId, setSelectedBorrowerId] = useState(initialBorrowerId ?? '');
   const [showAddCp, setShowAddCp] = useState(false);
   const [newCpName, setNewCpName] = useState('');
+  const [tagName, setTagName] = useState('');
+  const [showTagPicker, setShowTagPicker] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const knownTags = useTagStore((s) => s.tags);
   const [showBorrowerPicker, setShowBorrowerPicker] = useState(false);
 
   useEffect(() => {
@@ -322,10 +327,13 @@ export function TransactionFormModal({
 
     const tx = new Transaction(
       uuidv4(), type, capitalizedDesc, amount, txMemberId, dateTime, src, dst, debtorId,
+      undefined,
+      tagName.trim() ? { tags: [tagName.trim()] } : {},
     );
 
     await addTransaction(tx);
     await fetchAccounts();
+    if (tagName.trim()) useTagStore.getState().addTag(tagName.trim());
     onClose();
   };
 
@@ -594,6 +602,21 @@ export function TransactionFormModal({
       />
       {errors.description && <span className={styles.errorText}>{errors.description}</span>}
 
+      {tab !== 'loan' && (
+        <div className={styles.fieldGroup}>
+          <span className={styles.fieldLabel}>Tag (optional)</span>
+          <button
+            type="button"
+            className={`${styles.pickerTrigger} ${tagName ? styles.pickerHasValue : ''}`}
+            onClick={() => setShowTagPicker(true)}
+          >
+            {tagName
+              ? <><span className={styles.pickerValue}>{tagName}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
+              : <span className={styles.pickerPlaceholder}>Select tag (optional)</span>}
+          </button>
+        </div>
+      )}
+
       {txError && <span className={styles.errorText}>{txError}</span>}
     </>
   );
@@ -649,6 +672,63 @@ export function TransactionFormModal({
           </div>
         </div>
       </div>
+
+      {showTagPicker && (
+        <div className={styles.pickerOverlay} onClick={() => setShowTagPicker(false)}>
+          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.pickerHeader}>
+              <span className={styles.pickerTitle}>Select tag</span>
+              <button className={styles.pickerClose} onClick={() => setShowTagPicker(false)}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className={styles.tagPickerCreate}>
+              <input
+                className={styles.inputField}
+                value={newTagName}
+                maxLength={30}
+                placeholder="New tag name"
+                onChange={(e) => setNewTagName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newTagName.trim()) {
+                    useTagStore.getState().addTag(newTagName.trim());
+                    setTagName(newTagName.trim());
+                    setNewTagName('');
+                    setShowTagPicker(false);
+                  }
+                }}
+              />
+              <button
+                className={styles.tagPickerAdd}
+                disabled={!newTagName.trim()}
+                onClick={() => {
+                  useTagStore.getState().addTag(newTagName.trim());
+                  setTagName(newTagName.trim());
+                  setNewTagName('');
+                  setShowTagPicker(false);
+                }}
+              >
+                Add
+              </button>
+            </div>
+            <div className={styles.pickerList}>
+              <button className={styles.pickerItem} onClick={() => { setTagName(''); setShowTagPicker(false); }}>
+                <span className={styles.pickerPlaceholder}>No tag</span>
+              </button>
+              {knownTags.map((t) => (
+                <button key={t} className={styles.pickerItem} onClick={() => { setTagName(t); setShowTagPicker(false); }}>
+                  <span className={styles.pickerItemName}>{t}</span>
+                </button>
+              ))}
+              {knownTags.length === 0 && (
+                <div className={styles.pickerEmpty}>No tags yet — create one above</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showBorrowerPicker && (
         <div className={styles.pickerOverlay} onClick={() => setShowBorrowerPicker(false)}>
