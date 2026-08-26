@@ -66,9 +66,23 @@ All four transaction-form entry points in MemberProfile pass `initialSource=sele
 | OPEN-A | Remove localStorage transition mirror once one release cycle has shipped on OPFS storage | `senior-backend` | after next tagged release |
 | OPEN-B | PWA "update ready" toast instead of silent worker claim | `senior-frontend`, `ui-ux-pro-max` | next PWA-focused batch |
 
-## Next Phase
+## Next Phase — Search Expansion: Global + Ledger-Scoped (S-1…S-5)
 
-**TBD** — candidates discussed so far: Supabase sync groundwork, budgets/goals expansion, CSV export. Nothing is ticketed until the user picks a direction.
+Plan: `docs/plans/SEARCH_PLAN.md` (approved 2026-08-26). Dashboard search → all transactions + highlight; ledger search → that ledger only, widened fields + highlight; DB LIKE deferred.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| S-1 | Highlight primitive + `--color-primary-mark` token | `ui-ux-pro-max`, `frontend-design` | S | **Next** |
+| S-2 | Dashboard: search ALL transactions + highlight (fix slice-before-filter, `matchesTx`, debounced) | `senior-frontend`, `ui-ux-pro-max` | M | Pending |
+| S-3 | Ledgers: widen fields (amount/account/tag/date) + highlight + pagination fix (`MemberProfile` `GroupLedger` `LoanDetail` `TagLedger`) | `senior-frontend`, `ui-ux-pro-max` | M | Pending |
+| S-4 | Groups/Loans: decouple from global `useSearchStore` (`effectiveSearch = mobileSearch \|\| global` → local only) + highlight | `senior-frontend` | S | Pending |
+| S-5 | (Deferred) DB `LIKE` on `description`/`metadata.tags` + index — trigger when `transactions.length > 1000` | `senior-backend` | S | Deferred |
+
+Dependencies: S-1 → (S-2 ∥ S-3) → S-4 → S-5.
+
+## Following Phase
+
+Candidates after search: Supabase sync groundwork, budgets/goals expansion, CSV export. Nothing else ticketed until the user picks a direction.
 
 ## Ticket Template (use for all new work)
 
