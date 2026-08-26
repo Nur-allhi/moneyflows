@@ -317,3 +317,35 @@
   font-size: 12px;
   color: var(--color-text-secondary, #94a3b8);
 }
+
+.tagChipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border, rgba(255,255,255,0.06));
+  background: var(--color-surface, rgba(255,255,255,0.04));
+  font-size: 12.5px;
+  color: var(--color-text, #f1f5f9);
+}
+
+.tagChipRemove {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary, #94a3b8);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.tagChipRemove:hover {
+  color: var(--color-expense, #f43f5e);
+}
