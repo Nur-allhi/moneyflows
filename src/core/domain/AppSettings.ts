@@ -9,5 +9,7 @@ export class AppSettings {
     public numpadMaxDigits: number = DEFAULT_NUMPAD_MAX_DIGITS,
     public dashboardTxLimit: number = DEFAULT_DASHBOARD_TX_LIMIT,
     public lastSeenVersion?: string,
+    /** Loan-ledger PDF export: 'all' includes account trail, 'description' omits it. */
+    public reportDetailMode: 'all' | 'description' = 'all',
   ) {}
 }
