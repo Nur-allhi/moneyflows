@@ -22,7 +22,9 @@ vite.config.d.ts
 # Test & tooling artifacts
 test-results/
 playwright-report/
+playwright/.cache/
 .playwright-mcp/
+e2e/.auth/
 
 # Local dev / debug scripts
 query_db.mjs
