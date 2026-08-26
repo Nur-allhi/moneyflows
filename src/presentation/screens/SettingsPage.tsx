@@ -225,11 +225,6 @@ export function SettingsPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Settings</h1>
-        <span className={styles.subtitle}>Manage preferences, backups and storage</span>
-      </div>
-
       <div className={styles.layout}>
         <nav className={styles.subNav} aria-label="Settings sections">
           {TABS.map((t) => (
