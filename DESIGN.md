@@ -1,6 +1,7 @@
 # MoneyFlows — Design System
 
 > **Source of truth:** `DESIGN_FILES/` HTML mockups. Each screen's exact pixel layout, spacing, colors, typography, and component states are defined in its corresponding HTML file in that folder. This document is a derived reference — if any detail conflicts, the HTML in `DESIGN_FILES/` wins.
+> **Enforceable rules:** `docs/DESIGN_IDENTITY.md` is the canonical, review-enforceable companion to this file. It codifies tokens, surfaces, interactive states, modal/sheet/dropdown placement, icons, motion, and the pre-merge checklist. Every new component **MUST** satisfy `DESIGN_IDENTITY.md` §10 before merge.
 
 ## 1. Design Tokens
 
@@ -295,3 +296,22 @@ Test across: 360×800, 390×844, 430×932, 600×960, 820×1180, 1024×768, 1366�
 4. Implement responsive behavior per breakpoint matrix
 5. Add JS interactions: tab switching, accordion, numpad input, restore/delete, sheet/modal open-close
 6. Validate fidelity across all 9 viewports
+
+---
+
+## 7. Design Identity — How to Stay Consistent While Scaling
+
+`docs/DESIGN_IDENTITY.md` (v1.0) is the **enforceable** design contract. This file describes *what* the system looks like; `DESIGN_IDENTITY.md` prescribes *how to build the next piece* so it feels familiar.
+
+| Concern | Where to look | Non-negotiable |
+|---------|---------------|----------------|
+| Tokens (single source) | `DESIGN_IDENTITY.md §2` + `tokens.css` | No hex, no literal spacing/radii |
+| Surfaces / glass | `§4` | `surface blur20 border radius-md` recipe verbatim |
+| Interactive states | `§6` | All 4: hover glow, focus-visible 2px violet, active /0.08 or scale 0.92, disabled 0.5 |
+| Forms / amounts | `§8` | `FormField` label + `AmountInput` mono 24 + `formatAmount()` |
+| Modals / sheets / dropdowns | `§9` | `≤768 sheet slideUp 0.35s / >768 modal fadeIn 0.25s`, overlay `0.55 blur4 z300`, picker `360/85vw blur24` |
+| Icons / gradients | `§11` + `labels.ts` | `stroke 1.8 round` 16/18/20/24, emoji only via `TX_TYPE_ICON` |
+| Motion / responsive | `§12-13` | Durations `0.2/0.25/0.3/0.35/0.6`, validate at 9 viewports, no horiz overflow |
+| Review gate | `§17` | 11-item checklist must be pasted + checked in every UI PR |
+
+> New modals, dropdowns, filters, or cards that diverge from `DESIGN_IDENTITY.md` are defects — fix before merge.
