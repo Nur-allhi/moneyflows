@@ -7,6 +7,16 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.2.0',
+    items: [
+      'Search got smarter: the dashboard now finds across all your transactions — description, amount, account and tags — and highlights what you typed.',
+      'Each ledger (member, group, loan, tag) has its own search that stays inside that ledger, also highlighted.',
+      'Opening animation and the sidebar now share one MoneyFlows logo — same gradient, single identity.',
+      'Recent Transactions no longer shows two dates — mobile badge stays, desktop shows one full date.',
+      'Layout is more compact so every section gets more room on screen.',
+    ],
+  },
+  {
     version: '1.1.0',
     items: [
       'You can now edit any account — rename it or change its type from the pencil button on the account card.',
