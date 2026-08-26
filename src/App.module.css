@@ -87,6 +87,7 @@
   .main {
     padding-bottom: 24px;
     padding-left: calc(220px + 24px);
+    padding-right: 16px;
   }
 }
 
