@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { DatePicker } from '../../components/ui/date-picker';
 import { SegmentedTabs, FormTextarea } from '../components';
@@ -233,8 +233,20 @@ export function TransactionFormModal({
     }
   };
 
+  const submitLockRef = useRef(false);
+
   const handleSubmit = async () => {
+    if (submitLockRef.current) return;
     if (!validate()) return;
+    submitLockRef.current = true;
+    try {
+      await runSubmit();
+    } finally {
+      submitLockRef.current = false;
+    }
+  };
+
+  const runSubmit = async () => {
     const amount = parseInt(rawAmount, 10);
     const primaryMemberId = useSettingsStore.getState().settings.primaryMemberId;
     const txMemberId = (primaryMemberId && members.find((m) => m.id === primaryMemberId && !m.isExternal)?.id)
@@ -601,7 +613,11 @@ export function TransactionFormModal({
               <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
             </div>
 
-            <div className={styles.formBody} onFocus={handleFormFocus} onKeyDown={(e) => { if (e.key === 'Enter') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); handleSubmit(); } else if (!(e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); } } }}>
+            <div className={styles.formBody} onFocus={handleFormFocus} onKeyDown={(e) => {
+              if (e.key !== 'Enter' || e.shiftKey) return;
+              e.preventDefault();
+              void handleSubmit();
+            }}>
               {formFields}
               <button className={styles.submitBtn} onClick={handleSubmit} disabled={!rawAmount || Object.keys(errors).length > 0}>
                 {buttonLabel}
@@ -619,7 +635,11 @@ export function TransactionFormModal({
             <h2>New Transaction</h2>
             <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
           </div>
-          <div className={styles.modalBody} onKeyDown={(e) => { if (e.key === 'Enter') { if (e.ctrlKey || e.metaKey) { e.preventDefault(); handleSubmit(); } else if (!(e.target instanceof HTMLTextAreaElement)) { e.preventDefault(); } } }}>
+          <div className={styles.modalBody} onKeyDown={(e) => {
+              if (e.key !== 'Enter' || e.shiftKey) return;
+              e.preventDefault();
+              void handleSubmit();
+            }}>
             <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
             {formFields}
           </div>
