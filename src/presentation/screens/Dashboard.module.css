@@ -474,6 +474,10 @@
   white-space: nowrap;
 }
 
+@media (min-width: 769px) {
+  .txType { display: none; }
+}
+
 .txDesc {
   flex: 1;
   font-size: var(--text-md);
