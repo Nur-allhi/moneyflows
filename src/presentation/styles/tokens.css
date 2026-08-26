@@ -17,6 +17,7 @@
   --color-success: oklch(65% 0.15 150);
   --color-warning: oklch(75% 0.15 85);
   --color-danger: oklch(58% 0.18 30);
+  --color-primary-mark: oklch(62% 0.22 290 / 0.28);
 
   --space-1: 4px;
   --space-2: 8px;

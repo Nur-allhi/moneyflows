@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useMemo, useLayoutEffect } from 'react';
 import { ROW_HEIGHT, DESKTOP_ROW_HEIGHT, OVERSCAN, ANIMATION_DURATION } from '../constants/config';
+import { Highlight } from '../utils/highlight';
 import styles from './LedgerTable.module.css';
 
 export interface LedgerRow {
@@ -23,6 +24,7 @@ interface LedgerTableProps {
   showBalance?: boolean;
   fillHeight?: boolean;
   sentinel?: React.ReactNode;
+  searchQuery?: string;
 }
 
 const typeClassMap: Record<string, string | undefined> = {
@@ -31,7 +33,7 @@ const typeClassMap: Record<string, string | undefined> = {
   transfer: styles.transfer,
 };
 
-export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, fillHeight = false, sentinel }: LedgerTableProps) {
+export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, fillHeight = false, sentinel, searchQuery = '' }: LedgerTableProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [bodyHeight, setBodyHeight] = useState(desktop ? 360 : 340);
@@ -129,8 +131,8 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                     <span className={`${styles.typeCell} ${row.type ? (typeClassMap[row.type] ?? '') : ''}`}>
                       {row.typeLabel ?? row.type ?? '\u2014'}
                     </span>
-                    <span className={styles.desc}>{row.description}</span>
-                    {!showBalance && <span className={styles.account}>{row.account ?? '\u2014'}</span>}
+                    <span className={styles.desc}><Highlight text={row.description} query={searchQuery} /></span>
+                    {!showBalance && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                     <span className={styles.debit}>{row.debit ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>
                     <span className={styles.credit}>{row.credit ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>
                     {showBalance && <span className={styles.balance}>{row.balance ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>}
@@ -154,8 +156,8 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                 <span className={`${styles.typeCell} ${row.type ? (typeClassMap[row.type] ?? '') : ''}`}>
                   {row.typeLabel ?? row.type ?? '\u2014'}
                 </span>
-                <span className={styles.desc}>{row.description}</span>
-                {!showBalance && <span className={styles.account}>{row.account ?? '\u2014'}</span>}
+                <span className={styles.desc}><Highlight text={row.description} query={searchQuery} /></span>
+                {!showBalance && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                 <span className={styles.debit}>{row.debit ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>
                 <span className={styles.credit}>{row.credit ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>
                 {showBalance && <span className={styles.balance}>{row.balance ?? '\u2014'}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</span>}

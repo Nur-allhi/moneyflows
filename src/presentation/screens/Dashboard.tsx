@@ -13,6 +13,9 @@ import { ACCOUNT_TYPE_ACCENT } from '../constants/labels';
 import { useSearchStore } from '../stores/useSearchStore';
 import { shortDate, MONTHS } from '../constants/dates';
 import { DASHBOARD_TX_DISPLAY_LIMIT } from '../constants/config';
+import { Highlight } from '../utils/highlight';
+import { useDebouncedValue } from '../utils/useDebouncedValue';
+import { matchesTx, matchesAccount, matchesLoanStack } from '../utils/search';
 import styles from './Dashboard.module.css';
 
 const MEMBER_GRADIENTS = [
@@ -216,37 +219,44 @@ export function Dashboard() {
     return map;
   }, [accounts]);
 
-  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
+  const rawQuery = useSearchStore((s) => s.query);
+  const searchQuery = rawQuery.trim();
+  const debouncedQuery = useDebouncedValue(searchQuery, 200);
 
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
+  const accountMapForSearch = useMemo(() => new Map(accounts.map((a) => [a.id, { name: a.name }])), [accounts]);
+  const memberMapForSearch = useMemo(() => new Map(members.map((m) => [m.id, { name: m.name }])), [members]);
 
   const filteredAccountsByMember = useMemo(() => {
-    if (!searchQuery) return accountsByMember;
+    if (!debouncedQuery) return accountsByMember;
     const result = new Map<string, typeof accounts>();
     for (const [mid, accts] of accountsByMember) {
       const member = memberById[mid];
-      const mName = (member?.name ?? '').toLowerCase();
-      const filtered = accts.filter((a) =>
-        a.name.toLowerCase().includes(searchQuery) || mName.includes(searchQuery),
-      );
+      const mName = member?.name ?? '';
+      const filtered = accts.filter((a) => matchesAccount(a.name, mName, debouncedQuery));
       if (filtered.length > 0) result.set(mid, filtered);
     }
     return result;
-  }, [accountsByMember, memberById, searchQuery]);
+  }, [accountsByMember, memberById, debouncedQuery]);
 
   const filteredRecentTxs = useMemo(() => {
-    if (!searchQuery) return recentTxs;
-    return recentTxs.filter((tx) =>
-      tx.description.toLowerCase().includes(searchQuery),
-    );
-  }, [recentTxs, searchQuery]);
+    if (!debouncedQuery) return recentTxs;
+    const sortedAll = [...transactions].sort((a, b) => b.date.localeCompare(a.date));
+    return sortedAll
+      .filter((tx) =>
+        matchesTx(tx, debouncedQuery, {
+          accountMap: accountMapForSearch,
+          memberMap: memberMapForSearch,
+          shortDateFn: (iso) => shortDate(iso, locale),
+        }),
+      )
+      .slice(0, DASHBOARD_TX_DISPLAY_LIMIT);
+  }, [transactions, debouncedQuery, accountMapForSearch, memberMapForSearch, locale, recentTxs]);
 
   const filteredActiveLoanStacks = useMemo(() => {
-    if (!searchQuery) return activeLoanStacks;
-    return activeLoanStacks.filter((ls) =>
-      ls.debtorName.toLowerCase().includes(searchQuery),
-    );
-  }, [activeLoanStacks, searchQuery]);
+    if (!debouncedQuery) return activeLoanStacks;
+    return activeLoanStacks.filter((ls) => matchesLoanStack(ls.debtorName, debouncedQuery));
+  }, [activeLoanStacks, debouncedQuery]);
 
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [closingMembers, setClosingMembers] = useState<Set<string>>(new Set());
@@ -400,7 +410,7 @@ export function Dashboard() {
           {filteredAccountsByMember.size === 0 ? (
             <div className="empty-state" style={{ padding: '24px 20px' }}>
               <div className="empty-state-icon">{'\u{1F4B0}'}</div>
-              <p className="empty-state-text">No accounts yet</p>
+              <p className="empty-state-text">{searchQuery ? `No accounts match "${searchQuery}"` : 'No accounts yet'}</p>
             </div>
           ) : (
               [...filteredAccountsByMember.entries()].map(([mid, accts]) => {
@@ -415,7 +425,7 @@ export function Dashboard() {
                   <div key={mid} className={styles.memberGroup}>
                     <div className={styles.memberHead} onClick={() => toggleMember(mid)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleMember(mid)}>
                       <div className={styles.miniAvatar} style={{ background: grad }}>{initial}</div>
-                      <span className={styles.mname}>{mName}</span>
+                      <span className={styles.mname}><Highlight text={mName} query={searchQuery} /></span>
                       <span className={styles.memberTotal}>{formatAmountParts(totalBalance, locale, currency).amount}<span className={styles.currencyLabel}>{formatAmountParts(totalBalance, locale, currency).currency}</span></span>
                       <span className={`${styles.memberChevron} ${expanded ? styles.chevronOpen : ''}`}>
                         <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -430,7 +440,7 @@ export function Dashboard() {
                             <span className={styles.acctTypeIcon} style={{ color: ACCOUNT_TYPE_ACCENT[acct.type as keyof typeof ACCOUNT_TYPE_ACCENT] }}>
                               {ACCOUNT_ICONS[acct.type]}
                             </span>
-                            <span className={styles.acctName}>{acct.name}</span>
+                            <span className={styles.acctName}><Highlight text={acct.name} query={searchQuery} /></span>
                             <span className={styles.acctBalance}>
                               {formatAmountParts(acct.balance, locale, currency).amount}<span className={styles.currencyLabel}>{formatAmountParts(acct.balance, locale, currency).currency}</span>
                             </span>
@@ -452,7 +462,7 @@ export function Dashboard() {
             {filteredRecentTxs.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 20px' }}>
                 <div className="empty-state-icon">{'\u{1F4CB}'}</div>
-                <p className="empty-state-text">No transactions yet</p>
+                <p className="empty-state-text">{searchQuery ? `No matches for "${searchQuery}"` : 'No transactions yet'}</p>
               </div>
             ) : (
               filteredRecentTxs.map((tx) => {
@@ -468,7 +478,7 @@ export function Dashboard() {
                     <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
                   </span>
                   <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
-                  <span className={styles.txDesc}>{tx.description}</span>
+                  <span className={styles.txDesc}><Highlight text={tx.description} query={searchQuery} /></span>
                   <span className={styles.txAmount}>
                     <span className={`${styles.txArrow} ${tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? styles.txArrowIn : styles.txArrowOut}`}>
                       {tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? (
@@ -494,7 +504,7 @@ export function Dashboard() {
             {filteredActiveLoanStacks.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 0' }}>
                 <div className="empty-state-icon">{'\u{1F4B3}'}</div>
-                <p className="empty-state-text">No active loans</p>
+                <p className="empty-state-text">{searchQuery ? `No loans match "${searchQuery}"` : 'No active loans'}</p>
               </div>
             ) : (
               filteredActiveLoanStacks.map((stack) => {
@@ -505,7 +515,7 @@ export function Dashboard() {
                   <div key={stack.debtorId} className={styles.loanRow} onClick={() => navigate(`/loans/${stack.debtorId}`)}>
                     <div className={styles.loanTop}>
                       <span className={styles.loanDebtor}>
-                        <span className={styles.loanDebtorName}>{stack.debtorName}</span>
+                        <span className={styles.loanDebtorName}><Highlight text={stack.debtorName} query={searchQuery} /></span>
                         <span className={styles.loanBadges}>
                           {isSettled && <span className={`${styles.badge} ${styles.badgeSettled}`}>Settled</span>}
                           {!isSettled && stack.settledCount > 0 && <span className={`${styles.badge} ${styles.badgePartial}`}>Partial</span>}

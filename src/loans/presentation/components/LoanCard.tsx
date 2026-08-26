@@ -1,5 +1,6 @@
 import type { LoanStack } from '../../domain/types';
 import { formatAmount } from '../../../presentation/utils/format';
+import { Highlight } from '../../../presentation/utils/highlight';
 import styles from './LoanCard.module.css';
 
 interface LoanCardProps {
@@ -7,9 +8,10 @@ interface LoanCardProps {
   locale: string;
   currency: string;
   onClick: () => void;
+  searchQuery?: string;
 }
 
-export function LoanCard({ stack, locale, currency, onClick }: LoanCardProps) {
+export function LoanCard({ stack, locale, currency, onClick, searchQuery = '' }: LoanCardProps) {
   const stackType = stack.stackType === 'internal' ? 'Internal' : stack.stackType === 'external' ? 'Debtor' : 'Debtor';
   const initial = stack.debtorName.charAt(0).toUpperCase();
 
@@ -19,7 +21,7 @@ export function LoanCard({ stack, locale, currency, onClick }: LoanCardProps) {
         <div className={styles.leftGroup}>
           <div className={styles.avatar}>{initial}</div>
           <div className={styles.info}>
-            <span className={styles.name}>{stack.debtorName}</span>
+            <span className={styles.name}><Highlight text={stack.debtorName} query={searchQuery} /></span>
             <span className={styles.badge}>{stackType}</span>
           </div>
         </div>

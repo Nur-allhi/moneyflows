@@ -18,8 +18,10 @@ interface SidebarProps {
 export function Sidebar({ items, footerLabel, footerRole, className = '' }: SidebarProps) {
   return (
     <aside className={`${styles.sidebar} ${className}`}>
-      <div className={styles.logo}>
-        Money<span className={styles.logoAccent}>Flows</span>
+      <div className={styles.brandSlot}>
+        <span className={styles.logo}>
+          Money<span className={styles.logoSpan}>Flows</span>
+        </span>
       </div>
       <nav className={styles.nav}>
         {items.map((item) => (

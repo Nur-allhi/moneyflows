@@ -16,6 +16,9 @@ import { Transaction } from '../../core/domain/Transaction';
 import { formatAmount, formatAmountParts } from '../utils/format';
 import { shortDate, MONTHS } from '../constants/dates';
 import { ACCOUNT_TYPE_GRADIENT_THREE, displayType } from '../constants/labels';
+import { Highlight } from '../utils/highlight';
+import { useDebouncedValue } from '../utils/useDebouncedValue';
+import { matchesTx } from '../utils/search';
 import styles from './MemberProfile.module.css';
 
 const ledgerFilters = [
@@ -143,33 +146,53 @@ export function MemberProfile() {
     [accountTxs],
   );
 
-  const displayedTxs = useMemo(
-    () => sortedTxs.slice(-displayLimit),
-    [sortedTxs, displayLimit],
+  const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
+
+  const accountMapForSearch = useMemo(() => new Map(accounts.map((a) => [a.id, { name: a.name }])), [accounts]);
+  const memberMapForSearch = useMemo(() => new Map(members.map((m) => [m.id, { name: m.name }])), [members]);
+  const searchCtx = useMemo(
+    () => ({
+      accountMap: accountMapForSearch,
+      memberMap: memberMapForSearch,
+      shortDateFn: (iso: string) => shortDate(iso, locale),
+    }),
+    [accountMapForSearch, memberMapForSearch, locale],
   );
 
-  /** Tag filter applies to the ledger lists; balance math stays untouched. */
-  const tagFilteredTxs = useMemo(() => {
-    if (!tagFilter) return displayedTxs;
-    return displayedTxs.filter((tx) => Array.isArray(tx.metadata?.tags) && (tx.metadata.tags as string[]).includes(tagFilter));
-  }, [displayedTxs, tagFilter]);
+  const tagFilteredAll = useMemo(() => {
+    if (!tagFilter) return sortedTxs;
+    return sortedTxs.filter((tx) => Array.isArray(tx.metadata?.tags) && (tx.metadata.tags as string[]).includes(tagFilter));
+  }, [sortedTxs, tagFilter]);
+
+  const searchFilteredAll = useMemo(() => {
+    if (!debouncedLedgerQuery.trim()) return tagFilteredAll;
+    return tagFilteredAll.filter((tx) => matchesTx(tx, debouncedLedgerQuery, searchCtx));
+  }, [tagFilteredAll, debouncedLedgerQuery, searchCtx]);
+
+  const displayedTxs = useMemo(
+    () => searchFilteredAll.slice(-displayLimit),
+    [searchFilteredAll, displayLimit],
+  );
+
+  /** Tag-filtered view for ledger (displayed slice) — balance math uses full history. */
+  const tagFilteredTxs = displayedTxs;
 
   const ledgerTagOptions = useMemo(() => {
     const inLedger = new Set<string>();
-    displayedTxs.forEach((tx) => {
+    sortedTxs.forEach((tx) => {
       if (Array.isArray(tx.metadata?.tags)) (tx.metadata.tags as string[]).forEach((t) => inLedger.add(t));
     });
     knownTags.forEach((t) => inLedger.add(t));
     return [...inLedger].sort((a, b) => a.localeCompare(b));
-  }, [displayedTxs, knownTags]);
+  }, [sortedTxs, knownTags]);
 
   const handleReachEnd = useCallback(() => {
-    setDisplayLimit((prev) => Math.min(prev + 10, sortedTxs.length));
-  }, [sortedTxs.length]);
+    setDisplayLimit((prev) => Math.min(prev + 10, searchFilteredAll.length));
+  }, [searchFilteredAll.length]);
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || displayLimit >= sortedTxs.length) return;
+    if (!el || displayLimit >= searchFilteredAll.length) return;
     const root = getScrollParent(el);
     const observer = new IntersectionObserver(
       (entries) => {
@@ -180,7 +203,7 @@ export function MemberProfile() {
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [displayLimit, sortedTxs.length, handleReachEnd]);
+  }, [displayLimit, searchFilteredAll.length, handleReachEnd]);
 
   useEffect(() => {
     if (!filterOpen && !searchOpen) return;
@@ -282,11 +305,8 @@ export function MemberProfile() {
   }, [sortedTxs, tagFilteredTxs, locale, currency, showBalance, memberAccounts, selectedAccountId, resolveAccountDisplay]);
 
   const filteredLedger = useMemo(() => {
-    const q = ledgerQuery.toLowerCase().trim();
-    let rows = ledgerFilter === 'all' ? ledgerRows : ledgerRows.filter((row) => row.type === ledgerFilter);
-    if (q) rows = rows.filter((r) => r.description.toLowerCase().includes(q));
-    return rows;
-  }, [ledgerRows, ledgerFilter, ledgerQuery]);
+    return ledgerFilter === 'all' ? ledgerRows : ledgerRows.filter((row) => row.type === ledgerFilter);
+  }, [ledgerRows, ledgerFilter]);
 
   const filteredTxs = useMemo(() => {
     let txs = [...tagFilteredTxs];
@@ -295,10 +315,8 @@ export function MemberProfile() {
       const allowed = map[ledgerFilter] ?? [];
       txs = txs.filter((tx) => allowed.includes(tx.type));
     }
-    const q = ledgerQuery.toLowerCase().trim();
-    if (q) txs = txs.filter((tx) => tx.description.toLowerCase().includes(q));
     return txs.sort((a, b) => b.date.localeCompare(a.date));
-  }, [tagFilteredTxs, ledgerFilter, ledgerQuery]);
+  }, [tagFilteredTxs, ledgerFilter]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) {
@@ -689,10 +707,10 @@ export function MemberProfile() {
                 })()}
               </div>
             </div>
-            <LedgerTable rows={filteredLedger} className={styles.ledgerTableInner} desktop showBalance={showBalance} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} />
-            {displayLimit < sortedTxs.length && (
+            <LedgerTable rows={filteredLedger} className={styles.ledgerTableInner} desktop showBalance={showBalance} onRowClick={handleRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} searchQuery={ledgerQuery} />
+            {displayLimit < searchFilteredAll.length && (
               <button type="button" className={styles.loadMoreBtn} onClick={handleReachEnd}>
-                Load more ({sortedTxs.length - displayLimit} remaining)
+                Load more ({searchFilteredAll.length - displayLimit} remaining)
               </button>
             )}
           </div>
@@ -840,7 +858,7 @@ export function MemberProfile() {
                       <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
                       <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
                     </span>
-                    <span className={styles.txDesc}>{tx.description}</span>
+                    <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
                     <span className={styles.txAmount}>
                       <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>
                         {isCredit ? (
@@ -855,9 +873,9 @@ export function MemberProfile() {
                 );
               })
             )}
-            {displayLimit < sortedTxs.length && (
+            {displayLimit < searchFilteredAll.length && (
               <button type="button" className={styles.loadMoreBtn} onClick={handleReachEnd}>
-                Load more ({sortedTxs.length - displayLimit} remaining)
+                Load more ({searchFilteredAll.length - displayLimit} remaining)
               </button>
             )}
             <div ref={sentinelRef} style={{ height: 1 }} />

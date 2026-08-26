@@ -14,6 +14,9 @@ import { shortDate, MONTHS } from '../../../presentation/constants/dates';
 import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from '../../application/computeRunningBalances';
 import { ProgressBar, LedgerTable, LedgerSearch, MobileLedger } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
+import { Highlight } from '../../../presentation/utils/highlight';
+import { useDebouncedValue } from '../../../presentation/utils/useDebouncedValue';
+import { matchesTx } from '../../../presentation/utils/search';
 import styles from './LoanDetailView.module.css';
 
 interface LoanDetailViewProps {
@@ -67,6 +70,18 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const accountById = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a])), [accounts]);
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
 
+  const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
+  const accountMapForSearch = useMemo(() => new Map(accounts.map((a) => [a.id, { name: a.name }])), [accounts]);
+  const memberMapForSearch = useMemo(() => new Map(members.map((m) => [m.id, { name: m.name }])), [members]);
+  const searchCtx = useMemo(
+    () => ({
+      accountMap: accountMapForSearch,
+      memberMap: memberMapForSearch,
+      shortDateFn: (iso: string) => shortDate(iso, locale),
+    }),
+    [accountMapForSearch, memberMapForSearch, locale],
+  );
+
   const handleDelete = useCallback(async () => {
     await deleteLoanStack(stack.debtorId);
     navigate('/loans');
@@ -100,11 +115,12 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
       if (endDate) result = result.filter((tx) => tx.date <= endDate);
     }
 
-    const q = ledgerQuery.toLowerCase().trim();
-    if (q) result = result.filter((tx) => tx.description.toLowerCase().includes(q));
+    if (debouncedLedgerQuery.trim()) {
+      result = result.filter((tx) => matchesTx(tx, debouncedLedgerQuery, searchCtx));
+    }
 
     return result;
-  }, [sortedTxs, txFilter, month, startDate, endDate, dateMode, ledgerQuery]);
+  }, [sortedTxs, txFilter, month, startDate, endDate, dateMode, debouncedLedgerQuery, searchCtx]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -120,10 +136,11 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     } else if (txFilter === 'repay') {
       result = result.filter((tx) => tx.type === 'repay' || tx.type === 'loan_repayment');
     }
-    const q = ledgerQuery.toLowerCase().trim();
-    if (q) result = result.filter((tx) => tx.description.toLowerCase().includes(q));
+    if (debouncedLedgerQuery.trim()) {
+      result = result.filter((tx) => matchesTx(tx, debouncedLedgerQuery, searchCtx));
+    }
     return result.sort((a, b) => b.date.localeCompare(a.date));
-  }, [sortedTxs, txFilter, ledgerQuery]);
+  }, [sortedTxs, txFilter, debouncedLedgerQuery, searchCtx]);
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
     const cr = (t: typeof filteredTxs[0]) => LOAN_CREDIT_TYPES.has(t.type);
@@ -378,7 +395,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
                   <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
                   <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
                 </span>
-                <span className={styles.txDesc}>{tx.description}</span>
+                <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
                 <span className={styles.txAmount}>
                   <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>
                     {isCredit ? (
@@ -455,7 +472,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
               </div>
             </div>
           </div>
-          <LedgerTable rows={ledgerRows} desktop showBalance onRowClick={handleRowClick} />
+          <LedgerTable rows={ledgerRows} desktop showBalance onRowClick={handleRowClick} searchQuery={ledgerQuery} />
         </div>
       )}
     </div>

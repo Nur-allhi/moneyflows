@@ -11,6 +11,9 @@ import type { Transaction } from '../../core/domain/Transaction';
 import type { Account } from '../../core/domain/Account';
 import { formatAmount, formatAmountParts } from '../utils/format';
 import { shortDate, MONTHS } from '../constants/dates';
+import { Highlight } from '../utils/highlight';
+import { useDebouncedValue } from '../utils/useDebouncedValue';
+import { matchesTx } from '../utils/search';
 import styles from './GroupLedgerScreen.module.css';
 
 const TX_TABS = [
@@ -82,32 +85,42 @@ export function GroupLedgerScreen() {
     [txs],
   );
 
+  const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
+
+  const accountMapForSearch = useMemo(() => new Map(accounts.map((a) => [a.id, { name: a.name }])), [accounts]);
+
+  const searchFilteredAll = useMemo(() => {
+    if (!debouncedLedgerQuery.trim()) return sortedTxs;
+    return sortedTxs.filter((tx) =>
+      matchesTx(tx, debouncedLedgerQuery, {
+        accountMap: accountMapForSearch,
+        shortDateFn: (iso) => shortDate(iso, locale),
+      }),
+    );
+  }, [sortedTxs, debouncedLedgerQuery, accountMapForSearch, locale]);
+
   const displayedTxs = useMemo(
-    () => sortedTxs.slice(-displayLimit),
-    [sortedTxs, displayLimit],
+    () => searchFilteredAll.slice(-displayLimit),
+    [searchFilteredAll, displayLimit],
   );
 
-  const searchFilteredTxs = useMemo(() => {
-    const q = ledgerQuery.toLowerCase().trim();
-    if (!q) return displayedTxs;
-    return displayedTxs.filter((tx) => tx.description.toLowerCase().includes(q));
-  }, [displayedTxs, ledgerQuery]);
+  const searchFilteredTxs = displayedTxs;
 
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || displayLimit >= sortedTxs.length || loadingMore) return;
+    if (!el || displayLimit >= searchFilteredAll.length || loadingMore) return;
     const obs = new IntersectionObserver((entries) => {
       if (entries[0]?.isIntersecting) {
         setLoadingMore(true);
         setTimeout(() => {
-          setDisplayLimit((prev) => Math.min(prev + PAGE_SIZE, sortedTxs.length));
+          setDisplayLimit((prev) => Math.min(prev + PAGE_SIZE, searchFilteredAll.length));
           setLoadingMore(false);
         }, 250);
       }
     }, { rootMargin: '200px' });
     obs.observe(el);
     return () => obs.disconnect();
-  }, [displayLimit, sortedTxs.length, loadingMore]);
+  }, [displayLimit, searchFilteredAll.length, loadingMore]);
 
   const accountSet = useMemo(() => new Set(accountIds), [accountIds]);
   const accountMap = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
@@ -119,10 +132,8 @@ export function GroupLedgerScreen() {
       const allowed = map[typeFilter] ?? [];
       txs = txs.filter((tx) => allowed.includes(tx.type));
     }
-    const q = ledgerQuery.toLowerCase().trim();
-    if (q) txs = txs.filter((tx) => tx.description.toLowerCase().includes(q));
     return txs.sort((a, b) => b.date.localeCompare(a.date));
-  }, [displayedTxs, typeFilter, ledgerQuery]);
+  }, [displayedTxs, typeFilter]);
 
   const isMobileGroupCredit = useCallback((tx: Transaction) => {
     return accountSet.has(tx.destAccount ?? '') && !accountSet.has(tx.sourceAccount ?? '');
@@ -341,7 +352,7 @@ export function GroupLedgerScreen() {
                   <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
                   <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
                 </span>
-                <span className={styles.txDesc}>{tx.description}</span>
+                <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
                 <span className={styles.txAmount}>
                   <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>
                     {isCredit ? (
@@ -375,6 +386,7 @@ export function GroupLedgerScreen() {
             desktop
             onRowClick={handleRowClick}
             sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
+            searchQuery={ledgerQuery}
           />
 
           {typeRows.length === 0 && <div className={styles.empty}>No entries found</div>}

@@ -3,7 +3,6 @@ import { RecycleRow, GlassPanel } from '../components';
 import { useRecycleStore } from '../stores/useRecycleStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
-import { useSearchStore } from '../stores/useSearchStore';
 import styles from './RecycleBin.module.css';
 
 function timeAgo(iso: string): string {
@@ -19,7 +18,6 @@ function timeAgo(iso: string): string {
 export function RecycleBin() {
   const { deletedItems, loading, error, fetchDeleted, restore, purge } = useRecycleStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
-  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
   const [mobileSearch, setMobileSearch] = useState('');
 
   useEffect(() => {
@@ -28,12 +26,12 @@ export function RecycleBin() {
 
   const [activeTab, setActiveTab] = useState('all');
 
-  const effectiveSearch = mobileSearch.toLowerCase().trim() || searchQuery;
+  const effectiveSearch = mobileSearch.trim();
   const filteredItems = useMemo(() => {
     const byTab = activeTab === 'all' ? deletedItems
       : deletedItems.filter((item) => activeTab === 'transactions' ? item.type === 'transaction' : item.type === 'account');
     return effectiveSearch
-      ? byTab.filter((item) => item.name.toLowerCase().includes(effectiveSearch))
+      ? byTab.filter((item) => item.name.toLowerCase().includes(effectiveSearch.toLowerCase()))
       : byTab;
   }, [deletedItems, activeTab, effectiveSearch]);
 
@@ -149,11 +147,12 @@ export function RecycleBin() {
           {filteredItems.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">{'\uD83D\uDDD1\uFE0F'}</div>
-              <p className="empty-state-text">{searchQuery ? 'No deleted items match your search' : 'No deleted items'}</p>
+              <p className="empty-state-text">{effectiveSearch ? `No matches for "${effectiveSearch}"` : 'No deleted items'}</p>
             </div>
           ) : (
             filteredItems.map((item) => (
               <RecycleRow
+                searchQuery={effectiveSearch}
                 key={item.id}
                 icon={item.type === 'transaction' ? '\u26A0' : '\u{1F3E6}'}
                 iconVariant={item.type === 'transaction' ? 'warning' : 'account'}

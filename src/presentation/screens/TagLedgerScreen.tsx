@@ -6,6 +6,11 @@ import { useAccountStore } from '../stores/useAccountStore';
 import { useTagStore } from '../stores/useTagStore';
 import { formatAmount } from '../utils/format';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { Highlight } from '../utils/highlight';
+import { useDebouncedValue } from '../utils/useDebouncedValue';
+import { matchesTx } from '../utils/search';
+import { shortDate } from '../constants/dates';
+import { LedgerSearch } from '../components';
 import styles from './TagLedgerScreen.module.css';
 
 const CREDIT_TYPES = new Set(['income', 'loan_repayment', 'repay', 'loan_received']);
@@ -102,6 +107,21 @@ export function TagLedgerScreen() {
     .reduce((s, tx) => s + tx.amount, 0);
 
   const sorted = [...tagged].sort((a, b) => b.date.localeCompare(a.date));
+
+  const [ledgerQuery, setLedgerQuery] = useState('');
+  const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
+  const filteredSorted = useMemo(() => {
+    if (!debouncedLedgerQuery.trim()) return sorted;
+    const memberMap = new Map(members.map((m) => [m.id, { name: m.name }]));
+    const accountMap = new Map(accounts.map((a) => [a.id, { name: a.name }]));
+    return sorted.filter((tx) =>
+      matchesTx(tx, debouncedLedgerQuery, {
+        memberMap,
+        accountMap,
+        shortDateFn: (iso) => shortDate(iso, locale),
+      }),
+    );
+  }, [sorted, debouncedLedgerQuery, members, accounts, locale]);
 
   if (!tag) {
     return (
@@ -225,13 +245,21 @@ export function TagLedgerScreen() {
         <span>In +{formatAmount(totalIn, locale, currency)}</span>
         <span>Out −{formatAmount(totalOut, locale, currency)}</span>
       </div>
-      {sorted.length === 0 ? (
+      <div style={{ margin: '12px 0', maxWidth: 360 }}>
+        <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
+      </div>
+      {filteredSorted.length === 0 ? (
         <p className={styles.empty}>
-          No transactions carry this tag anymore.
-          {' '}
-          <button className={styles.deleteInline} onClick={() => void handleDelete(tag)}>
-            Delete this empty tag
-          </button>
+          {sorted.length === 0 ? (
+            <>
+              No transactions carry this tag anymore.{' '}
+              <button className={styles.deleteInline} onClick={() => void handleDelete(tag!)}>
+                Delete this empty tag
+              </button>
+            </>
+          ) : (
+            <>No matches for &ldquo;{ledgerQuery}&rdquo;</>
+          )}
         </p>
       ) : (
         <div className={styles.tableWrap}>
@@ -240,14 +268,14 @@ export function TagLedgerScreen() {
               <tr><th>Date</th><th>Member</th><th>Account</th><th>Description</th><th style={{ textAlign: 'right' }}>Amount</th></tr>
             </thead>
             <tbody>
-              {sorted.map((tx) => {
+              {filteredSorted.map((tx) => {
                 const credit = CREDIT_TYPES.has(tx.type);
                 return (
                   <tr key={tx.id}>
                     <td>{tx.date.slice(0, 10)}</td>
-                    <td>{memberName(tx.memberId)}</td>
-                    <td>{credit ? accountLabel(tx.destAccount ?? tx.sourceAccount) : accountLabel(tx.sourceAccount ?? tx.destAccount)}</td>
-                    <td>{tx.description}</td>
+                    <td><Highlight text={memberName(tx.memberId)} query={ledgerQuery} /></td>
+                    <td><Highlight text={credit ? accountLabel(tx.destAccount ?? tx.sourceAccount) : accountLabel(tx.sourceAccount ?? tx.destAccount)} query={ledgerQuery} /></td>
+                    <td><Highlight text={tx.description} query={ledgerQuery} /></td>
                     <td className={`${styles.amt} ${credit ? styles.in : styles.out}`}>
                       {credit ? '+' : '−'}{formatAmount(tx.amount, locale, currency)}
                     </td>

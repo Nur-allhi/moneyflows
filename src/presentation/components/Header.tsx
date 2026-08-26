@@ -11,7 +11,6 @@ interface BreadcrumbItem {
 
 interface HeaderProps {
   title?: string;
-  showBack?: boolean;
   showLogo?: boolean;
   showDate?: boolean;
   breadcrumb?: BreadcrumbItem[];
@@ -27,7 +26,6 @@ function formatDate(): string {
 
 export function Header({
   title,
-  showBack = false,
   showLogo = true,
   showDate = true,
   breadcrumb,
@@ -57,16 +55,25 @@ export function Header({
               <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
                 {'\u2190'}
               </button>
-              <span className={styles.title}>{title}</span>
+              {breadcrumb ? (
+                <div className={styles.breadcrumb}>
+                  {breadcrumb.map((item, i) => (
+                    <span key={item.label}>
+                      {i > 0 && <span className={styles.sep}>/</span>}
+                      {item.path ? <Link to={item.path}>{item.label}</Link> : <span>{item.label}</span>}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className={styles.title}>{title}</span>
+              )}
             </>
           )
-        ) : (
+        ) : !isDashboard ? (
           <>
-            {showBack && (
-              <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
-                {'\u2190'}
-              </button>
-            )}
+            <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
+              {'\u2190'}
+            </button>
             {breadcrumb ? (
               <div className={styles.breadcrumb}>
                 {breadcrumb.map((item, i) => (
@@ -77,20 +84,14 @@ export function Header({
                 ))}
               </div>
             ) : (
-              <>
-                {showLogo && (
-                  <span className={styles.logo}>
-                    Money<span className={styles.logoSpan}>Flows</span>
-                  </span>
-                )}
-                {title && <span className={styles.title}>{title}</span>}
-              </>
+              title && <span className={styles.title}>{title}</span>
             )}
           </>
-        )}
+        ) : null}
       </div>
 
-      <div className={styles.searchWrap}>
+      {isDashboard ? (
+        <div className={styles.searchWrap}>
         <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="7" cy="7" r="5.5" />
           <path d="M11 11l3.5 3.5" />
@@ -109,6 +110,9 @@ export function Header({
           </button>
         )}
       </div>
+      ) : (
+        <div style={{ flex: 1 }} aria-hidden="true" />
+      )}
 
       <div className={styles.right}>
         {showDate && <span className={styles.date}>{formatDate()}</span>}

@@ -55,7 +55,6 @@ function AppLayout() {
   const segments = pathname.split('/').filter(Boolean);
   const basePath = '/' + (segments[0] ?? '');
   const title = routeTitles[basePath] ?? routeTitles[pathname] ?? '';
-  const showBack = segments.length > 1;
 
   const members = useMemberStore((s) => s.members);
   const fetchMembers = useMemberStore((s) => s.fetchMembers);
@@ -87,15 +86,23 @@ function AppLayout() {
 
   const breadcrumb = basePath === '/member' && segments.length >= 2
     ? [{ label: 'Members', path: '/member' }, { label: members.find((m) => m.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
-    : undefined;
+    : basePath === '/groups' && segments.length >= 2
+      ? [{ label: 'Groups', path: '/groups' }, { label: members.find((m) => m.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
+      : basePath === '/tags' && segments[1]
+        ? [{ label: 'Tags', path: '/tags' }, { label: decodeURIComponent(segments[1] ?? '') }]
+        : basePath === '/loans' && segments[1]
+          ? [{ label: 'Loans', path: '/loans' }, { label: decodeURIComponent(segments[1] ?? '') }]
+          : undefined;
+
+  const isDashboard = pathname === '/';
 
   return (
     <div className={styles.layout}>
       <RippleGlow />
       <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
       <div className={styles.main}>
-        <Header title={title} showBack={showBack} showLogo={!showBack} breadcrumb={breadcrumb} className="app-header" searchActive={searchOpen} onSearchToggle={toggleSearch} />
-        {searchOpen && (
+        <Header title={title} breadcrumb={breadcrumb} className="app-header" searchActive={searchOpen} onSearchToggle={toggleSearch} />
+        {isDashboard && searchOpen && (
           <div className={`${styles.searchRow} ${searchClosing ? styles.searchPopin : styles.searchPopout}`}>
             <SearchBar />
             <button className={styles.searchCloseBtn} onClick={toggleSearch} aria-label="Close search">

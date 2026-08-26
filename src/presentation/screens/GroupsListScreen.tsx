@@ -8,7 +8,7 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import type { Member } from '../../core/domain/Member';
 import type { Account } from '../../core/domain/Account';
 import { formatAmount } from '../utils/format';
-import { useSearchStore } from '../stores/useSearchStore';
+import { Highlight } from '../utils/highlight';
 import styles from './GroupsListScreen.module.css';
 
 function groupGradient(name: string): string {
@@ -120,10 +120,9 @@ export function GroupsListScreen() {
   });
   const balanceMap = new Map(groupBalances.map((b) => [b.id, b.total]));
   const memberMap = new Map(members.map((m) => [m.id, m]));
-  const searchQuery = useSearchStore((s) => s.query.toLowerCase().trim());
-  const effectiveSearch = mobileSearch.toLowerCase().trim() || searchQuery;
+  const effectiveSearch = mobileSearch.trim();
   const filteredGroups = effectiveSearch
-    ? groups.filter((g) => g.name.toLowerCase().includes(effectiveSearch))
+    ? groups.filter((g) => g.name.toLowerCase().includes(effectiveSearch.toLowerCase()))
     : groups;
 
   if (loading) {
@@ -179,7 +178,7 @@ export function GroupsListScreen() {
                   {(g.name[0] ?? 'G').toUpperCase()}
                 </div>
                 <div className={styles.cardInfo}>
-                  <span className={styles.cardName}>{g.name}</span>
+                  <span className={styles.cardName}><Highlight text={g.name} query={effectiveSearch} /></span>
                   <span className={styles.cardTag}>{g.accountIds.length} account{g.accountIds.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
