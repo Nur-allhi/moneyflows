@@ -7,6 +7,16 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.3.0',
+    items: [
+      'Settings is now a full page with sub-navigation — General, Dashboard, Activity, Backup, Storage and About.',
+      'Dashboard sections can be shown or hidden from Settings → Dashboard — hidden panels free space for the rest.',
+      'New Activity log in Settings shows your last actions, 10 per page.',
+      'New Logs backdoor in Settings → About — Detailed logs toggle, Export and Clear, paginated 10 per page.',
+      'Dashboard now shows only its two main actions — New Transaction and Quick Loan — header gear goes to Settings.',
+    ],
+  },
+  {
     version: '1.2.0',
     items: [
       'Search got smarter: the dashboard now finds across all your transactions — description, amount, account and tags — and highlights what you typed.',

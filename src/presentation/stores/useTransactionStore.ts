@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Transaction } from '../../core/domain/Transaction';
 import type { TransactionFilter } from '../../core/ports/IDatabaseService';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
+import { logger } from '../../core/logging';
 
 interface TransactionState {
   transactions: Transaction[];
@@ -41,7 +42,9 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     set({ transactions: [tx, ...prev], error: null });
     try {
       await db.saveTransaction(tx);
+      logger.activity(`Added ${tx.type} — ${tx.description}`, { type: tx.type, amount: tx.amount, description: tx.description });
     } catch (err) {
+      logger.error('store', 'addTransaction failed', { type: tx.type }, (err as Error).stack);
       set({ transactions: prev, error: (err as Error).message });
     }
   },
@@ -52,7 +55,9 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     set({ transactions: prev.map((t) => (t.id === id ? tx : t)), error: null });
     try {
       await db.updateTransaction(id, tx);
+      logger.activity(`Updated transaction — ${tx.description}`, { id, type: tx.type });
     } catch (err) {
+      logger.error('store', 'updateTransaction failed', { id }, (err as Error).stack);
       set({ transactions: prev, error: (err as Error).message });
     }
   },
@@ -62,7 +67,9 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       const db = getDatabase();
       await db.softDeleteTransaction(id);
       set({ transactions: get().transactions.filter((t) => t.id !== id) });
+      logger.activity('Deleted transaction', { id });
     } catch (err) {
+      logger.error('store', 'softDeleteTransaction failed', { id }, (err as Error).stack);
       set({ error: (err as Error).message });
     }
   },

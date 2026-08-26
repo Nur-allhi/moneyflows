@@ -6,6 +6,7 @@ import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
 import { getDatabase } from './infrastructure/database/getDatabase';
+import { ErrorBoundary, logger } from './core/logging';
 import styles from './App.module.css';
 
 const Dashboard = lazy(() => import('./presentation/screens/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -15,6 +16,7 @@ const Loans = lazy(() => import('./loans/presentation/screens/LoansScreen').then
 const RecycleBin = lazy(() => import('./presentation/screens/RecycleBin').then(m => ({ default: m.RecycleBin })));
 const GroupsListScreen = lazy(() => import('./presentation/screens/GroupsListScreen').then(m => ({ default: m.GroupsListScreen })));
 const TagLedgerScreen = lazy(() => import('./presentation/screens/TagLedgerScreen').then(m => ({ default: m.TagLedgerScreen })));const GroupLedgerScreen = lazy(() => import('./presentation/screens/GroupLedgerScreen').then(m => ({ default: m.GroupLedgerScreen })));
+const SettingsPage = lazy(() => import('./presentation/screens/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 function Svg({ d, children }: { d?: string; children?: JSX.Element }) {
   return (
@@ -48,6 +50,7 @@ const routeTitles: Record<string, string> = {
   '/loans': 'Loans',
   '/tags': 'Tags',
   '/recycle': 'Recycle Bin',
+  '/settings': 'Settings',
 };
 
 function AppLayout() {
@@ -60,6 +63,7 @@ function AppLayout() {
   const fetchMembers = useMemberStore((s) => s.fetchMembers);
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
+  useEffect(() => { logger.info('nav', `navigate ${pathname}`); }, [pathname]);
   useEffect(() => { useModalStore.getState().closeAllImmediate(); }, [pathname]);
 
   useEffect(() => {
@@ -114,7 +118,7 @@ function AppLayout() {
         )}
         <div className={styles.content}>
           <Suspense fallback={<div className="skeleton skeleton-wizard" />}>
-            <PageTransition><Outlet /></PageTransition>
+            <ErrorBoundary><PageTransition><Outlet /></PageTransition></ErrorBoundary>
           </Suspense>
         </div>
       </div>
@@ -139,6 +143,7 @@ export function App() {
           <Route path="/loans" element={<Loans />} />
           <Route path="/loans/:debtorId" element={<Loans />} />
           <Route path="/recycle" element={<RecycleBin />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>
       {process.env.NODE_ENV === 'development' && <Agentation />}

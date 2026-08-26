@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SettingsModal, FAB } from '../components';
+import { FAB } from '../components';
 import { useAnimatedValue } from '../hooks';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
@@ -111,9 +111,9 @@ const EXPENSE_TYPES = new Set(['expense', 'loan_issue', 'lend', 'loan_paidback']
 export function Dashboard() {
   const navigate = useNavigate();
   const openWizard = () => useModalStore.getState().open('transaction-form');
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
-  const { locale, currency } = useSettingsStore((s) => s.settings);
+  const settings = useSettingsStore((s) => s.settings);
+  const { locale, currency } = settings;
   const { transactions, loading: txLoading, error: txError, fetchTransactions } = useTransactionStore();
   const { loanStacks, fetchLoanStacks } = useLoanStore();
   const { members, fetchMembers } = useMemberStore();
@@ -258,6 +258,11 @@ export function Dashboard() {
     return activeLoanStacks.filter((ls) => matchesLoanStack(ls.debtorName, debouncedQuery));
   }, [activeLoanStacks, debouncedQuery]);
 
+  const showWhere = settings.showWhereMoneyIs ?? true;
+  const showRecent = settings.showRecentTransactions ?? true;
+  const showLoans = settings.showActiveLoans ?? true;
+  const visibleCount = [showWhere, showRecent, showLoans].filter(Boolean).length;
+
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [closingMembers, setClosingMembers] = useState<Set<string>>(new Set());
   const closingRef = useRef<Set<string>>(new Set());
@@ -393,20 +398,14 @@ export function Dashboard() {
           </svg>
           Quick Loan
         </button>
-        <button className={styles.actBtn} onClick={() => setSettingsOpen(true)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-          Settings
-        </button>
       </div>
 
-      <div className={styles.content}>
-        <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Where Your Money Is</h2>
-          </div>
+      <div className={styles.content} data-cols={visibleCount || 1}>
+        {showWhere && (
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Where Your Money Is</h2>
+            </div>
           {filteredAccountsByMember.size === 0 ? (
             <div className="empty-state" style={{ padding: '24px 20px' }}>
               <div className="empty-state-icon">{'\u{1F4B0}'}</div>
@@ -451,13 +450,15 @@ export function Dashboard() {
                   </div>
                 );
               })
-          )}
+           )}
         </div>
+        )}
 
-        <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Recent Transactions</h2>
-          </div>
+        {showRecent && (
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Recent Transactions</h2>
+            </div>
           <div className={styles.txList}>
             {filteredRecentTxs.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 20px' }}>
@@ -495,11 +496,13 @@ export function Dashboard() {
             )}
           </div>
         </div>
+        )}
 
-        <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Active Loans</h2>
-          </div>
+        {showLoans && (
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Active Loans</h2>
+            </div>
           <div className={styles.loanList}>
             {filteredActiveLoanStacks.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 0' }}>
@@ -539,9 +542,17 @@ export function Dashboard() {
             )}
           </div>
         </div>
+        )}
+        {visibleCount === 0 && (
+          <div className={styles.panel}>
+            <div className="empty-state" style={{ padding: '40px 20px' }}>
+              <div className="empty-state-icon">⚙️</div>
+              <p className="empty-state-text">All sections hidden — enable them in Settings → Dashboard.</p>
+            </div>
+          </div>
+        )}
       </div>
 
-      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <FAB />
     </div>
   );
