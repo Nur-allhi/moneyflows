@@ -1479,3 +1479,16 @@
 ### Status
 - Complete on dev. Master sync pending user go-ahead.
 
+
+## Session 2026-08-26 11:30
+
+### Changes
+- [AccountCard/MemberProfile/SelectAccountModal .module.css] edit-pencil button background removed (transparent, blends with card); hover softened to white 10% tint
+- Verified computed style live: base bg transparent, icon-only
+
+### Skill(s) Used
+- frontend-design, playwright verification
+
+### Status
+- Complete on dev.
+
