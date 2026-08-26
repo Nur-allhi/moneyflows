@@ -1522,3 +1522,15 @@
 ### Status
 - Complete on dev. Master sync pending user go-ahead.
 
+
+## Session 2026-08-26 06:45
+
+### Changes
+- BUG fix (user-reported): export chooser reused translucent confirmForm glass -> options invisible. Added dedicated .exportModal opaque panel style; verified computed bg opaque + radios/labels readable.
+
+### Skill(s) Used
+- frontend-design, playwright verification
+
+### Status
+- Fixed on dev.
+
