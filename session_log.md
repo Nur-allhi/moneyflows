@@ -1433,3 +1433,17 @@
 
 - Follow-up: APP_VERSION moved to guarded constants/appVersion.ts module after dev-server define edge case crashed Root; verified v1.0.0 footer + notes row live.
 
+
+## Session 2026-08-24 06:00
+
+### Changes
+- BUG-2 investigation: scripted E2E of Add-Account under member (Md Iqbal azam profile)
+- Result: NO reload (marker survived), account created + persisted correctly (balance 500, Opening Balance tx in ledger after reload) -> closed as dev-server artifact (wontfix)
+- Found real minor issue during test -> BUG-3 logged: accounts store stale (balance 0) right after add; fix proposed = fetchAccounts() after save in AddAccountModal - awaiting owner confirmation
+
+### Skill(s) Used
+- senior-frontend, playwright E2E verification, code-reviewer
+
+### Status
+- BUG-2 wontfix(closed), BUG-3 open awaiting fix approval.
+
