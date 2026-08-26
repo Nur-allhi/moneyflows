@@ -1506,3 +1506,31 @@
 ### Status
 - Complete on dev. Mobile pills share same wiring (manual QA recommended).
 
+
+## Session 2026-08-26 06:20
+
+### Changes
+- T-108: loan ledger PDF export detail chooser
+  - [LoanDetailView.tsx] Download PDF opens radio chooser (All details / Just description); mode gates account-bracket in pdf rows; choice persisted via AppSettings.reportDetailMode
+  - [AppSettings.ts] reportDetailMode field (default all)
+  - [LoanDetailView.module.css] chooser styles (radioRow etc.)
+- E2E verified: chooser default All; Just description exported PDF lacks account trail but keeps descriptions; choice remembered across reload
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, playwright verification
+
+### Status
+- Complete on dev. Master sync pending user go-ahead.
+
+
+## Session 2026-08-26 06:45
+
+### Changes
+- BUG fix (user-reported): export chooser reused translucent confirmForm glass -> options invisible. Added dedicated .exportModal opaque panel style; verified computed bg opaque + radios/labels readable.
+
+### Skill(s) Used
+- frontend-design, playwright verification
+
+### Status
+- Fixed on dev.
+

@@ -25,11 +25,14 @@ type TxFilter = 'all' | 'lend' | 'repay';
 export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const navigate = useNavigate();
   const { locale, currency } = useSettingsStore((s) => s.settings);
+  const updateSettings = useSettingsStore((s) => s.updateSettings);
   const { transactions: txns, fetchTransactions } = useTransactionStore();
   const { deleteLoanStack } = useLoanStore();
   const { accounts } = useAccountStore();
   const { members } = useMemberStore();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [pendingMode, setPendingMode] = useState<'all' | 'description'>(useSettingsStore.getState().settings.reportDetailMode ?? 'all');
   const [showFilters, setShowFilters] = useState(false);
   const [txFilter, setTxFilter] = useState<TxFilter>('all');
   const [month, setMonth] = useState('');
@@ -165,7 +168,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     setShowFilters(false);
   }, []);
 
-  const downloadPdf = useCallback(() => {
+  const downloadPdf = useCallback((detailMode: 'all' | 'description' = 'all') => {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     let totalCreditVal = 0;
@@ -181,9 +184,11 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
       const srcMember = srcAcct?.memberId ? memberById[srcAcct.memberId] : undefined;
       const dstMember = dstAcct?.memberId ? memberById[dstAcct.memberId] : undefined;
-      const bracket = cr
-        ? (srcMember && srcAcct ? `${srcMember.name} / ${srcAcct.name}` : undefined)
-        : (dstMember && dstAcct ? `${dstMember.name} / ${dstAcct.name}` : undefined);
+      const bracket = detailMode === 'all'
+        ? (cr
+          ? (srcMember && srcAcct ? `${srcMember.name} / ${srcAcct.name}` : undefined)
+          : (dstMember && dstAcct ? `${dstMember.name} / ${dstAcct.name}` : undefined))
+        : undefined;
       return [
         shortDate(tx.date, locale),
         cr ? 'Lent' : 'Repayment',
@@ -258,6 +263,19 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     doc.save(`loan_ledger_${label}_${new Date().toISOString().slice(0, 10)}.pdf`);
   }, [filteredTxs, sortedTxs, locale, currency, stack.debtorName, dateMode, month, startDate, endDate, accountById, memberById]);
 
+  const openExportChooser = useCallback(() => {
+    setPendingMode(useSettingsStore.getState().settings.reportDetailMode ?? 'all');
+    setExportOpen(true);
+  }, []);
+
+  const handleExport = useCallback(() => {
+    setExportOpen(false);
+    if (useSettingsStore.getState().settings.reportDetailMode !== pendingMode) {
+      updateSettings({ reportDetailMode: pendingMode });
+    }
+    downloadPdf(pendingMode);
+  }, [pendingMode, downloadPdf, updateSettings]);
+
   return (
     <div className={styles.container}>
       <div className={styles.summary}>
@@ -295,6 +313,32 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         </div>
       </div>
 
+      {exportOpen && (
+        <div className={styles.overlay} onClick={() => setExportOpen(false)}>
+          <div className={styles.exportModal} onClick={(e) => e.stopPropagation()}>
+            <p className={styles.exportTitle}>Report details</p>
+            <label className={styles.radioRow}>
+              <input type="radio" name="reportDetail" checked={pendingMode === 'all'} onChange={() => setPendingMode('all')} />
+              <span className={styles.radioLabel}>
+                All details
+                <small>includes which account funded / received the loan</small>
+              </span>
+            </label>
+            <label className={styles.radioRow}>
+              <input type="radio" name="reportDetail" checked={pendingMode === 'description'} onChange={() => setPendingMode('description')} />
+              <span className={styles.radioLabel}>
+                Just description
+                <small>only the note you wrote on each transaction</small>
+              </span>
+            </label>
+            <div className={styles.confirmActions}>
+              <button className={styles.cancelBtn} onClick={() => setExportOpen(false)}>Cancel</button>
+              <button className={styles.confirmBtn} onClick={handleExport}>Export PDF</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmDelete && (
         <div className={styles.overlay} onClick={() => setConfirmDelete(false)}>
           <div className={styles.confirmForm} onClick={(e) => e.stopPropagation()}>
@@ -320,7 +364,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
           onFilterChange={(k) => setTxFilter(k as TxFilter)}
           searchQuery={ledgerQuery}
           onSearchChange={setLedgerQuery}
-          onDownloadPdf={downloadPdf}
+          onDownloadPdf={openExportChooser}
           loadingMore={false}
           sentinel={null}
           empty={mobileFilteredTxs.length === 0 ? <p style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--color-text-secondary)', fontSize: 15 }}>No entries found</p> : undefined}
@@ -354,7 +398,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
           <div className={styles.ledgerHead}>
             <h3 className={styles.ledgerTitle}>Transaction Ledger</h3>
             <div className={styles.ledgerActions}>
-              <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF">
+              <button className={styles.pdfBtn} onClick={openExportChooser} title="Download PDF">
                 <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, flexShrink: 0 }}>
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="7 10 12 15 17 10" />
