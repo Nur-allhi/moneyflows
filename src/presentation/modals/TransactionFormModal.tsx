@@ -7,6 +7,7 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useLoanStore } from '../stores/useLoanStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useTagStore } from '../stores/useTagStore';
 import { formatAmount } from '../utils/format';
 import { handleFormFocus } from '../utils/focus';
 import { Transaction } from '../../core/domain/Transaction';
@@ -121,6 +122,8 @@ export function TransactionFormModal({
   const [selectedBorrowerId, setSelectedBorrowerId] = useState(initialBorrowerId ?? '');
   const [showAddCp, setShowAddCp] = useState(false);
   const [newCpName, setNewCpName] = useState('');
+  const [tagName, setTagName] = useState('');
+  const knownTags = useTagStore((s) => s.tags);
   const [showBorrowerPicker, setShowBorrowerPicker] = useState(false);
 
   useEffect(() => {
@@ -322,10 +325,13 @@ export function TransactionFormModal({
 
     const tx = new Transaction(
       uuidv4(), type, capitalizedDesc, amount, txMemberId, dateTime, src, dst, debtorId,
+      undefined,
+      tagName.trim() ? { tags: [tagName.trim()] } : {},
     );
 
     await addTransaction(tx);
     await fetchAccounts();
+    if (tagName.trim()) useTagStore.getState().addTag(tagName.trim());
     onClose();
   };
 
@@ -593,6 +599,23 @@ export function TransactionFormModal({
         onChange={(e) => { setDescription(e.target.value); clearError('description'); }}
       />
       {errors.description && <span className={styles.errorText}>{errors.description}</span>}
+
+      {tab !== 'loan' && (
+        <div className={styles.fieldGroup}>
+          <span className={styles.fieldLabel}>Tag (optional)</span>
+          <input
+            className={styles.inputField}
+            list="tx-tag-options"
+            value={tagName}
+            maxLength={30}
+            placeholder="e.g. Travel, Medical"
+            onChange={(e) => setTagName(e.target.value)}
+          />
+          <datalist id="tx-tag-options">
+            {knownTags.map((t) => <option key={t} value={t} />)}
+          </datalist>
+        </div>
+      )}
 
       {txError && <span className={styles.errorText}>{txError}</span>}
     </>
