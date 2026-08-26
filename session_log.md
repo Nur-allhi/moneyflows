@@ -1492,3 +1492,17 @@
 ### Status
 - Complete on dev.
 
+
+## Session 2026-08-26 12:10
+
+### Changes
+- T-108: wizard pre-fill from member>account ledger context
+- [MemberProfile.tsx] all four transaction-form entry points pass initialSource=selectedAccountId
+- Verified desktop: Bkash ledger -> hero/pills open wizard with Source=Bkash preselected
+
+### Skill(s) Used
+- senior-frontend, playwright verification
+
+### Status
+- Complete on dev. Mobile pills share same wiring (manual QA recommended).
+
