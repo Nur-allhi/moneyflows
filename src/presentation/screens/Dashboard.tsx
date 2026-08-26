@@ -112,7 +112,8 @@ export function Dashboard() {
   const navigate = useNavigate();
   const openWizard = () => useModalStore.getState().open('transaction-form');
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
-  const { locale, currency } = useSettingsStore((s) => s.settings);
+  const settings = useSettingsStore((s) => s.settings);
+  const { locale, currency } = settings;
   const { transactions, loading: txLoading, error: txError, fetchTransactions } = useTransactionStore();
   const { loanStacks, fetchLoanStacks } = useLoanStore();
   const { members, fetchMembers } = useMemberStore();
@@ -257,6 +258,11 @@ export function Dashboard() {
     return activeLoanStacks.filter((ls) => matchesLoanStack(ls.debtorName, debouncedQuery));
   }, [activeLoanStacks, debouncedQuery]);
 
+  const showWhere = settings.showWhereMoneyIs ?? true;
+  const showRecent = settings.showRecentTransactions ?? true;
+  const showLoans = settings.showActiveLoans ?? true;
+  const visibleCount = [showWhere, showRecent, showLoans].filter(Boolean).length;
+
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [closingMembers, setClosingMembers] = useState<Set<string>>(new Set());
   const closingRef = useRef<Set<string>>(new Set());
@@ -394,11 +400,12 @@ export function Dashboard() {
         </button>
       </div>
 
-      <div className={styles.content}>
-        <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Where Your Money Is</h2>
-          </div>
+      <div className={styles.content} data-cols={visibleCount || 1}>
+        {showWhere && (
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Where Your Money Is</h2>
+            </div>
           {filteredAccountsByMember.size === 0 ? (
             <div className="empty-state" style={{ padding: '24px 20px' }}>
               <div className="empty-state-icon">{'\u{1F4B0}'}</div>
@@ -443,13 +450,15 @@ export function Dashboard() {
                   </div>
                 );
               })
-          )}
+           )}
         </div>
+        )}
 
-        <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Recent Transactions</h2>
-          </div>
+        {showRecent && (
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Recent Transactions</h2>
+            </div>
           <div className={styles.txList}>
             {filteredRecentTxs.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 20px' }}>
@@ -487,11 +496,13 @@ export function Dashboard() {
             )}
           </div>
         </div>
+        )}
 
-        <div className={styles.panel}>
-          <div className={styles.panelHeader}>
-            <h2>Active Loans</h2>
-          </div>
+        {showLoans && (
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>Active Loans</h2>
+            </div>
           <div className={styles.loanList}>
             {filteredActiveLoanStacks.length === 0 ? (
               <div className="empty-state" style={{ padding: '24px 0' }}>
@@ -531,6 +542,15 @@ export function Dashboard() {
             )}
           </div>
         </div>
+        )}
+        {visibleCount === 0 && (
+          <div className={styles.panel}>
+            <div className="empty-state" style={{ padding: '40px 20px' }}>
+              <div className="empty-state-icon">⚙️</div>
+              <p className="empty-state-text">All sections hidden — enable them in Settings → Dashboard.</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <FAB />

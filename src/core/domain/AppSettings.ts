@@ -11,5 +11,8 @@ export class AppSettings {
     public lastSeenVersion?: string,
     /** Loan-ledger PDF export: 'all' includes account trail, 'description' omits it. */
     public reportDetailMode: 'all' | 'description' = 'all',
+    public showWhereMoneyIs: boolean = true,
+    public showRecentTransactions: boolean = true,
+    public showActiveLoans: boolean = true,
   ) {}
 }

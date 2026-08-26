@@ -17,10 +17,11 @@ import {
 } from '../constants/config';
 import styles from './SettingsPage.module.css';
 
-type Tab = 'general' | 'backup' | 'storage' | 'about';
+type Tab = 'general' | 'dashboard' | 'backup' | 'storage' | 'about';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'general', label: 'General' },
+  { key: 'dashboard', label: 'Dashboard' },
   { key: 'backup', label: 'Backup' },
   { key: 'storage', label: 'Storage' },
   { key: 'about', label: 'About' },
@@ -229,6 +230,48 @@ export function SettingsPage() {
                 <input className={styles.inputField} type="number" min={DASHBOARD_TX_LIMIT_MIN} max={DASHBOARD_TX_LIMIT_MAX} value={dashboardTxLimit} onChange={(e) => setDashboardTxLimit(Number(e.target.value))} />
               </div>
               <button className={styles.saveBtn} onClick={handleSave}>{saved ? 'Saved ✓' : 'Save changes'}</button>
+            </div>
+          )}
+
+          {activeTab === 'dashboard' && (
+            <div className={styles.card}>
+              <div className={styles.cardHead}>
+                <h2>Dashboard</h2>
+                <span>Show or hide sections</span>
+              </div>
+              <label className={styles.toggleRow}>
+                <span>Where Your Money is</span>
+                <button
+                  role="switch"
+                  aria-checked={settings.showWhereMoneyIs ?? true}
+                  className={`${styles.switch} ${(settings.showWhereMoneyIs ?? true) ? styles.switchOn : ''}`}
+                  onClick={() => updateSettings({ showWhereMoneyIs: !(settings.showWhereMoneyIs ?? true) })}
+                >
+                  <span className={styles.knob} />
+                </button>
+              </label>
+              <label className={styles.toggleRow}>
+                <span>Recent Transactions</span>
+                <button
+                  role="switch"
+                  aria-checked={settings.showRecentTransactions ?? true}
+                  className={`${styles.switch} ${(settings.showRecentTransactions ?? true) ? styles.switchOn : ''}`}
+                  onClick={() => updateSettings({ showRecentTransactions: !(settings.showRecentTransactions ?? true) })}
+                >
+                  <span className={styles.knob} />
+                </button>
+              </label>
+              <label className={styles.toggleRow}>
+                <span>Active Loans</span>
+                <button
+                  role="switch"
+                  aria-checked={settings.showActiveLoans ?? true}
+                  className={`${styles.switch} ${(settings.showActiveLoans ?? true) ? styles.switchOn : ''}`}
+                  onClick={() => updateSettings({ showActiveLoans: !(settings.showActiveLoans ?? true) })}
+                >
+                  <span className={styles.knob} />
+                </button>
+              </label>
             </div>
           )}
 
