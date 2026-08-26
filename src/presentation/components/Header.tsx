@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
 import { useSearchStore } from '../stores/useSearchStore';
@@ -28,7 +28,7 @@ export function Header({
   title,
   showLogo = true,
   showDate = true,
-  breadcrumb: _breadcrumb,
+  breadcrumb,
   className = '',
   searchActive = false,
   onSearchToggle,
@@ -55,9 +55,38 @@ export function Header({
               <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
                 {'\u2190'}
               </button>
-              <span className={styles.title}>{title}</span>
+              {breadcrumb ? (
+                <div className={styles.breadcrumb}>
+                  {breadcrumb.map((item, i) => (
+                    <span key={item.label}>
+                      {i > 0 && <span className={styles.sep}>/</span>}
+                      {item.path ? <Link to={item.path}>{item.label}</Link> : <span>{item.label}</span>}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <span className={styles.title}>{title}</span>
+              )}
             </>
           )
+        ) : !isDashboard ? (
+          <>
+            <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
+              {'\u2190'}
+            </button>
+            {breadcrumb ? (
+              <div className={styles.breadcrumb}>
+                {breadcrumb.map((item, i) => (
+                  <span key={item.label}>
+                    {i > 0 && <span className={styles.sep}>/</span>}
+                    {item.path ? <Link to={item.path}>{item.label}</Link> : <span>{item.label}</span>}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              title && <span className={styles.title}>{title}</span>
+            )}
+          </>
         ) : null}
       </div>
 
