@@ -285,7 +285,7 @@ export function GroupsListScreen() {
                   return (
                     <div key={acctId} className={styles.detailRow}>
                       <div className={styles.detailInfo}>
-                        <span className={styles.detailName}>{acct?.name ?? 'Unknown'}</span>
+                        <span className={styles.detailName}>{acct?.name ?? '(deleted account)'}</span>
                         <span className={styles.detailMeta}>
                           {(member?.name ?? 'Unknown')} &middot; {acct?.type ?? ''}
                         </span>
@@ -338,7 +338,7 @@ export function GroupsListScreen() {
                   return (
                     <div key={acctId} className={styles.detailRow}>
                       <div className={styles.detailInfo}>
-                        <span className={styles.detailName}>{acct?.name ?? 'Unknown'}</span>
+                        <span className={styles.detailName}>{acct?.name ?? '(deleted account)'}</span>
                         <span className={styles.detailMeta}>
                           {(member?.name ?? 'Unknown')} &middot; {acct?.type ?? ''}
                         </span>

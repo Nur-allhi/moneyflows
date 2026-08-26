@@ -183,9 +183,9 @@ export function MemberProfile() {
   const resolveAccountDisplay = useCallback((tx: Transaction): string => {
     switch (tx.type) {
       case 'income':
-        return tx.destAccount ? (accountMap.get(tx.destAccount)?.name ?? 'Unknown') : '';
+        return tx.destAccount ? (accountMap.get(tx.destAccount)?.name ?? '(deleted account)') : '';
       case 'expense':
-        return tx.sourceAccount ? (accountMap.get(tx.sourceAccount)?.name ?? 'Unknown') : '';
+        return tx.sourceAccount ? (accountMap.get(tx.sourceAccount)?.name ?? '(deleted account)') : '';
       case 'transfer': {
         const src = tx.sourceAccount ? (accountMap.get(tx.sourceAccount)?.name ?? '?') : '?';
         const dst = tx.destAccount ? (accountMap.get(tx.destAccount)?.name ?? '?') : '?';
@@ -631,6 +631,18 @@ export function MemberProfile() {
                       showChip={acct.type === 'cash'}
                       onClick={() => handleAccountClick(acct.id)}
                       selected={selectedAccountId === acct.id}
+                      actions={
+                        <button
+                          className={styles.acctActionBtn}
+                          title="Edit account"
+                          aria-label={`Edit ${acct.name}`}
+                          onClick={() => useModalStore.getState().open('edit-account', { accountId: acct.id })}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                            <path d="M10.5 1.5l2 2L5 11l-2.7.7L3 8.9l7.5-7.4z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      }
                     />
                   ))
                 )}

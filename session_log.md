@@ -1461,3 +1461,21 @@
 ### Status
 - Complete on dev.
 
+
+## Session 2026-08-24 06:50
+
+### Changes
+- Feature: account edit + delete (T-104)
+  - [EditAccountModal.tsx/.module.css] NEW - rename/type + danger-zone delete w/ tx & loan-movement counts, two-step confirm, soft-delete
+  - [AccountCard] optional actions slot (top-right overlay, click-isolated); used by MemberProfile grid + SelectAccountModal grid (pencil opens edit-account via registry)
+  - [registry.ts] edit-account entry
+- T-105: '(deleted account)' fallbacks in MemberProfile/GroupLedger/GroupsList/TransactionDetail/LoanService/LoanDatabase name resolvers
+- v1.1.0: package.json bump; whatsNew.ts 1.1.0 notes; CHANGELOG [Unreleased] Added entries; TICKETS Phase 12 section
+- E2E verified live: rename+type change persisted (balance kept), delete->bin->restore roundtrip, fallback label in detail modal, no reloads
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, code-reviewer, playwright verification
+
+### Status
+- Complete on dev. Master sync pending user go-ahead.
+

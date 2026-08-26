@@ -92,7 +92,7 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
             <div className={styles.field}>
               <span className={styles.fieldKey}>From Account</span>
               <span className={styles.value}>
-                {acct?.name ?? 'Unknown'}
+                {acct?.name ?? '(deleted account)'}
                 {fromMember && <span className={styles.member}>– {fromMember.name}</span>}
               </span>
             </div>
@@ -105,7 +105,7 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
             <div className={styles.field}>
               <span className={styles.fieldKey}>To Account</span>
               <span className={styles.value}>
-                {acct?.name ?? 'Unknown'}
+                {acct?.name ?? '(deleted account)'}
                 {toMember && <span className={styles.member}>– {toMember.name}</span>}
               </span>
             </div>
@@ -119,11 +119,11 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
           return (<>
             <div className={styles.field}>
               <span className={styles.fieldKey}>Lender</span>
-              <span className={styles.value}>{lenderAcct?.name ?? 'Unknown'}{lenderMember ? ` \u2014 ${lenderMember.name}` : ''}</span>
+              <span className={styles.value}>{lenderAcct?.name ?? '(deleted account)'}{lenderMember ? ` \u2014 ${lenderMember.name}` : ''}</span>
             </div>
             <div className={styles.field}>
               <span className={styles.fieldKey}>Borrower</span>
-              <span className={styles.value}>{borrowerAcct?.name ?? 'Unknown'}{borrowerMember ? ` \u2014 ${borrowerMember.name}` : ''}</span>
+              <span className={styles.value}>{borrowerAcct?.name ?? '(deleted account)'}{borrowerMember ? ` \u2014 ${borrowerMember.name}` : ''}</span>
             </div>
           </>);
         })()}
@@ -135,11 +135,11 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
           return (<>
             <div className={styles.field}>
               <span className={styles.fieldKey}>Payer</span>
-              <span className={styles.value}>{payerAcct?.name ?? 'Unknown'}{payerMember ? ` \u2014 ${payerMember.name}` : ''}</span>
+              <span className={styles.value}>{payerAcct?.name ?? '(deleted account)'}{payerMember ? ` \u2014 ${payerMember.name}` : ''}</span>
             </div>
             <div className={styles.field}>
               <span className={styles.fieldKey}>Recipient</span>
-              <span className={styles.value}>{recipientAcct?.name ?? 'Unknown'}{recipientMember ? ` \u2014 ${recipientMember.name}` : ''}</span>
+              <span className={styles.value}>{recipientAcct?.name ?? '(deleted account)'}{recipientMember ? ` \u2014 ${recipientMember.name}` : ''}</span>
             </div>
           </>);
         })()}

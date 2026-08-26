@@ -145,11 +145,11 @@ export function GroupLedgerScreen() {
     switch (tx.type) {
       case 'income': {
         const dst = tx.destAccount ? accountMap.get(tx.destAccount)?.name : null;
-        return dst ?? 'Unknown';
+        return dst ?? '(deleted account)';
       }
       case 'expense': {
         const src = tx.sourceAccount ? accountMap.get(tx.sourceAccount)?.name : null;
-        return src ?? 'Unknown';
+        return src ?? '(deleted account)';
       }
       case 'transfer': {
         const src = tx.sourceAccount ? (accountMap.get(tx.sourceAccount)?.name ?? '?') : '?';

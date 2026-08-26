@@ -3,6 +3,7 @@ import { Modal, AccountCard } from '../components';
 import { useAccountStore } from '../stores/useAccountStore';
 import { formatAmount } from '../utils/format';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useModalStore } from '../stores/useModalStore';
 import { ACCOUNT_TYPE_GRADIENT_THREE, displayType } from '../constants/labels';
 import styles from './SelectAccountModal.module.css';
 
@@ -62,6 +63,18 @@ export function SelectAccountModal({ memberId, selectedAccountId, onSelect, onCl
                 onClick={() => { onSelect(acct.id); onClose(); }}
                 selected={selectedAccountId === acct.id}
                 className={styles.gridCard}
+                actions={
+                  <button
+                    className={styles.acctActionBtn}
+                    title="Edit account"
+                    aria-label={`Edit ${acct.name}`}
+                    onClick={() => { onClose(); useModalStore.getState().open('edit-account', { accountId: acct.id }); }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                      <path d="M10.5 1.5l2 2L5 11l-2.7.7L3 8.9l7.5-7.4z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                }
               />
             ))}
           </div>

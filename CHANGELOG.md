@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Account editing and deletion** (T-102/T-103): pencil action on every account card
+  (desktop + mobile selector) opens an edit modal — rename, change type, or delete.
+  Deletion is a soft-delete into the Recycle Bin with an inline confirm that shows how
+  many transactions/loan movements reference the account; restorable for 30 days.
+- Deleted-account fallback: ledgers, reports and detail views now render
+  "(deleted account)" instead of raw IDs for history rows.
+
 ### Fixed
 - Add-Account: new account's balance now shows immediately after saving (accounts store
   is refreshed instead of waiting for the next remount).

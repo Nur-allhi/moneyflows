@@ -7,6 +7,15 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.1.0',
+    items: [
+      'You can now edit any account — rename it or change its type from the pencil button on the account card.',
+      'You can also delete accounts. Deleted accounts go to the Recycle Bin and can be restored for 30 days.',
+      'Old transactions of a deleted account stay safe in every ledger, marked as a deleted account.',
+      'Fixed: new account balance now shows up right away after saving.',
+    ],
+  },
+  {
     version: '1.0.0',
     items: [
       'Your data now lives in a safer place inside your browser — saving is faster and more reliable.',

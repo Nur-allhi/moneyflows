@@ -12,6 +12,8 @@ interface AccountCardProps {
   className?: string;
   onClick?: () => void;
   selected?: boolean;
+  /** Overlay controls (e.g. edit/delete buttons). Clicks here do not trigger `onClick`. */
+  actions?: ReactNode;
 }
 
 export function AccountCard({
@@ -25,6 +27,7 @@ export function AccountCard({
   className = '',
   onClick,
   selected = false,
+  actions,
 }: AccountCardProps) {
   return (
     <div
@@ -42,6 +45,11 @@ export function AccountCard({
         </div>
         {showChip && <span className={styles.chip} />}
       </div>
+      {actions && (
+        <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+          {actions}
+        </div>
+      )}
       <div className={styles.balanceRow}>
         <div className={styles.balance}>{balance}</div>
         <div className={styles.label}>Available Balance</div>
