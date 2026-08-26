@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Placeholder for upcoming changes.
 
+## [1.3.0] - 2026-08-26
+
+### Added
+- Dedicated Settings page `/settings` with sub-navigation — General, Dashboard, Activity, Backup, Storage, About — like any other page (not a modal), gear `18px` in header right navigates there.
+- Dashboard visibility toggles in Settings → Dashboard — show/hide *Where Your Money is*, *Recent Transactions*, *Active Loans*; hidden panels free space via `data-cols` `3fr 6fr 3fr → 1fr 1fr → 1fr`.
+- Activity log in Settings → Activity — last `1000` user actions, paginated `10` per page in `320px` scroll container (`logContainer`), `Prev/Next`.
+- App log backdoor in Settings → About — `Detailed logs` switch (`Verbose` → `Detailed logs`), `Export Logs` NDJSON download, `Clear Logs`, paginated `10` per page with `level/cat`.
+
+### Changed
+- Dashboard action bar now shows two buttons only — *New Transaction* + *Quick Loan* share `50/50` (`flex:1`); Settings entry removed (header gear is entry).
+- Settings page duplicate title removed — header already shows `Back + Settings` breadcrumb.
+
 ## [1.2.0] - 2026-08-26
 
 ### Added
