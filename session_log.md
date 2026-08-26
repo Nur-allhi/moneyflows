@@ -1593,3 +1593,15 @@
 ### Status
 - Complete on dev. Master sync pending user go-ahead.
 
+
+## Session 2026-08-26 13:20
+
+### Changes
+- Tags page fixes (user-reported): renameInput overflowed card -> column layout w/ min-width:0; whole tag card clickable to open its ledger (inner clicks stopPropagation); edit/delete icons swapped to TransactionDetails-modal pencil/trash svgs w/ matching hover/active animation
+
+### Skill(s) Used
+- frontend-design, playwright verification
+
+### Status
+- Complete on dev.
+
