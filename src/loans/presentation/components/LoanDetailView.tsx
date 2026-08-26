@@ -315,7 +315,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
 
       {exportOpen && (
         <div className={styles.overlay} onClick={() => setExportOpen(false)}>
-          <div className={styles.confirmForm} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.exportModal} onClick={(e) => e.stopPropagation()}>
             <p className={styles.exportTitle}>Report details</p>
             <label className={styles.radioRow}>
               <input type="radio" name="reportDetail" checked={pendingMode === 'all'} onChange={() => setPendingMode('all')} />
