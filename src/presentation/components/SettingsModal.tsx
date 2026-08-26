@@ -5,7 +5,6 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { isFsaSupported, folderSync } from '../../infrastructure/database/FolderSync';
 import type { SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
-import { useTagStore } from '../stores/useTagStore';
 import { WhatsNewModal } from './WhatsNewModal';
 import { whatsNewFor } from '../constants/whatsNew';
 import { APP_VERSION } from '../constants/appVersion';
@@ -37,8 +36,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
   const [storageHealth, setStorageHealth] = useState<StorageHealth | null>(null);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-  const knownTags = useTagStore((s) => s.tags);
-  const removeTag = useTagStore((s) => s.removeTag);
   const [restoring, setRestoring] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [folderName, setFolderName] = useState<string | null>(null);
@@ -326,31 +323,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               );
             })
           )}
-        </div>
-      )}
-
-      <div className={fieldStyles.separator} />
-
-      <div className={fieldStyles.sectionTitle}>Transaction Tags</div>
-      {knownTags.length === 0 ? (
-        <div className={fieldStyles.emptyState}>
-          No tags yet — add one while creating a transaction.
-        </div>
-      ) : (
-        <div className={fieldStyles.tagChipRow}>
-          {knownTags.map((t) => (
-            <span key={t} className={fieldStyles.tagChip}>
-              {t}
-              <button
-                className={fieldStyles.tagChipRemove}
-                onClick={() => removeTag(t)}
-                aria-label={`Remove tag ${t}`}
-                title="Remove from suggestions (existing transactions keep it)"
-              >
-                ×
-              </button>
-            </span>
-          ))}
         </div>
       )}
 

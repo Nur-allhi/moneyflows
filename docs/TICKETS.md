@@ -49,7 +49,10 @@ Single optional tag stored in `metadata.tags`; typed with datalist suggestions f
 Tag dropdown in the ledger toolbar (options = registry ∪ tags present in view); filters rows only, balance math untouched.
 
 ### T-111 - Family-wide tag browser (`/tags`, `/tags/:tag`) — **Complete**
-Cross-member ledger per tag with member/account/description/amount and In/Out totals; reachable from the member toolbar once a tag is selected.
+Cross-member ledger per tag with member/account/description/amount and In/Out totals; reachable from the member toolbar once a tag is selected and via the new sidebar **Tags** nav item.
+
+### T-112 - Tag management UI on the Tags page — **Complete** (v1.1.1)
+Create / rename / delete directly on `/tags`: inline create row, per-card ✎ rename (rewrites the tag across all carrying transactions) and 🗑 two-step delete (strips it from transactions). Removed the interim Settings chips section. Sidebar gains a Tags item under Loans.
 
 ### T-107 - Wizard pre-fills open ledger account — **Complete** (v1.1.1)
 All four transaction-form entry points in MemberProfile pass `initialSource=selectedAccountId`; Income/Expense/Transfer pills also pin their tab. Verified: Bkash ledger → wizard opens with Source=Bkash.
