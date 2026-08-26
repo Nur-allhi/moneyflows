@@ -1554,3 +1554,16 @@
 ### Status
 - Complete on dev. Master sync pending.
 
+
+## Session 2026-08-26 12:55
+
+### Changes
+- BUG (user report): transaction wizard stuck - submit/cancel unreachable + tag input inaccessible on desktop. Root cause: .modalBody lacked flex/min-height so extra Tag field overflowed fixed-height desktopModal (overflow:hidden clipped actions). Fixed via flex:1/min-height:0; verified at 700px window height.
+- Feature: tag management UI - Settings > Transaction Tags chips w/ remove (useTagStore.removeTag); registry deletions don't alter existing tx metadata.
+
+### Skill(s) Used
+- frontend-design, senior-frontend, playwright verification
+
+### Status
+- Complete on dev.
+
