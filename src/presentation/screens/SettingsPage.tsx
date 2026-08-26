@@ -460,8 +460,8 @@ export function SettingsPage() {
               <div className={styles.separator} />
               <div className={styles.sectionTitle}>Logs — backdoor for dev</div>
               <label className={styles.toggleRow}>
-                <span>Verbose debug logs</span>
-                <button role="switch" aria-checked={verbose} className={`${styles.switch} ${verbose ? styles.switchOn : ''}`} onClick={toggleVerbose}>
+                <span>Detailed logs</span>
+                <button role="switch" aria-checked={verbose} className={`${styles.switch} ${verbose ? styles.switchOn : ''}`} onClick={toggleVerbose} title="When on, extra details are saved to help find bugs">
                   <span className={styles.knob} />
                 </button>
               </label>
