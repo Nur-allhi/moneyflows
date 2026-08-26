@@ -238,7 +238,23 @@
 }
 
 .mobileSettingsBtn {
-  display: none;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  place-items: center;
+  cursor: pointer;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), transform 0.15s;
+  flex-shrink: 0;
+}
+
+.mobileSettingsBtn:hover {
+  background: var(--color-surface-hover);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+  color: var(--color-text);
 }
 
 .mobileSearchBtn {
@@ -251,7 +267,10 @@
 }
 
 .settingsWrap {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
 }
 
 @media (max-width: 768px) {
