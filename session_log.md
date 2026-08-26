@@ -1617,3 +1617,16 @@
 ### Status
 - Complete on dev.
 
+
+## Session 2026-08-26 14:10
+
+### Changes
+- T-109 follow-up: wizard Tag field converted from datalist input to standard picker dropdown (trigger + overlay w/ No-tag option + inline create-new), matching Source/Destination picker design identity
+- Live verified: dropdown opens/lists/creates/selects (trigger label updates to Travel)
+
+### Skill(s) Used
+- ui-ux-pro-max, senior-frontend
+
+### Status
+- Complete on dev.
+
