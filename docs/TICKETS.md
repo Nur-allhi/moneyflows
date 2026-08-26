@@ -36,6 +36,9 @@ Ledgers, detail modals, group screens, loan reports and PDFs render "(deleted ac
 ### T-106 - BUG-3 fix — **Complete**
 Add-Account refreshes the accounts store so the new balance displays immediately.
 
+### T-107 - Wizard pre-fills open ledger account — **Complete** (v1.1.1)
+All four transaction-form entry points in MemberProfile pass `initialSource=selectedAccountId`; Income/Expense/Transfer pills also pin their tab. Verified: Bkash ledger → wizard opens with Source=Bkash.
+
 
 ## Deferred / Open Items
 
