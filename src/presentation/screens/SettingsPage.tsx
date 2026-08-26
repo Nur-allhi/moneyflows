@@ -59,6 +59,9 @@ export function SettingsPage() {
   });
   const [activityLogs, setActivityLogs] = useState<LogEntry[]>([]);
   const [appLogs, setAppLogs] = useState<LogEntry[]>([]);
+  const [activityPage, setActivityPage] = useState(1);
+  const [appPage, setAppPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
@@ -182,8 +185,14 @@ export function SettingsPage() {
   };
 
   useEffect(() => {
-    if (activeTab === 'activity') setActivityLogs(logger.getEntries({ cat: 'activity', limit: 100 }));
-    if (activeTab === 'about') setAppLogs(logger.getEntries({ limit: 100 }));
+    if (activeTab === 'activity') {
+      setActivityLogs(logger.getEntries({ cat: 'activity', limit: 1000 }));
+      setActivityPage(1);
+    }
+    if (activeTab === 'about') {
+      setAppLogs(logger.getEntries({ limit: 1000 }));
+      setAppPage(1);
+    }
   }, [activeTab]);
 
   const handleExportLogs = () => {
@@ -202,6 +211,8 @@ export function SettingsPage() {
     logger.clear();
     setActivityLogs([]);
     setAppLogs([]);
+    setActivityPage(1);
+    setAppPage(1);
   };
 
   const toggleVerbose = () => {
@@ -312,27 +323,39 @@ export function SettingsPage() {
             </div>
           )}
 
-          {activeTab === 'activity' && (
-            <div className={styles.card}>
-              <div className={styles.cardHead}>
-                <h2>Activity</h2>
-                <span>Your recent actions — last 100</span>
-              </div>
-              {activityLogs.length === 0 ? (
-                <div className={styles.emptyState}>No activity yet — add a transaction to see it here.</div>
-              ) : (
-                <div className={styles.snapshotList}>
-                  {activityLogs.map((e) => (
-                    <div key={e.id} className={styles.snapshotRow}>
-                      <span className={styles.snapshotTime}>{new Date(e.ts).toLocaleString(settings.locale, { hour: 'numeric', minute: '2-digit', hour12: true } as const)} — {new Date(e.ts).toLocaleDateString(settings.locale, { month: 'short', day: 'numeric' } as const)}</span>
-                      <span className={styles.snapshotLabel}>{e.msg}</span>
-                    </div>
-                  ))}
+          {activeTab === 'activity' && (() => {
+            const totalPages = Math.max(1, Math.ceil(activityLogs.length / PAGE_SIZE));
+            const page = Math.min(activityPage, totalPages);
+            const slice = activityLogs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+            return (
+              <div className={styles.card}>
+                <div className={styles.cardHead}>
+                  <h2>Activity</h2>
+                  <span>Your recent actions — last 1000, 10 per page</span>
                 </div>
-              )}
-              <button className={styles.restoreBtn} onClick={() => setActivityLogs(logger.getEntries({ cat: 'activity', limit: 100 }))}>Refresh</button>
-            </div>
-          )}
+                {activityLogs.length === 0 ? (
+                  <div className={styles.emptyState}>No activity yet — add a transaction to see it here.</div>
+                ) : (
+                  <>
+                    <div className={styles.logContainer}>
+                      {slice.map((e) => (
+                        <div key={e.id} className={styles.snapshotRow}>
+                          <span className={styles.snapshotTime}>{new Date(e.ts).toLocaleString(settings.locale, { hour: 'numeric', minute: '2-digit', hour12: true } as const)} — {new Date(e.ts).toLocaleDateString(settings.locale, { month: 'short', day: 'numeric' } as const)}</span>
+                          <span className={styles.snapshotLabel}>{e.msg}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className={styles.pagination}>
+                      <button className={styles.pageBtn} disabled={page <= 1} onClick={() => setActivityPage((p) => Math.max(1, p - 1))}>‹ Prev</button>
+                      <span className={styles.pageInfo}>Page {page} of {totalPages} — {activityLogs.length} total</span>
+                      <button className={styles.pageBtn} disabled={page >= totalPages} onClick={() => setActivityPage((p) => Math.min(totalPages, p + 1))}>Next ›</button>
+                    </div>
+                  </>
+                )}
+                <button className={styles.restoreBtn} onClick={() => { const logs = logger.getEntries({ cat: 'activity', limit: 1000 }); setActivityLogs(logs); setActivityPage(1); }}>Refresh</button>
+              </div>
+            );
+          })()}
 
           {activeTab === 'backup' && (
             <div className={styles.card}>
@@ -451,17 +474,31 @@ export function SettingsPage() {
                 <button className={styles.actionBtn} onClick={handleExportLogs}>↓ Export Logs</button>
                 <button className={styles.actionBtn} onClick={handleClearLogs}>Clear Logs</button>
               </div>
-              {appLogs.length > 0 && (
-                <div className={styles.snapshotList}>
-                  {appLogs.slice(0, 20).map((e) => (
-                    <div key={e.id} className={styles.snapshotRow}>
-                      <span className={e.level === 'error' ? styles.statusWarnDot : styles.statusDot} />
-                      <span className={styles.snapshotTime}>{e.level}/{e.cat}</span>
-                      <span className={styles.snapshotLabel}>{e.msg}</span>
+              {appLogs.length === 0 ? (
+                <div className={styles.emptyState}>No logs yet — logs appear as you use the app.</div>
+              ) : (() => {
+                const totalPages = Math.max(1, Math.ceil(appLogs.length / PAGE_SIZE));
+                const page = Math.min(appPage, totalPages);
+                const slice = appLogs.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+                return (
+                  <>
+                    <div className={styles.logContainer}>
+                      {slice.map((e) => (
+                        <div key={e.id} className={styles.snapshotRow}>
+                          <span className={e.level === 'error' ? styles.statusWarnDot : styles.statusDot} />
+                          <span className={styles.snapshotTime}>{e.level}/{e.cat}</span>
+                          <span className={styles.snapshotLabel}>{e.msg}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className={styles.pagination}>
+                      <button className={styles.pageBtn} disabled={page <= 1} onClick={() => setAppPage((p) => Math.max(1, p - 1))}>‹ Prev</button>
+                      <span className={styles.pageInfo}>Page {page} of {totalPages} — {appLogs.length} total</span>
+                      <button className={styles.pageBtn} disabled={page >= totalPages} onClick={() => setAppPage((p) => Math.min(totalPages, p + 1))}>Next ›</button>
+                    </div>
+                  </>
+                );
+              })()}
               <div className={styles.separator} />
               <div className={styles.statusRow}>
                 <span className={styles.statusDot} />
