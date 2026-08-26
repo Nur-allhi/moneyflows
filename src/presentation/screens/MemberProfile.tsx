@@ -583,7 +583,7 @@ export function MemberProfile() {
               <div className={styles.heroName}>{member.name} <button className={styles.heroEditBtn} onClick={() => useModalStore.getState().open('edit-member', { memberId: member.id })} aria-label="Edit member name">{'\u270E'}</button></div>
             </div>
             <div className={styles.heroActions}>
-              <button className={styles.heroActionBtn} onClick={() => useModalStore.getState().open('transaction-form')}>
+              <button className={styles.heroActionBtn} onClick={() => useModalStore.getState().open('transaction-form', { initialSource: selectedAccountId || undefined })}>
                 <span className={styles.heroActionIcon}>+</span>
                 Transaction
               </button>
@@ -715,15 +715,15 @@ export function MemberProfile() {
           </div>
 
           <div className={styles.actionPills}>
-            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'income' })}>
+            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'income', initialSource: selectedAccountId || undefined })}>
               <span className={`${styles.pillIcon} ${styles.pillIncome}`}>{'+$'}</span>
               <span className={styles.pillLabel}>Income</span>
             </button>
-            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'expense' })}>
+            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'expense', initialSource: selectedAccountId || undefined })}>
               <span className={`${styles.pillIcon} ${styles.pillExpense}`}>{'-$'}</span>
               <span className={styles.pillLabel}>Expense</span>
             </button>
-            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'transfer' })}>
+            <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'transfer', initialSource: selectedAccountId || undefined })}>
               <span className={`${styles.pillIcon} ${styles.pillTransfer}`}>{'$'}</span>
               <span className={styles.pillLabel}>Transfer</span>
             </button>
