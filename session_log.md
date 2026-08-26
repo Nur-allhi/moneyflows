@@ -1605,3 +1605,15 @@
 ### Status
 - Complete on dev.
 
+
+## Session 2026-08-26 13:35
+
+### Changes
+- Tags page delete-confirm: Yes/No buttons were rendering bare (actBtn transparent classes from rewrite) -> switched to confirmBtn/cancelBtn styles w/ .deleteActions row; count=0 wording now 'Delete this unused tag?'
+
+### Skill(s) Used
+- ui-ux-pro-max, playwright verification
+
+### Status
+- Complete on dev.
+
