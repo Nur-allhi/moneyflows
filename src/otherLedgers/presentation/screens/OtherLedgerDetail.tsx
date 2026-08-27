@@ -1,100 +1,222 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { LedgerTable, SegmentedTabs, LedgerSearch, MobileLedger } from '../../../presentation/components';
+import type { LedgerRow } from '../../../presentation/components';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
 import { useMemberStore } from '../../../presentation/stores/useMemberStore';
 import { useSettingsStore } from '../../../presentation/stores/useSettingsStore';
-import { formatAmount } from '../../../presentation/utils/format';
-import { shortDate } from '../../../presentation/constants/dates';
+import { formatAmount, formatAmountParts } from '../../../presentation/utils/format';
+import { shortDate, MONTHS } from '../../../presentation/constants/dates';
+import { Highlight } from '../../../presentation/utils/highlight';
+import { useDebouncedValue } from '../../../presentation/utils/useDebouncedValue';
 import { AddEntryModal } from '../components/AddEntryModal';
+import styles from './OtherLedgerDetail.module.css';
+
+const FILTER_TABS = [
+  { key: 'all', label: 'All' },
+  { key: 'debit', label: 'Debit' },
+  { key: 'credit', label: 'Credit' },
+];
+
+const PAGE_SIZE = 10;
 
 export function OtherLedgerDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { ledgers, entriesByLedger, fetchLedgers, fetchEntries, deleteEntry } = useOtherLedgerStore();
+  const { ledgers, entriesByLedger, fetchLedgers, fetchEntries } = useOtherLedgerStore();
   const members = useMemberStore((s) => s.members);
   const { locale, currency } = useSettingsStore((s) => s.settings);
-  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [ledgerQuery, setLedgerQuery] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+  const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => { fetchLedgers(); }, [fetchLedgers]);
   useEffect(() => { if (id) fetchEntries(id); }, [id, fetchEntries]);
+
   const ledger = useMemo(() => ledgers.find((l) => l.id === id), [ledgers, id]);
   const entries = useMemo(() => (id ? entriesByLedger[id] ?? [] : []), [id, entriesByLedger]);
   const memberMap = useMemo(() => new Map(members.map((m) => [m.id, m.name])), [members]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+  const debouncedQuery = useDebouncedValue(ledgerQuery, 200);
+
+  const searchFiltered = useMemo(() => {
+    const q = debouncedQuery.trim().toLowerCase();
     if (!q) return entries;
     return entries.filter((e) => e.description.toLowerCase().includes(q) || e.date.includes(q) || String(e.debit).includes(q) || String(e.credit).includes(q));
-  }, [entries, search]);
+  }, [entries, debouncedQuery]);
+
+  const displayed = useMemo(() => searchFiltered.slice(-displayLimit), [searchFiltered, displayLimit]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || displayLimit >= searchFiltered.length) return;
+    const obs = new IntersectionObserver((ents) => { if (ents[0]?.isIntersecting) setDisplayLimit((p) => Math.min(p + PAGE_SIZE, searchFiltered.length)); }, { rootMargin: '200px' });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [displayLimit, searchFiltered.length]);
 
   const currentBalance = entries.length > 0 ? entries[entries.length - 1]!.balance : ledger?.openingBalance ?? 0;
+  const owner = ledger ? (ledger.ownerType === 'member' ? memberMap.get(ledger.ownerMemberId ?? '') ?? 'Unknown' : ledger.ownerName ?? '—') : '—';
 
-  const downloadPdf = () => {
+  const ledgerRows: LedgerRow[] = useMemo(() => {
+    const rows = displayed.map((e) => {
+      const isDebit = e.debit > 0;
+      return {
+        id: e.id,
+        date: shortDate(e.date, locale),
+        description: e.description,
+        account: '',
+        debit: isDebit ? formatAmountParts(e.debit, locale, currency).amount : '—',
+        credit: !isDebit ? formatAmountParts(e.credit, locale, currency).amount : '—',
+        balance: formatAmountParts(e.balance, locale, currency).amount,
+        currencyLabel: currency,
+        type: isDebit ? 'expense' as const : 'income' as const,
+      };
+    }).reverse();
+    if (filter === 'all') return rows;
+    return rows.filter((r) => (filter === 'debit' ? r.debit !== '—' : r.credit !== '—'));
+  }, [displayed, filter, locale, currency]);
+
+  const mobileFiltered = useMemo(() => {
+    let list = [...displayed];
+    if (filter !== 'all') list = list.filter((e) => (filter === 'debit' ? e.debit > 0 : e.credit > 0));
+    return list.sort((a, b) => b.date.localeCompare(a.date));
+  }, [displayed, filter]);
+
+  const handleRowClick = useCallback((row: LedgerRow) => {
+    if (row.id) setEditId(row.id);
+  }, []);
+
+  const downloadPdf = useCallback(() => {
     if (!ledger) return;
     const doc = new jsPDF();
-    doc.text(`${ledger.name} — ${ledger.startingDate}`, 14, 14);
+    const pageW = doc.internal.pageSize.getWidth();
+    doc.setFontSize(16);
+    doc.text(ledger.name, pageW / 2, 20, { align: 'center' });
+    doc.setFontSize(10);
+    doc.text(`Owner: ${owner}`, 14, 28);
+    doc.text(`Starting: ${shortDate(ledger.startingDate, locale)}`, 14, 36);
+    const rows = mobileFiltered.map((e) => [shortDate(e.date, locale), e.description, e.debit ? formatAmount(e.debit, locale, currency) : '', e.credit ? formatAmount(e.credit, locale, currency) : '', formatAmount(e.balance, locale, currency)]);
+    if (rows.length === 0) return;
+    doc.text(`Balance: ${formatAmount(currentBalance, locale, currency)}`, pageW - 14, 28, { align: 'right' });
     autoTable(doc, {
       head: [['Date', 'Description', 'Debit', 'Credit', 'Balance']],
-      body: filtered.map((r) => [r.date, r.description, r.debit ? formatAmount(r.debit, locale, currency) : '', r.credit ? formatAmount(r.credit, locale, currency) : '', formatAmount(r.balance, locale, currency)]),
-      startY: 20,
+      body: rows.map((r) => r as string[]),
+      startY: 44,
       styles: { fontSize: 8, overflow: 'linebreak' },
+      headStyles: { fillColor: [99, 102, 241] },
     });
     doc.save(`other_ledger_${ledger.name}_${new Date().toISOString().slice(0, 10)}.pdf`);
-  };
+  }, [ledger, owner, locale, currency, mobileFiltered, currentBalance]);
 
-  if (!ledger) return <div style={{ padding: 24, color: 'var(--color-text-secondary)' }}>Ledger not found <button onClick={() => navigate('/other-ledgers')} style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer' }}>Back</button></div>;
+  if (!ledger) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.empty}>Ledger not found <button className={styles.backBtn} onClick={() => navigate('/other-ledgers')}>Back</button></div>
+      </div>
+    );
+  }
 
-  const owner = ledger.ownerType === 'member' ? memberMap.get(ledger.ownerMemberId ?? '') ?? 'Unknown' : ledger.ownerName ?? '—';
+  const filteredForEmpty = filter === 'all' ? mobileFiltered : mobileFiltered;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '12px 0' }}>
-      <button onClick={() => navigate('/other-ledgers')} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>← Back to Other Ledgers</button>
-      <div style={{ padding: 16, borderRadius: 16, background: 'var(--color-surface)', border: '1px solid var(--color-border)', backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text)' }}>{ledger.name}</div>
-          <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{owner} · Starting {shortDate(ledger.startingDate, locale)} · {entries.length} entries</div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-          <div style={{ fontFamily: 'monospace', fontSize: 20, fontWeight: 700, color: 'var(--color-text)' }}>{formatAmount(currentBalance, locale, currency)}</div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setShowAdd(true)} style={{ padding: '8px 16px', borderRadius: 9999, background: 'var(--color-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>+ Add Entry</button>
-            <button onClick={downloadPdf} style={{ padding: '8px 12px', borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)', cursor: 'pointer' }}>PDF</button>
-          </div>
-        </div>
-      </div>
+    <div className={styles.container}>
+      <button className={styles.backBtn} onClick={() => navigate('/other-ledgers')}>← Back to Other Ledgers</button>
 
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 9999, padding: '8px 12px' }}>
-          <input placeholder="Search entries..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--color-text)' }} />
+      {!isDesktop ? (
+        <div className={styles.heroCard}>
+          <span className={styles.heroLabel}>Current Balance</span>
+          <span className={styles.heroValue}>{formatAmount(currentBalance, locale, currency)}</span>
+          <span className={styles.heroMeta}>{owner} · {entries.length} entries · Starting {shortDate(ledger.startingDate, locale)}</span>
         </div>
-      </div>
+      ) : null}
 
-      <div style={{ borderRadius: 16, overflow: 'hidden', background: 'var(--color-surface)', border: '1px solid var(--color-border)', backdropFilter: 'blur(20px)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 90px 90px 110px 80px', gap: 8, padding: '10px 12px', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', borderBottom: '1px solid var(--color-border)' }}>
-          <span>Date</span><span>Description</span><span>Debit</span><span>Credit</span><span>Balance</span><span />
-        </div>
-        {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 32, color: 'var(--color-text-secondary)' }}>{search ? `No matches for "${search}"` : 'No entries yet — tap + to add first row.'}</div>
-        ) : (
-          filtered.map((r) => (
-            <div key={r.id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 90px 90px 110px 80px', gap: 8, padding: '10px 12px', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
-              <span style={{ color: 'var(--color-text-secondary)' }}>{shortDate(r.date, locale)}</span>
-              <span style={{ color: 'var(--color-text)' }}>{r.description}</span>
-              <span style={{ color: 'var(--color-expense)' }}>{r.debit ? formatAmount(r.debit, locale, currency) : '—'}</span>
-              <span style={{ color: 'var(--color-income)' }}>{r.credit ? formatAmount(r.credit, locale, currency) : '—'}</span>
-              <span style={{ fontFamily: 'monospace', color: 'var(--color-text)' }}>{formatAmount(r.balance, locale, currency)}</span>
-              <span style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => setEditId(r.id)} style={{ width: 28, height: 28, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-secondary)' }}>✎</button>
-                <button onClick={async () => { if (window.confirm('Delete entry?')) await deleteEntry(r.id); }} style={{ width: 28, height: 28, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', cursor: 'pointer', color: 'var(--color-text-secondary)' }}>✕</button>
-              </span>
+      {!isDesktop ? (
+        <MobileLedger
+          title={ledger.name}
+          count={mobileFiltered.length}
+          filterOptions={FILTER_TABS}
+          activeFilter={filter}
+          onFilterChange={setFilter}
+          searchQuery={ledgerQuery}
+          onSearchChange={setLedgerQuery}
+          onDownloadPdf={downloadPdf}
+          sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
+          empty={mobileFiltered.length === 0 ? <div className={styles.empty}>{ledgerQuery ? `No matches for "${ledgerQuery}"` : 'No entries yet — tap + to add first row.'}</div> : undefined}
+        >
+          {mobileFiltered.map((e) => {
+            const isDebit = e.debit > 0;
+            const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(isDebit ? e.debit : e.credit, locale, currency);
+            return (
+              <div key={e.id} className={styles.txRow} onClick={() => setEditId(e.id)}>
+                <span className={styles.txType} data-type={isDebit ? 'debit' : 'credit'}>
+                  <span className={styles.txDay}>{new Date(e.date).getDate()}</span>
+                  <span className={styles.txMonth}>{MONTHS[new Date(e.date).getMonth()]}</span>
+                </span>
+                <span className={styles.txDesc}><Highlight text={e.description} query={ledgerQuery} /></span>
+                <span className={styles.txAmount}>
+                  <span className={`${styles.txArrow} ${isDebit ? styles.txArrowOut : styles.txArrowIn}`}>
+                    {isDebit ? (
+                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 2v8M2 6l4 4 4-4" /></svg>
+                    ) : (
+                      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 10V2M2 6l4-4 4 4" /></svg>
+                    )}
+                  </span>
+                  {fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small>
+                </span>
+              </div>
+            );
+          })}
+        </MobileLedger>
+      ) : (
+        <>
+          <div className={styles.header}>
+            <div>
+              <h1 className={styles.title}>{ledger.name}</h1>
+              <span className={styles.subtitle}>{owner} · Starting {shortDate(ledger.startingDate, locale)} · {entries.length} entries · {formatAmount(currentBalance, locale, currency)}</span>
             </div>
-          ))
-        )}
-      </div>
+            <div className={styles.actions}>
+              <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
+              <button className={styles.pdfBtn} onClick={downloadPdf}>PDF</button>
+              <button className={styles.addBtn} onClick={() => setShowAdd(true)}>+ Add Entry</button>
+            </div>
+          </div>
+
+          <SegmentedTabs tabs={FILTER_TABS} activeKey={filter} onChange={setFilter} />
+
+          <LedgerTable
+            rows={ledgerRows}
+            showBalance
+            desktop
+            onRowClick={handleRowClick}
+            sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
+            searchQuery={ledgerQuery}
+          />
+
+          {filteredForEmpty.length === 0 && <div className={styles.empty}>{ledgerQuery ? `No matches for "${ledgerQuery}"` : 'No entries yet — tap + to add first row.'}</div>}
+        </>
+      )}
+
+      {/* Add button for mobile header (desktop has it in header, mobile ledger needs separate trigger when empty) */}
+      {isDesktop ? null : (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+          <button className={styles.addBtn} onClick={() => setShowAdd(true)}>+ Add Entry</button>
+        </div>
+      )}
+
       {showAdd && id && <AddEntryModal isOpen ledgerId={id} onClose={() => setShowAdd(false)} />}
       {editId && id && <AddEntryModal isOpen ledgerId={id} entryId={editId} onClose={() => setEditId(null)} />}
     </div>
