@@ -1,11 +1,12 @@
 import { lazy, Suspense, useEffect, useState, useCallback, type JSX } from 'react';
-import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Agentation } from 'agentation';
 import { Sidebar, BottomNav, Header, PageTransition, RippleGlow, SearchBar } from './presentation/components';
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
 import { useOtherLedgerStore } from './otherLedgers/presentation/stores/useOtherLedgerStore';
+import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { getDatabase } from './infrastructure/database/getDatabase';
 import { ErrorBoundary, logger } from './core/logging';
 import styles from './App.module.css';
@@ -19,6 +20,7 @@ const GroupsListScreen = lazy(() => import('./presentation/screens/GroupsListScr
 const TagLedgerScreen = lazy(() => import('./presentation/screens/TagLedgerScreen').then(m => ({ default: m.TagLedgerScreen })));const GroupLedgerScreen = lazy(() => import('./presentation/screens/GroupLedgerScreen').then(m => ({ default: m.GroupLedgerScreen })));
 const OtherLedgersIndex = lazy(() => import('./otherLedgers/presentation/screens/OtherLedgersIndex').then(m => ({ default: m.OtherLedgersIndex })));
 const OtherLedgerDetail = lazy(() => import('./otherLedgers/presentation/screens/OtherLedgerDetail').then(m => ({ default: m.OtherLedgerDetail })));
+const SetupWizard = lazy(() => import('./presentation/screens/SetupWizard').then(m => ({ default: m.SetupWizard })));
 const SettingsPage = lazy(() => import('./presentation/screens/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 function Svg({ d, children }: { d?: string; children?: JSX.Element }) {
@@ -147,26 +149,51 @@ function AppLayout() {
   );
 }
 
+function SetupGuard({ children }: { children: JSX.Element }) {
+  const setupComplete = useSettingsStore((s: { settings: { setupComplete?: boolean } }) => s.settings.setupComplete ?? false);
+  const members = useMemberStore((s) => s.members);
+  const fetchMembers = useMemberStore((s) => s.fetchMembers);
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => { fetchMembers(); }, [fetchMembers]);
+  useEffect(() => {
+    if (setupComplete) return;
+    if (members.length > 0) return;
+    if (location.pathname === '/setup') return;
+    // only redirect if we have confirmed empty members after fetch (members still 0 after mount)
+    // small delay to allow fetch to complete
+    const t = setTimeout(() => {
+      if (useMemberStore.getState().members.length === 0 && !useSettingsStore.getState().settings.setupComplete) {
+        navigate('/setup', { replace: true });
+      }
+    }, 600);
+    return () => clearTimeout(t);
+  }, [setupComplete, members.length, location.pathname, navigate, fetchMembers]);
+  return children;
+}
 export function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/member" element={<MemberList />} />
-          <Route path="/member/:id" element={<MemberProfile />} />
-          <Route path="/groups" element={<GroupsListScreen />} />
-          <Route path="/groups/:groupId" element={<GroupLedgerScreen />} />
-          <Route path="/tags" element={<TagLedgerScreen />} />
-          <Route path="/tags/:tag" element={<TagLedgerScreen />} />
-          <Route path="/loans" element={<Loans />} />
-          <Route path="/loans/:debtorId" element={<Loans />} />
-          <Route path="/other-ledgers" element={<OtherLedgersIndex />} />
-          <Route path="/other-ledgers/:id" element={<OtherLedgerDetail />} />
-          <Route path="/recycle" element={<RecycleBin />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<div className="skeleton skeleton-wizard" />}>
+        <Routes>
+          <Route path="/setup" element={<SetupWizard />} />
+          <Route element={<SetupGuard><AppLayout /></SetupGuard>}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/member" element={<MemberList />} />
+            <Route path="/member/:id" element={<MemberProfile />} />
+            <Route path="/groups" element={<GroupsListScreen />} />
+            <Route path="/groups/:groupId" element={<GroupLedgerScreen />} />
+            <Route path="/tags" element={<TagLedgerScreen />} />
+            <Route path="/tags/:tag" element={<TagLedgerScreen />} />
+            <Route path="/loans" element={<Loans />} />
+            <Route path="/loans/:debtorId" element={<Loans />} />
+            <Route path="/other-ledgers" element={<OtherLedgersIndex />} />
+            <Route path="/other-ledgers/:id" element={<OtherLedgerDetail />} />
+            <Route path="/recycle" element={<RecycleBin />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
+        </Routes>
+      </Suspense>
       {process.env.NODE_ENV === 'development' && <Agentation />}
     </BrowserRouter>
   );

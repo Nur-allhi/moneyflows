@@ -546,6 +546,7 @@ export function SettingsPage() {
                 <button className={styles.restoreBtn} onClick={() => setWhatsNewOpen(true)}>View</button>
               </div>
               <div className={styles.versionLine}>MoneyFlows v{APP_VERSION}</div>
+              <button className={styles.restoreBtn} onClick={() => { updateSettings({ setupComplete: false }); navigate('/setup'); }} style={{ marginTop: 8 }}>Replay setup wizard</button>
               <WhatsNewModal isOpen={whatsNewOpen} version={APP_VERSION} items={whatsNewFor(APP_VERSION)?.items ?? []} onClose={() => setWhatsNewOpen(false)} />
             </div>
           )}
