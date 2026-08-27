@@ -217,20 +217,20 @@ after verified load, fresh installs skip empty-schema initial flush.
 Persistence now: OPFS primary (`money_flows.db` + `snapshots/`), localStorage fallback;
 19 vitest tests; all gates green.
 
-**Phase 13: Other Ledgers v1 — Manual Registers** (approved 2026-08-27 — `docs/plans/OTHER_LEDGERS_PLAN.md`, future V2 in `OTHER_LEDGERS_FUTURE_V2.md`)
+**Phase 13: Other Ledgers v1 — Manual Registers** (shipped 2026-08-27 — `docs/plans/OTHER_LEDGERS_PLAN.md` `2c8957c`, future V2 in `OTHER_LEDGERS_FUTURE_V2.md`)
 
-Sidebar name: **Other Ledgers**. Decision: Member OR Other person (free text), separate tables `other_ledgers`+`other_ledger_entries` with `linkedTransactionId NULL` (standalone v1, dual-post ready).
+Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `other_ledgers`+`other_ledger_entries` with `linkedTransactionId NULL` (standalone v1, dual-post ready). Routes `/other-ledgers` + `/other-ledgers/:id` live.
 
 | Ticket | Description | Status |
 |--------|-------------|--------|
-| T-113 | Schema + migration: `other_ledgers` / `other_ledger_entries` (linkedTransactionId NULL) | Todo — next |
-| T-114 | Domain + OtherLedgerService + useOtherLedgerStore | Todo |
-| T-115 | OtherLedgersIndex `/other-ledgers` — card grid, global + picker, search | Todo |
-| T-116 | OtherLedgerDetail `/other-ledgers/:id` — hero + Date|Desc|Debit|Credit|Balance table, per-ledger + | Todo |
-| T-117 | CreateLedgerModal + AddEntryModal (edit/delete, validation, tags) | Todo |
-| T-118 | Wiring: Sidebar/BottomNav/routeTitles/Recycle Bin/Search/PDF | Todo |
+| T-113 | Schema + migration: `other_ledgers` / `other_ledger_entries` (linkedTransactionId NULL) | **Complete** (`2c8957c`) |
+| T-114 | Domain + OtherLedgerService + useOtherLedgerStore | **Complete** (`2c8957c`) |
+| T-115 | OtherLedgersIndex `/other-ledgers` — card grid, global + picker, search | **Complete** (`2c8957c`) |
+| T-116 | OtherLedgerDetail `/other-ledgers/:id` — hero + Date|Desc|Debit|Credit|Balance table, per-ledger + | **Complete** (`2c8957c`) |
+| T-117 | CreateLedgerModal + AddEntryModal (edit/delete, validation, tags) | **Complete** (`2c8957c`) |
+| T-118 | Wiring: Sidebar/BottomNav/routeTitles/Recycle Bin/Search/PDF | **Complete** (`2c8957c`) |
 
-Future **V2 (not ticketed until user says "next update")**: `Also post to Other Ledger` toggle in Transaction Wizard — see `docs/plans/OTHER_LEDGERS_FUTURE_V2.md` (T-119..T-123). When user asks "what's next to update?", answer from that file.
+All 64+6 tickets complete. Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 
