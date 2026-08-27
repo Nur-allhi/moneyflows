@@ -54,6 +54,27 @@ export function OtherLedgersIndex() {
 
   const getCount = (ledgerId: string) => (entriesByLedger[ledgerId] ?? []).length;
 
+  const grouped = useMemo(() => {
+    const map = new Map<string, { key: string; ownerName: string; ownerType: 'member' | 'external'; memberId?: string; ledgers: typeof filtered; totalBalance: number }>();
+    for (const l of filtered) {
+      const key = l.ownerType === 'member' ? `member:${l.ownerMemberId ?? ''}` : `external:${(l.ownerName ?? '').toLowerCase()}`;
+      const ownerName = l.ownerType === 'member' ? memberMap.get(l.ownerMemberId ?? '')?.name ?? 'Unknown' : l.ownerName ?? '—';
+      let g = map.get(key);
+      if (!g) {
+        g = { key, ownerName, ownerType: l.ownerType, memberId: l.ownerMemberId, ledgers: [], totalBalance: 0 };
+        map.set(key, g);
+      }
+      g.ledgers.push(l);
+    }
+    // compute totals and sort groups by ownerName
+    for (const g of map.values()) {
+      g.totalBalance = g.ledgers.reduce((s, l) => s + getBalance(l.id, l.openingBalance), 0);
+      g.ledgers.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return [...map.values()].sort((a, b) => a.ownerName.localeCompare(b.ownerName));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, memberMap, entriesByLedger]);
+
   if (loading && ledgers.length === 0) {
     return <div className={styles.page}><div className={styles.grid}>{[1, 2, 3].map((i) => <div key={i} className="skeleton skeleton-card" />)}</div></div>;
   }
@@ -80,23 +101,35 @@ export function OtherLedgersIndex() {
       {filtered.length === 0 ? (
         <div className={styles.empty}>{search ? `No matches for "${search}"` : 'No ledgers yet. Create your first register.'}</div>
       ) : (
-        <div className={styles.grid}>
-          {filtered.map((l) => {
-            const owner = l.ownerType === 'member' ? memberMap.get(l.ownerMemberId ?? '')?.name ?? 'Unknown' : l.ownerName ?? '—';
-            const bal = getBalance(l.id, l.openingBalance);
-            return (
-              <button key={l.id} className={styles.card} onClick={() => navigate(`/other-ledgers/${l.id}`)}>
-                <span className={styles.cardLeft}>
-                  <span className={styles.cardAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
-                  <span className={styles.cardInfo}>
-                    <span className={styles.cardName}><Highlight text={l.name} query={search} /></span>
-                    <span className={styles.cardTag}>{owner} · {getCount(l.id)} entries · {l.startingDate}</span>
-                  </span>
+        <div className={styles.grouped}>
+          {grouped.map((group) => (
+            <div key={group.key} className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionAvatar} style={{ background: ledgerGradient(group.ownerName) }}>{(group.ownerName[0] ?? '?').toUpperCase()}</span>
+                <span className={styles.sectionInfo}>
+                  <span className={styles.sectionName}>{group.ownerName}</span>
+                  <span className={styles.sectionMeta}>{group.ledgers.length} ledger{group.ledgers.length !== 1 ? 's' : ''} · {formatAmount(group.totalBalance, locale, currency)}</span>
                 </span>
-                <span className={styles.cardBalance}>{formatAmount(bal, locale, currency)}</span>
-              </button>
-            );
-          })}
+              </div>
+              <div className={styles.grid}>
+                {group.ledgers.map((l) => {
+                  const bal = getBalance(l.id, l.openingBalance);
+                  return (
+                    <button key={l.id} className={styles.card} onClick={() => navigate(`/other-ledgers/${l.id}`)}>
+                      <span className={styles.cardLeft}>
+                        <span className={styles.cardAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
+                        <span className={styles.cardInfo}>
+                          <span className={styles.cardName}><Highlight text={l.name} query={search} /></span>
+                          <span className={styles.cardTag}>{getCount(l.id)} entries · {l.startingDate}</span>
+                        </span>
+                      </span>
+                      <span className={styles.cardBalance}>{formatAmount(bal, locale, currency)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
