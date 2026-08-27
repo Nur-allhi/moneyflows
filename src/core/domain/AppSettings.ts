@@ -14,5 +14,6 @@ export class AppSettings {
     public showWhereMoneyIs: boolean = true,
     public showRecentTransactions: boolean = true,
     public showActiveLoans: boolean = true,
+    public setupComplete: boolean = false,
   ) {}
 }
