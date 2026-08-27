@@ -2,85 +2,152 @@
   padding: 24px;
   max-width: 900px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
-
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-
 .title {
   margin: 0;
   font-size: var(--text-5xl);
   font-weight: 700;
+  color: var(--color-text);
 }
-
 .subtitle {
   font-size: var(--text-md);
-  color: var(--text-secondary, #888);
+  color: var(--color-text-secondary);
   margin-top: 4px;
   display: block;
 }
-
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .pdfBtn {
-  padding: 8px 16px;
-  border: 1px solid var(--color-border, #333);
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
   background: transparent;
-  color: inherit;
-  font-family: inherit;
-  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: width var(--transition-normal), border-color var(--transition-fast), color var(--transition-fast), gap var(--transition-fast), padding var(--transition-fast);
+  overflow: hidden;
+  white-space: nowrap;
+  gap: 0;
+  padding: 0;
+}
+.pdfBtn:hover {
+  width: 128px;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  gap: 6px;
+  padding: 0 8px;
+  justify-content: flex-start;
+  border-radius: 9999px;
+}
+.pdfBtnIcon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pdfBtnLabel {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity var(--transition-fast), max-width var(--transition-normal);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pdfBtn:hover .pdfBtnLabel {
+  opacity: 1;
+  max-width: 90px;
+}
+.filterBar {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filterBar::-webkit-scrollbar { display: none; }
+.filterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  backdrop-filter: blur(12px);
 }
-
-.pdfBtn:hover {
-  background: var(--bg-hover, #2a2a2a);
+.filterPill:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  box-shadow: 0 0 12px var(--color-primary-glow);
 }
-
+.filterPillActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 0 16px var(--color-primary-glow);
+}
+.filterPillActive:hover {
+  background: var(--color-primary);
+  color: white;
+}
+.filterIcon { display: flex; flex-shrink: 0; }
 .loading {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: var(--text-secondary, #888);
+  color: var(--color-text-secondary);
 }
-
 .empty {
   text-align: center;
   padding: 48px 16px;
-  color: var(--text-secondary, #888);
+  color: var(--color-text-secondary);
   font-size: var(--text-xl);
 }
-
-/* ---- Mobile-only elements ---- */
 .heroCard {
   display: none;
 }
-
 .heroLabel,
 .heroValue,
 .heroMeta {
   display: none;
 }
-
-/* ---- Mobile transaction rows ---- */
 .txRow {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: var(--transition-fast);
 }
-
-.txRow:hover {
-  background: oklch(100% 0 0 / 0.04);
-}
-
+.txRow:hover { background: oklch(100% 0 0 / 0.04); }
 .txType {
   width: 44px;
   height: 44px;
@@ -89,109 +156,28 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
-  overflow: hidden;
   flex-shrink: 0;
-  background: oklch(62% 0.18 30 / 0.2);
-  line-height: 1;
-}
-
-.txType[data-type="income"],
-.txType[data-type="loan_repayment"],
-.txType[data-type="repay"] {
-  background: oklch(65% 0.15 170 / 0.2);
-}
-
-.txType[data-type="expense"],
-.txType[data-type="loan_issue"],
-.txType[data-type="lend"] {
-  background: oklch(62% 0.18 30 / 0.2);
-}
-
-.txType[data-type="transfer"] {
   background: oklch(62% 0.22 290 / 0.2);
 }
-
-.txDay {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.txMonth {
-  font-size: var(--text-3xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
-}
-
-.txDesc {
-  flex: 1;
-  font-size: var(--text-lg);
-  color: var(--color-text);
-  min-width: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.3;
-}
-
-.txAmount {
-  font-family: var(--font-mono);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  justify-content: flex-end;
-}
-
-.txCurrency {
-  font-size: var(--text-3xs);
-  font-weight: 400;
-  opacity: 0.55;
-  margin-left: 2px;
-}
-
-.txArrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-}
-
-.txArrowIn {
-  background: oklch(65% 0.15 150 / 0.15);
-  color: var(--color-teal);
-}
-
-.txArrowOut {
-  background: oklch(62% 0.18 30 / 0.15);
-  color: var(--color-coral);
-}
-
-.txArrow svg {
-  width: 12px;
-  height: 12px;
-}
-
+.txType[data-type="income"],
+.txType[data-type="loan_repayment"],
+.txType[data-type="repay"] { background: oklch(65% 0.15 170 / 0.2); }
+.txType[data-type="expense"],
+.txType[data-type="loan_issue"],
+.txType[data-type="lend"] { background: oklch(62% 0.18 30 / 0.2); }
+.txType[data-type="transfer"] { background: oklch(62% 0.22 290 / 0.2); }
+.txDay { font-size: var(--text-xl); font-weight: 700; color: var(--color-text); }
+.txMonth { font-size: var(--text-3xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary); }
+.txDesc { flex: 1; font-size: var(--text-lg); color: var(--color-text); min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.txAmount { font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 600; text-align: right; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.txCurrency { font-size: var(--text-3xs); opacity: 0.55; margin-left: 2px; }
+.txArrow { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; }
+.txArrowIn { background: oklch(65% 0.15 150 / 0.15); color: var(--color-teal); }
+.txArrowOut { background: oklch(62% 0.18 30 / 0.15); color: var(--color-coral); }
+.txArrow svg { width: 12px; height: 12px; }
 @media (max-width: 768px) {
-  .container {
-    padding: 0;
-  }
-
-  .header {
-    display: none;
-  }
-
+  .container { padding: 0; gap: 12px; }
+  .header { display: none; }
   .heroCard {
     display: flex;
     flex-direction: column;
@@ -204,26 +190,7 @@
     border-radius: 16px;
     gap: 4px;
   }
-
-  .heroLabel {
-    display: block;
-    font: 600 var(--text-sm) var(--font-display);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-text-secondary);
-  }
-
-  .heroValue {
-    display: block;
-    font: 700 var(--text-7xl) var(--font-mono);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-    color: var(--color-primary);
-  }
-
-  .heroMeta {
-    display: block;
-    font: 400 var(--text-base) var(--font-body);
-    color: var(--color-text-secondary);
-  }
+  .heroLabel { display: block; font: 600 var(--text-sm) var(--font-display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-secondary); }
+  .heroValue { display: block; font: 700 var(--text-7xl) var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--color-primary); }
+  .heroMeta { display: block; font: 400 var(--text-base) var(--font-body); color: var(--color-text-secondary); }
 }
