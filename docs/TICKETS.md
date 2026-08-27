@@ -1,7 +1,7 @@
 # MoneyFlows — Feature Ticket List
 
-**Version:** 3.0 · 2026-08-24
-All tickets T-001…T-101 (Phases 1–11) are **complete**. Full historical specs live in git history (`git log -- docs/TICKETS.md`); audit context in `docs/audit/FINDINGS.md`.
+**Version:** 3.1 · 2026-08-27
+All tickets T-001…T-112 + Search S-1..S-4 are **complete**. Full historical specs live in git history (`git log -- docs/TICKETS.md`); audit context in `docs/audit/FINDINGS.md`. Current: Phase 13 Other Ledgers v1 (T-113..T-118) approved — V2 dual-post spec in `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`.
 
 ---
 
@@ -80,9 +80,28 @@ Plan: `docs/plans/SEARCH_PLAN.md` (approved 2026-08-26). Dashboard search → al
 
 Dependencies: S-1 → (S-2 ∥ S-3) → S-4 → S-5. **S-1..S-4 done on dev — highlight + global all-transactions + ledger-scoped widen + pagination fix.**
 
+## Phase 13 — Other Ledgers v1 (Approved 2026-08-27)
+
+Plan: `docs/plans/OTHER_LEDGERS_PLAN.md` (v1 standalone). Future dual-post V2 in `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`. Nav name: **Other Ledgers**.
+
+Storage: separate tables `other_ledgers` + `other_ledger_entries` with `linkedTransactionId NULL` (forward-compat for V2). Owner: Member OR free-text Other person. Behavior: standalone — entries do NOT affect account balances.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-113 | Schema + migration: `other_ledgers` / `other_ledger_entries` (incl. `linkedTransactionId` NULL), indexes, seed no-op | `senior-backend` | M | Todo |
+| T-114 | Domain + `OtherLedgerService` + `useOtherLedgerStore` (CRUD, `computeRunningBalances` no-mutate, `flush` lifecycle) | `senior-backend`, `senior-frontend` | M | Todo |
+| T-115 | `OtherLedgersIndex` screen `/other-ledgers` — card grid, header `+ Add New Ledger` + global `+` entry picker (ledger dropdown), search | `senior-frontend`, `ui-ux-pro-max` | M | Todo |
+| T-116 | `OtherLedgerDetail` `/other-ledgers/:id` — hero + `Date|Description|Debit|Credit|Balance` virtual table, per-ledger `+` pre-locked, running balance from full history | `senior-frontend`, `ui-ux-pro-max` | M | Todo |
+| T-117 | `CreateLedgerModal` + `AddEntryModal` (edit/delete, validation 3–50 / 1–200, date ≥ startingDate, Debit xor Credit >0, tags via `useTagStore`) | `senior-frontend`, `ui-ux-pro-max` | M | Todo |
+| T-118 | Wiring: Sidebar `Other Ledgers` + BottomNav More sheet + `routeTitles` + Recycle Bin tab + Search `Highlight` + PDF export + Settings health already covers new tables | `senior-frontend` | S | Todo |
+
+Dependencies: `T-113 → T-114 → (T-115 ∥ T-117) → T-116 → T-118`. Each file ≤300 LOC, `DESIGN_IDENTITY.md §17` gate, `typecheck/lint --max-warnings 0/build/vitest` green.
+
+Future V2 (not ticketed here): dual-post linking — `Transaction Wizard → Also post to Other Ledger [dropdown]` creating `linkedTransactionId` link (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123). Build only when user says "next update / V2".
+
 ## Following Phase
 
-Candidates after search: Supabase sync groundwork, budgets/goals expansion, CSV export. Nothing else ticketed until the user picks a direction.
+Candidates after Other Ledgers v1: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 
 ## Ticket Template (use for all new work)
 

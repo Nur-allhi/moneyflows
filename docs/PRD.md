@@ -1,8 +1,8 @@
 # MoneyFlows — Product Requirement Document
 
 **Target Skill:** `skill-creator`
-**Version:** 3.0 · 2026-08-24
-**Source of truth:** `Project_plan/Project_Brief.md`, `DESIGN_FILES/`
+**Version:** 3.1 · 2026-08-27
+**Source of truth:** `Project_plan/Project_Brief.md`, `DESIGN_FILES/`, `docs/plans/OTHER_LEDGERS_PLAN.md` (v1) / `OTHER_LEDGERS_FUTURE_V2.md` (next update)
 
 ---
 
@@ -35,14 +35,17 @@ Single-device, single-admin app (see SECURITY.md). No multi-user auth in v1.
 | F8 | Settings — locale-aware formatting, dynamic currency, primary member, wizard constants | ✅ |
 | F9 | Mobile-first UI — bottom sheets, bottom nav, responsive tables/cards at ≤768px | ✅ |
 | F10 | Durable storage engine — OPFS-backed database + snapshots (localStorage fallback), write coalescing, boot watchdog with recovery actions, storage health indicator | ✅ |
+| F11 | Other Ledgers v1 — manual `Other Ledgers` registers: create ledger (Member or Other person), `Date|Desc|Debit|Credit|Balance` table with running balance, two `+` entry points (global picker + per-ledger pre-locked) | 🔜 Planned — Phase 13 T-113..T-118 (`docs/plans/OTHER_LEDGERS_PLAN.md`) |
+| F12 | Other Ledgers V2 — dual-post linking: `Also post to Other Ledger` toggle in Transaction Wizard (see `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`) | 🔜 Next update — ask "what's next?" to get spec |
 
 ## 4. Target Workflows
 
 1. **Record a transaction** → Wizard → type tab → amount (numpad) → description/date → submit → balances update optimistically.
 2. **Issue / track a loan** → Loans screen → unified LoanForm (lender, borrower counterparty, principal) → stack appears with progress bar → repayments logged from same form.
-3. **Monthly review** → Dashboard totals → member profile → ledger filters (type/month) → export PDF report.
-4. **Recover mistakes** → Recycle Bin → restore or purge → auto-purge after 30 days.
-5. **Disaster recovery** → If storage is corrupt or boot stalls: Database Error screen offers **Restore Latest Backup / Reload / Start Fresh** — never a silent hang. Settings shows storage backend + last save time.
+3. **Keep a manual register** → Other Ledgers → `Add New Ledger` (name, starting date, owner Member/Other) → Detail → `+` → post `Debit/Credit` rows → watch running `Balance` in `Date|Description|Debit|Credit|Balance` table (v1 standalone). *Next update:* same rent payment can also hit `Brac Bank` + `House Rent` ledger via Wizard toggle (see Future V2 doc).
+4. **Monthly review** → Dashboard totals → member profile → ledger filters (type/month) → export PDF report (also Other Ledger PDF).
+5. **Recover mistakes** → Recycle Bin → restore or purge → auto-purge after 30 days (covers Other Ledgers + entries).
+6. **Disaster recovery** → If storage is corrupt or boot stalls: Database Error screen offers **Restore Latest Backup / Reload / Start Fresh** — never a silent hang. Settings shows storage backend + last save time.
 
 ## 5. Non-Goals (v1)
 

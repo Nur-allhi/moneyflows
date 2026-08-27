@@ -1,7 +1,7 @@
 # MoneyFlows — Frontend Spec Document
 
 **Target Skills:** `ui-ux-pro-max`, `frontend-design`, `senior-frontend`
-**Version:** 3.1 · 2026-08-26
+**Version:** 3.2 · 2026-08-27 — adds Other Ledgers v1 route/spec + V2 future note (`docs/plans/OTHER_LEDGERS_PLAN.md` / `FUTURE_V2.md`)
 
 > **Design reference:** `DESIGN_FILES/*.html` are the pixel-perfect source of truth per screen. `DESIGN.md` derives tokens from them. `docs/DESIGN_IDENTITY.md` is the canonical, review-enforceable ruleset — every new component, modal, dropdown, or icon must satisfy its checklist (§17) before merge.
 
@@ -34,17 +34,19 @@ CSS Modules only; inline `style={{…}}` banned (exception: shadcn primitives). 
 ## 2. Routes & Navigation
 
 ```
-/                    Dashboard
-/member              Member list
-/member/:id          Member profile (ledger, scroll-load)
-/loans               Loan receivables (debtor stacks)
-/loans/:debtorId     Loan detail (ledger, filters, PDF export)
-/recycle             Recycle bin (tabs All/Txs/Accounts)
-/settings            Settings modal overlay
-*                    Database Error screen (boot failure state, not a route)
+ /                    Dashboard
+ /member              Member list
+ /member/:id          Member profile (ledger, scroll-load)
+ /loans               Loan receivables (debtor stacks)
+ /loans/:debtorId     Loan detail (ledger, filters, PDF export)
+ /other-ledgers       Other Ledgers index — card grid (Phase 13 v1, `docs/plans/OTHER_LEDGERS_PLAN.md`)
+ /other-ledgers/:id   Other Ledger detail — Date|Desc|Debit|Credit|Balance + two + entry points
+ /recycle             Recycle bin (tabs All/Txs/Accounts/Other Ledgers)
+ /settings            Settings modal overlay
+ *                    Database Error screen (boot failure state, not a route)
 ```
 
-Chrome: Sidebar (desktop) ⇄ BottomNav (mobile) at 768px; Header: back button, title from `routeTitles`, global search, FAB → wizard.
+Chrome: Sidebar (desktop) ⇄ BottomNav (mobile) at 768px; Header: back button, title from `routeTitles`, global search, FAB → wizard. Sidebar order: `Dashboard → Members → Loans → Other Ledgers → Tags → Recycle`.
 
 ## 3. Screen & Overlay Specs
 
@@ -53,6 +55,8 @@ Chrome: Sidebar (desktop) ⇄ BottomNav (mobile) at 768px; Header: back button, 
 **Member Profile `/member/:id`** — credit-card account cards → ledger with type/month filters, running balance from full history → infinite scroll + button fallback.
 
 **Loans `/loans`, `/loans/:debtorId`** — progress-bar stacks → filter chips, ledger rows, summary card, Download PDF (`loan_ledger_<name>_<date>.pdf`). Balance rules identical to profile.
+
+**Other Ledgers `/other-ledgers`, `/other-ledgers/:id` (Phase 13 v1)** — index card grid (Name, Owner avatar/initial, Starting Date, Current Balance, entry count) with global `+` entry picker (ledger dropdown) + per-ledger `+` pre-locked; detail hero + `Date|Description|Debit|Credit|Balance` virtual table (running balance from full history), search/highlight, PDF export, Recycle Bin. Create Ledger modal: Name 3–50, Starting Date, Owner Member/Other person, Opening Balance. Add Entry modal: Date ≥ startingDate, Description 1–200, Debit xor Credit >0, Tags. *V2 next update:* Wizard `Also post to Other Ledger [dropdown]` linking via `linkedTransactionId` — see `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`.
 
 **Transaction Wizard** (`transaction-form`) — mobile bottom sheet / desktop modal; tabs Income/Expense/Transfer/Loan; numpad w/ Indian comma grouping; source⇄dest swap; counterparty inline-create **with inline error on failure**; insufficient-balance warning non-blocking; optimistic submit → 300 ms close.
 
