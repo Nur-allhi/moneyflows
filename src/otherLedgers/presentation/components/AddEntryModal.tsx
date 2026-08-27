@@ -52,7 +52,7 @@ export function AddEntryModal({ isOpen, ledgerId, entryId, onClose }: { isOpen: 
         <span className={txStyles.fieldLabel}>Date</span>
         <DatePicker value={date} onChange={setDate} />
       </div>
-      <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description (1–200)" maxLength={200} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }} />
+      <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description (1–200)" maxLength={200} rows={3} style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)', minHeight: 88, resize: 'vertical', fontFamily: 'var(--font-body)', fontSize: 14, lineHeight: 1.4 }} />
       <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }} />
       <div className={txStyles.fieldGroup}>
         <span className={txStyles.fieldLabel}>Tag (optional)</span>
