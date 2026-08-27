@@ -89,6 +89,33 @@
   margin-left: 4px;
 }
 
+.grouped { display: flex; flex-direction: column; gap: 16px; }
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 14px;
+}
+.sectionHeader { display: flex; align-items: center; gap: 12px; padding: 2px 2px 12px; border-bottom: 1px solid var(--color-border); margin-bottom: 2px; }
+.sectionAvatar { width: 28px; height: 28px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.sectionInfo { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+.sectionName { font-size: 14px; font-weight: 600; color: var(--color-text); line-height: 1.2; }
+.sectionMeta { font-size: 12px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sortSelect {
+  padding: 6px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
 .grid {
   display: flex;
   flex-direction: column;

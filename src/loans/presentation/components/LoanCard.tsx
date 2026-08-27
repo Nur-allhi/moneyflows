@@ -11,6 +11,14 @@ interface LoanCardProps {
   searchQuery?: string;
 }
 
+function ledgerGradient(name: string): string {
+  const hues = [290, 170, 30, 85, 220, 330, 50, 190];
+  let idx = 0;
+  for (let i = 0; i < name.length; i++) idx = (idx * 31 + name.charCodeAt(i)) % hues.length;
+  const h = hues[idx]!;
+  return `linear-gradient(135deg, oklch(62% 0.22 ${h}), oklch(50% 0.2 ${h}))`;
+}
+
 export function LoanCard({ stack, locale, currency, onClick, searchQuery = '' }: LoanCardProps) {
   const stackType = stack.stackType === 'internal' ? 'Internal' : stack.stackType === 'external' ? 'Debtor' : 'Debtor';
   const initial = stack.debtorName.charAt(0).toUpperCase();
@@ -19,7 +27,7 @@ export function LoanCard({ stack, locale, currency, onClick, searchQuery = '' }:
     <button className={styles.card} onClick={onClick}>
       <div className={styles.top}>
         <div className={styles.leftGroup}>
-          <div className={styles.avatar}>{initial}</div>
+          <div className={styles.avatar} style={{ background: ledgerGradient(stack.debtorName) }}>{initial}</div>
           <div className={styles.info}>
             <span className={styles.name}><Highlight text={stack.debtorName} query={searchQuery} /></span>
             <span className={styles.badge}>{stackType}</span>

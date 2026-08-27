@@ -8,7 +8,17 @@ import { formatAmount } from '../../../presentation/utils/format';
 import { GlassPanel } from '../../../presentation/components';
 import { LoanCard } from '../components/LoanCard';
 import { LoanDetailView } from '../components/LoanDetailView';
+import { getDatabase } from '../../../infrastructure/database/getDatabase';
+import type { Transaction } from '../../../core/domain/Transaction';
 import styles from './LoansScreen.module.css';
+
+function ledgerGradient(name: string): string {
+  const hues = [290, 170, 30, 85, 220, 330, 50, 190];
+  let idx = 0;
+  for (let i = 0; i < name.length; i++) idx = (idx * 31 + name.charCodeAt(i)) % hues.length;
+  const h = hues[idx]!;
+  return `linear-gradient(135deg, oklch(62% 0.22 ${h}), oklch(50% 0.2 ${h}))`;
+}
 
 export function LoansScreen() {
   const { debtorId: routeBorrowerId } = useParams<{ debtorId: string }>();
@@ -18,10 +28,13 @@ export function LoansScreen() {
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const [filter, setFilter] = useState<'active' | 'settled' | 'all'>('active');
   const [mobileSearch, setMobileSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'alpha' | 'lastTx' | 'lastRepay'>('alpha');
+  const [txs, setTxs] = useState<Transaction[]>([]);
 
   useEffect(() => {
     fetchLoanStacks();
     fetchAccounts();
+    getDatabase().getTransactions().then(setTxs).catch(() => {});
   }, [fetchLoanStacks, fetchAccounts]);
 
   const selectedStack = useMemo(() => {
@@ -29,15 +42,39 @@ export function LoansScreen() {
     return loanStacks.find((s) => s.debtorId === routeBorrowerId) ?? null;
   }, [loanStacks, routeBorrowerId]);
 
+  const getLastTxDate = (debtorId: string): string => {
+    let latest = '';
+    for (const tx of txs) {
+      if (tx.sourceAccount === debtorId || tx.destAccount === debtorId) {
+        if (!latest || tx.date > latest) latest = tx.date;
+      }
+    }
+    return latest;
+  };
+  const getLastRepayDate = (debtorId: string): string => {
+    let latest = '';
+    for (const tx of txs) {
+      const isRepay = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_paidback';
+      if (isRepay && (tx.sourceAccount === debtorId || tx.destAccount === debtorId)) {
+        if (!latest || tx.date > latest) latest = tx.date;
+      }
+    }
+    return latest;
+  };
+
   const filteredStacks = useMemo(() => {
     const byStatus = filter === 'active' ? loanStacks.filter((s) => !s.isSettled)
       : filter === 'settled' ? loanStacks.filter((s) => s.isSettled)
       : loanStacks;
     const q = mobileSearch.trim().toLowerCase();
-    return q
-      ? byStatus.filter((s) => s.debtorName.toLowerCase().includes(q))
-      : byStatus;
-  }, [loanStacks, filter, mobileSearch]);
+    let list = q ? byStatus.filter((s) => s.debtorName.toLowerCase().includes(q)) : byStatus;
+    if (sortBy === 'alpha') list = [...list].sort((a, b) => a.debtorName.localeCompare(b.debtorName));
+    else if (sortBy === 'lastTx') list = [...list].sort((a, b) => getLastTxDate(b.debtorId).localeCompare(getLastTxDate(a.debtorId)));
+    else if (sortBy === 'lastRepay') list = [...list].sort((a, b) => getLastRepayDate(b.debtorId).localeCompare(getLastRepayDate(a.debtorId)));
+    return list;
+    // getLastTxDate/getLastRepayDate read txs which is dep
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loanStacks, filter, mobileSearch, sortBy, txs]);
 
   const totals = useMemo(() => ({
     active: loanStacks.filter((s) => !s.isSettled).reduce((s, x) => s + x.totalOutstanding, 0),
@@ -126,7 +163,12 @@ export function LoansScreen() {
           </button>
         </div>
         <div className={styles.headerActions}>
-          <span className={styles.count}>{loanStacks.length} Account{loanStacks.length !== 1 ? 's' : ''}</span>
+          <select className={styles.sortSelect} value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} aria-label="Sort loans">
+            <option value="alpha">Alphabetically</option>
+            <option value="lastTx">Last transaction</option>
+            <option value="lastRepay">Last repayment</option>
+          </select>
+          <span className={styles.count}>{filteredStacks.length} Account{filteredStacks.length !== 1 ? 's' : ''}</span>
           <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'loan' })}>+ New Loan</button>
         </div>
       </div>
@@ -144,17 +186,36 @@ export function LoansScreen() {
           </div>
         </GlassPanel>
       ) : (
-        <div className={styles.grid}>
-          {filteredStacks.map((stack) => (
-            <LoanCard
-              key={stack.debtorId}
-              stack={stack}
-              locale={locale}
-              currency={currency}
-              onClick={() => navigate(`/loans/${stack.debtorId}`)}
-              searchQuery={mobileSearch}
-            />
-          ))}
+        <div className={styles.grouped}>
+          {(['internal', 'external'] as const).map((type) => {
+            const list = filteredStacks.filter((s) => (type === 'internal' ? s.stackType === 'internal' : s.stackType !== 'internal'));
+            if (list.length === 0) return null;
+            const total = list.reduce((s, x) => s + x.totalOutstanding, 0);
+            const label = type === 'internal' ? 'Internal' : 'External';
+            return (
+              <div key={type} className={styles.section}>
+                <div className={styles.sectionHeader}>
+                  <span className={styles.sectionAvatar} style={{ background: ledgerGradient(label) }}>{label[0]}</span>
+                  <span className={styles.sectionInfo}>
+                    <span className={styles.sectionName}>{label}</span>
+                    <span className={styles.sectionMeta}><span>{list.length} ledger{list.length !== 1 ? 's' : ''}</span><span style={{ opacity: 0.4 }}>·</span><span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(total, locale, currency)}</span></span>
+                  </span>
+                </div>
+                <div className={styles.grid}>
+                  {list.map((stack) => (
+                    <LoanCard
+                      key={stack.debtorId}
+                      stack={stack}
+                      locale={locale}
+                      currency={currency}
+                      onClick={() => navigate(`/loans/${stack.debtorId}`)}
+                      searchQuery={mobileSearch}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
