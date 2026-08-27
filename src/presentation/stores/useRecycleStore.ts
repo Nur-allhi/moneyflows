@@ -6,9 +6,9 @@ interface RecycleState {
   deletedItems: DeletedItem[];
   loading: boolean;
   error: string | null;
-  fetchDeleted: (type?: 'transaction' | 'account') => Promise<void>;
-  restore: (id: string, type: 'transaction' | 'account') => Promise<void>;
-  purge: (id: string, type: 'transaction' | 'account') => Promise<void>;
+  fetchDeleted: (type?: DeletedItem['type']) => Promise<void>;
+  restore: (id: string, type: DeletedItem['type']) => Promise<void>;
+  purge: (id: string, type: DeletedItem['type']) => Promise<void>;
 }
 
 export const useRecycleStore = create<RecycleState>((set, get) => ({

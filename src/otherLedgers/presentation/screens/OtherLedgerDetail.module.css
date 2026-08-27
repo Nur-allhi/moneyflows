@@ -1,0 +1,20 @@
+.page { display: flex; flex-direction: column; gap: 12px; padding: 12px 0; }
+.hero { padding: 16px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.heroLeft { display: flex; flex-direction: column; gap: 4px; }
+.heroName { font-size: 18px; font-weight: 700; color: var(--color-text); }
+.heroMeta { font-size: 13px; color: var(--color-text-secondary); }
+.heroBalance { font-family: monospace; font-size: 20px; font-weight: 700; color: var(--color-text); }
+.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: white; border: none; cursor: pointer; }
+.toolbar { display: flex; gap: 8px; }
+.searchWrap { flex: 1; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; }
+.searchWrap input { flex: 1; background: transparent; border: none; outline: none; color: var(--color-text); }
+.tableWrap { border-radius: 16px; overflow: hidden; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); }
+.tableHeader { display: grid; grid-template-columns: 110px 1fr 90px 90px 110px 80px; gap: 8px; padding: 10px 12px; font-size: 12px; font-weight: 600; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); }
+.row { display: grid; grid-template-columns: 110px 1fr 90px 90px 110px 80px; gap: 8px; padding: 10px 12px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); align-items: center; }
+.row:last-child { border-bottom: none; }
+.debit { color: var(--color-expense); }
+.credit { color: var(--color-income); }
+.actions { display: flex; gap: 6px; }
+.iconBtn { width: 28px; height: 28px; border-radius: 9999px; border: 1px solid var(--color-border); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--color-text-secondary); }
+.empty { text-align: center; padding: 32px 12px; color: var(--color-text-secondary); }
+@media (max-width: 768px) { .tableHeader, .row { grid-template-columns: 80px 1fr 80px 80px; } .tableHeader span:nth-child(5), .row span:nth-child(5) { display: none; } .heroBalance { font-size: 18px; } }

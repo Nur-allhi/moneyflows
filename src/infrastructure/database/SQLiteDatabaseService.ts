@@ -3,6 +3,7 @@ import { Member } from '../../core/domain/Member';
 import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
+import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
 import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
 import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
@@ -33,6 +34,13 @@ const SCHEMA = [
   'CREATE INDEX IF NOT EXISTS idx_loans_deleted ON loans(deleted_at);',
   "CREATE TABLE IF NOT EXISTS account_groups (id TEXT PRIMARY KEY,name TEXT NOT NULL,sort_order INTEGER NOT NULL DEFAULT 0,metadata TEXT DEFAULT '{}',deleted_at TEXT);",
   'CREATE TABLE IF NOT EXISTS account_group_mappings (id TEXT PRIMARY KEY,account_group_id TEXT NOT NULL REFERENCES account_groups(id),account_id TEXT NOT NULL REFERENCES accounts(id),UNIQUE(account_group_id,account_id));',
+  "CREATE TABLE IF NOT EXISTS other_ledgers (id TEXT PRIMARY KEY,name TEXT NOT NULL CHECK(length(name) BETWEEN 3 AND 50),owner_type TEXT NOT NULL CHECK(owner_type IN ('member','external')),owner_member_id TEXT REFERENCES members(id),owner_name TEXT,starting_date TEXT NOT NULL,opening_balance REAL NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT);",
+  'CREATE INDEX IF NOT EXISTS idx_other_ledgers_owner ON other_ledgers(owner_member_id);',
+  'CREATE INDEX IF NOT EXISTS idx_other_ledgers_deleted ON other_ledgers(deleted_at);',
+  "CREATE TABLE IF NOT EXISTS other_ledger_entries (id TEXT PRIMARY KEY,ledger_id TEXT NOT NULL REFERENCES other_ledgers(id) ON DELETE CASCADE,date TEXT NOT NULL,description TEXT NOT NULL CHECK(length(description) BETWEEN 1 AND 200),debit REAL NOT NULL DEFAULT 0 CHECK(debit >= 0),credit REAL NOT NULL DEFAULT 0 CHECK(credit >= 0),balance REAL NOT NULL DEFAULT 0,linkedTransactionId TEXT REFERENCES transactions(id) ON DELETE SET NULL,metadata TEXT DEFAULT '{}',created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT,CHECK(debit = 0 OR credit = 0),CHECK(debit + credit > 0));",
+  'CREATE INDEX IF NOT EXISTS idx_other_entries_ledger_date ON other_ledger_entries(ledger_id, date);',
+  'CREATE INDEX IF NOT EXISTS idx_other_entries_link ON other_ledger_entries(linkedTransactionId);',
+  'CREATE INDEX IF NOT EXISTS idx_other_entries_deleted ON other_ledger_entries(deleted_at);',
 ].join('\n');
 
 
@@ -64,6 +72,38 @@ function rowToTransaction(r: Record<string, unknown>): Transaction {
 function rowToGroup(r: Record<string, unknown>): AccountGroup {
   return new AccountGroup(r.id as string, r.name as string, r.sort_order as number,
     JSON.parse((r.metadata as string) || '{}'), r.deleted_at as string);
+}
+
+function rowToOtherLedger(r: Record<string, unknown>): OtherLedger {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    ownerType: r.owner_type as OtherLedger['ownerType'],
+    ownerMemberId: (r.owner_member_id as string) || undefined,
+    ownerName: (r.owner_name as string) || undefined,
+    startingDate: r.starting_date as string,
+    openingBalance: (r.opening_balance as number) ?? 0,
+    createdAt: r.created_at as string,
+    updatedAt: r.updated_at as string,
+    deletedAt: r.deleted_at as string | undefined,
+  };
+}
+
+function rowToOtherEntry(r: Record<string, unknown>): OtherLedgerEntry {
+  return {
+    id: r.id as string,
+    ledgerId: r.ledger_id as string,
+    date: r.date as string,
+    description: r.description as string,
+    debit: (r.debit as number) ?? 0,
+    credit: (r.credit as number) ?? 0,
+    balance: (r.balance as number) ?? 0,
+    linkedTransactionId: (r.linkedTransactionId as string) || undefined,
+    metadata: JSON.parse((r.metadata as string) || '{}'),
+    createdAt: r.created_at as string,
+    updatedAt: r.updated_at as string,
+    deletedAt: r.deleted_at as string | undefined,
+  };
 }
 
 export class SQLiteDatabaseService implements IDatabaseService {
@@ -229,6 +269,14 @@ export class SQLiteDatabaseService implements IDatabaseService {
       this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_debtor ON transactions(debtor_id)');
       this.db.run('CREATE INDEX IF NOT EXISTS idx_transactions_loan_ref ON transactions(loan_ref)');
     }
+    // Phase 13: Other Ledgers v1 — create tables if missing (fresh + existing DBs)
+    this.db.run("CREATE TABLE IF NOT EXISTS other_ledgers (id TEXT PRIMARY KEY,name TEXT NOT NULL CHECK(length(name) BETWEEN 3 AND 50),owner_type TEXT NOT NULL CHECK(owner_type IN ('member','external')),owner_member_id TEXT REFERENCES members(id),owner_name TEXT,starting_date TEXT NOT NULL,opening_balance REAL NOT NULL DEFAULT 0,created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT)");
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_other_ledgers_owner ON other_ledgers(owner_member_id)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_other_ledgers_deleted ON other_ledgers(deleted_at)');
+    this.db.run("CREATE TABLE IF NOT EXISTS other_ledger_entries (id TEXT PRIMARY KEY,ledger_id TEXT NOT NULL REFERENCES other_ledgers(id) ON DELETE CASCADE,date TEXT NOT NULL,description TEXT NOT NULL CHECK(length(description) BETWEEN 1 AND 200),debit REAL NOT NULL DEFAULT 0 CHECK(debit >= 0),credit REAL NOT NULL DEFAULT 0 CHECK(credit >= 0),balance REAL NOT NULL DEFAULT 0,linkedTransactionId TEXT REFERENCES transactions(id) ON DELETE SET NULL,metadata TEXT DEFAULT '{}',created_at TEXT NOT NULL DEFAULT (datetime('now')),updated_at TEXT NOT NULL DEFAULT (datetime('now')),deleted_at TEXT,CHECK(debit = 0 OR credit = 0),CHECK(debit + credit > 0))");
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_other_entries_ledger_date ON other_ledger_entries(ledger_id, date)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_other_entries_link ON other_ledger_entries(linkedTransactionId)');
+    this.db.run('CREATE INDEX IF NOT EXISTS idx_other_entries_deleted ON other_ledger_entries(deleted_at)');
   }
 
   /** Marks pending changes; a microtask-coalesced write follows (see plan §3). */
@@ -656,26 +704,91 @@ export class SQLiteDatabaseService implements IDatabaseService {
     ).map((r) => r.account_id));
   }
 
-  getDeletedItems(type?: 'transaction' | 'account'): Promise<DeletedItem[]> {
+  // ---- Other Ledgers ----
+  getOtherLedgers(): Promise<OtherLedger[]> {
+    return Promise.resolve(this.query<Record<string, unknown>>('SELECT * FROM other_ledgers WHERE deleted_at IS NULL ORDER BY created_at DESC').map(rowToOtherLedger));
+  }
+
+  getOtherLedgerById(id: string): Promise<OtherLedger | null> {
+    const r = this.queryOne<Record<string, unknown>>('SELECT * FROM other_ledgers WHERE id=$id', { $id: id });
+    return Promise.resolve(r ? rowToOtherLedger(r) : null);
+  }
+
+  async saveOtherLedger(ledger: OtherLedger): Promise<void> {
+    this.run(`INSERT INTO other_ledgers (id,name,owner_type,owner_member_id,owner_name,starting_date,opening_balance,created_at,updated_at)
+      VALUES ($id,$name,$otype,$mid,$oname,$sdate,$open,$created,$updated)
+      ON CONFLICT(id) DO UPDATE SET name=$name,owner_type=$otype,owner_member_id=$mid,owner_name=$oname,starting_date=$sdate,opening_balance=$open,updated_at=$updated`,
+      { $id: ledger.id, $name: ledger.name, $otype: ledger.ownerType, $mid: ledger.ownerMemberId ?? null, $oname: ledger.ownerName ?? null, $sdate: ledger.startingDate, $open: ledger.openingBalance, $created: ledger.createdAt, $updated: now() });
+    await this.flush();
+  }
+
+  async softDeleteOtherLedger(id: string): Promise<void> { this.run('UPDATE other_ledgers SET deleted_at=$now,updated_at=$now WHERE id=$id', { $id: id, $now: now() }); await this.flush(); }
+  async restoreOtherLedger(id: string): Promise<void> { this.run('UPDATE other_ledgers SET deleted_at=NULL,updated_at=$now WHERE id=$id', { $id: id, $now: now() }); await this.flush(); }
+  async purgeOtherLedger(id: string): Promise<void> { this.run('DELETE FROM other_ledgers WHERE id=$id', { $id: id }); await this.flush(); }
+
+  getOtherLedgerEntries(ledgerId: string): Promise<OtherLedgerEntry[]> {
+    return Promise.resolve(this.query<Record<string, unknown>>('SELECT * FROM other_ledger_entries WHERE ledger_id=$lid AND deleted_at IS NULL ORDER BY date ASC, created_at ASC', { $lid: ledgerId }).map(rowToOtherEntry));
+  }
+
+  getOtherLedgerEntryById(id: string): Promise<OtherLedgerEntry | null> {
+    const r = this.queryOne<Record<string, unknown>>('SELECT * FROM other_ledger_entries WHERE id=$id', { $id: id });
+    return Promise.resolve(r ? rowToOtherEntry(r) : null);
+  }
+
+  async saveOtherLedgerEntry(entry: OtherLedgerEntry): Promise<void> {
+    if (entry.debit > 0 && entry.credit > 0) throw new Error('Entry cannot have both debit and credit');
+    if (entry.debit <= 0 && entry.credit <= 0) throw new Error('Entry must have debit or credit > 0');
+    this.run(`INSERT INTO other_ledger_entries (id,ledger_id,date,description,debit,credit,balance,linkedTransactionId,metadata,created_at,updated_at)
+      VALUES ($id,$lid,$date,$desc,$debit,$credit,$bal,$link,$meta,$created,$updated)
+      ON CONFLICT(id) DO UPDATE SET ledger_id=$lid,date=$date,description=$desc,debit=$debit,credit=$credit,balance=$bal,linkedTransactionId=$link,metadata=$meta,updated_at=$updated`,
+      { $id: entry.id, $lid: entry.ledgerId, $date: entry.date, $desc: entry.description, $debit: entry.debit, $credit: entry.credit, $bal: entry.balance, $link: entry.linkedTransactionId ?? null, $meta: JSON.stringify(entry.metadata), $created: entry.createdAt, $updated: now() });
+    await this.flush();
+  }
+
+  async updateOtherLedgerEntry(id: string, entry: OtherLedgerEntry): Promise<void> {
+    await this.saveOtherLedgerEntry({ ...entry, id });
+  }
+
+  async softDeleteOtherLedgerEntry(id: string): Promise<void> { this.run('UPDATE other_ledger_entries SET deleted_at=$now,updated_at=$now WHERE id=$id', { $id: id, $now: now() }); await this.flush(); }
+  async restoreOtherLedgerEntry(id: string): Promise<void> { this.run('UPDATE other_ledger_entries SET deleted_at=NULL,updated_at=$now WHERE id=$id', { $id: id, $now: now() }); await this.flush(); }
+  async purgeOtherLedgerEntry(id: string): Promise<void> { this.run('DELETE FROM other_ledger_entries WHERE id=$id', { $id: id }); await this.flush(); }
+
+  getDeletedItems(type?: 'transaction' | 'account' | 'other_ledger' | 'other_entry'): Promise<DeletedItem[]> {
     const items: DeletedItem[] = [];
-    const types = type ? [type] : ['transaction', 'account'];
+    const types = type ? [type] : ['transaction', 'account', 'other_ledger', 'other_entry'];
     if (types.includes('transaction')) items.push(...this.query<Record<string, unknown>>(
       "SELECT id, 'transaction' as t, description as name, amount, deleted_at FROM transactions WHERE deleted_at IS NOT NULL",
     ).map((r) => ({ id: r.id as string, type: 'transaction' as const, name: r.name as string, amount: r.amount as number, deletedAt: r.deleted_at as string })));
     if (types.includes('account')) items.push(...this.query<Record<string, unknown>>(
       "SELECT id, 'account' as t, name, balance as amount, deleted_at FROM accounts WHERE deleted_at IS NOT NULL",
     ).map((r) => ({ id: r.id as string, type: 'account' as const, name: r.name as string, amount: r.amount as number, deletedAt: r.deleted_at as string })));
+    if (types.includes('other_ledger')) items.push(...this.query<Record<string, unknown>>(
+      "SELECT id, 'other_ledger' as t, name, opening_balance as amount, deleted_at FROM other_ledgers WHERE deleted_at IS NOT NULL",
+    ).map((r) => ({ id: r.id as string, type: 'other_ledger' as const, name: r.name as string, amount: r.amount as number, deletedAt: r.deleted_at as string })));
+    if (types.includes('other_entry')) items.push(...this.query<Record<string, unknown>>(
+      "SELECT id, 'other_entry' as t, description as name, (debit+credit) as amount, deleted_at FROM other_ledger_entries WHERE deleted_at IS NOT NULL",
+    ).map((r) => ({ id: r.id as string, type: 'other_entry' as const, name: r.name as string, amount: r.amount as number, deletedAt: r.deleted_at as string })));
     items.sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
     return Promise.resolve(items);
   }
 
-  restoreItem(id: string, type: 'transaction' | 'account'): Promise<void> { return type === 'transaction' ? this.restoreTransaction(id) : this.restoreAccount(id); }
-  purgeItem(id: string, type: 'transaction' | 'account'): Promise<void> { return type === 'transaction' ? this.purgeTransaction(id) : this.purgeAccount(id); }
+  restoreItem(id: string, type: 'transaction' | 'account' | 'other_ledger' | 'other_entry'): Promise<void> {
+    if (type === 'transaction') return this.restoreTransaction(id);
+    if (type === 'account') return this.restoreAccount(id);
+    if (type === 'other_ledger') return this.restoreOtherLedger(id);
+    return this.restoreOtherLedgerEntry(id);
+  }
+  purgeItem(id: string, type: 'transaction' | 'account' | 'other_ledger' | 'other_entry'): Promise<void> {
+    if (type === 'transaction') return this.purgeTransaction(id);
+    if (type === 'account') return this.purgeAccount(id);
+    if (type === 'other_ledger') return this.purgeOtherLedger(id);
+    return this.purgeOtherLedgerEntry(id);
+  }
 
   async purgeExpiredItems(daysRetained: number): Promise<number> {
     const cutoff = new Date(Date.now() - daysRetained * 86400000).toISOString().replace('T', ' ').slice(0, 19);
     let count = 0;
-    for (const table of ['transactions', 'accounts']) {
+    for (const table of ['transactions', 'accounts', 'other_ledgers', 'other_ledger_entries']) {
       const result = this.db!.exec(`DELETE FROM ${table} WHERE deleted_at IS NOT NULL AND deleted_at < '${cutoff}'`);
       if (result[0]) count += result[0].values.length;
     }
