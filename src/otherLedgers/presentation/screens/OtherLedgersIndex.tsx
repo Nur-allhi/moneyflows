@@ -19,7 +19,7 @@ function ledgerGradient(name: string): string {
 
 export function OtherLedgersIndex() {
   const navigate = useNavigate();
-  const { ledgers, entriesByLedger, loading, fetchLedgers, fetchEntries } = useOtherLedgerStore();
+  const { ledgers, entriesByLedger, loading, fetchLedgers, fetchEntries, deleteLedger } = useOtherLedgerStore();
   const members = useMemberStore((s) => s.members);
   const fetchMembers = useMemberStore((s) => s.fetchMembers);
   const { locale, currency } = useSettingsStore((s) => s.settings);
@@ -119,16 +119,29 @@ export function OtherLedgersIndex() {
                 {group.ledgers.map((l) => {
                   const bal = getBalance(l.id, l.openingBalance);
                   return (
-                    <button key={l.id} className={styles.card} onClick={() => navigate(`/other-ledgers/${l.id}`)}>
-                      <span className={styles.cardLeft}>
-                        <span className={styles.cardAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
-                        <span className={styles.cardInfo}>
-                          <span className={styles.cardName}><Highlight text={l.name} query={search} /></span>
-                          <span className={styles.cardTag}>{getCount(l.id)} entries · {l.startingDate}</span>
+                    <div key={l.id} className={styles.cardWrap}>
+                      <button className={styles.card} onClick={() => navigate(`/other-ledgers/${l.id}`)}>
+                        <span className={styles.cardLeft}>
+                          <span className={styles.cardAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
+                          <span className={styles.cardInfo}>
+                            <span className={styles.cardName}><Highlight text={l.name} query={search} /></span>
+                            <span className={styles.cardTag}>{getCount(l.id)} entries · {l.startingDate}</span>
+                          </span>
                         </span>
-                      </span>
-                      <span className={styles.cardBalance}>{formatAmount(bal, locale, currency)}</span>
-                    </button>
+                        <span className={styles.cardBalance}>{formatAmount(bal, locale, currency)}</span>
+                      </button>
+                      <button
+                        className={styles.cardDelete}
+                        aria-label={`Delete ${l.name}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!window.confirm(`Delete ledger "${l.name}"? It will go to Recycle Bin.`)) return;
+                          void deleteLedger(l.id);
+                        }}
+                      >
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
+                      </button>
+                    </div>
                   );
                 })}
               </div>

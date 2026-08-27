@@ -10,8 +10,25 @@
 .searchIcon { color: var(--color-text-secondary); display: flex; flex-shrink: 0; }
 .searchClear { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); display: flex; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.card { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); cursor: pointer; transition: var(--transition-fast); text-align: left; width: 100%; }
+.cardWrap { position: relative; }
+.card { display: flex; align-items: center; justify-content: space-between; padding: 16px; padding-right: 44px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); cursor: pointer; transition: var(--transition-fast); text-align: left; width: 100%; }
 .card:hover { border-color: var(--color-primary); box-shadow: 0 0 20px var(--color-primary-glow); }
+.cardDelete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: oklch(100% 0 0 / 0.06);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.cardDelete:hover { background: oklch(62% 0.22 25 / 0.18); border-color: oklch(62% 0.22 25 / 0.3); color: var(--color-expense); }
 .cardLeft { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .cardAvatar { width: 40px; height: 40px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0; }
 .cardInfo { display: flex; flex-direction: column; min-width: 0; }

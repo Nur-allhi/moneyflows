@@ -25,7 +25,7 @@ const PAGE_SIZE = 10;
 export function OtherLedgerDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { ledgers, entriesByLedger, fetchLedgers, fetchEntries } = useOtherLedgerStore();
+  const { ledgers, entriesByLedger, fetchLedgers, fetchEntries, deleteLedger } = useOtherLedgerStore();
   const members = useMemberStore((s) => s.members);
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const [filter, setFilter] = useState('all');
@@ -200,6 +200,17 @@ export function OtherLedgerDetail() {
                 </span>
                 <span className={styles.addBtnLabel}>New Entry</span>
               </button>
+              <button
+                className={styles.deleteBtn}
+                aria-label="Delete ledger"
+                onClick={() => {
+                  if (!ledger || !id) return;
+                  if (!window.confirm(`Delete ledger "${ledger.name}"? It will go to Recycle Bin and can be restored.`)) return;
+                  void deleteLedger(id).then(() => navigate('/other-ledgers'));
+                }}
+              >
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
+              </button>
             </div>
           </div>
 
@@ -240,12 +251,24 @@ export function OtherLedgerDetail() {
       )}
 
       {isDesktop ? null : (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, padding: '12px 0' }}>
           <button className={styles.addBtn} onClick={() => setShowAdd(true)} aria-label="New entry">
             <span className={styles.addBtnIcon}>
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="14" height="14"><path d="M8 3v10M3 8h10" /></svg>
             </span>
             <span className={styles.addBtnLabel}>New Entry</span>
+          </button>
+          <button
+            className={styles.deleteBtn}
+            aria-label="Delete ledger"
+            onClick={() => {
+              if (!ledger || !id) return;
+              if (!window.confirm(`Delete ledger "${ledger.name}"?`)) return;
+              void deleteLedger(id).then(() => navigate('/other-ledgers'));
+            }}
+            style={{ width: 36, height: 36 }}
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
           </button>
         </div>
       )}

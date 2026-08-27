@@ -166,6 +166,24 @@
   opacity: 1;
   max-width: 80px;
 }
+.deleteBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+.deleteBtn:hover {
+  background: oklch(62% 0.22 25 / 0.12);
+  border-color: oklch(62% 0.22 25 / 0.28);
+  color: var(--color-expense);
+}
 .loading {
   display: flex;
   align-items: center;
