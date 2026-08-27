@@ -1,14 +1,13 @@
 .page { display: flex; flex-direction: column; gap: 12px; padding: 12px 0; }
-.header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.title { font-size: 20px; font-weight: 700; color: var(--color-text); }
-.subtitle { font-size: 13px; color: var(--color-text-secondary); }
-.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: white; border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); }
+.topBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.leftCount { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
+.rightControls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1; }
+.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: white; border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; }
 .addBtn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
 .addBtn:active { transform: scale(0.98); }
-.searchBar { display: flex; gap: 8px; }
-.searchWrap { flex: 1; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; backdrop-filter: blur(20px); }
-.searchWrap input { flex: 1; background: transparent; border: none; outline: none; color: var(--color-text); font-size: 14px; }
-.searchIcon { color: var(--color-text-secondary); display: flex; }
+.searchWrap { width: 240px; max-width: 42vw; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; backdrop-filter: blur(20px); flex-shrink: 1; }
+.searchWrap input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--color-text); font-size: 14px; }
+.searchIcon { color: var(--color-text-secondary); display: flex; flex-shrink: 0; }
 .searchClear { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); display: flex; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .card { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); cursor: pointer; transition: var(--transition-fast); text-align: left; width: 100%; }
@@ -26,4 +25,9 @@
 .pickerList { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
 .pickerItem { padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid transparent; text-align: left; cursor: pointer; color: var(--color-text); }
 .pickerItem:hover { border-color: var(--color-primary); }
-@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+  .topBar { align-items: stretch; }
+  .rightControls { width: 100%; }
+  .searchWrap { flex: 1; width: auto; max-width: none; }
+}

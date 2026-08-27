@@ -60,24 +60,18 @@ export function OtherLedgersIndex() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.searchBar}>
-        <div className={styles.searchWrap}>
-          <span className={styles.searchIcon}>
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-              <circle cx="7" cy="7" r="5.5" /><path d="M11 11l3.5 3.5" />
-            </svg>
-          </span>
-          <input placeholder="Search ledgers..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          {search && <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>}
-        </div>
-      </div>
-
-      <div className={styles.header}>
-        <div>
-          <h2 className={styles.title}>Other Ledgers</h2>
-          <p className={styles.subtitle}>{filtered.length} ledger{filtered.length !== 1 ? 's' : ''}</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <div className={styles.topBar}>
+        <span className={styles.leftCount}>{filtered.length} ledger{filtered.length !== 1 ? 's' : ''}</span>
+        <div className={styles.rightControls}>
+          <div className={styles.searchWrap}>
+            <span className={styles.searchIcon}>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                <circle cx="7" cy="7" r="5.5" /><path d="M11 11l3.5 3.5" />
+              </svg>
+            </span>
+            <input placeholder="Search ledgers..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            {search && <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>}
+          </div>
           <button className={styles.addBtn} onClick={() => setShowEntryPicker(true)} title="Add entry">+ Entry</button>
           <button className={styles.addBtn} onClick={() => setShowCreate(true)}>+ New Ledger</button>
         </div>
