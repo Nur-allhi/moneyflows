@@ -44,17 +44,21 @@
 }
 .pdfBtn:hover { background: oklch(100% 0 0 / 0.06); }
 .addBtn {
-  padding: 8px 16px;
+  width: 36px;
+  height: 36px;
   border-radius: 9999px;
   background: var(--color-primary);
   color: white;
   border: none;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: var(--transition-fast);
+  flex-shrink: 0;
 }
 .addBtn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
-.addBtn:active { transform: scale(0.98); }
+.addBtn:active { transform: scale(0.92); }
 .loading {
   display: flex;
   align-items: center;
