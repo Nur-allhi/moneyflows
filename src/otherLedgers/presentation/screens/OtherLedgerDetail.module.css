@@ -35,10 +35,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border: 1px solid var(--color-border);
-  border-radius: 9999px;
+  border-radius: 50%;
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -49,12 +49,13 @@
   padding: 0;
 }
 .pdfBtn:hover {
-  width: 132px;
+  width: 128px;
   border-color: var(--color-primary);
   color: var(--color-primary);
   gap: 6px;
-  padding: 0 10px;
+  padding: 0 8px;
   justify-content: flex-start;
+  border-radius: 9999px;
 }
 .pdfBtnIcon {
   flex-shrink: 0;
@@ -118,9 +119,9 @@
 }
 .filterIcon { display: flex; flex-shrink: 0; }
 .addBtn {
-  width: 36px;
-  height: 36px;
-  border-radius: 9999px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   background: var(--color-primary);
   color: white;
   border: none;
@@ -138,8 +139,9 @@
 .addBtn:hover {
   width: 122px;
   gap: 6px;
-  padding: 0 12px;
+  padding: 0 10px;
   justify-content: flex-start;
+  border-radius: 9999px;
   box-shadow: 0 0 20px var(--color-primary-glow);
 }
 .addBtn:active { transform: scale(0.92); }
