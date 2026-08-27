@@ -18,13 +18,30 @@
 .cardName { font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cardTag { font-size: 12px; color: var(--color-text-secondary); }
 .cardBalance { font-family: var(--font-mono, monospace); font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; }
-.grouped { display: flex; flex-direction: column; gap: 20px; }
-.section { display: flex; flex-direction: column; gap: 8px; }
-.sectionHeader { display: flex; align-items: center; gap: 10px; padding: 4px 2px; }
-.sectionAvatar { width: 24px; height: 24px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 11px; flex-shrink: 0; }
-.sectionInfo { display: flex; flex-direction: column; min-width: 0; }
-.sectionName { font-size: 13px; font-weight: 600; color: var(--color-text); line-height: 1.1; }
-.sectionMeta { font-size: 12px; color: var(--color-text-secondary); line-height: 1.1; }
+.grouped { display: flex; flex-direction: column; gap: 16px; }
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 14px;
+}
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 2px 12px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 2px;
+}
+.sectionAvatar { width: 28px; height: 28px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.sectionInfo { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+.sectionName { font-size: 14px; font-weight: 600; color: var(--color-text); line-height: 1.2; }
+.sectionMeta { font-size: 12px; color: var(--color-text-secondary); line-height: 1.2; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .empty { text-align: center; padding: 40px 16px; color: var(--color-text-secondary); font-size: 14px; }
 .pickerOverlay { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.55); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .pickerSheet { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; padding: 16px; width: 360px; max-width: 85vw; backdrop-filter: blur(24px); display: flex; flex-direction: column; gap: 8px; }

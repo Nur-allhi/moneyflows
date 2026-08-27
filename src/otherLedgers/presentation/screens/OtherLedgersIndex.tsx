@@ -108,7 +108,11 @@ export function OtherLedgersIndex() {
                 <span className={styles.sectionAvatar} style={{ background: ledgerGradient(group.ownerName) }}>{(group.ownerName[0] ?? '?').toUpperCase()}</span>
                 <span className={styles.sectionInfo}>
                   <span className={styles.sectionName}>{group.ownerName}</span>
-                  <span className={styles.sectionMeta}>{group.ledgers.length} ledger{group.ledgers.length !== 1 ? 's' : ''} · {formatAmount(group.totalBalance, locale, currency)}</span>
+                  <span className={styles.sectionMeta}>
+                    <span>{group.ledgers.length} ledger{group.ledgers.length !== 1 ? 's' : ''}</span>
+                    <span style={{ opacity: 0.4 }}>·</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(group.totalBalance, locale, currency)}</span>
+                  </span>
                 </span>
               </div>
               <div className={styles.grid}>
