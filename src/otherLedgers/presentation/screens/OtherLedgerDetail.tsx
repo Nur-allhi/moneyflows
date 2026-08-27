@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { LedgerTable, LedgerSearch, MobileLedger } from '../../../presentation/components';
+import { LedgerTable, LedgerSearch, MobileLedger, Modal, BottomSheet } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
 import { useMemberStore } from '../../../presentation/stores/useMemberStore';
@@ -32,6 +32,7 @@ export function OtherLedgerDetail() {
   const [ledgerQuery, setLedgerQuery] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+  const [showDeleteLedgerConfirm, setShowDeleteLedgerConfirm] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -203,11 +204,7 @@ export function OtherLedgerDetail() {
               <button
                 className={styles.deleteBtn}
                 aria-label="Delete ledger"
-                onClick={() => {
-                  if (!ledger || !id) return;
-                  if (!window.confirm(`Delete ledger "${ledger.name}"? It will go to Recycle Bin and can be restored.`)) return;
-                  void deleteLedger(id).then(() => navigate('/other-ledgers'));
-                }}
+                onClick={() => setShowDeleteLedgerConfirm(true)}
               >
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
               </button>
@@ -261,11 +258,7 @@ export function OtherLedgerDetail() {
           <button
             className={styles.deleteBtn}
             aria-label="Delete ledger"
-            onClick={() => {
-              if (!ledger || !id) return;
-              if (!window.confirm(`Delete ledger "${ledger.name}"?`)) return;
-              void deleteLedger(id).then(() => navigate('/other-ledgers'));
-            }}
+            onClick={() => setShowDeleteLedgerConfirm(true)}
             style={{ width: 36, height: 36 }}
           >
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
@@ -275,6 +268,27 @@ export function OtherLedgerDetail() {
 
       {showAdd && id && <AddEntryModal isOpen ledgerId={id} onClose={() => setShowAdd(false)} />}
       {editId && id && <AddEntryModal isOpen ledgerId={id} entryId={editId} onClose={() => setEditId(null)} />}
+      {showDeleteLedgerConfirm && ledger && id && (() => {
+        const descStyle: React.CSSProperties = { textAlign: 'center', fontSize: '14px', color: 'var(--color-text-secondary)', margin: '12px 0' };
+        const handleDelete = async () => {
+          await deleteLedger(id);
+          setShowDeleteLedgerConfirm(false);
+          navigate('/other-ledgers');
+        };
+        return isDesktop ? (
+          <Modal isOpen onClose={() => setShowDeleteLedgerConfirm(false)} title="Delete Ledger" saveLabel="Delete" onSave={handleDelete}>
+            <p style={descStyle}>Are you sure you want to delete “{ledger.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
+          </Modal>
+        ) : (
+          <BottomSheet isOpen onClose={() => setShowDeleteLedgerConfirm(false)} title="Delete Ledger">
+            <p style={descStyle}>Are you sure you want to delete “{ledger.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
+            <div style={{ display: 'flex', gap: 10, padding: '8px 0 4px' }}>
+              <button onClick={() => setShowDeleteLedgerConfirm(false)} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleDelete} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Delete</button>
+            </div>
+          </BottomSheet>
+        );
+      })()}
     </div>
   );
 }

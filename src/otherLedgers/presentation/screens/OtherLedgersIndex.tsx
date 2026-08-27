@@ -5,6 +5,7 @@ import { useMemberStore } from '../../../presentation/stores/useMemberStore';
 import { useSettingsStore } from '../../../presentation/stores/useSettingsStore';
 import { formatAmount } from '../../../presentation/utils/format';
 import { Highlight } from '../../../presentation/utils/highlight';
+import { Modal, BottomSheet } from '../../../presentation/components';
 import { CreateLedgerModal } from '../components/CreateLedgerModal';
 import { AddEntryModal } from '../components/AddEntryModal';
 import styles from './OtherLedgersIndex.module.css';
@@ -27,6 +28,13 @@ export function OtherLedgersIndex() {
   const [showCreate, setShowCreate] = useState(false);
   const [showEntryPicker, setShowEntryPicker] = useState(false);
   const [entryLedgerId, setEntryLedgerId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => { fetchLedgers(); fetchMembers(); }, [fetchLedgers, fetchMembers]);
   useEffect(() => {
@@ -135,8 +143,7 @@ export function OtherLedgersIndex() {
                         aria-label={`Delete ${l.name}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!window.confirm(`Delete ledger "${l.name}"? It will go to Recycle Bin.`)) return;
-                          void deleteLedger(l.id);
+                          setDeleteTarget({ id: l.id, name: l.name });
                         }}
                       >
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
@@ -165,6 +172,23 @@ export function OtherLedgersIndex() {
         </div>
       )}
       {entryLedgerId && <AddEntryModal isOpen ledgerId={entryLedgerId} onClose={() => setEntryLedgerId(null)} />}
+      {deleteTarget && (() => {
+        const descStyle: React.CSSProperties = { textAlign: 'center', fontSize: '14px', color: 'var(--color-text-secondary)', margin: '12px 0' };
+        const handleDelete = async () => { await deleteLedger(deleteTarget.id); setDeleteTarget(null); };
+        return isMobile ? (
+          <BottomSheet isOpen onClose={() => setDeleteTarget(null)} title="Delete Ledger">
+            <p style={descStyle}>Are you sure you want to delete “{deleteTarget.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
+            <div style={{ display: 'flex', gap: 10, padding: '8px 0 4px' }}>
+              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleDelete} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Delete</button>
+            </div>
+          </BottomSheet>
+        ) : (
+          <Modal isOpen onClose={() => setDeleteTarget(null)} title="Delete Ledger" saveLabel="Delete" onSave={handleDelete}>
+            <p style={descStyle}>Are you sure you want to delete “{deleteTarget.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
+          </Modal>
+        );
+      })()}
     </div>
   );
 }
