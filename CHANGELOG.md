@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Placeholder for upcoming changes.
 
+## [1.4.0] - 2026-08-27
+
+### Added
+- **Other Ledgers v1** — new section `/other-ledgers` with ledger index and detail — create ledger (name 3–50, starting date, owner Member or Other person, opening balance), grouped by owner on the index (avatar + count · total per owner), two entry points (global + picker with ledger dropdown and per-ledger + pre-locked), `Date|Description|Debit|Credit|Balance` table with running balance from full history, search, `SegmentedTabs` All/Debit/Credit, `MobileLedger` on mobile, PDF export, Recycle Bin, and `OPFS` persistence. Schema `other_ledgers` + `other_ledger_entries` (incl. `linkedTransactionId` NULL for future dual-post V2 — see `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`).
+- Loan ledger now grouped into **Internal** and **External** glass containers (same as Other Ledgers) with sort via picker `Alphabetically / Last transaction / Last repayment` — avatars now use the same `ledgerGradient` as Other Ledgers.
+- Group ledger page now mirrors the Other Ledger detail — same header (`LedgerSearch` + `Download PDF` hover-expand + filters) and `MobileLedger` structure.
+
+### Changed
+- Other Ledger index header: title removed, short search + Entry + New Ledger in one right-aligned line; ledger count left.
+- Other Ledger detail header: second back button removed (banner back remains), `Download PDF` and `+ Add Entry` now `30px` circles expanding to pills on hover (same as account ledger `pdfBtn`), filter redesigned to glass pills with icons, three header icons now same `30px` size.
+- Entry form: description field taller (`textarea rows=3 minHeight 88px`), Date now `DatePicker` (`Popover` + `Calendar` `PPP`) same as transaction wizard, Tag now centered `pickerOverlay/pickerModal` (was absolute dropdown).
+
+### Fixed
+- Header breadcrumb for `Groups/<id>` and `Other Ledgers/<id>` now shows names (`Groups/<Group Name>`, `Other Ledgers/<House Rent>`) instead of raw UUIDs — `AppLayout` now reads `OtherLedgerStore` + `getAccountGroupsWithMembers()`.
+
 ## [1.3.0] - 2026-08-26
 
 ### Added

@@ -7,6 +7,16 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.4.0',
+    items: [
+      'New Other Ledgers section — create your own ledgers by name, starting date, and owner (family member or other person).',
+      'Each ledger shows Date, Description, Debit, Credit and running Balance — add rows from the global + picker or the per-ledger + button, search, and export to PDF.',
+      'Ledgers are grouped by owner so you can see at a glance who owns what and the total per owner.',
+      'Ledger pages now match your account ledger — same header with search, PDF and filters, and the same mobile view.',
+      'Loan page now uses the same avatar colors and is grouped into Internal and External sections you can sort Alphabetically, by Last transaction, or Last repayment.',
+    ],
+  },
+  {
     version: '1.3.0',
     items: [
       'Settings is now a full page with sub-navigation — General, Dashboard, Activity, Backup, Storage and About.',
