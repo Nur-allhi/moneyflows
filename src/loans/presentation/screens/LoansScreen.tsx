@@ -10,6 +10,7 @@ import { LoanCard } from '../components/LoanCard';
 import { LoanDetailView } from '../components/LoanDetailView';
 import { getDatabase } from '../../../infrastructure/database/getDatabase';
 import type { Transaction } from '../../../core/domain/Transaction';
+import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
 import styles from './LoansScreen.module.css';
 
 function ledgerGradient(name: string): string {
@@ -29,6 +30,7 @@ export function LoansScreen() {
   const [filter, setFilter] = useState<'active' | 'settled' | 'all'>('active');
   const [mobileSearch, setMobileSearch] = useState('');
   const [sortBy, setSortBy] = useState<'alpha' | 'lastTx' | 'lastRepay'>('alpha');
+  const [showSortPicker, setShowSortPicker] = useState(false);
   const [txs, setTxs] = useState<Transaction[]>([]);
 
   useEffect(() => {
@@ -163,15 +165,38 @@ export function LoansScreen() {
           </button>
         </div>
         <div className={styles.headerActions}>
-          <select className={styles.sortSelect} value={sortBy} onChange={(e) => setSortBy(e.target.value as never)} aria-label="Sort loans">
-            <option value="alpha">Alphabetically</option>
-            <option value="lastTx">Last transaction</option>
-            <option value="lastRepay">Last repayment</option>
-          </select>
+          <button type="button" className={txStyles.pickerTrigger} style={{ minWidth: 160 }} onClick={() => setShowSortPicker(true)}>
+            <span className={txStyles.pickerValue}>{sortBy === 'alpha' ? 'Alphabetically' : sortBy === 'lastTx' ? 'Last transaction' : 'Last repayment'}</span>
+            <span className={txStyles.pickerArrow}>▾</span>
+          </button>
           <span className={styles.count}>{filteredStacks.length} Account{filteredStacks.length !== 1 ? 's' : ''}</span>
           <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'loan' })}>+ New Loan</button>
         </div>
       </div>
+
+      {showSortPicker && (
+        <div className={txStyles.pickerOverlay} onClick={() => setShowSortPicker(false)}>
+          <div className={txStyles.pickerModal} onClick={(e) => e.stopPropagation()}>
+            <div className={txStyles.pickerHeader}>
+              <span className={txStyles.pickerTitle}>Sort by</span>
+              <button className={txStyles.pickerClose} onClick={() => setShowSortPicker(false)}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              </button>
+            </div>
+            <div className={txStyles.pickerList}>
+              {[
+                { key: 'alpha' as const, label: 'Alphabetically' },
+                { key: 'lastTx' as const, label: 'Last transaction' },
+                { key: 'lastRepay' as const, label: 'Last repayment' },
+              ].map((opt) => (
+                <button key={opt.key} className={txStyles.pickerItem} onClick={() => { setSortBy(opt.key); setShowSortPicker(false); }} style={sortBy === opt.key ? { background: 'var(--color-primary)', color: 'white', borderRadius: 10 } : undefined}>
+                  <span className={txStyles.pickerItemName}>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.summaryCard}>
         <span className={styles.summaryLabel}>Total Outstanding</span>
