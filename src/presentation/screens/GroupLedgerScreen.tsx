@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { LedgerTable, SegmentedTabs, LedgerSearch, MobileLedger } from '../components';
+import { LedgerTable, LedgerSearch, MobileLedger } from '../components';
 import type { LedgerRow } from '../components';
 import { useModalStore } from '../stores/useModalStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -374,11 +374,43 @@ export function GroupLedgerScreen() {
               <h1 className={styles.title}>{groupName}</h1>
               <span className={styles.subtitle}>{accountIds.length} accounts &middot; {formatAmount(totalBalance, locale, currency)} total</span>
             </div>
-            <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
-            <button className={styles.pdfBtn} onClick={handleDownloadPdf}>PDF</button>
+            <div className={styles.actions}>
+              <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
+              <button className={styles.pdfBtn} onClick={handleDownloadPdf} aria-label="Download PDF">
+                <span className={styles.pdfBtnIcon}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                </span>
+                <span className={styles.pdfBtnLabel}>Download PDF</span>
+              </button>
+            </div>
           </div>
 
-          <SegmentedTabs tabs={TX_TABS} activeKey={typeFilter} onChange={setTypeFilter} />
+          <div className={styles.filterBar} role="tablist" aria-label="Filter entries">
+            {TX_TABS.map((t) => (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={typeFilter === t.key}
+                className={`${styles.filterPill} ${typeFilter === t.key ? styles.filterPillActive : ''}`}
+                onClick={() => setTypeFilter(t.key)}
+              >
+                <span className={styles.filterIcon}>
+                  {t.key === 'all' ? (
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M8 3v10M3 8h10" opacity="0.35" /></svg>
+                  ) : t.key === 'income' ? (
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M8 11V5M11 8l-3-3-3 3" /></svg>
+                  ) : t.key === 'expense' ? (
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M8 5v6M5 8l3 3 3-3" /></svg>
+                  ) : t.key === 'transfer' ? (
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M5 8h6M8 5l6 3-6 3" opacity="0.7" /></svg>
+                  ) : (
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M8 6v4M8 10h.01" /></svg>
+                  )}
+                </span>
+                {t.label}
+              </button>
+            ))}
+          </div>
 
           <LedgerTable
             rows={ledgerRows}

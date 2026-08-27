@@ -5,6 +5,7 @@ import { Sidebar, BottomNav, Header, PageTransition, RippleGlow, SearchBar } fro
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
+import { useOtherLedgerStore } from './otherLedgers/presentation/stores/useOtherLedgerStore';
 import { getDatabase } from './infrastructure/database/getDatabase';
 import { ErrorBoundary, logger } from './core/logging';
 import styles from './App.module.css';
@@ -16,6 +17,8 @@ const Loans = lazy(() => import('./loans/presentation/screens/LoansScreen').then
 const RecycleBin = lazy(() => import('./presentation/screens/RecycleBin').then(m => ({ default: m.RecycleBin })));
 const GroupsListScreen = lazy(() => import('./presentation/screens/GroupsListScreen').then(m => ({ default: m.GroupsListScreen })));
 const TagLedgerScreen = lazy(() => import('./presentation/screens/TagLedgerScreen').then(m => ({ default: m.TagLedgerScreen })));const GroupLedgerScreen = lazy(() => import('./presentation/screens/GroupLedgerScreen').then(m => ({ default: m.GroupLedgerScreen })));
+const OtherLedgersIndex = lazy(() => import('./otherLedgers/presentation/screens/OtherLedgersIndex').then(m => ({ default: m.OtherLedgersIndex })));
+const OtherLedgerDetail = lazy(() => import('./otherLedgers/presentation/screens/OtherLedgerDetail').then(m => ({ default: m.OtherLedgerDetail })));
 const SettingsPage = lazy(() => import('./presentation/screens/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 function Svg({ d, children }: { d?: string; children?: JSX.Element }) {
@@ -31,6 +34,7 @@ const sidebarItems = [
   { path: '/member', label: 'Members', icon: <Svg d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /> },
   { path: '/groups', label: 'Groups', icon: <Svg d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /> },
   { path: '/loans', label: 'Loans', icon: <Svg d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /> },
+  { path: '/other-ledgers', label: 'Other Ledgers', icon: <Svg d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM9 12h6M9 16h6" /> },
   { path: '/tags', label: 'Tags', icon: <Svg d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" /> },
   { path: '/recycle', label: 'Recycle Bin', icon: <Svg d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /> },
 ];
@@ -47,6 +51,7 @@ const routeTitles: Record<string, string> = {
   '/member': 'Members',
   '/groups': 'Groups',
   '/loans': 'Loans',
+  '/other-ledgers': 'Other Ledgers',
   '/tags': 'Tags',
   '/recycle': 'Recycle Bin',
   '/settings': 'Settings',
@@ -61,6 +66,19 @@ function AppLayout() {
   const members = useMemberStore((s) => s.members);
   const fetchMembers = useMemberStore((s) => s.fetchMembers);
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
+
+  const ledgers = useOtherLedgerStore((s) => s.ledgers);
+  const fetchLedgers = useOtherLedgerStore((s) => s.fetchLedgers);
+  useEffect(() => { fetchLedgers(); }, [fetchLedgers]);
+
+  const [groupNameMap, setGroupNameMap] = useState<Record<string, string>>({});
+  useEffect(() => {
+    getDatabase().getAccountGroupsWithMembers().then((groups) => {
+      const map: Record<string, string> = {};
+      for (const g of groups) map[g.id] = g.name;
+      setGroupNameMap(map);
+    }).catch(() => {});
+  }, [pathname]);
 
   useEffect(() => { logger.info('nav', `navigate ${pathname}`); }, [pathname]);
   useEffect(() => { useModalStore.getState().closeAllImmediate(); }, [pathname]);
@@ -90,12 +108,14 @@ function AppLayout() {
   const breadcrumb = basePath === '/member' && segments.length >= 2
     ? [{ label: 'Members', path: '/member' }, { label: members.find((m) => m.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
     : basePath === '/groups' && segments.length >= 2
-      ? [{ label: 'Groups', path: '/groups' }, { label: members.find((m) => m.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
+      ? [{ label: 'Groups', path: '/groups' }, { label: groupNameMap[decodeURIComponent(segments[1] ?? '')] ?? decodeURIComponent(segments[1] ?? '') }]
       : basePath === '/tags' && segments[1]
         ? [{ label: 'Tags', path: '/tags' }, { label: decodeURIComponent(segments[1] ?? '') }]
         : basePath === '/loans' && segments[1]
           ? [{ label: 'Loans', path: '/loans' }, { label: decodeURIComponent(segments[1] ?? '') }]
-          : undefined;
+          : basePath === '/other-ledgers' && segments[1]
+            ? [{ label: 'Other Ledgers', path: '/other-ledgers' }, { label: ledgers.find((l) => l.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
+            : undefined;
 
   const isDashboard = pathname === '/';
 
@@ -141,6 +161,8 @@ export function App() {
           <Route path="/tags/:tag" element={<TagLedgerScreen />} />
           <Route path="/loans" element={<Loans />} />
           <Route path="/loans/:debtorId" element={<Loans />} />
+          <Route path="/other-ledgers" element={<OtherLedgersIndex />} />
+          <Route path="/other-ledgers/:id" element={<OtherLedgerDetail />} />
           <Route path="/recycle" element={<RecycleBin />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

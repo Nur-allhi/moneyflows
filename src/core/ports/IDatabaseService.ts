@@ -2,6 +2,7 @@ import type { Member } from '../domain/Member';
 import type { Account } from '../domain/Account';
 import type { Transaction } from '../domain/Transaction';
 import type { AccountGroup } from '../domain/AccountGroup';
+import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
 
 export interface TransactionFilter {
   memberId?: string;
@@ -17,7 +18,7 @@ export interface TransactionFilter {
 
 export interface DeletedItem {
   id: string;
-  type: 'transaction' | 'account';
+  type: 'transaction' | 'account' | 'other_ledger' | 'other_entry';
   name: string;
   amount?: number;
   deletedAt: string;
@@ -81,9 +82,24 @@ export interface IDatabaseService {
   removeGroupAccount(groupId: string, accountId: string): Promise<void>;
   getGroupAccountIds(groupId: string): Promise<string[]>;
 
-  getDeletedItems(type?: 'transaction' | 'account'): Promise<DeletedItem[]>;
-  restoreItem(id: string, type: 'transaction' | 'account'): Promise<void>;
-  purgeItem(id: string, type: 'transaction' | 'account'): Promise<void>;
+  getOtherLedgers(): Promise<OtherLedger[]>;
+  getOtherLedgerById(id: string): Promise<OtherLedger | null>;
+  saveOtherLedger(ledger: OtherLedger): Promise<void>;
+  softDeleteOtherLedger(id: string): Promise<void>;
+  restoreOtherLedger(id: string): Promise<void>;
+  purgeOtherLedger(id: string): Promise<void>;
+
+  getOtherLedgerEntries(ledgerId: string): Promise<OtherLedgerEntry[]>;
+  getOtherLedgerEntryById(id: string): Promise<OtherLedgerEntry | null>;
+  saveOtherLedgerEntry(entry: OtherLedgerEntry): Promise<void>;
+  updateOtherLedgerEntry(id: string, entry: OtherLedgerEntry): Promise<void>;
+  softDeleteOtherLedgerEntry(id: string): Promise<void>;
+  restoreOtherLedgerEntry(id: string): Promise<void>;
+  purgeOtherLedgerEntry(id: string): Promise<void>;
+
+  getDeletedItems(type?: 'transaction' | 'account' | 'other_ledger' | 'other_entry'): Promise<DeletedItem[]>;
+  restoreItem(id: string, type: 'transaction' | 'account' | 'other_ledger' | 'other_entry'): Promise<void>;
+  purgeItem(id: string, type: 'transaction' | 'account' | 'other_ledger' | 'other_entry'): Promise<void>;
   purgeExpiredItems(daysRetained: number): Promise<number>;
 
   getSnapshots(): Promise<SnapshotInfo[]>;

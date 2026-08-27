@@ -118,6 +118,54 @@
   color: white;
 }
 .filterIcon { display: flex; flex-shrink: 0; }
+.addBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: width var(--transition-normal), box-shadow var(--transition-fast), gap var(--transition-fast), padding var(--transition-fast);
+  flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  gap: 0;
+  padding: 0;
+}
+.addBtn:hover {
+  width: 122px;
+  gap: 6px;
+  padding: 0 10px;
+  justify-content: flex-start;
+  border-radius: 9999px;
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+.addBtn:active { transform: scale(0.92); }
+.addBtnIcon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.addBtnLabel {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity var(--transition-fast), max-width var(--transition-normal);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.addBtn:hover .addBtnLabel {
+  opacity: 1;
+  max-width: 80px;
+}
 .loading {
   display: flex;
   align-items: center;
@@ -159,13 +207,8 @@
   flex-shrink: 0;
   background: oklch(62% 0.22 290 / 0.2);
 }
-.txType[data-type="income"],
-.txType[data-type="loan_repayment"],
-.txType[data-type="repay"] { background: oklch(65% 0.15 170 / 0.2); }
-.txType[data-type="expense"],
-.txType[data-type="loan_issue"],
-.txType[data-type="lend"] { background: oklch(62% 0.18 30 / 0.2); }
-.txType[data-type="transfer"] { background: oklch(62% 0.22 290 / 0.2); }
+.txType[data-type="debit"] { background: oklch(62% 0.18 30 / 0.2); }
+.txType[data-type="credit"] { background: oklch(65% 0.15 170 / 0.2); }
 .txDay { font-size: var(--text-xl); font-weight: 700; color: var(--color-text); }
 .txMonth { font-size: var(--text-3xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary); }
 .txDesc { flex: 1; font-size: var(--text-lg); color: var(--color-text); min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -175,6 +218,14 @@
 .txArrowIn { background: oklch(65% 0.15 150 / 0.15); color: var(--color-teal); }
 .txArrowOut { background: oklch(62% 0.18 30 / 0.15); color: var(--color-coral); }
 .txArrow svg { width: 12px; height: 12px; }
+.backBtn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--text-md);
+}
 @media (max-width: 768px) {
   .container { padding: 0; gap: 12px; }
   .header { display: none; }

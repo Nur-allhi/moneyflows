@@ -1,0 +1,57 @@
+.page { display: flex; flex-direction: column; gap: 12px; padding: 12px 0; }
+.topBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.leftCount { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
+.rightControls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1; }
+.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: white; border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; }
+.addBtn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
+.addBtn:active { transform: scale(0.98); }
+.searchWrap { width: 240px; max-width: 42vw; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; backdrop-filter: blur(20px); flex-shrink: 1; }
+.searchWrap input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--color-text); font-size: 14px; }
+.searchIcon { color: var(--color-text-secondary); display: flex; flex-shrink: 0; }
+.searchClear { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); display: flex; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.card { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); cursor: pointer; transition: var(--transition-fast); text-align: left; width: 100%; }
+.card:hover { border-color: var(--color-primary); box-shadow: 0 0 20px var(--color-primary-glow); }
+.cardLeft { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.cardAvatar { width: 40px; height: 40px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0; }
+.cardInfo { display: flex; flex-direction: column; min-width: 0; }
+.cardName { font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cardTag { font-size: 12px; color: var(--color-text-secondary); }
+.cardBalance { font-family: var(--font-mono, monospace); font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; }
+.grouped { display: flex; flex-direction: column; gap: 16px; }
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 14px;
+}
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 2px 2px 12px;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 2px;
+}
+.sectionAvatar { width: 28px; height: 28px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.sectionInfo { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+.sectionName { font-size: 14px; font-weight: 600; color: var(--color-text); line-height: 1.2; }
+.sectionMeta { font-size: 12px; color: var(--color-text-secondary); line-height: 1.2; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.empty { text-align: center; padding: 40px 16px; color: var(--color-text-secondary); font-size: 14px; }
+.pickerOverlay { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.55); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.pickerSheet { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; padding: 16px; width: 360px; max-width: 85vw; backdrop-filter: blur(24px); display: flex; flex-direction: column; gap: 8px; }
+.pickerTitle { font-weight: 700; color: var(--color-text); }
+.pickerList { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+.pickerItem { padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid transparent; text-align: left; cursor: pointer; color: var(--color-text); }
+.pickerItem:hover { border-color: var(--color-primary); }
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+  .topBar { align-items: stretch; }
+  .rightControls { width: 100%; }
+  .searchWrap { flex: 1; width: auto; max-width: none; }
+}

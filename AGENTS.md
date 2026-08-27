@@ -28,6 +28,9 @@ money_flows_v0.4/
 │   ├── VERSIONING.md         — Version bump rules (agent auto-applies §2→§3)
 │   ├── TICKETS.md            — Feature Ticket List
 │   ├── REPO_RULES.md          — Repo Management Document (branch/commit/merge rules)
+│   ├── plans/
+│   │   ├── OTHER_LEDGERS_PLAN.md       — Other Ledgers v1 (approved, next to build)
+│   │   └── OTHER_LEDGERS_FUTURE_V2.md  — Other Ledgers V2 dual-post (next update)
 │   └── audit/                 — Project audit reports + findings register
 ├── src/
 │   ├── core/
@@ -214,21 +217,34 @@ after verified load, fresh installs skip empty-schema initial flush.
 Persistence now: OPFS primary (`money_flows.db` + `snapshots/`), localStorage fallback;
 19 vitest tests; all gates green.
 
-**Next phase TBD.**
+**Phase 13: Other Ledgers v1 — Manual Registers** (shipped 2026-08-27 — `docs/plans/OTHER_LEDGERS_PLAN.md` `2c8957c`, future V2 in `OTHER_LEDGERS_FUTURE_V2.md`)
+
+Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `other_ledgers`+`other_ledger_entries` with `linkedTransactionId NULL` (standalone v1, dual-post ready). Routes `/other-ledgers` + `/other-ledgers/:id` live.
+
+| Ticket | Description | Status |
+|--------|-------------|--------|
+| T-113 | Schema + migration: `other_ledgers` / `other_ledger_entries` (linkedTransactionId NULL) | **Complete** (`2c8957c`) |
+| T-114 | Domain + OtherLedgerService + useOtherLedgerStore | **Complete** (`2c8957c`) |
+| T-115 | OtherLedgersIndex `/other-ledgers` — card grid, global + picker, search | **Complete** (`2c8957c`) |
+| T-116 | OtherLedgerDetail `/other-ledgers/:id` — hero + Date|Desc|Debit|Credit|Balance table, per-ledger + | **Complete** (`2c8957c`) |
+| T-117 | CreateLedgerModal + AddEntryModal (edit/delete, validation, tags) | **Complete** (`2c8957c`) |
+| T-118 | Wiring: Sidebar/BottomNav/routeTitles/Recycle Bin/Search/PDF | **Complete** (`2c8957c`) |
+
+All 64+6 tickets complete. Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **moneyflows** (1786 symbols, 3620 relationships, 134 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **moneyflows** (2332 symbols, 5065 relationships, 192 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
 ## Always Do
 
 - **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "main"})`.
+- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "master"})`.
 - **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
 - When exploring unfamiliar code, use `query({search_query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
 - When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.

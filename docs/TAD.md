@@ -1,8 +1,8 @@
 # MoneyFlows — Technical Architecture Document (TAD)
 
 **Target Skill:** `senior-backend`
-**Version:** 3.0 · 2026-08-24
-**Reality check:** reflects the codebase as built (Phases 1–11 complete), not the original plan.
+**Version:** 3.1 · 2026-08-27
+**Reality check:** reflects the codebase as built (Phases 1–12 + Search) + approved Phase 13 Other Ledgers v1 (`docs/plans/OTHER_LEDGERS_PLAN.md`) and future V2 (`OTHER_LEDGERS_FUTURE_V2.md`).
 
 ---
 
@@ -99,6 +99,26 @@ loans(id PK, lender_account_id FK→accounts NOT NULL, borrower_account_id FK→
 ```
 
 Movements are transactions of type `loan_issue`/`loan_repayment` linked via metadata. Legacy `lend`/`repay` rows persist and MUST count as credits/debits in every balance computation.
+
+### 2.4b Other Ledgers v1 (Phase 13 — approved, not yet built)
+
+Separate tables, standalone v1 (no account impact), forward-compat `linkedTransactionId` for V2 dual-post:
+
+```sql
+other_ledgers(id PK, name TEXT CHECK(length 3-50),
+  owner_type CHECK('member','external'), owner_member_id FK→members NULL, owner_name TEXT NULL,
+  starting_date TEXT, opening_balance REAL DEFAULT 0, created_at, updated_at, deleted_at)
+
+other_ledger_entries(id PK, ledger_id FK→other_ledgers ON DELETE CASCADE,
+  date TEXT, description TEXT CHECK(length 1-200),
+  debit REAL DEFAULT 0 CHECK(debit>=0), credit REAL DEFAULT 0 CHECK(credit>=0), balance REAL DEFAULT 0,
+  linkedTransactionId TEXT NULL REFERENCES transactions(id) ON DELETE SET NULL, -- NULL in v1
+  metadata JSON, created_at, updated_at, deleted_at,
+  CHECK(debit=0 OR credit=0), CHECK(debit+credit>0))
+-- indexes: (ledger_id, date), (linkedTransactionId)
+```
+
+V2 will write `linkedTransactionId = <real tx id>` when Wizard toggle `Also post to Other Ledger` is on. See `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`.
 
 ### 2.5 Settings
 
