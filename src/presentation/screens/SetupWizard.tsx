@@ -174,12 +174,16 @@ export function SetupWizard() {
           {step === 3 && (
             <div className={styles.step}>
               <h2 className={styles.h2}>How it works</h2>
+              <p className={styles.sub}>Everything lives in the sidebar — tap to explore after setup.</p>
               <div className={styles.cards}>
-                <div className={styles.card}><span className={styles.cardIcon}>📊</span><span className={styles.cardTitle}>Dashboard</span><span className={styles.cardDesc}>Total Assets + Where Your Money Is</span></div>
+                <div className={styles.card}><span className={styles.cardIcon}>📊</span><span className={styles.cardTitle}>Dashboard</span><span className={styles.cardDesc}>Totals + Where Your Money Is</span></div>
                 <div className={styles.card}><span className={styles.cardIcon}>📒</span><span className={styles.cardTitle}>Ledger</span><span className={styles.cardDesc}>Date | Description | Debit | Credit | Balance</span></div>
-                <div className={styles.card}><span className={styles.cardIcon}>🏦</span><span className={styles.cardTitle}>Other Ledgers / Loans</span><span className={styles.cardDesc}>Grouped by owner, sorted and searchable</span></div>
+                <div className={styles.card}><span className={styles.cardIcon}>🤝</span><span className={styles.cardTitle}>Loans</span><span className={styles.cardDesc}>Who you lent to, how much is left, repayment progress</span></div>
+                <div className={styles.card}><span className={styles.cardIcon}>👥</span><span className={styles.cardTitle}>Groups</span><span className={styles.cardDesc}>Combine accounts of a family to see joint balance + shared ledger</span></div>
+                <div className={styles.card}><span className={styles.cardIcon}>🏦</span><span className={styles.cardTitle}>Other Ledgers</span><span className={styles.cardDesc}>Manual registers like House Rent — grouped by owner</span></div>
+                <div className={styles.card}><span className={styles.cardIcon}>🏷️</span><span className={styles.cardTitle}>Tags</span><span className={styles.cardDesc}>Label any transaction, then find it family-wide on Tags page</span></div>
               </div>
-              <p className={styles.sub}>Tap any ledger row to edit. Swipe to see more.</p>
+              <p className={styles.sub}>Tap any row to edit. Use search and filters on every ledger.</p>
               <div className={styles.actions}>
                 <button className={styles.secondary} onClick={() => setStep(2)}>Back</button>
                 <button className={styles.primary} onClick={() => setStep(4)}>Next</button>
