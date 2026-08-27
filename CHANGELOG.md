@@ -10,6 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Placeholder for upcoming changes.
 
+## [1.5.0] - 2026-08-27
+
+### Added
+- **Setup wizard** — new `/setup` full-page 5-step flow (Welcome → Family → Money → How it works → Try it) with progress dots + teal bar, glass `r20 blur24` panel, `Skip → Dashboard`, and `setupComplete` flag in `AppSettings`. Family step saves `Member`s, Money step saves `Account`s, Try step offers `Start empty` or `Load sample family` (2 members, 2 accounts). Re-playable from `Settings → About → Replay setup wizard`.
+- How it works now covers all 6 areas: `Dashboard`, `Ledger`, `Loans`, `Groups`, `Other Ledgers`, `Tags` — each with icon + one-line description, so new users learn where Loans/Groups/Other Ledgers/Tags live in the sidebar.
+
+### Changed
+- Other Ledgers index owner groups: better spacing (`gap 12` header, `16px` section gap, thin `1px` line bottom) and `28px` avatar — groups now appear as bordered glass containers.
+
+### Fixed
+- Other Ledgers delete now uses the app’s standard `Modal`/`BottomSheet` confirmation (centered, `Cancel` + coral `Delete`, `30-day Recycle Bin` copy) instead of `window.confirm` — for ledgers (index card + detail header + mobile) and entries (edit modal).
+
 ## [1.4.0] - 2026-08-27
 
 ### Added

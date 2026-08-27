@@ -7,6 +7,15 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.5.0',
+    items: [
+      'New setup wizard for first-time users — 5 friendly steps to add your family, your accounts, and see how Dashboard, Ledger, Loans, Groups, Other Ledgers and Tags work.',
+      'You can start empty or load a sample family to explore — and replay the tour anytime from Settings → About.',
+      'Other Ledgers now has proper delete — ledgers and entries use the same confirmation modal as the rest of the app and go to Recycle Bin.',
+      'Ledger groups now look cleaner with better spacing and a thin line separating each owner’s section.',
+    ],
+  },
+  {
     version: '1.4.0',
     items: [
       'New Other Ledgers section — create your own ledgers by name, starting date, and owner (family member or other person).',
