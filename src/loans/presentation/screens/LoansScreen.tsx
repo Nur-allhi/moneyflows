@@ -165,12 +165,12 @@ export function LoansScreen() {
           </button>
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={txStyles.pickerTrigger} style={{ minWidth: 160 }} onClick={() => setShowSortPicker(true)}>
-            <span className={txStyles.pickerValue}>{sortBy === 'alpha' ? 'Alphabetically' : sortBy === 'lastTx' ? 'Last transaction' : 'Last repayment'}</span>
-            <span className={txStyles.pickerArrow}>▾</span>
+          <button type="button" className={txStyles.pickerTrigger} style={{ width: 'auto', minWidth: 0, flexShrink: 0, whiteSpace: 'nowrap', padding: '8px 12px', gap: 8 }} onClick={() => setShowSortPicker(true)}>
+            <span className={txStyles.pickerValue} style={{ whiteSpace: 'nowrap' }}>{sortBy === 'alpha' ? 'Alphabetically' : sortBy === 'lastTx' ? 'Last transaction' : 'Last repayment'}</span>
+            <span className={txStyles.pickerArrow} style={{ flexShrink: 0 }}>▾</span>
           </button>
-          <span className={styles.count}>{filteredStacks.length} Account{filteredStacks.length !== 1 ? 's' : ''}</span>
-          <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'loan' })}>+ New Loan</button>
+          <span className={styles.count} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{filteredStacks.length} Account{filteredStacks.length !== 1 ? 's' : ''}</span>
+          <button className={styles.addBtn} style={{ whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'loan' })}>+ New Loan</button>
         </div>
       </div>
 
