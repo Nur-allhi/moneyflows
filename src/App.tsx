@@ -5,6 +5,7 @@ import { Sidebar, BottomNav, Header, PageTransition, RippleGlow, SearchBar } fro
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
+import { useOtherLedgerStore } from './otherLedgers/presentation/stores/useOtherLedgerStore';
 import { getDatabase } from './infrastructure/database/getDatabase';
 import { ErrorBoundary, logger } from './core/logging';
 import styles from './App.module.css';
@@ -66,6 +67,19 @@ function AppLayout() {
   const fetchMembers = useMemberStore((s) => s.fetchMembers);
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
+  const ledgers = useOtherLedgerStore((s) => s.ledgers);
+  const fetchLedgers = useOtherLedgerStore((s) => s.fetchLedgers);
+  useEffect(() => { fetchLedgers(); }, [fetchLedgers]);
+
+  const [groupNameMap, setGroupNameMap] = useState<Record<string, string>>({});
+  useEffect(() => {
+    getDatabase().getAccountGroupsWithMembers().then((groups) => {
+      const map: Record<string, string> = {};
+      for (const g of groups) map[g.id] = g.name;
+      setGroupNameMap(map);
+    }).catch(() => {});
+  }, [pathname]);
+
   useEffect(() => { logger.info('nav', `navigate ${pathname}`); }, [pathname]);
   useEffect(() => { useModalStore.getState().closeAllImmediate(); }, [pathname]);
 
@@ -94,13 +108,13 @@ function AppLayout() {
   const breadcrumb = basePath === '/member' && segments.length >= 2
     ? [{ label: 'Members', path: '/member' }, { label: members.find((m) => m.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
     : basePath === '/groups' && segments.length >= 2
-      ? [{ label: 'Groups', path: '/groups' }, { label: members.find((m) => m.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
+      ? [{ label: 'Groups', path: '/groups' }, { label: groupNameMap[decodeURIComponent(segments[1] ?? '')] ?? decodeURIComponent(segments[1] ?? '') }]
       : basePath === '/tags' && segments[1]
         ? [{ label: 'Tags', path: '/tags' }, { label: decodeURIComponent(segments[1] ?? '') }]
         : basePath === '/loans' && segments[1]
           ? [{ label: 'Loans', path: '/loans' }, { label: decodeURIComponent(segments[1] ?? '') }]
           : basePath === '/other-ledgers' && segments[1]
-            ? [{ label: 'Other Ledgers', path: '/other-ledgers' }, { label: decodeURIComponent(segments[1] ?? '') }]
+            ? [{ label: 'Other Ledgers', path: '/other-ledgers' }, { label: ledgers.find((l) => l.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
             : undefined;
 
   const isDashboard = pathname === '/';
