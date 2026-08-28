@@ -83,7 +83,8 @@ export function useMemberData() {
     for (const { tx, balance } of withBalance) {
       if (!searchFilteredAll.includes(tx)) continue;
       const mappedType: LedgerRow['type'] = tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : tx.type === 'transfer' ? 'transfer' : 'loan';
-      rows.push({ id: tx.id, date: tx.date, description: tx.description, balance: String(balance), type: mappedType } as unknown as LedgerRow);
+      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
+      rows.push({ id: tx.id, date: tx.date, description: tx.description, balance: String(balance), type: mappedType, credit: isCredit ? String(tx.amount) : '', debit: !isCredit ? String(tx.amount) : '' } as unknown as LedgerRow);
     }
     return rows;
   }, [sortedTxs, memberAccounts, searchFilteredAll]);
