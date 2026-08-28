@@ -1,7 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { LedgerTable, LedgerSearch, MobileLedger, Modal, BottomSheet } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
@@ -101,8 +99,10 @@ export function OtherLedgerDetail() {
     if (row.id) setEditId(row.id);
   }, []);
 
-  const downloadPdf = useCallback(() => {
+  const downloadPdf = useCallback(async () => {
     if (!ledger) return;
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     doc.setFontSize(16);

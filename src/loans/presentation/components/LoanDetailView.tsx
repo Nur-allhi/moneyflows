@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import type { LoanStack } from '../../domain/types';
 import { useLoanStore } from '../stores/useLoanStore';
 import { useAccountStore } from '../../../presentation/stores/useAccountStore';
@@ -185,7 +183,9 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     setShowFilters(false);
   }, []);
 
-  const downloadPdf = useCallback((detailMode: 'all' | 'description' = 'all') => {
+  const downloadPdf = useCallback(async (detailMode: 'all' | 'description' = 'all') => {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     let totalCreditVal = 0;

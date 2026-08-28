@@ -1,8 +1,6 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { Avatar, AccountCard, LedgerTable, SegmentedTabs, GlassPanel, LedgerSearch } from '../components';
 import type { LedgerRow } from '../components';
 import { useAnimatedValue } from '../hooks';
@@ -370,7 +368,9 @@ export function MemberProfile() {
   const selectedAcct = selectedAccountId ? memberAccounts.find((a) => a.id === selectedAccountId) : undefined;
   const txCount = accountTxs.length;
 
-  const downloadPdf = useCallback(() => {
+  const downloadPdf = useCallback(async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const isTxCredit = (tx: Transaction) => {
       const loanLike = ['transfer', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback', 'lend', 'repay'];
       if ((loanLike as readonly string[]).includes(tx.type)) return tx.destAccount === selectedAccountId;
