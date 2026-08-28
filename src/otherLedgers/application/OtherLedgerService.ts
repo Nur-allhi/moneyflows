@@ -24,7 +24,7 @@ export function computeOtherRunningBalances(
   const map = new Map<string, number>();
   let running = openingBalance;
   for (const e of sorted) {
-    running += e.debit - e.credit;
+    running += e.credit - e.debit;
     map.set(e.id, running);
   }
   return map;
@@ -121,7 +121,7 @@ export class OtherLedgerService {
     const sorted = sortOtherEntries(existing);
     const balMap = computeOtherRunningBalances(sorted, ledger.openingBalance);
     const lastBal = sorted.length > 0 ? balMap.get(sorted[sorted.length - 1]!.id) ?? ledger.openingBalance : ledger.openingBalance;
-    const newBal = lastBal + debit - credit;
+    const newBal = lastBal + credit - debit;
     // but chronological position may not be last; we recompute all after insert via caller refresh
     const entry: OtherLedgerEntry = {
       id: uuidv4(),
@@ -167,7 +167,7 @@ export class OtherLedgerService {
     const sorted = sortOtherEntries(entries);
     let running = ledger.openingBalance;
     for (const e of sorted) {
-      running += e.debit - e.credit;
+      running += e.credit - e.debit;
       const updated: OtherLedgerEntry = { ...e, balance: running, updatedAt: nowSql() };
       // bypass validation flush via direct save
       await this.db.saveOtherLedgerEntry(updated);

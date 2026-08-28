@@ -1,44 +1,44 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, BottomSheet } from '../../../presentation/components';
 import { DatePicker } from '../../../components/ui/date-picker';
-import { getDatabase } from '../../../infrastructure/database/getDatabase';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
+import { useMemberStore } from '../../../presentation/stores/useMemberStore';
 import { useAccountStore } from '../../../presentation/stores/useAccountStore';
-import type { Member } from '../../../core/domain/Member';
+import type { OtherLedger } from '../../domain/types';
 import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
 
-export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: boolean; onClose: () => void; onCreated?: () => void }) {
-  const createLedger = useOtherLedgerStore((s) => s.createLedger);
-  const allLedgers = useOtherLedgerStore((s) => s.ledgers);
+export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean; ledger: OtherLedger; onClose: () => void }) {
+  const updateLedger = useOtherLedgerStore((s) => s.updateLedger);
+  const members = useMemberStore((s) => s.members);
   const accounts = useAccountStore((s) => s.accounts);
-  const [name, setName] = useState('');
-  const [startingDate, setStartingDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [ownerType, setOwnerType] = useState<'member' | 'external'>('member');
-  const [ownerMemberId, setOwnerMemberId] = useState('');
-  const [ownerName, setOwnerName] = useState('');
-  const [openingBalance, setOpeningBalance] = useState('0');
-  const [members, setMembers] = useState<Member[]>([]);
+  const allLedgers = useOtherLedgerStore((s) => s.ledgers);
+  const [name, setName] = useState(ledger.name);
+  const [startingDate, setStartingDate] = useState(ledger.startingDate);
+  const [ownerType, setOwnerType] = useState<'member' | 'external'>(ledger.ownerType);
+  const [ownerMemberId, setOwnerMemberId] = useState(ledger.ownerMemberId ?? '');
+  const [ownerName, setOwnerName] = useState(ledger.ownerName ?? '');
+  const [openingBalance, setOpeningBalance] = useState(String(ledger.openingBalance));
   const [showOwnerPicker, setShowOwnerPicker] = useState(false);
   const [newOwnerName, setNewOwnerName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
 
   useEffect(() => {
+    if (isOpen) {
+      setName(ledger.name);
+      setStartingDate(ledger.startingDate);
+      setOwnerType(ledger.ownerType);
+      setOwnerMemberId(ledger.ownerMemberId ?? '');
+      setOwnerName(ledger.ownerName ?? '');
+      setOpeningBalance(String(ledger.openingBalance));
+    }
+  }, [isOpen, ledger]);
+
+  useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
-  useEffect(() => {
-    if (!isOpen) return;
-    getDatabase().getMembers().then(setMembers).catch(() => {});
-  }, [isOpen]);
-  useEffect(() => {
-    if (members.length > 0 && !ownerMemberId) setOwnerMemberId(members[0]!.id);
-  }, [members, ownerMemberId]);
-
-  const counterpartyNames = useMemo(() => Array.from(new Set(accounts.filter((a) => a.type === 'counterparty').map((a) => a.name).filter(Boolean))), [accounts]);
-  const existingExternalNames = useMemo(() => Array.from(new Set(allLedgers.filter((l) => l.ownerType === 'external' && l.ownerName).map((l) => l.ownerName as string))), [allLedgers]);
-  const allExternalNames = useMemo(() => Array.from(new Set([...counterpartyNames, ...existingExternalNames])).sort(), [counterpartyNames, existingExternalNames]);
 
   const handleSave = async () => {
     setError(null);
@@ -48,7 +48,7 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
       return;
     }
     try {
-      await createLedger({
+      await updateLedger(ledger.id, {
         name: trimmed,
         startingDate,
         ownerType,
@@ -56,15 +56,15 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
         ownerName: ownerType === 'external' ? ownerName : undefined,
         openingBalance: Number(openingBalance) || 0,
       });
-      setName('');
-      setOwnerName('');
-      setOpeningBalance('0');
-      onCreated?.();
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
+
+  const counterpartyNames = Array.from(new Set(accounts.filter((a) => a.type === 'counterparty').map((a) => a.name).filter(Boolean)));
+  const existingExternalNames = Array.from(new Set(allLedgers.filter((l) => l.ownerType === 'external' && l.id !== ledger.id).map((l) => l.ownerName).filter((n): n is string => Boolean(n))));
+  const allExternalNames = Array.from(new Set([...counterpartyNames, ...existingExternalNames])).sort();
 
   const form = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -136,6 +136,6 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
     </div>
   );
 
-  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="New Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}>Cancel</button><button onClick={handleSave} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'white', border: 'none' }}>Create</button></div></BottomSheet>;
-  return <Modal isOpen={isOpen} onClose={onClose} title="New Ledger" onSave={handleSave} saveLabel="Create">{form}</Modal>;
+  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="Rename Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}>Cancel</button><button onClick={handleSave} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'white', border: 'none' }}>Save</button></div></BottomSheet>;
+  return <Modal isOpen={isOpen} onClose={onClose} title="Rename Ledger" onSave={handleSave} saveLabel="Save">{form}</Modal>;
 }
