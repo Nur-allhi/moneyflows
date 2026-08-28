@@ -185,6 +185,9 @@ export function OtherLedgerDetail() {
       ) : (
         <>
           <div className={styles.header}>
+            <button className={styles.renameBtn} onClick={() => setShowRename(true)} aria-label="Rename ledger" title="Rename ledger" tabIndex={0}>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
+            </button>
             <div>
               <h1 className={styles.title}>{ledger.name}</h1>
               <span className={styles.subtitle}>{owner} · Starting {shortDate(ledger.startingDate, locale)} · {entries.length} entries · {formatAmount(currentBalance, locale, currency)}</span>
@@ -202,14 +205,6 @@ export function OtherLedgerDetail() {
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="14" height="14"><path d="M8 3v10M3 8h10" /></svg>
                 </span>
                 <span className={styles.addBtnLabel}>New Entry</span>
-              </button>
-              <button
-                className={styles.deleteBtn}
-                aria-label="Rename ledger"
-                onClick={() => setShowRename(true)}
-                title="Rename ledger"
-              >
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
               </button>
               <button
                 className={styles.deleteBtn}
@@ -266,13 +261,7 @@ export function OtherLedgerDetail() {
             </span>
             <span className={styles.addBtnLabel}>New Entry</span>
           </button>
-          <button
-            className={styles.deleteBtn}
-            aria-label="Rename ledger"
-            onClick={() => setShowRename(true)}
-            style={{ width: 36, height: 36 }}
-            title="Rename ledger"
-          >
+          <button className={styles.renameBtn} onClick={() => setShowRename(true)} aria-label="Rename ledger" title="Rename ledger" style={{ width: 36, height: 36 }}>
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
           </button>
           <button
