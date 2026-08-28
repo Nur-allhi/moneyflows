@@ -228,33 +228,27 @@
   font-variant-numeric: tabular-nums;
 }
 .statValueWrap {
-  position: relative;
-  display: inline-block;
+  display: grid;
   line-height: 1.1;
+}
+.statValueWrap > .statValueFinal,
+.statValueWrap > .statValue {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  text-align: right;
 }
 .statValueFinal {
   visibility: hidden;
 }
-.statValueWrap > .statValue {
-  position: absolute;
-  inset: 0;
-  text-align: right;
-  white-space: nowrap;
-}
 .balanceAmountWrap {
-  position: relative;
-  display: inline-block;
+  display: grid;
   line-height: 1.1;
 }
+.balanceAmountWrap > .statValueFinal,
 .balanceAmountWrap > .balanceAmount {
-  position: absolute;
-  inset: 0;
-  text-align: center;
+  grid-area: 1 / 1;
   white-space: nowrap;
-}
-.balanceAmountWrap > .statValueFinal {
-  position: relative;
-  visibility: hidden;
+  text-align: center;
 }
 .statCurrency {
   font-size: 0.5em;

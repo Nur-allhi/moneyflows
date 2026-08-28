@@ -40,8 +40,7 @@
   letter-spacing: -0.02em;
 }
 .metricValueWrap {
-  position: relative;
-  display: inline-block;
+  display: grid;
   font-family: var(--font-mono);
   font-size: 22px;
   font-weight: 700;
@@ -52,9 +51,10 @@
 .metricValueFinal {
   visibility: hidden;
 }
+.metricValueWrap > .metricValueFinal,
 .metricValueWrap > .metricValue {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
+  white-space: nowrap;
   text-align: right;
 }
 
