@@ -75,8 +75,13 @@ export function useMemberData() {
   const ledgerRows: LedgerRow[] = useMemo(() => {
     let bal = 0; const rows: LedgerRow[] = [];
     const acctIds = new Set(memberAccounts.map((a) => a.id));
+    const loanLike = new Set(['transfer', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback', 'lend', 'repay']);
+    const isTxCredit = (tx: { type: string; sourceAccount?: string; destAccount?: string }) => {
+      if (loanLike.has(tx.type)) return tx.destAccount === selectedAccountId;
+      return tx.type === 'income';
+    };
     const withBalance = sortedTxs.map((tx) => {
-      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
+      const isCredit = isTxCredit(tx);
       const isRelevant = acctIds.has(tx.sourceAccount ?? '') || acctIds.has(tx.destAccount ?? '');
       if (isRelevant) bal += isCredit ? tx.amount : -tx.amount;
       return { tx, balance: bal };
@@ -84,12 +89,12 @@ export function useMemberData() {
     for (const { tx, balance } of withBalance) {
       if (!searchFilteredAll.includes(tx)) continue;
       const mappedType: LedgerRow['type'] = tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : tx.type === 'transfer' ? 'transfer' : 'loan';
-      const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
+      const isCredit = isTxCredit(tx);
       const fmt = formatAmountParts(tx.amount, locale, currency);
       rows.push({ id: tx.id, date: tx.date, description: tx.description, balance: String(balance), currencyLabel: currency, type: mappedType, credit: isCredit ? fmt.amount : '', debit: !isCredit ? fmt.amount : '' } as unknown as LedgerRow);
     }
     return rows;
-  }, [sortedTxs, memberAccounts, searchFilteredAll, locale, currency]);
+  }, [sortedTxs, memberAccounts, searchFilteredAll, selectedAccountId, locale, currency]);
 
   const filteredLedger = useMemo(() => {
     let r = ledgerRows;

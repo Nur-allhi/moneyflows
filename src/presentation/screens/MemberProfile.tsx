@@ -35,9 +35,10 @@ export function MemberProfile() {
     void downloadMemberPdf({ member, selectedAcct, selectedAccountId, memberAccounts, sortedTxs, ledgerFilter, ledgerQuery, locale, currency, showBalance });
   }, [member, selectedAcct, selectedAccountId, memberAccounts, sortedTxs, ledgerFilter, ledgerQuery, locale, currency, showBalance]);
 
-  const onRowClick = useCallback((row: { transaction: typeof transactions[0] }) => {
-    useModalStore.getState().open('transaction-detail', { transaction: row.transaction });
-  }, []);
+  const onRowClick = useCallback((row: { id?: string }) => {
+    const tx = transactions.find((t) => t.id === row.id);
+    if (tx) useModalStore.getState().open('transaction-detail', { transaction: tx });
+  }, [transactions]);
 
   const onOpeningBalance = useCallback(() => {
     if (!selectedAccountId) return;
