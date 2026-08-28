@@ -116,6 +116,11 @@ export function Header({
 
       <div className={styles.right}>
         {showDate && <span className={styles.date}>{formatDate()}</span>}
+        <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form')} aria-label="New transaction">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </button>
         <div className={styles.settingsWrap}>
           {isDashboard && (
             <button className={`${styles.mobileSearchBtn} ${searchActive ? styles.searchActiveBtn : ''}`} onClick={onSearchToggle} aria-label="Search">
@@ -132,11 +137,6 @@ export function Header({
             </svg>
           </button>
         </div>
-        <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form')} aria-label="New transaction">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
         <button className={styles.notifBtn} aria-label="Notifications">
           {'\uD83D\uDD14'}
         </button>
