@@ -8,7 +8,7 @@
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 }
 
@@ -556,28 +556,29 @@
     gap: 12px;
   }
 
-  .metrics > .metricCard:first-child {
+  .metrics > .metricCard:last-child {
     grid-column: 1 / -1;
     text-align: center;
     padding: 20px;
     border-radius: 16px;
   }
 
-  .metrics > .metricCard:first-child .metricChange {
+  .metrics > .metricCard:last-child .metricChange {
     display: none;
   }
 
-  .metrics > .metricCard:first-child .metricLabel {
+  .metrics > .metricCard:last-child .metricLabel {
     font-size: var(--text-sm);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-text-secondary);
   }
 
-  .metrics > .metricCard:first-child .metricValue {
+  .metrics > .metricCard:last-child .metricValue {
     font-size: var(--text-6xl);
   }
 
+  .metrics > .metricCard:nth-child(1),
   .metrics > .metricCard:nth-child(2),
   .metrics > .metricCard:nth-child(3) {
     padding: 16px;
@@ -585,16 +586,19 @@
     border-radius: 16px;
   }
 
+  .metrics > .metricCard:nth-child(1) .metricValue,
   .metrics > .metricCard:nth-child(2) .metricValue,
   .metrics > .metricCard:nth-child(3) .metricValue {
     font-size: var(--text-4xl);
   }
 
+  .metrics > .metricCard:nth-child(1) .metricChange,
   .metrics > .metricCard:nth-child(2) .metricChange,
   .metrics > .metricCard:nth-child(3) .metricChange {
     display: none;
   }
 
+  .metrics > .metricCard:nth-child(1) .metricLabel,
   .metrics > .metricCard:nth-child(2) .metricLabel,
   .metrics > .metricCard:nth-child(3) .metricLabel {
     font-size: var(--text-sm);

@@ -12,16 +12,11 @@ function MetricValue({ value, color, locale, currency }: { value: number; color:
   );
 }
 
-export function MetricCards({ assetsChange, cashChange, banksChange, locale, currency, animTotalAssets, animCashInHand, animTotalInBanks }: {
-  assetsChange: number; cashChange: number; banksChange: number; locale: string; currency: string; animTotalAssets: number; animCashInHand: number; animTotalInBanks: number;
+export function MetricCards({ assetsChange, cashChange, banksChange, loansChange, locale, currency, animTotalAssets, animCashInHand, animTotalInBanks, animActiveLoans }: {
+  assetsChange: number; cashChange: number; banksChange: number; loansChange: number; locale: string; currency: string; animTotalAssets: number; animCashInHand: number; animTotalInBanks: number; animActiveLoans: number;
 }) {
   return (
     <div className={styles.metrics}>
-      <div className={`${styles.metricCard} ${styles.glowViolet}`}>
-        <span className={styles.metricLabel}>Total Assets</span>
-        <MetricValue value={animTotalAssets} color="var(--color-primary)" locale={locale} currency={currency} />
-        <span className={`${styles.metricChange} ${assetsChange >= 0 ? styles.up : styles.down}`}>{assetsChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(assetsChange).toFixed(1)}% vs last month</span>
-      </div>
       <div className={`${styles.metricCard} ${styles.glowGold}`}>
         <span className={styles.metricLabel}>Cash in Hand</span>
         <MetricValue value={animCashInHand} color="var(--color-cash)" locale={locale} currency={currency} />
@@ -31,6 +26,16 @@ export function MetricCards({ assetsChange, cashChange, banksChange, locale, cur
         <span className={styles.metricLabel}>Total in Banks</span>
         <MetricValue value={animTotalInBanks} color="var(--color-coral)" locale={locale} currency={currency} />
         <span className={`${styles.metricChange} ${banksChange >= 0 ? styles.up : styles.down}`}>{banksChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(banksChange).toFixed(1)}% vs last month</span>
+      </div>
+      <div className={`${styles.metricCard} ${styles.glowCoral}`}>
+        <span className={styles.metricLabel}>Active Loans</span>
+        <MetricValue value={animActiveLoans} color="var(--color-coral)" locale={locale} currency={currency} />
+        <span className={`${styles.metricChange} ${loansChange >= 0 ? styles.up : styles.down}`}>{loansChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(loansChange).toFixed(1)}% vs last month</span>
+      </div>
+      <div className={`${styles.metricCard} ${styles.glowViolet}`}>
+        <span className={styles.metricLabel}>Total Assets</span>
+        <MetricValue value={animTotalAssets} color="var(--color-primary)" locale={locale} currency={currency} />
+        <span className={`${styles.metricChange} ${assetsChange >= 0 ? styles.up : styles.down}`}>{assetsChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(assetsChange).toFixed(1)}% vs last month</span>
       </div>
     </div>
   );

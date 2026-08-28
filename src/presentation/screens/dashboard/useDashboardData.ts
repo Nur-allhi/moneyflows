@@ -43,10 +43,11 @@ export function useDashboardData() {
     const exp = lastMonthTxs.filter((tx) => EXPENSE_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
     return inc - exp;
   }, [lastMonthTxs]);
-  const prevAssets = totalAssets - thisMonthNet; const prevCash = cashInHand - thisMonthNet; const prevBanks = totalInBanks - lastMonthNet;
+  const prevAssets = totalAssets - thisMonthNet; const prevCash = cashInHand - thisMonthNet; const prevBanks = totalInBanks - lastMonthNet; const prevLoans = activeLoansOutstanding - lastMonthNet;
   const assetsChange = prevAssets > 0 ? ((totalAssets - prevAssets) / prevAssets) * 100 : 0;
   const cashChange = prevCash > 0 ? ((cashInHand - prevCash) / prevCash) * 100 : 0;
   const banksChange = prevBanks > 0 ? ((totalInBanks - prevBanks) / prevBanks) * 100 : 0;
+  const loansChange = prevLoans > 0 ? ((activeLoansOutstanding - prevLoans) / prevLoans) * 100 : 0;
   const accountsByMember = useMemo(() => {
     const map = new Map<string, typeof accounts>();
     for (const acct of accounts) { if (acct.type === 'counterparty') continue; const mid = acct.memberId ?? '__unassigned__'; if (!map.has(mid)) map.set(mid, []); map.get(mid)!.push(acct); }
@@ -73,6 +74,6 @@ export function useDashboardData() {
   }, [recentTxs, transactions, debouncedQuery, accountMapForSearch, memberMapForSearch]);
 
   return {
-    accounts, members, transactions, loanStacks, locale, currency, loading, error, internalMembers, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, activeLoanStacks, recentTxs, thisMonth, lastMonth, thisMonthTxs, lastMonthTxs, thisMonthIncome, thisMonthExpenses, thisMonthNet, lastMonthNet, prevAssets, prevCash, prevBanks, assetsChange, cashChange, banksChange, accountsByMember, filteredAccountsByMember, filteredRecentTxs, rawQuery, debouncedQuery, memberById,
+    accounts, members, transactions, loanStacks, locale, currency, loading, error, internalMembers, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, activeLoanStacks, recentTxs, thisMonth, lastMonth, thisMonthTxs, lastMonthTxs, thisMonthIncome, thisMonthExpenses, thisMonthNet, lastMonthNet, prevAssets, prevCash, prevBanks, prevLoans, assetsChange, cashChange, banksChange, loansChange, accountsByMember, filteredAccountsByMember, filteredRecentTxs, rawQuery, debouncedQuery, memberById,
   };
 }
