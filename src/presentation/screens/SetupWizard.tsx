@@ -9,17 +9,10 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { ACCOUNT_TYPE_LABEL, ACCOUNT_TYPE_OPTIONS } from '../constants/labels';
+import { ledgerGradient } from '../constants/gradients';
 import styles from './SetupWizard.module.css';
 
 const ACCOUNT_TYPES: AccountType[] = ['bank', 'mobile_wallet', 'cash', 'savings', 'business'];
-
-function seedGradient(name: string): string {
-  const hues = [290, 170, 30, 85, 220, 330, 50, 190];
-  let idx = 0;
-  for (let i = 0; i < name.length; i++) idx = (idx * 31 + name.charCodeAt(i)) % hues.length;
-  const h = hues[idx]!;
-  return `linear-gradient(135deg, oklch(62% 0.22 ${h}), oklch(50% 0.2 ${h}))`;
-}
 
 export function SetupWizard() {
   const navigate = useNavigate();
@@ -126,7 +119,7 @@ export function SetupWizard() {
               <div className={styles.list}>
                 {memberNames.map((n, i) => (
                   <div key={i} className={styles.row}>
-                    <span className={styles.avatar} style={{ background: seedGradient(n || 'You') }}>{(n[0] ?? 'Y').toUpperCase()}</span>
+                    <span className={styles.avatar} style={{ background: ledgerGradient(n || 'You') }}>{(n[0] ?? 'Y').toUpperCase()}</span>
                     <input className={styles.input} placeholder={i === 0 ? 'You (Admin)' : 'Member name'} value={n} onChange={(e) => handleMemberChange(i, e.target.value)} />
                   </div>
                 ))}
