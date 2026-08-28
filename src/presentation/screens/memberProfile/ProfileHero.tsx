@@ -19,12 +19,14 @@ function Stat({ label, value, kind }: { label: string; value: number; kind: 'tea
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const anim = useAnimatedValue(value);
   const fmt = formatAmountParts(anim, locale, currency);
+  const finalFmt = formatAmountParts(value, locale, currency);
   const cls = kind === 'teal' ? styles.statTeal : styles.statCoral;
   return (
     <div className={styles.statItem}>
       <div className={styles.statLabel}>{label}</div>
-      <div className={`${styles.statValue} ${cls}`}>
-        {fmt.amount}<small className={styles.statCurrency}>{fmt.currency}</small>
+      <div className={`${styles.statValueWrap} ${cls}`}>
+        <span className={styles.statValueFinal} aria-hidden="true">{finalFmt.amount}<small className={styles.statCurrency}>{finalFmt.currency}</small></span>
+        <span className={`${styles.statValue} ${cls}`}>{fmt.amount}<small className={styles.statCurrency}>{fmt.currency}</small></span>
       </div>
     </div>
   );
@@ -78,5 +80,11 @@ function BalanceAmount({ value }: { value: number }) {
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const anim = useAnimatedValue(value);
   const fmt = formatAmountParts(anim, locale, currency);
-  return <div className={styles.balanceAmount}>{fmt.amount}<small className={styles.statCurrency}>{fmt.currency}</small></div>;
+  const finalFmt = formatAmountParts(value, locale, currency);
+  return (
+    <div className={styles.balanceAmountWrap}>
+      <span className={styles.statValueFinal} aria-hidden="true">{finalFmt.amount}<small className={styles.statCurrency}>{finalFmt.currency}</small></span>
+      <span className={styles.balanceAmount}>{fmt.amount}<small className={styles.statCurrency}>{fmt.currency}</small></span>
+    </div>
+  );
 }

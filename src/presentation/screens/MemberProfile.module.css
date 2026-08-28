@@ -227,6 +227,35 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+.statValueWrap {
+  position: relative;
+  display: inline-block;
+  line-height: 1.1;
+}
+.statValueFinal {
+  visibility: hidden;
+}
+.statValueWrap > .statValue {
+  position: absolute;
+  inset: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+.balanceAmountWrap {
+  position: relative;
+  display: inline-block;
+  line-height: 1.1;
+}
+.balanceAmountWrap > .balanceAmount {
+  position: absolute;
+  inset: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+.balanceAmountWrap > .statValueFinal {
+  position: relative;
+  visibility: hidden;
+}
 .statCurrency {
   font-size: 0.5em;
   opacity: 0.55;

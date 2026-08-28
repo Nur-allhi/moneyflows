@@ -34,11 +34,28 @@
 
 .metricValue {
   font-family: var(--font-mono);
-  font-size: var(--text-7xl);
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.metricValueWrap {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.metricValueFinal {
+  visibility: hidden;
+}
+.metricValueWrap > .metricValue {
+  position: absolute;
+  inset: 0;
+  text-align: right;
 }
 
 .metricChange {
