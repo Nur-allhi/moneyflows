@@ -19,7 +19,6 @@ export class OpfsAdapter implements IPersistenceAdapter {
   readonly backend: StorageBackend = 'opfs';
   private root: FileSystemDirectoryHandle | null = null;
   private snapshotsDir: FileSystemDirectoryHandle | null = null;
-  private mirrorAdapter: IPersistenceAdapter | null = null;
 
   constructor(private readonly options: OpfsAdapterOptions) {}
 
@@ -56,16 +55,6 @@ export class OpfsAdapter implements IPersistenceAdapter {
     }
   }
 
-  /** Activate the localStorage transition mirror (after verified legacy import/load). */
-  enableMirror(adapter: IPersistenceAdapter): void {
-    this.mirrorAdapter = adapter;
-  }
-
-  private async mirrorWrite(data: Uint8Array): Promise<void> {
-    if (!this.mirrorAdapter) return;
-    try { await this.mirrorAdapter.writeMain(data); } catch { /* best-effort */ }
-  }
-
   async writeMain(data: Uint8Array): Promise<void> {
     const handle = await this.mainFile();
     const writable = await handle.createWritable({ keepExistingData: false });
@@ -76,7 +65,6 @@ export class OpfsAdapter implements IPersistenceAdapter {
       try { await writable.abort(); } catch { /* already closed */ }
       throw e;
     }
-    await this.mirrorWrite(data);
   }
 
   async clearAll(): Promise<void> {
