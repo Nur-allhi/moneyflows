@@ -24,7 +24,7 @@ export function AccountsSection({ memberAccounts, selectedAccountId, accountsOpe
       <div className={styles.accountsDropdown}>
         <div className={styles.accountsDropdownHeader} onClick={() => setAccountsOpen(!accountsOpen)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setAccountsOpen(!accountsOpen)}>
           <h2>Linked Accounts <span className={styles.acctCount}>{memberAccounts.length}</span></h2>
-          <span className={`${styles.accountsChevron} ${accountsOpen ? styles.chevronOpen : ''}`}>{'\u25BC'}</span>
+          <svg className={`${styles.accountsChevron} ${accountsOpen ? styles.chevronOpen : ''}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
         </div>
         <div className={`${styles.accountsSlide} ${accountsOpen ? styles.accountsOpen : ''}`}>
           <div className={styles.accountsSlideInner}>

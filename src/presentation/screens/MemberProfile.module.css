@@ -337,10 +337,9 @@
 }
 
 .accountsChevron {
-  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   transition: transform var(--transition-normal);
-  line-height: 1;
+  flex-shrink: 0;
 }
 
 .chevronOpen {
