@@ -99,9 +99,28 @@ Dependencies: `T-113 → T-114 → (T-115 ∥ T-117) → T-116 → T-118`. Each 
 
 Future V2 (not ticketed here): dual-post linking — `Transaction Wizard → Also post to Other Ledger [dropdown]` creating `linkedTransactionId` link (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123). Build only when user says "next update / V2".
 
+## Phase 15 — Cleanup & Optimization (Lean Combo 1A+2A+3A) — In Progress
+
+Plan: `docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` (branch `feature/cleanup-optimization` off `v1.5.0`). Tickets `T-124..T-131` atomic, gates `typecheck/lint/build/vitest` green per REPO_RULES §9.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-124 | Hygiene: verify `.gitignore` + remove tracked `dist`/`*.bundle` + `depcheck`/`prune` | `code-reviewer`, `senior-backend` | S | Todo — next |
+| T-125 | Optimization: lazy-load `jspdf`/`autotable`/`html2canvas`/`Calendar` | `senior-frontend` | S | Todo |
+| T-126 | Remove OPFS `localStorage` transition mirror (`OPEN-A`) | `senior-backend` | M | Todo |
+| T-127 | Split `MemberProfile.tsx` 887 → 4 files | `senior-frontend`, `ui-ux-pro-max` | L | Todo |
+| T-128 | Split `TransactionFormModal.tsx` 898 → 4 files | `senior-frontend` | L | Todo |
+| T-129 | Split `SQLiteDatabaseService.ts` 739 → repos | `senior-backend` | L | Todo |
+| T-130 | Split `Dashboard.tsx` + `GroupLedgerScreen.tsx` + de-dupe `ledgerGradient` | `senior-frontend`, `frontend-design` | M | Todo |
+| T-131 | Docs: archive `session_log.md` tail + de-dupe `TICKETS.md` `T-107` | `skill-creator` | S | Todo |
+
+Dependencies: `T-124 → (T-125 ∥ T-126) → (T-127 ∥ T-128 ∥ T-129 ∥ T-130) → T-131`. Only `T-124` blocks the rest.
+
+Future V2 still `T-119..T-123` in `OTHER_LEDGERS_FUTURE_V2.md` (build on “next update”).
+
 ## Following Phase
 
-Candidates after Other Ledgers v1: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
+Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 
 ## Ticket Template (use for all new work)
 
