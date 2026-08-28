@@ -183,6 +183,7 @@
 
 /* ---- Profile hero (desktop) ---- */
 .profileHero {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -712,21 +713,40 @@
 }
 
 .heroEditBtn {
-  background: none;
-  border: none;
-  font-size: var(--text-2xl);
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
   cursor: pointer;
   color: var(--color-text-secondary);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-  vertical-align: middle;
-  line-height: 1;
+  padding: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+  opacity: 0;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.heroLeft:hover ~ .heroEditBtn,
+.heroName:hover ~ .heroEditBtn,
+.profileHero:hover .heroEditBtn,
+.heroEditBtn:hover,
+.heroEditBtn:focus-visible {
+  opacity: 1;
 }
 
 .heroEditBtn:hover {
   color: var(--color-primary);
-  background: rgba(255,255,255,0.08);
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  transform: scale(1.08);
 }
 
 /* ---- Mobile action pills ---- */

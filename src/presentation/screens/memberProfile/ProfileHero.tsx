@@ -35,9 +35,10 @@ export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, 
   if (isDesktop) {
     return (
       <div className={styles.profileHero}>
+        <button className={styles.heroEditBtn} onClick={() => useModalStore.getState().open('edit-member', { memberId: member.id })} aria-label="Edit member name" tabIndex={0}>{'\u270E'}</button>
         <div className={styles.heroLeft}>
           <Avatar initial={initial} seed={member.name} name={member.name} size={72} />
-          <div className={styles.heroName}>{member.name} <button className={styles.heroEditBtn} onClick={() => useModalStore.getState().open('edit-member', { memberId: member.id })} aria-label="Edit member name">{'\u270E'}</button></div>
+          <div className={styles.heroName}>{member.name}</div>
         </div>
         <div className={styles.heroActions}>
           <button className={styles.heroActionBtn} onClick={() => useModalStore.getState().open('transaction-form', { initialSource: selectedAccountId || undefined })}>
