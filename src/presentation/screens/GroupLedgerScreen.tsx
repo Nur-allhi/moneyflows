@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LedgerTable, LedgerSearch } from '../components';

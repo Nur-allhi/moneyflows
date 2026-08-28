@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getDatabase } from '../../../infrastructure/database/getDatabase';
 import type { Transaction } from '../../../core/domain/Transaction';
 import type { Account } from '../../../core/domain/Account';
+import type { TransactionFilter } from '../../../core/ports/IDatabaseService';
 import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import { matchesTx } from '../../utils/search';
 
@@ -41,7 +42,7 @@ export function useGroupData() {
         const allAccts = await db.getAccounts?.() ?? [];
         const filtered = (allAccts as Account[]).filter((a) => ids.includes(a.id));
         setAccounts(filtered);
-        const allTxs = await db.getTransactions?.({} as any) ?? [];
+        const allTxs = (await db.getTransactions?.({} as TransactionFilter)) ?? [] as Transaction[];
         setTxs((allTxs as Transaction[]).filter((t) => ids.includes(t.sourceAccount ?? '') || ids.includes(t.destAccount ?? '')));
       } else { setAccounts([]); setTxs([]); }
       setLoading(false);
