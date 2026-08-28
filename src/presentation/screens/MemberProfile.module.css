@@ -226,6 +226,13 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+.statCurrency {
+  font-size: 0.5em;
+  opacity: 0.55;
+  margin-left: 4px;
+  font-weight: 500;
+  vertical-align: 0.3em;
+}
 
 .statTeal { color: var(--color-income); }
 .statCoral { color: var(--color-expense); }

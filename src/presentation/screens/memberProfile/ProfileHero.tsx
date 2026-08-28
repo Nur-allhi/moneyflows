@@ -2,7 +2,7 @@ import { Avatar } from '../../components';
 import { useAnimatedValue } from '../../hooks';
 import { useModalStore } from '../../stores/useModalStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
-import { formatAmount } from '../../utils/format';
+import { formatAmountParts } from '../../utils/format';
 import styles from '../MemberProfile.module.css';
 import type { Member } from '../../../core/domain/Member';
 
@@ -15,11 +15,22 @@ interface Props {
   isDesktop: boolean;
 }
 
-export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, selectedAccountId, isDesktop }: Props) {
+function Stat({ label, value, kind }: { label: string; value: number; kind: 'teal' | 'coral' }) {
   const { locale, currency } = useSettingsStore((s) => s.settings);
-  const animBal = useAnimatedValue(totalBalance);
-  const animInc = useAnimatedValue(totalIncome);
-  const animExp = useAnimatedValue(totalExpenses);
+  const anim = useAnimatedValue(value);
+  const fmt = formatAmountParts(anim, locale, currency);
+  const cls = kind === 'teal' ? styles.statTeal : styles.statCoral;
+  return (
+    <div className={styles.statItem}>
+      <div className={styles.statLabel}>{label}</div>
+      <div className={`${styles.statValue} ${cls}`}>
+        {fmt.amount}<small className={styles.statCurrency}>{fmt.currency}</small>
+      </div>
+    </div>
+  );
+}
+
+export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, selectedAccountId, isDesktop }: Props) {
   const initial = member.shortName?.[0] ?? member.name[0] ?? '?';
   if (isDesktop) {
     return (
@@ -37,9 +48,9 @@ export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, 
           </button>
         </div>
         <div className={styles.heroStats}>
-          <div className={styles.statItem}><div className={styles.statLabel}>Net Balance</div><div className={`${styles.statValue} ${styles.statTeal}`}>{formatAmount(animBal, locale, currency)}</div></div>
-          <div className={styles.statItem}><div className={styles.statLabel}>Total Income</div><div className={`${styles.statValue} ${styles.statTeal}`}>{formatAmount(animInc, locale, currency)}</div></div>
-          <div className={styles.statItem}><div className={styles.statLabel}>Total Expenses</div><div className={`${styles.statValue} ${styles.statCoral}`}>{formatAmount(animExp, locale, currency)}</div></div>
+          <Stat label="Net Balance" value={totalBalance} kind="teal" />
+          <Stat label="Total Income" value={totalIncome} kind="teal" />
+          <Stat label="Total Expenses" value={totalExpenses} kind="coral" />
         </div>
       </div>
     );
@@ -51,7 +62,7 @@ export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, 
         <div className={styles.profileName}>{member.name}</div>
         <div className={styles.profileTag}>{member.isExternal ? 'External' : 'Family'}</div>
         <div className={styles.balanceLabel}>Net Balance</div>
-        <div className={styles.balanceAmount}>{formatAmount(animBal, locale, currency)}</div>
+        <BalanceAmount value={totalBalance} />
       </div>
       <div className={styles.actionPills}>
         <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'income', initialSource: selectedAccountId || undefined })}><span className={`${styles.pillIcon} ${styles.pillIncome}`}>{'+$'}</span><span className={styles.pillLabel}>Income</span></button>
@@ -60,4 +71,11 @@ export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, 
       </div>
     </>
   );
+}
+
+function BalanceAmount({ value }: { value: number }) {
+  const { locale, currency } = useSettingsStore((s) => s.settings);
+  const anim = useAnimatedValue(value);
+  const fmt = formatAmountParts(anim, locale, currency);
+  return <div className={styles.balanceAmount}>{fmt.amount}<small className={styles.statCurrency}>{fmt.currency}</small></div>;
 }
