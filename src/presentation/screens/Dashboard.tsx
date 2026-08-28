@@ -17,10 +17,10 @@ export function Dashboard() {
   const { fetchAccounts } = useAccountStore();
   const settings = useSettingsStore((s) => s.settings);
   const d = useDashboardData();
-  const { locale, currency, loading, error, totalAssets, cashInHand, activeLoansOutstanding, assetsChange, cashChange, loanChange, thisMonthIncome, thisMonthExpenses, thisMonthNet, filteredAccountsByMember, memberById, internalMembers, filteredRecentTxs, activeLoanStacks } = d as any;
+  const { locale, currency, loading, error, totalAssets, cashInHand, totalInBanks, assetsChange, cashChange, banksChange, thisMonthIncome, thisMonthExpenses, thisMonthNet, filteredAccountsByMember, memberById, internalMembers, filteredRecentTxs, activeLoanStacks } = d as any;
   const animTotalAssets = useAnimatedValue(totalAssets);
   const animCashInHand = useAnimatedValue(cashInHand);
-  const animActiveLoans = useAnimatedValue(activeLoansOutstanding);
+  const animTotalInBanks = useAnimatedValue(totalInBanks);
   const showWhere = settings.showWhereMoneyIs ?? true;
   const showRecent = settings.showRecentTransactions ?? true;
   const showLoans = settings.showActiveLoans ?? true;
@@ -42,7 +42,7 @@ export function Dashboard() {
   if (error) return <div className={styles.dashboard}><div className={`${styles.panel} ${styles.monthSummary}`}><div className="error-state"><div className="error-state-icon">{'\u26A0\uFE0F'}</div><p className="error-state-text">Could not load dashboard data</p><button className="retry-btn" onClick={() => fetchAccounts()}>Retry</button></div></div></div>;
   return (
     <div className={styles.dashboard}>
-      <MetricCards assetsChange={assetsChange} cashChange={cashChange} loanChange={loanChange} locale={locale} currency={currency} animTotalAssets={animTotalAssets} animCashInHand={animCashInHand} animActiveLoans={animActiveLoans} />
+      <MetricCards assetsChange={assetsChange} cashChange={cashChange} banksChange={banksChange} locale={locale} currency={currency} animTotalAssets={animTotalAssets} animCashInHand={animCashInHand} animTotalInBanks={animTotalInBanks} />
       <MonthSummary thisMonthIncome={thisMonthIncome} thisMonthExpenses={thisMonthExpenses} thisMonthNet={thisMonthNet} locale={locale} currency={currency} />
       <div className={styles.actions}>
         <button className={`${styles.actBtn} ${styles.actPrimary}`} onClick={openWizard}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>New Transaction</button>
