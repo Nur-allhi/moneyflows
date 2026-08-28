@@ -68,6 +68,13 @@
   align-items: center;
   gap: 3px;
 }
+.metricSubtitle {
+  font-size: var(--text-xs);
+  color: var(--color-coral);
+  font-weight: 500;
+  margin-top: 2px;
+  text-align: center;
+}
 
 .metricChange svg { width: 8px; height: 8px; }
 

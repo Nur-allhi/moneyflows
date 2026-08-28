@@ -14,7 +14,7 @@ const EXPENSE_TYPES = new Set(['expense', 'loan_issue', 'lend', 'loan_paidback']
 
 export function useDashboardData() {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
-  const { locale, currency } = useSettingsStore((s) => s.settings);
+  const { locale, currency, totalAssetsIncludeLoans } = useSettingsStore((s) => s.settings);
   const { transactions, loading: txLoading, error: txError, fetchTransactions } = useTransactionStore();
   const { loanStacks, fetchLoanStacks } = useLoanStore();
   const { members, fetchMembers } = useMemberStore();
@@ -24,10 +24,13 @@ export function useDashboardData() {
   const loading = acctLoading || txLoading;
   const error = acctError || txError;
   const internalMembers = useMemo(() => members.filter((m) => !m.isExternal), [members]);
-  const totalAssets = useMemo(() => accounts.filter((a) => a.type !== 'counterparty').reduce((s, a) => s + a.balance, 0), [accounts]);
+  const activeLoansOutstanding = useMemo(() => loanStacks.reduce((s, ls) => s + ls.totalOutstanding, 0), [loanStacks]);
+  const totalAssets = useMemo(() => {
+    const base = accounts.filter((a) => a.type !== 'counterparty').reduce((s, a) => s + a.balance, 0);
+    return totalAssetsIncludeLoans ? base + activeLoansOutstanding : base;
+  }, [accounts, totalAssetsIncludeLoans, activeLoansOutstanding]);
   const cashInHand = useMemo(() => accounts.filter((a) => a.type === 'cash' || a.type === 'mobile_wallet').reduce((s, a) => s + a.balance, 0), [accounts]);
   const totalInBanks = useMemo(() => accounts.filter((a) => a.type === 'bank' || a.type === 'savings' || a.type === 'business').reduce((s, a) => s + a.balance, 0), [accounts]);
-  const activeLoansOutstanding = useMemo(() => loanStacks.reduce((s, ls) => s + ls.totalOutstanding, 0), [loanStacks]);
   const activeLoanStacks = useMemo(() => loanStacks.filter((ls) => ls.totalOutstanding > 0 && !ls.loans.every((l) => l.status === 'settled')), [loanStacks]);
   const recentTxs = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, DASHBOARD_TX_DISPLAY_LIMIT), [transactions]);
   const now = new Date(); const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -74,6 +77,6 @@ export function useDashboardData() {
   }, [recentTxs, transactions, debouncedQuery, accountMapForSearch, memberMapForSearch]);
 
   return {
-    accounts, members, transactions, loanStacks, locale, currency, loading, error, internalMembers, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, activeLoanStacks, recentTxs, thisMonth, lastMonth, thisMonthTxs, lastMonthTxs, thisMonthIncome, thisMonthExpenses, thisMonthNet, lastMonthNet, prevAssets, prevCash, prevBanks, prevLoans, assetsChange, cashChange, banksChange, loansChange, accountsByMember, filteredAccountsByMember, filteredRecentTxs, rawQuery, debouncedQuery, memberById,
+    accounts, members, transactions, loanStacks, locale, currency, totalAssetsIncludeLoans, loading, error, internalMembers, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, activeLoanStacks, recentTxs, thisMonth, lastMonth, thisMonthTxs, lastMonthTxs, thisMonthIncome, thisMonthExpenses, thisMonthNet, lastMonthNet, prevAssets, prevCash, prevBanks, prevLoans, assetsChange, cashChange, banksChange, loansChange, accountsByMember, filteredAccountsByMember, filteredRecentTxs, rawQuery, debouncedQuery, memberById,
   };
 }

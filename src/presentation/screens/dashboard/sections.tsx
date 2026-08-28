@@ -12,8 +12,8 @@ function MetricValue({ value, color, locale, currency }: { value: number; color:
   );
 }
 
-export function MetricCards({ assetsChange, cashChange, banksChange, loansChange, locale, currency, animTotalAssets, animCashInHand, animTotalInBanks, animActiveLoans }: {
-  assetsChange: number; cashChange: number; banksChange: number; loansChange: number; locale: string; currency: string; animTotalAssets: number; animCashInHand: number; animTotalInBanks: number; animActiveLoans: number;
+export function MetricCards({ assetsChange, cashChange, banksChange, loansChange, locale, currency, animTotalAssets, animCashInHand, animTotalInBanks, animActiveLoans, totalAssetsIncludeLoans, animLoansAdded }: {
+  assetsChange: number; cashChange: number; banksChange: number; loansChange: number; locale: string; currency: string; animTotalAssets: number; animCashInHand: number; animTotalInBanks: number; animActiveLoans: number; totalAssetsIncludeLoans: boolean; animLoansAdded: number;
 }) {
   return (
     <div className={styles.metrics}>
@@ -35,6 +35,9 @@ export function MetricCards({ assetsChange, cashChange, banksChange, loansChange
       <div className={`${styles.metricCard} ${styles.glowViolet}`}>
         <span className={styles.metricLabel}>Total Assets</span>
         <MetricValue value={animTotalAssets} color="var(--color-primary)" locale={locale} currency={currency} />
+        {totalAssetsIncludeLoans && animLoansAdded > 0 && (
+          <span className={styles.metricSubtitle}>+ Active Loans {formatAmount(animLoansAdded, locale, currency)}</span>
+        )}
         <span className={`${styles.metricChange} ${assetsChange >= 0 ? styles.up : styles.down}`}>{assetsChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(assetsChange).toFixed(1)}% vs last month</span>
       </div>
     </div>

@@ -360,6 +360,17 @@ export function SettingsPage() {
                   <span className={styles.knob} />
                 </button>
               </label>
+              <label className={styles.toggleRow}>
+                <span>Total Assets includes Active Loans</span>
+                <button
+                  role="switch"
+                  aria-checked={settings.totalAssetsIncludeLoans ?? false}
+                  className={`${styles.switch} ${(settings.totalAssetsIncludeLoans ?? false) ? styles.switchOn : ''}`}
+                  onClick={() => updateSettings({ totalAssetsIncludeLoans: !(settings.totalAssetsIncludeLoans ?? false) })}
+                >
+                  <span className={styles.knob} />
+                </button>
+              </label>
             </div>
           )}
 
