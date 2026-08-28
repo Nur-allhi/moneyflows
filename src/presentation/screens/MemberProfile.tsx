@@ -55,7 +55,6 @@ export function MemberProfile() {
 
   return (
     <div className={styles.memberProfile}>
-      <button className={styles.backBtn} onClick={() => navigate(-1)} aria-label="Back">&#8592; Back</button>
       <ProfileHero member={member} totalBalance={totalBalance} totalIncome={totalIncome} totalExpenses={totalExpenses} selectedAccountId={selectedAccountId} isDesktop={isDesktop} />
       <AccountsSection memberAccounts={memberAccounts} selectedAccountId={selectedAccountId} accountsOpen={accountsOpen} setAccountsOpen={setAccountsOpen} onAccountClick={handleAccountClick} isDesktop={isDesktop} memberId={memberId ?? ''} onSelectAccount={handleSelectAccount} />
       <LedgerSection
