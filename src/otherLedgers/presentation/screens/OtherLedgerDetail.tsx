@@ -185,11 +185,13 @@ export function OtherLedgerDetail() {
       ) : (
         <>
           <div className={styles.header}>
-            <div className={styles.titleRow}>
-              <h1 className={styles.title}>{ledger.name}</h1>
-              <button className={styles.renameBtn} onClick={() => setShowRename(true)} aria-label="Rename ledger" title="Rename ledger" tabIndex={0}>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
-              </button>
+            <div className={styles.titleBlock}>
+              <div className={styles.titleRow}>
+                <h1 className={styles.title}>{ledger.name}</h1>
+                <button className={styles.renameBtn} onClick={() => setShowRename(true)} aria-label="Rename ledger" title="Rename ledger" tabIndex={0}>
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
+                </button>
+              </div>
               <span className={styles.subtitle}>{owner} · Starting {shortDate(ledger.startingDate, locale)} · {entries.length} entries · {formatAmount(currentBalance, locale, currency)}</span>
             </div>
             <div className={styles.actions}>
