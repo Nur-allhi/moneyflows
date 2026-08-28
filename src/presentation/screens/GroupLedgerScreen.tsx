@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { LedgerTable, LedgerSearch } from '../components';
 import { useModalStore } from '../stores/useModalStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import { formatAmount } from '../utils/format';
+import { formatAmount, formatAmountParts } from '../utils/format';
 import styles from './GroupLedgerScreen.module.css';
 import { useGroupData } from './groupLedger/useGroupData';
 
@@ -53,13 +53,15 @@ export function GroupLedgerScreen() {
             ? `${srcName} → ${dstName}`
             : '?';
     const mappedType = tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : tx.type === 'transfer' ? 'transfer' : 'loan';
+    const fmt = formatAmountParts(tx.amount, locale, currency);
     return {
       id: tx.id,
       date: tx.date,
       description: tx.description,
       account,
-      debit: credit ? '—' : String(tx.amount),
-      credit: debit ? '—' : String(tx.amount),
+      debit: credit ? '—' : fmt.amount,
+      credit: debit ? '—' : fmt.amount,
+      currencyLabel: currency,
       balance: '',
       type: mappedType,
     };
