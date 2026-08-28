@@ -7,6 +7,7 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useTagStore } from '../../stores/useTagStore';
 import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import { matchesTx } from '../../utils/search';
+import { formatAmountParts } from '../../utils/format';
 import type { LedgerRow } from '../../components';
 
 export function useMemberData() {
@@ -84,10 +85,11 @@ export function useMemberData() {
       if (!searchFilteredAll.includes(tx)) continue;
       const mappedType: LedgerRow['type'] = tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : tx.type === 'transfer' ? 'transfer' : 'loan';
       const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
-      rows.push({ id: tx.id, date: tx.date, description: tx.description, balance: String(balance), type: mappedType, credit: isCredit ? String(tx.amount) : '', debit: !isCredit ? String(tx.amount) : '' } as unknown as LedgerRow);
+      const fmt = formatAmountParts(tx.amount, locale, currency);
+      rows.push({ id: tx.id, date: tx.date, description: tx.description, balance: String(balance), currencyLabel: currency, type: mappedType, credit: isCredit ? fmt.amount : '', debit: !isCredit ? fmt.amount : '' } as unknown as LedgerRow);
     }
     return rows;
-  }, [sortedTxs, memberAccounts, searchFilteredAll]);
+  }, [sortedTxs, memberAccounts, searchFilteredAll, locale, currency]);
 
   const filteredLedger = useMemo(() => {
     let r = ledgerRows;
