@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { DatePicker } from '../../components/ui/date-picker';
-import { SegmentedTabs, FormTextarea } from '../components';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+
 import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
@@ -9,11 +7,15 @@ import { useLoanStore } from '../stores/useLoanStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useTagStore } from '../stores/useTagStore';
 import { formatAmount } from '../utils/format';
-import { handleFormFocus } from '../utils/focus';
-import { Transaction } from '../../core/domain/Transaction';
+
 import type { Account } from '../../core/domain/Account';
-import styles from './TransactionFormModal.module.css';
-import { validateForm, type ValidationErrors } from './transactionForm/validation';
+import type { ValidationErrors } from './transactionForm/validation';
+import { FormFields } from './transactionForm/formFields';
+import { SourceDestinationPickers, BorrowerPicker } from './transactionForm/pickers';
+import { TransactionFormLayout } from './transactionForm/layout';
+import { EmptyAccountsState, ErrorState, LoadingState } from './transactionForm/states';
+import { TagPicker, CreatePersonModal } from './transactionForm/extraPickers';
+import { useTxSubmit } from './transactionForm/useSubmit';
 
 interface TransactionFormModalProps {
   onClose: () => void;
@@ -39,8 +41,8 @@ export function TransactionFormModal({
 }: TransactionFormModalProps) {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
   const { members, loading: memberLoading, fetchMembers } = useMemberStore();
-  const { addTransaction, error: txError } = useTransactionStore();
-  const { loanStacks, createLoan, recordRepayment, createCounterparty, fetchLoanStacks } = useLoanStore();
+  const { error: txError } = useTransactionStore();
+  const { loanStacks, fetchLoanStacks } = useLoanStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
 
   const [tab, setTab] = useState(initialTab ?? 'transfer');
@@ -133,12 +135,6 @@ export function TransactionFormModal({
       }));
   }, [loanStacks, locale, currency]);
 
-  const validate = useCallback((): boolean => {
-    const next = validateForm(tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId);
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId]);
-
   const clearError = useCallback((field: string) => {
     setErrors((prev) => {
       if (!prev[field]) return prev;
@@ -166,238 +162,17 @@ export function TransactionFormModal({
     setTimeout(() => onClose(), 300);
   };
 
-  const handleCreateCp = async () => {
-    if (!newCpName.trim()) return;
-    try {
-      const result = await createCounterparty(newCpName.trim());
-      setDestination(result.accountId);
-      setShowAddCp(false);
-      setNewCpName('');
-    } catch (e) {
-      setErrors({ destination: e instanceof Error ? e.message : 'Could not create counterparty. Try again.' });
-    }
-  };
-
-  const submitLockRef = useRef(false);
-
-  const handleSubmit = async () => {
-    if (submitLockRef.current) return;
-    if (!validate()) return;
-    submitLockRef.current = true;
-    try {
-      await runSubmit();
-    } finally {
-      submitLockRef.current = false;
-    }
-  };
-
-  const runSubmit = async () => {
-    const amount = parseInt(rawAmount, 10);
-    const primaryMemberId = useSettingsStore.getState().settings.primaryMemberId;
-    const txMemberId = (primaryMemberId && members.find((m) => m.id === primaryMemberId && !m.isExternal)?.id)
-      ?? members.find((m) => !m.isExternal)?.id
-      ?? members[0]?.id
-      ?? '';
-    if (!txMemberId) {
-      setErrors({ source: 'No family members found. Create a member first.' });
-      return;
-    }
-
-    if (tab === 'loan') {
-      setClosing(true);
-      try {
-        if (loanAction === 'lend') {
-          await createLoan({
-            lenderAccountId: source,
-            borrowerAccountId: destination,
-            amount,
-            description: description.trim(),
-            date,
-            memberId: txMemberId,
-          });
-        } else {
-          await recordRepayment({
-            borrowerAccountId: selectedBorrowerId,
-            amount,
-            description: description.trim(),
-            date,
-            memberId: txMemberId,
-            destinationAccountId: destination,
-          });
-        }
-        await fetchAccounts();
-        await fetchLoanStacks();
-      } catch (e) {
-        setErrors({ amount: (e as Error).message });
-        return;
-      }
-      setTimeout(() => onClose(), 300);
-      return;
-    }
-
-    let type: Transaction['type'];
-    let src: string | undefined;
-    let dst: string | undefined;
-    let debtorId: string | undefined;
-
-    switch (tab) {
-      case 'income':
-        type = 'income';
-        dst = source;
-        break;
-      case 'expense':
-        type = 'expense';
-        src = source;
-        break;
-      case 'transfer':
-        type = 'transfer';
-        src = source;
-        dst = destination;
-        break;
-      default:
-        return;
-    }
-
-    const now = new Date();
-    const [y, m, d] = date.split('-');
-    const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
-
-    const cleanDesc = description.trim();
-    const capitalizedDesc = cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1);
-
-    const tx = new Transaction(
-      uuidv4(), type, capitalizedDesc, amount, txMemberId, dateTime, src, dst, debtorId,
-      undefined,
-      tagName.trim() ? { tags: [tagName.trim()] } : {},
-    );
-
-    await addTransaction(tx);
-    await fetchAccounts();
-    if (tagName.trim()) useTagStore.getState().addTag(tagName.trim());
-    onClose();
-  };
+  const { handleSubmit, handleCreateCp } = useTxSubmit({
+    tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName,
+    accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName,
+  });
 
   const loading = acctLoading || memberLoading;
   const emptyAccounts = !loading && !acctError && accounts.length === 0;
 
-  if (emptyAccounts) {
-    return (
-      <>
-        <div className={styles.mobileLayout}>
-          <div className={styles.wizard} onClick={handleClose}>
-            <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.handle} />
-              <div className={styles.header}>
-                <h2>New Transaction</h2>
-                <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-              </div>
-              <div className="empty-state">
-                <div className="empty-state-icon">{'\u{1F4B0}'}</div>
-                <p className="empty-state-text">No accounts available</p>
-                <button className="retry-btn" onClick={handleClose}>Go Back</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.desktopLayout}>
-          <div className={styles.desktopOverlay} onClick={handleClose} />
-          <div className={styles.desktopModal}>
-            <div className={styles.modalHeader}>
-              <h2>New Transaction</h2>
-              <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-            </div>
-            <div className="empty-state">
-              <div className="empty-state-icon">{'\u{1F4B0}'}</div>
-              <p className="empty-state-text">No accounts available</p>
-              <button className="retry-btn" onClick={handleClose}>Go Back</button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (acctError) {
-    return (
-      <>
-        <div className={styles.mobileLayout}>
-          <div className={styles.wizard} onClick={handleClose}>
-            <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.handle} />
-              <div className={styles.header}>
-                <h2>New Transaction</h2>
-                <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-              </div>
-              <div className="error-state">
-                <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
-                <p className="error-state-text">{acctError}</p>
-                <button className="retry-btn" onClick={() => { fetchAccounts(); fetchMembers(); }}>Retry</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.desktopLayout}>
-          <div className={styles.desktopOverlay} onClick={handleClose} />
-          <div className={styles.desktopModal}>
-            <div className={styles.modalHeader}>
-              <h2>New Transaction</h2>
-              <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-            </div>
-            <div className="error-state">
-              <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
-              <p className="error-state-text">{acctError}</p>
-              <button className="retry-btn" onClick={() => { fetchAccounts(); fetchMembers(); }}>Retry</button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (loading) {
-    return (
-      <>
-        <div className={styles.mobileLayout}>
-          <div className={styles.wizard} onClick={handleClose}>
-            <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.handle} />
-              <div className={styles.header}>
-                <h2>New Transaction</h2>
-                <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-              </div>
-              <div className={styles.loadingBody}>
-                <div className="skeleton skeleton-text" />
-                <div className="skeleton skeleton-row" />
-                <div className="skeleton skeleton-row" />
-                <div className="skeleton skeleton-text" />
-                <div className="skeleton skeleton-row" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className={styles.desktopLayout}>
-          <div className={styles.desktopOverlay} onClick={handleClose} />
-          <div className={styles.desktopModal}>
-            <div className={styles.modalHeader}>
-              <h2>New Transaction</h2>
-              <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-            </div>
-            <div className={styles.loadingBody}>
-              <div className="skeleton skeleton-text" />
-              <div className="skeleton skeleton-row" />
-              <div className="skeleton skeleton-row" />
-              <div className="skeleton skeleton-text" />
-              <div className="skeleton skeleton-row" />
-            </div>
-            <div className={styles.modalActions}>
-              <div className="skeleton skeleton-wizard" />
-              <div className="skeleton skeleton-wizard" />
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
+  if (emptyAccounts) return <EmptyAccountsState onClose={handleClose} />;
+  if (acctError) return <ErrorState error={acctError} onRetry={() => { fetchAccounts(); fetchMembers(); }} onClose={handleClose} />;
+  if (loading) return <LoadingState onClose={handleClose} />;
 
   const buttonLabel =
     tab === 'income' ? 'Complete Income' :
@@ -406,433 +181,81 @@ export function TransactionFormModal({
     loanAction === 'lend' ? 'Confirm Loan' : 'Confirm Repayment';
 
   const formFields = (
-    <>
-      {tab === 'loan' && (
-        <div className={styles.loanTypeStrip}>
-          <button
-            className={`${styles.loanTypeBtn} ${loanAction === 'lend' ? styles.loanTypeActive : ''}`}
-            onClick={() => setLoanAction('lend')}
-          >Lend Money</button>
-          <button
-            className={`${styles.loanTypeBtn} ${loanAction === 'repay' ? styles.loanTypeActive : ''}`}
-            onClick={() => setLoanAction('repay')}
-          >Record Repayment</button>
-        </div>
-      )}
-
-      <div className={`${styles.amountRow} ${errors.amount ? styles.fieldError : ''}`}>
-        <span className={styles.amountCurrency}>{currency}</span>
-        <input
-          className={styles.amountInput}
-          type="text"
-          inputMode="decimal"
-          enterKeyHint="next"
-          placeholder="0"
-          value={displayAmount}
-          onChange={handleAmountChange}
-          onKeyDown={handleAmountKeyDown}
-        />
-      </div>
-      {errors.amount && <span className={styles.errorText}>{errors.amount}</span>}
-
-      {insufficientWarning && (
-        <div className={styles.insufficientWarning}>
-          <span className={styles.warningIcon}>{'\u26A0'}</span>
-          <div className={styles.warningBody}>
-            <span className={styles.warningTitle}>Low balance</span>
-            <span className={styles.warningText}>
-              Only {formatAmount(insufficientWarning.available, locale, currency)} available.
-              Account will go negative by {formatAmount(insufficientWarning.deficit, locale, currency)} if you proceed.
-            </span>
-            <button className={styles.addTxBtn} onClick={handleClose}>
-              + Add Transaction
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className={styles.fieldGroup}>
-        <span className={styles.fieldLabel}>Date</span>
-        <DatePicker className={styles.inputField} value={date} onChange={setDate} />
-      </div>
-
-      {tab === 'loan' && loanAction === 'repay' ? (
-        <>
-          <div className={styles.fieldGroup}>
-            <span className={styles.fieldLabel}>Counterparty</span>
-            <button
-              type="button"
-              className={styles.pickerTrigger}
-              onClick={() => setShowBorrowerPicker(true)}
-            >
-              {selectedBorrowerId
-                ? <><span className={styles.pickerValue}>{repayStackOptions.find(o => o.borrowerId === selectedBorrowerId)?.label ?? 'Select counterparty'}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                : <span className={styles.pickerPlaceholder}>Select counterparty</span>}
-            </button>
-          </div>
-          <div className={`${styles.slideField} ${styles.slideOpen}`}>
-            <div className={styles.slideInner}>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>Paid To</span>
-                <button
-                  type="button"
-                  className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`}
-                  onClick={() => { setPickerField('destination'); setPickerMember(null); }}
-                >
-                  {destination
-                    ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                    : <span className={styles.pickerPlaceholder}>Select account</span>}
-                </button>
-                {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
-              </div>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className={`${styles.slideField} ${styles.slideOpen}`}>
-            <div className={styles.slideInner}>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>
-                  {tab === 'loan' && loanAction === 'lend' ? 'Lender Account' : 'Source Account'}
-                </span>
-                <button
-                  type="button"
-                  className={`${styles.pickerTrigger} ${errors.source ? styles.fieldError : ''}`}
-                  onClick={() => { setPickerField('source'); setPickerMember(null); }}
-                >
-                  {source
-                    ? <><span className={styles.pickerValue}>{accountLabel(source)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                    : <span className={styles.pickerPlaceholder}>Select account</span>}
-                </button>
-                {errors.source && <span className={styles.errorText}>{errors.source}</span>}
-              </div>
-            </div>
-          </div>
-
-          <div className={`${styles.slideField} ${tab === 'loan' || tab === 'transfer' ? styles.slideOpen : ''}`}>
-            <div className={styles.slideInner}>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>
-                  {tab === 'loan' && loanAction === 'lend' ? 'Borrower Account' : 'Destination Account'}
-                </span>
-                <button
-                  type="button"
-                  className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`}
-                  onClick={() => { setPickerField('destination'); setPickerMember(null); }}
-                >
-                  {destination
-                    ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-                    : <span className={styles.pickerPlaceholder}>Select account</span>}
-                </button>
-                {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      <FormTextarea
-        label="Description"
-        placeholder="What's this for?"
-        value={description}
-        maxLength={200}
-        id="tx-description"
-        onChange={(e) => { setDescription(e.target.value); clearError('description'); }}
-      />
-      {errors.description && <span className={styles.errorText}>{errors.description}</span>}
-
-      {tab !== 'loan' && (
-        <div className={styles.fieldGroup}>
-          <span className={styles.fieldLabel}>Tag (optional)</span>
-          <button
-            type="button"
-            className={`${styles.pickerTrigger} ${tagName ? styles.pickerHasValue : ''}`}
-            onClick={() => setShowTagPicker(true)}
-          >
-            {tagName
-              ? <><span className={styles.pickerValue}>{tagName}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></>
-              : <span className={styles.pickerPlaceholder}>Select tag (optional)</span>}
-          </button>
-        </div>
-      )}
-
-      {txError && <span className={styles.errorText}>{txError}</span>}
-    </>
+    <FormFields
+      tab={tab}
+      loanAction={loanAction}
+      setLoanAction={setLoanAction}
+      rawAmount={rawAmount}
+      displayAmount={displayAmount}
+      onAmountChange={handleAmountChange}
+      onAmountKeyDown={handleAmountKeyDown}
+      currency={currency}
+      errors={errors}
+      date={date}
+      setDate={setDate}
+      source={source}
+      destination={destination}
+      setPickerField={setPickerField}
+      setPickerMember={setPickerMember}
+      accountLabel={accountLabel}
+      description={description}
+      setDescription={setDescription}
+      clearError={clearError}
+      tagName={tagName}
+      setShowTagPicker={setShowTagPicker}
+      insufficientWarning={insufficientWarning}
+      handleClose={handleClose}
+      formatAmount={formatAmount}
+      locale={locale}
+      setShowBorrowerPicker={setShowBorrowerPicker}
+      selectedBorrowerId={selectedBorrowerId}
+      repayStackOptions={repayStackOptions}
+      txError={txError}
+    />
   );
 
   return (
     <>
-      <div className={`${styles.mobileLayout} ${closing ? styles.closing : ''}`}>
-        <div className={styles.wizard} onClick={handleClose}>
-          <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.handle} />
-            <div className={styles.header}>
-              <h2>New Transaction</h2>
-              <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-            </div>
+      <TransactionFormLayout
+        tab={tab}
+        setTab={setTab}
+        tabs={tabs}
+        formFields={formFields}
+        buttonLabel={buttonLabel}
+        handleSubmit={handleSubmit}
+        handleClose={handleClose}
+        closing={closing}
+        rawAmount={rawAmount}
+        errors={errors}
+      />
 
-            <div className={styles.filterTabs}>
-              <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
-            </div>
+      <TagPicker show={showTagPicker} onClose={() => setShowTagPicker(false)} setTagName={setTagName} newTagName={newTagName} setNewTagName={setNewTagName} knownTags={knownTags} />
 
-            <div className={styles.formBody} onFocus={handleFormFocus} onKeyDown={(e) => {
-              if (e.key !== 'Enter' || e.shiftKey) return;
-              e.preventDefault();
-              void handleSubmit();
-            }}>
-              {formFields}
-              <button className={styles.submitBtn} onClick={handleSubmit} disabled={!rawAmount || Object.keys(errors).length > 0}>
-                {buttonLabel}
-              </button>
-            </div>
+      <BorrowerPicker
+        show={showBorrowerPicker}
+        onClose={() => setShowBorrowerPicker(false)}
+        repayStackOptions={repayStackOptions}
+        selectedBorrowerId={selectedBorrowerId}
+        setSelectedBorrowerId={setSelectedBorrowerId}
+      />
+      <SourceDestinationPickers
+        pickerField={pickerField}
+        pickerMember={pickerMember}
+        setPickerField={setPickerField}
+        setPickerMember={setPickerMember}
+        internalMembers={internalMembers}
+        accountsByMember={accountsByMember}
+        counterpartyAccounts={counterpartyAccounts}
+        onSelectSource={(id) => setSource(id)}
+        onSelectDestination={(id) => setDestination(id)}
+        setShowAddCp={setShowAddCp}
+        clearError={clearError}
+        locale={locale}
+        currency={currency}
+        tab={tab}
+      />
 
-          </div>
-        </div>
-      </div>
-
-      <div className={`${styles.desktopLayout} ${closing ? styles.closing : ''}`}>
-        <div className={styles.desktopOverlay} onClick={handleClose} />
-        <div className={styles.desktopModal}>
-          <div className={styles.modalHeader}>
-            <h2>New Transaction</h2>
-            <button className={styles.closeBtn} onClick={handleClose} aria-label="Close">&times;</button>
-          </div>
-          <div className={styles.modalBody} onKeyDown={(e) => {
-              if (e.key !== 'Enter' || e.shiftKey) return;
-              e.preventDefault();
-              void handleSubmit();
-            }}>
-            <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
-            {formFields}
-          </div>
-          <div className={styles.modalActions}>
-            <button className={styles.cancelBtn} onClick={handleClose}>Cancel</button>
-            <button className={styles.saveBtn} onClick={handleSubmit} disabled={!rawAmount || Object.keys(errors).length > 0}>{buttonLabel}</button>
-          </div>
-        </div>
-      </div>
-
-      {showTagPicker && (
-        <div className={styles.pickerOverlay} onClick={() => setShowTagPicker(false)}>
-          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.pickerHeader}>
-              <span className={styles.pickerTitle}>Select tag</span>
-              <button className={styles.pickerClose} onClick={() => setShowTagPicker(false)}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            <div className={styles.tagPickerCreate}>
-              <input
-                className={styles.inputField}
-                value={newTagName}
-                maxLength={30}
-                placeholder="New tag name"
-                onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newTagName.trim()) {
-                    useTagStore.getState().addTag(newTagName.trim());
-                    setTagName(newTagName.trim());
-                    setNewTagName('');
-                    setShowTagPicker(false);
-                  }
-                }}
-              />
-              <button
-                className={styles.tagPickerAdd}
-                disabled={!newTagName.trim()}
-                onClick={() => {
-                  useTagStore.getState().addTag(newTagName.trim());
-                  setTagName(newTagName.trim());
-                  setNewTagName('');
-                  setShowTagPicker(false);
-                }}
-              >
-                Add
-              </button>
-            </div>
-            <div className={styles.pickerList}>
-              <button className={styles.pickerItem} onClick={() => { setTagName(''); setShowTagPicker(false); }}>
-                <span className={styles.pickerPlaceholder}>No tag</span>
-              </button>
-              {knownTags.map((t) => (
-                <button key={t} className={styles.pickerItem} onClick={() => { setTagName(t); setShowTagPicker(false); }}>
-                  <span className={styles.pickerItemName}>{t}</span>
-                </button>
-              ))}
-              {knownTags.length === 0 && (
-                <div className={styles.pickerEmpty}>No tags yet — create one above</div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showBorrowerPicker && (
-        <div className={styles.pickerOverlay} onClick={() => setShowBorrowerPicker(false)}>
-          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.pickerHeader}>
-              <span className={styles.pickerTitle}>Select Counterparty</span>
-              <button className={styles.pickerClose} onClick={() => setShowBorrowerPicker(false)}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            <div className={styles.pickerBody}>
-              {repayStackOptions.length === 0 ? (
-                <div className={styles.pickerEmpty}>No counterparties with outstanding loans</div>
-              ) : (
-                <div className={styles.pickerList}>
-                  {repayStackOptions.map((opt) => (
-                    <button
-                      key={opt.borrowerId}
-                      className={`${styles.pickerItem} ${selectedBorrowerId === opt.borrowerId ? styles.pickerItemActive : ''}`}
-                      onClick={() => {
-                        setSelectedBorrowerId(opt.borrowerId);
-                        setShowBorrowerPicker(false);
-                      }}
-                    >
-                      <span className={styles.pickerItemName}>{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {pickerField && (
-        <div className={styles.pickerOverlay} onClick={() => { setPickerField(null); setPickerMember(null); }}>
-          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.pickerHeader}>
-              <button className={styles.pickerBack} onClick={() => setPickerMember(null)} style={{ visibility: !pickerMember ? 'hidden' : 'visible' }}>{'\u25C0'}</button>
-              <span className={styles.pickerTitle}>
-                {pickerMember ? 'Select Account' : 'Select Member'}
-              </span>
-              <button className={styles.pickerClose} onClick={() => { setPickerField(null); setPickerMember(null); }}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            <div className={styles.pickerBody}>
-              {!pickerMember ? (
-                <div className={styles.pickerList}>
-                  {internalMembers.map((m) => (
-                    <button
-                      key={m.id}
-                      className={styles.pickerItem}
-                      onClick={() => setPickerMember(m.id)}
-                    >
-                      <span className={styles.pickerItemName}>{m.name}</span>
-                      {m.shortName && <span className={styles.pickerItemMeta}>{m.shortName}</span>}
-                      <span className={styles.pickerItemCount}>{accountsByMember[m.id]?.length ?? 0} accounts</span>
-                    </button>
-                  ))}
-                  {tab === 'loan' && pickerField === 'destination' && (
-                    <>
-                      <div className={styles.pickerItem} style={{ opacity: 0.4, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '8px 14px', cursor: 'default' }}>
-                        Person
-                      </div>
-                      {counterpartyAccounts.length === 0 ? (
-                        <div className={styles.pickerEmpty}>No persons yet</div>
-                      ) : (
-                        counterpartyAccounts.map((a) => (
-                          <button
-                            key={a.id}
-                            className={styles.pickerItem}
-                            onClick={() => {
-                              setDestination(a.id);
-                              clearError('destination');
-                              setPickerField(null);
-                              setPickerMember(null);
-                            }}
-                          >
-                            <span className={styles.pickerItemName}>{a.name}</span>
-                            <span className={styles.pickerItemMeta}>Counterparty</span>
-                            <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
-                          </button>
-                        ))
-                      )}
-                      <button
-                        className={styles.pickerCreateBtn}
-                        onClick={() => {
-                          setShowAddCp(true);
-                          setPickerField(null);
-                          setPickerMember(null);
-                        }}
-                      >
-                        + Create New Person
-                      </button>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className={styles.pickerList}>
-                  {(accountsByMember[pickerMember] ?? []).length === 0 ? (
-                    <div className={styles.pickerEmpty}>No accounts for this member</div>
-                  ) : (
-                    (accountsByMember[pickerMember] ?? []).map((a) => (
-                      <button
-                        key={a.id}
-                        className={styles.pickerItem}
-                        onClick={() => {
-                          if (pickerField === 'source') setSource(a.id);
-                          else setDestination(a.id);
-                          clearError(pickerField);
-                          setPickerField(null);
-                          setPickerMember(null);
-                        }}
-                      >
-                        <span className={styles.pickerItemName}>{a.name}</span>
-                        <span className={styles.pickerItemMeta}>{a.type.replace('_', ' ')}</span>
-                        <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAddCp && (
-        <div className={styles.pickerOverlay} onClick={() => setShowAddCp(false)}>
-          <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.pickerHeader}>
-              <span className={styles.pickerTitle}>Create New Person</span>
-              <button className={styles.pickerClose} onClick={() => setShowAddCp(false)}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-            <div className={styles.pickerBody}>
-              <div className={styles.createCpBody}>
-                <input
-                  className={styles.inputField}
-                  placeholder="Person name"
-                  value={newCpName}
-                  onChange={(e) => { setNewCpName(e.target.value); if (errors.destination) setErrors((p) => ({ ...p, destination: '' })); }}
-                  autoFocus
-                />
-                {errors.destination && (
-                  <span className={styles.errorText}>{errors.destination}</span>
-                )}
-                <div className={styles.createCpActions}>
-                  <button className={styles.cancelBtn} onClick={() => { setShowAddCp(false); setNewCpName(''); }}>Cancel</button>
-                  <button className={styles.saveBtn} onClick={handleCreateCp}>Create</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreatePersonModal show={showAddCp} onClose={() => setShowAddCp(false)} newCpName={newCpName} setNewCpName={(v) => { setNewCpName(v); if (errors.destination) setErrors((p) => ({ ...p, destination: '' })); }} onCreate={handleCreateCp} error={errors.destination} />
     </>
   );
 }
