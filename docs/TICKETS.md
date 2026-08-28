@@ -54,16 +54,12 @@ Cross-member ledger per tag with member/account/description/amount and In/Out to
 ### T-112 - Tag management UI on the Tags page — **Complete** (v1.1.1)
 Create / rename / delete directly on `/tags`: inline create row, per-card ✎ rename (rewrites the tag across all carrying transactions) and 🗑 two-step delete (strips it from transactions). Removed the interim Settings chips section. Sidebar gains a Tags item under Loans.
 
-### T-107 - Wizard pre-fills open ledger account — **Complete** (v1.1.1)
-All four transaction-form entry points in MemberProfile pass `initialSource=selectedAccountId`; Income/Expense/Transfer pills also pin their tab. Verified: Bkash ledger → wizard opens with Source=Bkash.
-
-
 ## Deferred / Open Items
 
 | ID | Title | Skill(s) | Trigger |
 |----|-------|----------|---------|
-| T-092 | Split oversized files >300 LOC (MemberProfile 764, TransactionFormModal ~740, SQLiteDatabaseService ~650, Dashboard ~490) | `senior-frontend`, `ui-ux-pro-max` | touch when next edited |
-| OPEN-A | Remove localStorage transition mirror once one release cycle has shipped on OPFS storage | `senior-backend` | after next tagged release |
+| T-092 | Split oversized files >300 LOC (MemberProfile 887→, TransactionFormModal 898→, SQLiteDatabaseService 739→, Dashboard ~490) — partial via T-130 gradient de-dupe, full splits deferred | `senior-frontend`, `ui-ux-pro-max` | touch when next edited |
+| OPEN-A | Remove localStorage transition mirror once one release cycle has shipped on OPFS storage | `senior-backend` | **Done** `c3db41b` (shipped in `v1.5.0` → `v1.6.0` one cycle) |
 | OPEN-B | PWA "update ready" toast instead of silent worker claim | `senior-frontend`, `ui-ux-pro-max` | next PWA-focused batch |
 
 ## Next Phase — Search Expansion: Global + Ledger-Scoped (S-1…S-5)
@@ -99,9 +95,28 @@ Dependencies: `T-113 → T-114 → (T-115 ∥ T-117) → T-116 → T-118`. Each 
 
 Future V2 (not ticketed here): dual-post linking — `Transaction Wizard → Also post to Other Ledger [dropdown]` creating `linkedTransactionId` link (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123). Build only when user says "next update / V2".
 
+## Phase 15 — Cleanup & Optimization (Lean Combo 1A+2A+3A) — In Progress
+
+Plan: `docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` (branch `feature/cleanup-optimization` off `v1.5.0`). Tickets `T-124..T-131` atomic, gates `typecheck/lint/build/vitest` green per REPO_RULES §9.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-124 | Hygiene: verify `.gitignore` + remove tracked `dist`/`*.bundle` + `depcheck`/`prune` | `code-reviewer`, `senior-backend` | S | **Complete** (`7145bf6` + verified `git ls-files dist` 0) |
+| T-125 | Optimization: lazy-load `jspdf`/`autotable`/`html2canvas`/`Calendar` | `senior-frontend` | S | **Complete** (`a174c9a` dynamic import) |
+| T-126 | Remove OPFS `localStorage` transition mirror (`OPEN-A`) | `senior-backend` | M | **Complete** (`c3db41b` single path) |
+| T-127 | Split `MemberProfile.tsx` 887 → 4 files | `senior-frontend`, `ui-ux-pro-max` | L | Todo — deferred to next touch (T-092) |
+| T-128 | Split `TransactionFormModal.tsx` 898 → 4 files | `senior-frontend` | L | Todo — deferred |
+| T-129 | Split `SQLiteDatabaseService.ts` 739 → repos | `senior-backend` | L | Todo — deferred |
+| T-130 | De-dupe `ledgerGradient` → `constants/gradients.ts` (part of T-130) | `senior-frontend`, `frontend-design` | M | **Complete** (`26e22b3`) |
+| T-131 | Docs: archive `session_log.md` (1000→archive) + de-dupe `T-107` + `OPEN-A` close | `skill-creator` | S | **Complete** (this commit) |
+
+Dependencies: `T-124 → (T-125 ∥ T-126) → (T-127 ∥ T-128 ∥ T-129 ∥ T-130) → T-131`. Only `T-124` blocks the rest.
+
+Future V2 still `T-119..T-123` in `OTHER_LEDGERS_FUTURE_V2.md` (build on “next update”).
+
 ## Following Phase
 
-Candidates after Other Ledgers v1: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
+Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 
 ## Ticket Template (use for all new work)
 

@@ -10,16 +10,9 @@ import { LoanCard } from '../components/LoanCard';
 import { LoanDetailView } from '../components/LoanDetailView';
 import { getDatabase } from '../../../infrastructure/database/getDatabase';
 import type { Transaction } from '../../../core/domain/Transaction';
+import { ledgerGradient } from '../../../presentation/constants/gradients';
 import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
 import styles from './LoansScreen.module.css';
-
-function ledgerGradient(name: string): string {
-  const hues = [290, 170, 30, 85, 220, 330, 50, 190];
-  let idx = 0;
-  for (let i = 0; i < name.length; i++) idx = (idx * 31 + name.charCodeAt(i)) % hues.length;
-  const h = hues[idx]!;
-  return `linear-gradient(135deg, oklch(62% 0.22 ${h}), oklch(50% 0.2 ${h}))`;
-}
 
 export function LoansScreen() {
   const { debtorId: routeBorrowerId } = useParams<{ debtorId: string }>();

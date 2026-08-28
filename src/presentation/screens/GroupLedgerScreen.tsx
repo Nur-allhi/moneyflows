@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { LedgerTable, LedgerSearch, MobileLedger } from '../components';
 import type { LedgerRow } from '../components';
 import { useModalStore } from '../stores/useModalStore';
@@ -225,7 +223,9 @@ export function GroupLedgerScreen() {
     if (tx) useModalStore.getState().open('transaction-detail', { transaction: tx });
   }, [txs]);
 
-  const handleDownloadPdf = useCallback(() => {
+  const handleDownloadPdf = useCallback(async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     doc.setFontSize(16);
