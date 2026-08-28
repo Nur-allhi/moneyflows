@@ -18,6 +18,7 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
   const [ownerMemberId, setOwnerMemberId] = useState(ledger.ownerMemberId ?? '');
   const [ownerName, setOwnerName] = useState(ledger.ownerName ?? '');
   const [openingBalance, setOpeningBalance] = useState(String(ledger.openingBalance));
+  const [showMemberPicker, setShowMemberPicker] = useState(false);
   const [showOwnerPicker, setShowOwnerPicker] = useState(false);
   const [newOwnerName, setNewOwnerName] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -81,9 +82,14 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
         <button onClick={() => setOwnerType('external')} style={{ flex: 1, padding: 10, borderRadius: 9999, border: ownerType === 'external' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: ownerType === 'external' ? 'var(--color-primary)' : 'var(--color-surface)', color: ownerType === 'external' ? 'white' : 'var(--color-text)' }}>Other person</button>
       </div>
       {ownerType === 'member' ? (
-        <select value={ownerMemberId} onChange={(e) => setOwnerMemberId(e.target.value)} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }}>
-          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        <div className={txStyles.fieldGroup}>
+          <span className={txStyles.fieldLabel}>Member</span>
+          <button type="button" className={`${txStyles.pickerTrigger} ${ownerMemberId ? txStyles.pickerHasValue : ''}`} onClick={() => setShowMemberPicker(true)}>
+            {ownerMemberId
+              ? <><span className={txStyles.pickerValue}>{members.find((m) => m.id === ownerMemberId)?.name ?? 'Select member'}</span><span className={txStyles.pickerArrow}>▾</span></>
+              : <span className={txStyles.pickerPlaceholder}>Select member</span>}
+          </button>
+        </div>
       ) : (
         <div className={txStyles.fieldGroup}>
           <span className={txStyles.fieldLabel}>Other Person</span>
@@ -99,6 +105,28 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
         <input type="number" value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value)} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }} />
       </label>
       {error && <div style={{ color: 'var(--color-expense)', fontSize: 13 }}>{error}</div>}
+
+      {showMemberPicker && (
+        <div className={txStyles.pickerOverlay} onClick={() => setShowMemberPicker(false)}>
+          <div className={txStyles.pickerModal} onClick={(e) => e.stopPropagation()}>
+            <div className={txStyles.pickerHeader}>
+              <span className={txStyles.pickerTitle}>Select Member</span>
+              <button className={txStyles.pickerClose} onClick={() => setShowMemberPicker(false)}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              </button>
+            </div>
+            <div className={txStyles.pickerList}>
+              {members.length === 0
+                ? <div className={txStyles.pickerEmpty}>No members yet</div>
+                : members.map((m) => (
+                    <button key={m.id} className={txStyles.pickerItem} onClick={() => { setOwnerMemberId(m.id); setShowMemberPicker(false); }}>
+                      <span className={txStyles.pickerItemName}>{m.name}</span>
+                    </button>
+                  ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showOwnerPicker && (
         <div className={txStyles.pickerOverlay} onClick={() => setShowOwnerPicker(false)}>
