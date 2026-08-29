@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LedgerTable, LedgerSearch } from '../../components';
 import type { LedgerRow } from '../../components';
@@ -9,6 +9,7 @@ import { MONTHS } from '../../constants/dates';
 import { Highlight } from '../../utils/highlight';
 import { Transaction } from '../../../core/domain/Transaction';
 import type { Account } from '../../../core/domain/Account';
+import { HandCoins, BanknoteArrowUp, BanknoteArrowDown, Coins, Filter } from 'lucide-react';
 import styles from '../MemberProfile.module.css';
 
 const ledgerFilters = [
@@ -51,6 +52,34 @@ export function LedgerSection(props: Props) {
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const filterWrapRef = useRef<HTMLDivElement>(null);
+  const closeTimerRef = useRef<number | null>(null);
+  const clearCloseTimer = () => {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+  const scheduleClose = () => {
+    clearCloseTimer();
+    closeTimerRef.current = window.setTimeout(() => setDrawerOpen(false), 500);
+  };
+  useEffect(() => {
+    if (!drawerOpen) {
+      clearCloseTimer();
+      return;
+    }
+    const onDown = (e: MouseEvent) => {
+      if (filterWrapRef.current && !filterWrapRef.current.contains(e.target as Node)) setDrawerOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    scheduleClose();
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      clearCloseTimer();
+    };
+  }, [drawerOpen]);
 
   if (isDesktop) {
     return (
@@ -64,49 +93,96 @@ export function LedgerSection(props: Props) {
                 <>All Accounts Ledger <span className={styles.txCount}>{txCount}</span></>
               )}
             </h3>
-            <div className={styles.ledgerPanelFilter}>
+            <div className={styles.ledgerPanelFilter} ref={filterWrapRef}>
               <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
               <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF" aria-label="Download PDF">
                 <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                 <span className={styles.pdfBtnLabel}>Download PDF</span>
               </button>
-              <div className={styles.extrasWrap}>
-                <button className={`${styles.pdfBtn} ${styles.extrasToggle}`} title="Show filter and extras" aria-label="Show filter and extras">
-                  <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></svg>
-                  <span className={styles.pdfBtnLabel}>More</span>
-                </button>
-                <div className={styles.extrasPanel}>
-                  <div className={styles.ledgerFilterPills}>
-                    {ledgerFilters.map((f) => (
-                      <button
-                        key={f.key}
-                        className={`${styles.ledgerFilterIconBtn} ${ledgerFilter === f.key ? styles.ledgerFilterIconBtnActive : ''}`}
-                        onClick={() => setLedgerFilter(f.key)}
-                        title={f.label}
-                        aria-label={f.label}
-                        aria-pressed={ledgerFilter === f.key}
-                      >
-                        {f.key === 'all' ? (
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /></svg>
-                        ) : f.key === 'income' ? (
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><path d="M8 13V3" /><path d="M4 7l4-4 4 4" /></svg>
-                        ) : f.key === 'expense' ? (
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><path d="M8 3v10" /><path d="M4 9l4 4 4-4" /></svg>
-                        ) : f.key === 'transfer' ? (
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><path d="M3 8h10" /><path d="M9 4l4 4-4 4" /></svg>
-                        ) : (
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M8 5v6" /><path d="M5 8h6" /></svg>
-                        )}
-                      </button>
-                    ))}
+              <button
+                className={`${styles.pdfBtn} ${styles.drawerToggle} ${drawerOpen ? styles.drawerToggleOpen : ''}`}
+                onClick={() => setDrawerOpen((o) => !o)}
+                title={drawerOpen ? 'Hide filters' : 'Show filters'}
+                aria-label={drawerOpen ? 'Hide filters' : 'Show filters'}
+                aria-expanded={drawerOpen}
+              >
+                <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                <span className={styles.pdfBtnLabel}>More</span>
+              </button>
+              <div
+                className={`${styles.filterDrawer} ${drawerOpen ? styles.filterDrawerOpen : ''}`}
+                onMouseEnter={clearCloseTimer}
+                onMouseLeave={scheduleClose}
+                onMouseMove={() => {
+                  clearCloseTimer();
+                  scheduleClose();
+                }}
+              >
+                <div className={styles.filterDrawerInner}>
+                  <div className={styles.drawerFiltersRow}>
+                    <div className={styles.ledgerFilterPills}>
+                      {ledgerFilters.map((f) => (
+                        <button
+                          key={f.key}
+                          className={`${styles.ledgerFilterIconBtn} ${ledgerFilter === f.key ? styles.ledgerFilterIconBtnActive : ''}`}
+                          onClick={() => {
+                            setLedgerFilter(f.key);
+                            clearCloseTimer();
+                            scheduleClose();
+                          }}
+                          title={f.label}
+                          aria-label={f.label}
+                          aria-pressed={ledgerFilter === f.key}
+                        >
+                          <span className={styles.filterIconBox}>
+                            {f.key === 'all' ? (
+                              <Filter size={14} strokeWidth={1.8} />
+                            ) : f.key === 'income' ? (
+                              <BanknoteArrowUp size={14} strokeWidth={1.8} />
+                            ) : f.key === 'expense' ? (
+                              <BanknoteArrowDown size={14} strokeWidth={1.8} />
+                            ) : f.key === 'transfer' ? (
+                              <Coins size={14} strokeWidth={1.8} />
+                            ) : (
+                              <HandCoins size={14} strokeWidth={1.8} />
+                            )}
+                          </span>
+                          <span className={styles.filterLabel}>{f.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {selectedAccountId && (
+                      <div className={styles.drawerActions}>
+                        <button
+                          className={styles.showAllBtn}
+                          onClick={() => {
+                            setSelectedAccountId(null);
+                            clearCloseTimer();
+                            scheduleClose();
+                          }}
+                        >
+                          All account
+                        </button>
+                        {(() => {
+                          const hasObTx = transactions.some((tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true);
+                          const showAdd = hasObTx || memberAccounts.find((a) => a.id === selectedAccountId)?.balance === 0;
+                          if (!showAdd) return null;
+                          return (
+                            <button
+                              className={styles.obBtn}
+                              onClick={() => {
+                                onOpeningBalance();
+                                clearCloseTimer();
+                                scheduleClose();
+                              }}
+                            >
+                              {hasObTx ? 'Opening Balance' : 'Add Opening'}
+                            </button>
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
-                  {selectedAccountId && <button className={styles.showAllBtn} onClick={() => setSelectedAccountId(null)}>All account</button>}
-                  {selectedAccountId && (() => {
-                    const hasObTx = transactions.some((tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true);
-                    const showAdd = hasObTx || memberAccounts.find((a) => a.id === selectedAccountId)?.balance === 0;
-                    if (!showAdd) return null;
-                    return <button className={styles.obBtn} onClick={onOpeningBalance}>{hasObTx ? 'Opening Balance' : 'Add Opening'}</button>;
-                  })()}
                 </div>
               </div>
             </div>

@@ -59,7 +59,6 @@ export function SelectAccountModal({ memberId, selectedAccountId, onSelect, onCl
                 type={displayType(acct.type)}
                 balance={formatAmount(acct.balance, locale, currency)}
                 gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
-                showChip={acct.type === 'cash'}
                 onClick={() => { onSelect(acct.id); onClose(); }}
                 selected={selectedAccountId === acct.id}
                 className={styles.gridCard}

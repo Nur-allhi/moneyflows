@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { AccountCard } from '../../components';
 import { useModalStore } from '../../stores/useModalStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
@@ -19,9 +20,18 @@ interface Props {
 
 export function AccountsSection({ memberAccounts, selectedAccountId, accountsOpen, setAccountsOpen, onAccountClick, isDesktop, memberId, onSelectAccount }: Props) {
   const { locale, currency } = useSettingsStore((s) => s.settings);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!accountsOpen || !isDesktop) return;
+    const onDown = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setAccountsOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [accountsOpen, isDesktop, setAccountsOpen]);
   if (isDesktop) {
     return (
-      <div className={styles.accountsDropdown}>
+      <div className={styles.accountsDropdown} ref={dropdownRef}>
         <div className={styles.accountsDropdownHeader} onClick={() => setAccountsOpen(!accountsOpen)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setAccountsOpen(!accountsOpen)}>
           <h2>Linked Accounts <span className={styles.acctCount}>{memberAccounts.length}</span></h2>
           <svg className={`${styles.accountsChevron} ${accountsOpen ? styles.chevronOpen : ''}`} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
@@ -39,7 +49,6 @@ export function AccountsSection({ memberAccounts, selectedAccountId, accountsOpe
                     type={displayType(acct.type)}
                     balance={formatAmount(acct.balance, locale, currency)}
                     gradient={ACCOUNT_TYPE_GRADIENT_THREE[acct.type]}
-                    showChip={acct.type === 'cash'}
                     onClick={() => onAccountClick(acct.id)}
                     selected={selectedAccountId === acct.id}
                     actions={
