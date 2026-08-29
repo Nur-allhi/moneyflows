@@ -552,7 +552,8 @@
 }
 .extrasToggle {
   flex-shrink: 0;
-  transition: opacity var(--transition-fast);
+  transition: opacity var(--transition-fast), max-width 0.28s ease, width 0.28s ease, padding var(--transition-fast), margin var(--transition-fast), border-width var(--transition-fast);
+  overflow: hidden;
 }
 .extrasToggle.pdfBtn:hover {
   width: 30px;
@@ -562,6 +563,12 @@
 .extrasWrap:focus-within .extrasToggle {
   opacity: 0;
   pointer-events: none;
+  max-width: 0;
+  width: 0;
+  padding: 0;
+  margin: 0;
+  border-width: 0;
+  overflow: hidden;
 }
 .extrasToggle .pdfBtnLabel {
   display: none;
