@@ -551,6 +551,27 @@
   opacity: 1;
   pointer-events: auto;
 }
+.extrasToggle {
+  transition: opacity var(--transition-fast), max-width var(--transition-fast), padding var(--transition-fast), margin var(--transition-fast), border-width var(--transition-fast);
+}
+.extrasToggle.pdfBtn:hover {
+  width: 30px;
+  border-radius: 50%;
+}
+.extrasWrap:hover .extrasToggle,
+.extrasWrap:focus-within .extrasToggle {
+  opacity: 0;
+  pointer-events: none;
+  max-width: 0;
+  width: 0;
+  padding: 0;
+  margin: 0;
+  border-width: 0;
+  overflow: hidden;
+}
+.extrasToggle .pdfBtnLabel {
+  display: none;
+}
 
 .pdfBtn {
   display: flex;
