@@ -1,6 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LedgerTable, SegmentedTabs, LedgerSearch } from '../../components';
+import { LedgerTable, SegmentedTabs } from '../../components';
 import type { LedgerRow } from '../../components';
 import { useModalStore } from '../../stores/useModalStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
@@ -51,8 +51,11 @@ export function LedgerSection(props: Props) {
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
+  const [toolMode, setToolMode] = useState<'filter' | 'search' | 'download'>('filter');
+  const [showExtras, setShowExtras] = useState(false);
 
   if (isDesktop) {
+    const cycleTool = () => setToolMode((m) => (m === 'filter' ? 'search' : m === 'search' ? 'download' : 'filter'));
     return (
       <div className={styles.contentSplit}>
         <div className={styles.ledgerPanel}>
@@ -65,19 +68,56 @@ export function LedgerSection(props: Props) {
               )}
             </h3>
             <div className={styles.ledgerPanelFilter}>
-              <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF">
-                <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                <span className={styles.pdfBtnLabel}>Download PDF</span>
+              <button
+                className={styles.pdfBtn}
+                onClick={() => {
+                  if (toolMode === 'filter') { setShowExtras(v => !v); }
+                  else if (toolMode === 'search') { setShowExtras(false); }
+                  else { downloadPdf(); }
+                  cycleTool();
+                }}
+                title={toolMode === 'filter' ? 'Show extras' : toolMode === 'search' ? 'Search' : 'Download PDF'}
+                aria-label={toolMode === 'filter' ? 'Show extras' : toolMode === 'search' ? 'Search' : 'Download PDF'}
+              >
+                {toolMode === 'filter' && (
+                  <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 4.5h14M4.5 9h9M7 13.5h4" /><circle cx="4.5" cy="4.5" r="1.5" fill="currentColor" stroke="none" /><circle cx="13.5" cy="9" r="1.5" fill="currentColor" stroke="none" /><circle cx="9" cy="13.5" r="1.5" fill="currentColor" stroke="none" /></svg>
+                )}
+                {toolMode === 'search' && (
+                  <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="5.5" /><path d="M12 12l4 4" /></svg>
+                )}
+                {toolMode === 'download' && (
+                  <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                )}
+                <span className={styles.pdfBtnLabel}>
+                  {toolMode === 'filter' ? 'Extras' : toolMode === 'search' ? 'Search' : 'Download PDF'}
+                </span>
               </button>
-              <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
-              <SegmentedTabs tabs={ledgerFilters} activeKey={ledgerFilter} onChange={setLedgerFilter} />
-              {selectedAccountId && <button className={styles.showAllBtn} onClick={() => setSelectedAccountId(null)}>All account</button>}
-              {selectedAccountId && (() => {
+              <button
+                className={`${styles.pdfBtn} ${styles.extrasToggle}`}
+                onClick={() => setShowExtras((v) => !v)}
+                title="Toggle extras"
+                aria-label="Toggle extras"
+                aria-expanded={showExtras}
+              >
+                <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></svg>
+              </button>
+              {showExtras && selectedAccountId && (
+                <button className={styles.showAllBtn} onClick={() => setSelectedAccountId(null)}>All account</button>
+              )}
+              {showExtras && selectedAccountId && (() => {
                 const hasObTx = transactions.some((tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true);
                 const showAdd = hasObTx || memberAccounts.find((a) => a.id === selectedAccountId)?.balance === 0;
                 if (!showAdd) return null;
                 return <button className={styles.obBtn} onClick={onOpeningBalance}>{hasObTx ? 'Opening Balance' : 'Add Opening'}</button>;
               })()}
+              {showExtras && toolMode === 'search' && (
+                <div className={styles.ledgerSearchInline}>
+                  <input className={styles.ledgerSearchInput} type="text" placeholder="Search transactions..." value={ledgerQuery} onChange={(e) => setLedgerQuery(e.target.value)} />
+                </div>
+              )}
+              {showExtras && toolMode === 'filter' && (
+                <SegmentedTabs tabs={ledgerFilters} activeKey={ledgerFilter} onChange={setLedgerFilter} />
+              )}
             </div>
           </div>
           <LedgerTable rows={filteredLedger} className={styles.ledgerTableInner} desktop showBalance={showBalance} onRowClick={onRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} searchQuery={ledgerQuery} />
