@@ -517,6 +517,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+  flex-direction: row;
 }
 .extrasPanel {
   display: inline-flex;
@@ -527,16 +528,14 @@
   border-radius: 9999px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  opacity: 0;
-  transform: translateX(8px) scale(0.95);
-  pointer-events: none;
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
   white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
 }
 .extrasWrap:hover .extrasPanel,
 .extrasWrap:focus-within .extrasPanel {
   opacity: 1;
-  transform: translateX(0) scale(1);
   pointer-events: auto;
 }
 
