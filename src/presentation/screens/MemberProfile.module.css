@@ -515,16 +515,12 @@
 }
 
 .extrasWrap {
-  position: relative;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   margin-left: auto;
 }
 .extrasPanel {
-  position: absolute;
-  right: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%) scale(0.95);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -533,18 +529,30 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   white-space: nowrap;
+  max-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-width: 0;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  transform: translateX(12px);
+  transition: max-width 0.28s ease, opacity var(--transition-fast), transform 0.28s ease, padding var(--transition-fast), border-width var(--transition-fast);
+  transform-origin: right center;
 }
 .extrasWrap:hover .extrasPanel,
 .extrasWrap:focus-within .extrasPanel {
+  max-width: 600px;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-width: 1px;
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(-50%) scale(1);
+  transform: translateX(0);
 }
 .extrasToggle {
   flex-shrink: 0;
+  transition: opacity var(--transition-fast);
 }
 .extrasToggle.pdfBtn:hover {
   width: 30px;
