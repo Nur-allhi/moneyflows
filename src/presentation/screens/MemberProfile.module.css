@@ -536,8 +536,8 @@
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transform: translateX(12px);
-  transition: max-width 0.28s ease, opacity var(--transition-fast), transform 0.28s ease, padding var(--transition-fast), border-width var(--transition-fast);
+  transform: translateX(16px) scale(0.96);
+  transition: max-width 0.36s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease, transform 0.36s cubic-bezier(0.4, 0, 0.2, 1), padding var(--transition-fast), border-width var(--transition-fast);
   transform-origin: right center;
 }
 .extrasWrap:hover .extrasPanel,
@@ -548,7 +548,7 @@
   border-width: 1px;
   opacity: 1;
   pointer-events: auto;
-  transform: translateX(0);
+  transform: translateX(0) scale(1);
 }
 .extrasToggle {
   flex-shrink: 0;
