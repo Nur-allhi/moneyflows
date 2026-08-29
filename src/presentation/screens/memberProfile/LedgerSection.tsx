@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LedgerTable } from '../../components';
+import { LedgerTable, LedgerSearch } from '../../components';
 import type { LedgerRow } from '../../components';
 import { useModalStore } from '../../stores/useModalStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
@@ -51,7 +51,6 @@ export function LedgerSection(props: Props) {
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const trayRef = useRef<HTMLDivElement>(null);
-  const [showExtras, setShowExtras] = useState(false);
 
   if (isDesktop) {
     return (
@@ -66,26 +65,17 @@ export function LedgerSection(props: Props) {
               )}
             </h3>
             <div className={styles.ledgerPanelFilter}>
-              <div className={styles.ledgerSearchInline}>
-                <svg className={styles.pdfBtnIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><circle cx="7" cy="7" r="5.5" /><path d="M11 11l3.5 3.5" /></svg>
-                <input className={styles.ledgerSearchInput} type="text" placeholder="Search transactions..." value={ledgerQuery} onChange={(e) => setLedgerQuery(e.target.value)} />
-                {ledgerQuery && <button className={styles.searchClear} onClick={() => setLedgerQuery('')} aria-label="Clear"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="10" height="10"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>}
-              </div>
+              <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
               <button className={styles.pdfBtn} onClick={downloadPdf} title="Download PDF" aria-label="Download PDF">
                 <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                 <span className={styles.pdfBtnLabel}>Download PDF</span>
               </button>
-              <button
-                className={`${styles.pdfBtn} ${styles.extrasToggle}`}
-                onClick={() => setShowExtras((v) => !v)}
-                title="Toggle filter and extras"
-                aria-label="Toggle filter and extras"
-                aria-expanded={showExtras}
-              >
-                <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></svg>
-              </button>
-              {showExtras && (
-                <>
+              <div className={styles.extrasWrap}>
+                <button className={`${styles.pdfBtn} ${styles.extrasToggle}`} title="Show filter and extras" aria-label="Show filter and extras">
+                  <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></svg>
+                  <span className={styles.pdfBtnLabel}>More</span>
+                </button>
+                <div className={styles.extrasPanel}>
                   <div className={styles.ledgerFilterPills}>
                     {ledgerFilters.map((f) => (
                       <button
@@ -117,8 +107,8 @@ export function LedgerSection(props: Props) {
                     if (!showAdd) return null;
                     return <button className={styles.obBtn} onClick={onOpeningBalance}>{hasObTx ? 'Opening Balance' : 'Add Opening'}</button>;
                   })()}
-                </>
-              )}
+                </div>
+              </div>
             </div>
           </div>
           <LedgerTable rows={filteredLedger} className={styles.ledgerTableInner} desktop showBalance={showBalance} onRowClick={onRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} searchQuery={ledgerQuery} />

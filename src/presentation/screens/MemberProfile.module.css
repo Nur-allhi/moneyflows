@@ -513,6 +513,33 @@
   color: white;
 }
 
+.extrasWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.extrasPanel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  margin-left: 4px;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  opacity: 0;
+  transform: translateX(8px) scale(0.95);
+  pointer-events: none;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  white-space: nowrap;
+}
+.extrasWrap:hover .extrasPanel,
+.extrasWrap:focus-within .extrasPanel {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+}
+
 .pdfBtn {
   display: flex;
   align-items: center;
