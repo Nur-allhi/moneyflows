@@ -518,41 +518,33 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  flex-direction: row;
   margin-left: auto;
 }
 .extrasPanel {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.95);
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  margin-left: 4px;
   border-radius: 9999px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   white-space: nowrap;
-  max-width: 0;
-  padding-left: 0;
-  padding-right: 0;
-  margin-left: 0;
-  border-color: transparent;
-  overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transition: max-width var(--transition-fast), opacity var(--transition-fast), padding var(--transition-fast), margin var(--transition-fast), border-color var(--transition-fast);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
 }
 .extrasWrap:hover .extrasPanel,
 .extrasWrap:focus-within .extrasPanel {
-  max-width: 600px;
-  padding-left: 8px;
-  padding-right: 8px;
-  margin-left: 4px;
-  border-color: var(--color-border);
   opacity: 1;
   pointer-events: auto;
+  transform: translateY(-50%) scale(1);
 }
 .extrasToggle {
-  transition: opacity var(--transition-fast), max-width var(--transition-fast), padding var(--transition-fast), margin var(--transition-fast), border-width var(--transition-fast);
+  flex-shrink: 0;
 }
 .extrasToggle.pdfBtn:hover {
   width: 30px;
@@ -562,12 +554,6 @@
 .extrasWrap:focus-within .extrasToggle {
   opacity: 0;
   pointer-events: none;
-  max-width: 0;
-  width: 0;
-  padding: 0;
-  margin: 0;
-  border-width: 0;
-  overflow: hidden;
 }
 .extrasToggle .pdfBtnLabel {
   display: none;
