@@ -366,3 +366,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Feature complete on branch. Next: user confirmation to merge into dev (needs CHANGELOG [Unreleased] entry at merge time per REPO_RULES §5).
+
+## Session 2026-09-29 12:20
+
+### Changes
+- Split repay form on `feature/loan-lender-breakdown` (`a5a961a`): "Paying Off" lender selector (allocation) + "Credit To" free account picker (money destination), independent; Credit To prefills with chosen lender until user overrides (touched-ref, survives lender switches)
+- Service already accepted both ids — submit now sends `lenderAccountId` + `destinationAccountId` separately, empty credit falls back to lender; new 7th test (pay off BRAC_B, credit Cash) green
+- Gates: unit vitest 26/26 PASS, tsc PASS, eslint PASS on all touched files
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Pushed. Still needs user confirmation to merge into dev + CHANGELOG entry.
