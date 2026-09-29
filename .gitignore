@@ -36,6 +36,7 @@ view_db.cjs
 # User data exports / dumps (NEVER commit - see docs/SECURITY.md §5)
 USER_DATA/
 db_b64.txt
+DemoDB/
 
 # Misc debug artifacts
 dashboard
