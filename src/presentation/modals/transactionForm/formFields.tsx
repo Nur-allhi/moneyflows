@@ -81,19 +81,31 @@ export function FormFields(props: Props & {
           </div>
           <div className={`${styles.slideField} ${styles.slideOpen}`}>
             <div className={styles.slideInner}>
-              <div className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>Paid To</span>
-                {showLenderChoice ? (
-                  <button type="button" className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`} onClick={() => setShowLenderPicker(true)}>
-                    {selectedLenderId ? <><span className={styles.pickerValue}>{repayLenderOptions.find((o) => o.lenderId === selectedLenderId)?.label ?? 'Select lender'}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></> : <span className={styles.pickerPlaceholder}>Select lender</span>}
-                  </button>
-                ) : (
+              {showLenderChoice ? (
+                <>
+                  <div className={styles.fieldGroup}>
+                    <span className={styles.fieldLabel}>Paying Off</span>
+                    <button type="button" className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`} onClick={() => setShowLenderPicker(true)}>
+                      {selectedLenderId ? <><span className={styles.pickerValue}>{repayLenderOptions.find((o) => o.lenderId === selectedLenderId)?.label ?? 'Select lender'}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></> : <span className={styles.pickerPlaceholder}>Select lender</span>}
+                    </button>
+                    {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
+                  </div>
+                  <div className={styles.fieldGroup}>
+                    <span className={styles.fieldLabel}>Credit To</span>
+                    <button type="button" className={styles.pickerTrigger} onClick={() => { setPickerField('destination'); setPickerMember(null); }}>
+                      {destination ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></> : <span className={styles.pickerPlaceholder}>Select account</span>}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className={styles.fieldGroup}>
+                  <span className={styles.fieldLabel}>Paid To</span>
                   <button type="button" className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''}`} onClick={() => { setPickerField('destination'); setPickerMember(null); }}>
                     {destination ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></> : <span className={styles.pickerPlaceholder}>Select account</span>}
                   </button>
-                )}
-                {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
-              </div>
+                  {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
+                </div>
+              )}
             </div>
           </div>
         </>

@@ -57,7 +57,7 @@ function makeService(loans: Loan[]): { service: LoanService; saved: Transaction[
   return { service, saved, loanDb };
 }
 
-function repayParams(extra: Partial<{ lenderAccountId: string; amount: number }> = {}) {
+function repayParams(extra: Partial<{ lenderAccountId: string; destinationAccountId: string; amount: number }> = {}) {
   return {
     borrowerAccountId: BORROWER, amount: 5000, description: 'repayment',
     date: '2026-09-25', memberId: 'member-1', ...extra,
@@ -117,6 +117,21 @@ describe('LoanService.recordRepayment (targeted)', () => {
     expect(loanDb.loans.find((l) => l.lenderAccountId === BUSINESS_CASH)?.outstanding).toBe(6230);
     expect(saved[0]?.destAccount).toBe(BRAC_A);
     expect(saved[0]?.amount).toBe(12000);
+  });
+
+  it('pays off one lender while crediting a different account', async () => {
+    const { service, saved, loanDb } = makeService(homeExpLoans());
+    await service.recordRepayment(repayParams({
+      lenderAccountId: BRAC_B, destinationAccountId: 'acct-cash', amount: 5000,
+    }));
+
+    // Allocation hits only BRAC_B's loans...
+    expect(loanDb.loans.filter((l) => l.lenderAccountId === BRAC_B).map((l) => l.outstanding)).toEqual([5000, 5000]);
+    expect(loanDb.loans.find((l) => l.lenderAccountId === BUSINESS_CASH)?.outstanding).toBe(9230);
+    // ...while the money is recorded against the credited account.
+    expect(saved[0]?.destAccount).toBe('acct-cash');
+    expect(saved[0]?.sourceAccount).toBe(BORROWER);
+    expect(saved[0]?.amount).toBe(5000);
   });
 
   it('keeps FIFO across all loans when no lender is chosen', async () => {

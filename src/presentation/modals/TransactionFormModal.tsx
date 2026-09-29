@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
@@ -64,6 +64,7 @@ export function TransactionFormModal({
   const [selectedBorrowerId, setSelectedBorrowerId] = useState(initialBorrowerId ?? '');
   const [selectedLenderId, setSelectedLenderId] = useState('');
   const [showLenderPicker, setShowLenderPicker] = useState(false);
+  const creditTouchedRef = useRef(false);
   const [showAddCp, setShowAddCp] = useState(false);
   const [newCpName, setNewCpName] = useState('');
   const [tagName, setTagName] = useState('');
@@ -151,8 +152,11 @@ export function TransactionFormModal({
 
   useEffect(() => {
     const stack = loanStacks.find((s) => s.debtorId === selectedBorrowerId);
-    const top = (stack?.lenderBreakdown ?? []).filter((b) => b.outstanding > 0)[0];
-    setSelectedLenderId(top?.lenderAccountId ?? '');
+    const top = (stack?.lenderBreakdown ?? []).filter((b) => b.outstanding > 0)[0]?.lenderAccountId ?? '';
+    setSelectedLenderId(top);
+    // "Credit To" prefills with the chosen lender until the user picks otherwise.
+    setDestination(top);
+    creditTouchedRef.current = false;
   }, [selectedBorrowerId, loanStacks]);
 
   const clearError = useCallback((field: string) => {
@@ -268,7 +272,11 @@ export function TransactionFormModal({
         onClose={() => setShowLenderPicker(false)}
         lenderOptions={repayLenderOptions}
         selectedLenderId={selectedLenderId}
-        setSelectedLenderId={(v) => { setSelectedLenderId(v); clearError('destination'); }}
+        setSelectedLenderId={(v) => {
+          setSelectedLenderId(v);
+          if (!creditTouchedRef.current) setDestination(v);
+          clearError('destination');
+        }}
       />
       <SourceDestinationPickers
         pickerField={pickerField}
@@ -279,7 +287,7 @@ export function TransactionFormModal({
         accountsByMember={accountsByMember}
         counterpartyAccounts={counterpartyAccounts}
         onSelectSource={(id) => setSource(id)}
-        onSelectDestination={(id) => setDestination(id)}
+        onSelectDestination={(id) => { setDestination(id); creditTouchedRef.current = true; }}
         setShowAddCp={setShowAddCp}
         clearError={clearError}
         locale={locale}

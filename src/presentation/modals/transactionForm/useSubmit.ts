@@ -59,10 +59,13 @@ export function useTxSubmit(params: {
         if (loanAction === 'lend') {
           await createLoan({ lenderAccountId: source, borrowerAccountId: destination, amount, description: description.trim(), date, memberId: txMemberId });
         } else {
+          // "Paying off" (allocation) and "credit to" (money destination) are
+          // independent: the tx goes to the credited account while the chosen
+          // lender's loans are paid down. Empty credit falls back to the lender.
           const targetedLender = lenderChoiceActive ? selectedLenderId : undefined;
           await recordRepayment({
             borrowerAccountId: selectedBorrowerId, amount, description: description.trim(), date, memberId: txMemberId,
-            destinationAccountId: targetedLender ?? destination,
+            destinationAccountId: targetedLender ? (destination || targetedLender) : destination,
             lenderAccountId: targetedLender,
           });
         }
