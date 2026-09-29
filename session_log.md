@@ -398,6 +398,7 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Page feedback: "Owed to" breakdown in loan ledger header is now collapsible (`cef7bb1`) — header button shows lender count + chevron, expanded by default, `aria-expanded` set
 - Page feedback follow-up: collapsed by default + chevron enlarged to a 28px tap target in `--color-text` (`883a6b1`)
 - Page feedback: text glyph swapped for chevron-down SVG (same `M4 6l4 4 4-4` as AccountsSection, rotates 180° when open) (`505c4d2`)
+- Page feedback: smooth open/close via grid-rows `0fr→1fr` slide (same pattern as accounts dropdown) (`9e9c8b1`)
 - Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS; pushed
 
 ### Skill(s) Used
