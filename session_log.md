@@ -349,3 +349,83 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - **Other Ledgers v1 complete on dev (2c8957c).** Next: Other Ledgers V2 (see OTHER_LEDGERS_FUTURE_V2.md) on "next update".
+
+## Session 2026-09-29 12:07
+
+### Changes
+- New branch `feature/loan-lender-breakdown` off dev — per-lender loan breakdown + targeted repayment (Option A)
+- Verified user scenario against DemoDB: Home EXP holds 15 active loans (Business Cash 30230 + Brac Bank x2 19000/35000 outstanding); confirmed no per-source totals and no pay-specific-lender path existed
+- `LoanStack.lenderBreakdown` (derived, no migration) via `buildLenderBreakdown()` in LoanDatabase; `recordRepayment({ lenderAccountId })` hits chosen lender oldest-first, spills over FIFO; tx dest = chosen lender
+- `LoanDetailView` header shows "Owed to" inline list when 2+ lenders (borrowed + outstanding each, member-suffixed names for duplicate bank names)
+- Repay form shows scoped LenderPicker dropdown when 2+ lenders; single-lender flow unchanged; 6 new vitest tests (grouping + targeted/spillover/FIFO/reject)
+- Gates: typecheck PASS, unit vitest 25/25 PASS (4 files), lint has 1 pre-existing warning in LedgerSection.tsx (untouched, fails --max-warnings 0 on dev too), e2e specs fail under vitest on clean dev too (pre-existing collector issue)
+- Committed `b129947`, pushed to `origin/feature/loan-lender-breakdown`
+
+### Skill(s) Used
+- senior-backend, senior-frontend
+
+### Status
+- Feature complete on branch. Next: user confirmation to merge into dev (needs CHANGELOG [Unreleased] entry at merge time per REPO_RULES §5).
+
+## Session 2026-09-29 12:20
+
+### Changes
+- Split repay form on `feature/loan-lender-breakdown` (`a5a961a`): "Paying Off" lender selector (allocation) + "Credit To" free account picker (money destination), independent; Credit To prefills with chosen lender until user overrides (touched-ref, survives lender switches)
+- Service already accepted both ids — submit now sends `lenderAccountId` + `destinationAccountId` separately, empty credit falls back to lender; new 7th test (pay off BRAC_B, credit Cash) green
+- Gates: unit vitest 26/26 PASS, tsc PASS, eslint PASS on all touched files
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Pushed. Still needs user confirmation to merge into dev + CHANGELOG entry.
+
+## Session 2026-09-29 12:28
+
+### Changes
+- `a5658d2` on `feature/loan-lender-breakdown`: "Available in {account}" row in loan ledger header (live account balance, locale currency) — internal borrowers only, counterparty ledgers unchanged
+- Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS; pushed
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Still needs user confirmation to merge into dev + CHANGELOG entry.
+
+## Session 2026-09-29 12:36
+
+### Changes
+- Page feedback: "Owed to" breakdown in loan ledger header is now collapsible (`cef7bb1`) — header button shows lender count + chevron, expanded by default, `aria-expanded` set
+- Page feedback follow-up: collapsed by default + chevron enlarged to a 28px tap target in `--color-text` (`883a6b1`)
+- Page feedback: text glyph swapped for chevron-down SVG (same `M4 6l4 4 4-4` as AccountsSection, rotates 180° when open) (`505c4d2`)
+- Page feedback: smooth open/close via grid-rows `0fr→1fr` slide (same pattern as accounts dropdown) (`9e9c8b1`)
+- Page feedback: whole "Owed to" block toggles on click anywhere (header button keeps keyboard/`aria-expanded` handling with stopPropagation) (`b54ea33`)
+- Page feedback: "Owed to · 3" title centered in section, chevron pinned right (`605a22c`)
+- Page feedback follow-up: chevron vertically centered against title via `top: 50% + translateY` (`a48b904`)
+
+## Session 2026-09-29 12:54
+
+### Changes
+- Ledger rename (`11fb69b`): pencil button next to debtor name reuses existing `edit-account` modal on the borrower account; stacks refetch on rename so header/PDF update; rename-by-ID propagates to all tx references; pushed
+- Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS
+
+## Session 2026-09-29 13:30
+
+### Changes
+- BUG: clicking any loan card froze the app (report + reproduced in two browsers). Root cause: rename refetch effect in LoanDetailView called fetchLoanStacks() → parent LoansScreen shows loading skeletons (unmounting detail) → remount refetches again → infinite mount/fetch/unmount storm (StrictMode double-effect refires it every mount)
+- Fix (`297cb8d`): deleted the effect; header name now derives live from the accounts store via shared `getStackDisplayName()` helper (also adopted by LoanDatabase — one naming rule, no refetch, no loop)
+- Verification: new e2e `14-loan-rename.spec.ts` (create loan → open ledger → rename → header asserts) PASSES 2/2; unit vitest 29/29 PASS; tsc + eslint PASS
+- Gates: typecheck PASS, lint PASS, unit 29/29, e2e rename 2/2
+
+### Skill(s) Used
+- senior-frontend, senior-backend
+
+### Status
+- Pushed. Still needs user confirmation to merge into dev + CHANGELOG entry.
+- Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS; pushed
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Still needs user confirmation to merge into dev + CHANGELOG entry.

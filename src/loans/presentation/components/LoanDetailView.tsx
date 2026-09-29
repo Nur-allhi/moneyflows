@@ -10,6 +10,7 @@ import { useModalStore } from '../../../presentation/stores/useModalStore';
 import { formatAmount, formatAmountParts } from '../../../presentation/utils/format';
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
 import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from '../../application/computeRunningBalances';
+import { getStackDisplayName } from '../../domain/loanDisplay';
 import { ProgressBar, LedgerTable, LedgerSearch, MobileLedger } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import { Highlight } from '../../../presentation/utils/highlight';
@@ -35,6 +36,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const [exportOpen, setExportOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState<'all' | 'description'>(useSettingsStore.getState().settings.reportDetailMode ?? 'all');
   const [showFilters, setShowFilters] = useState(false);
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [txFilter, setTxFilter] = useState<TxFilter>('all');
   const [month, setMonth] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -68,6 +70,15 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const accountById = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a])), [accounts]);
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
 
+  // Ledger name derives live from the borrower account (same rule as the
+  // database layer), so renames reflect instantly with no refetch — refetching
+  // here unmounts this view via the parent's loading skeleton and loops.
+  const borrowerAcct = accountById[stack.debtorId];
+  const borrowerMemberName = borrowerAcct?.memberId ? memberById[borrowerAcct.memberId]?.name : undefined;
+  const displayDebtorName = borrowerAcct
+    ? getStackDisplayName(borrowerAcct.name, borrowerAcct.type, borrowerMemberName)
+    : stack.debtorName;
+
   const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
   const accountMapForSearch = useMemo(() => new Map(accounts.map((a) => [a.id, { name: a.name }])), [accounts]);
   const memberMapForSearch = useMemo(() => new Map(members.map((m) => [m.id, { name: m.name }])), [members]);
@@ -92,10 +103,22 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     });
   }, [stack.debtorId]);
 
+  const handleRename = useCallback(() => {
+    useModalStore.getState().open('edit-account', { accountId: stack.debtorId });
+  }, [stack.debtorId]);
+
   const sortedTxs = useMemo(
     () => sortLoanTransactions(txns),
     [txns]
   );
+
+  const lenderRows = useMemo(
+    () => (stack.lenderBreakdown ?? []).filter((b) => b.outstanding > 0),
+    [stack.lenderBreakdown],
+  );
+
+  // Counterparty "accounts" are just people — no real balance to show.
+  const showAvailable = !!borrowerAcct && borrowerAcct.type !== 'counterparty';
 
   const filteredTxs = useMemo(() => {
     let result = sortedTxs;
@@ -300,7 +323,10 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
           <div className={styles.summaryInfo}>
             <span className={styles.typeLabel}>{stack.stackType === 'internal' ? 'Internal' : 'External'}</span>
             <div className={styles.debtorName}>
-              {stack.debtorName}
+              {displayDebtorName}
+              <button type="button" className={styles.renameBtn} onClick={handleRename} aria-label="Rename ledger" title="Rename ledger">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" aria-hidden="true"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
+              </button>
               <span className={styles.badge}>{stack.stackType === 'internal' ? 'Internal' : 'Debtor'}</span>
             </div>
           </div>
@@ -309,6 +335,12 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
             <div className={styles.amountLabel}>Total Outstanding</div>
           </div>
         </div>
+        {showAvailable && (
+          <div className={styles.availableRow}>
+            <span className={styles.availableLabel}>Available in {borrowerAcct?.name}</span>
+            <span className={styles.availableValue}>{formatAmount(borrowerAcct?.balance ?? 0, locale, currency)}</span>
+          </div>
+        )}
         <ProgressBar
           percent={stack.progressPercent}
           label="Repayment Progress"
@@ -316,6 +348,41 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
             ? `${stack.progressPercent}% repaid - ${formatAmount(stack.totalOutstanding, locale, currency)} remaining`
             : `${formatAmount(stack.totalOutstanding, locale, currency)} remaining`}
         />
+        {lenderRows.length >= 2 && (
+          <div className={styles.lenderBreakdown} onClick={() => setBreakdownOpen((v) => !v)}>
+            <button
+              type="button"
+              className={styles.lenderBreakdownToggle}
+              aria-expanded={breakdownOpen}
+              onClick={(e) => { e.stopPropagation(); setBreakdownOpen((v) => !v); }}
+            >
+              <span className={styles.lenderBreakdownTitle}>Owed to · {lenderRows.length}</span>
+              <span className={styles.lenderChevron}>
+                <svg className={breakdownOpen ? styles.lenderChevronOpen : ''} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+              </span>
+            </button>
+            <div className={`${styles.lenderSlide} ${breakdownOpen ? styles.lenderSlideOpen : ''}`}>
+              <div className={styles.lenderSlideInner}>
+                {lenderRows.map((b) => {
+              const lenderAcct = accountById[b.lenderAccountId];
+              const lenderMember = lenderAcct?.memberId ? memberById[lenderAcct.memberId] : undefined;
+              const lenderName = lenderAcct
+                ? (lenderMember ? `${lenderAcct.name} \u2014 ${lenderMember.name}` : lenderAcct.name)
+                : '(deleted account)';
+              return (
+                <div key={b.lenderAccountId} className={styles.lenderRow}>
+                  <div className={styles.lenderInfo}>
+                    <span className={styles.lenderName}>{lenderName}</span>
+                    <span className={styles.lenderLent}>Borrowed {formatAmount(b.lent, locale, currency)}</span>
+                  </div>
+                  <span className={styles.lenderAmount}>{formatAmount(b.outstanding, locale, currency)}</span>
+                </div>
+              );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
         <div className={styles.actions}>
           {stack.isSettled ? (
             <span className={styles.settledBadge}>Settled</span>

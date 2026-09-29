@@ -101,6 +101,48 @@ export function SourceDestinationPickers(props: PickerProps) {
   );
 }
 
+export function LenderPicker({ show, onClose, lenderOptions, selectedLenderId, setSelectedLenderId }: {
+  show: boolean;
+  onClose: () => void;
+  lenderOptions: { lenderId: string; label: string }[];
+  selectedLenderId: string;
+  setSelectedLenderId: (v: string) => void;
+}) {
+  if (!show) return null;
+  return (
+    <div className={styles.pickerOverlay} onClick={onClose}>
+      <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.pickerHeader}>
+          <span className={styles.pickerTitle}>Pay To — Select Lender</span>
+          <button className={styles.pickerClose} onClick={onClose}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          </button>
+        </div>
+        <div className={styles.pickerBody}>
+          {lenderOptions.length === 0 ? (
+            <div className={styles.pickerEmpty}>No lenders with outstanding balance</div>
+          ) : (
+            <div className={styles.pickerList}>
+              {lenderOptions.map((opt) => (
+                <button
+                  key={opt.lenderId}
+                  className={`${styles.pickerItem} ${selectedLenderId === opt.lenderId ? styles.pickerItemActive : ''}`}
+                  onClick={() => {
+                    setSelectedLenderId(opt.lenderId);
+                    onClose();
+                  }}
+                >
+                  <span className={styles.pickerItemName}>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function BorrowerPicker({ show, onClose, repayStackOptions, selectedBorrowerId, setSelectedBorrowerId }: {
   show: boolean;
   onClose: () => void;

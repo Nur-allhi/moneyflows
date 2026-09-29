@@ -17,17 +17,21 @@ export function useTxSubmit(params: {
   setErrors: React.Dispatch<React.SetStateAction<ValidationErrors>>;
   onClose: () => void; setClosing: (v: boolean) => void;
   setDestination: (v: string) => void; setShowAddCp: (v: boolean) => void; setNewCpName: (v: string) => void; newCpName: string;
+  selectedLenderId?: string; lenderChoiceActive?: boolean;
 }) {
-  const { tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName, accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName } = params;
+  const { tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName, accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName, selectedLenderId, lenderChoiceActive } = params;
   const { addTransaction } = useTransactionStore();
   const { createLoan, recordRepayment, createCounterparty, fetchLoanStacks } = useLoanStore();
   const { fetchAccounts } = useAccountStore();
 
   const validate = useCallback((): boolean => {
     const next = validateForm(tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId);
+    if (tab === 'loan' && loanAction === 'repay' && lenderChoiceActive && !selectedLenderId) {
+      next.destination = 'Select which lender this repays';
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId, setErrors]);
+  }, [tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId, lenderChoiceActive, selectedLenderId, setErrors]);
 
   const handleCreateCp = async () => {
     if (!newCpName.trim()) return;
@@ -55,7 +59,15 @@ export function useTxSubmit(params: {
         if (loanAction === 'lend') {
           await createLoan({ lenderAccountId: source, borrowerAccountId: destination, amount, description: description.trim(), date, memberId: txMemberId });
         } else {
-          await recordRepayment({ borrowerAccountId: selectedBorrowerId, amount, description: description.trim(), date, memberId: txMemberId, destinationAccountId: destination });
+          // "Paying off" (allocation) and "credit to" (money destination) are
+          // independent: the tx goes to the credited account while the chosen
+          // lender's loans are paid down. Empty credit falls back to the lender.
+          const targetedLender = lenderChoiceActive ? selectedLenderId : undefined;
+          await recordRepayment({
+            borrowerAccountId: selectedBorrowerId, amount, description: description.trim(), date, memberId: txMemberId,
+            destinationAccountId: targetedLender ? (destination || targetedLender) : destination,
+            lenderAccountId: targetedLender,
+          });
         }
         await fetchAccounts(); await fetchLoanStacks();
       } catch (e) { setErrors({ amount: (e as Error).message }); return; }

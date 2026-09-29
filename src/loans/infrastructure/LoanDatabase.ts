@@ -1,5 +1,6 @@
 import type { Database as SqlJsDb } from 'sql.js';
-import type { Loan, LoanItem, LoanStack } from '../domain/types';
+import type { Loan, LoanItem, LoanStack, LenderBreakdown } from '../domain/types';
+import { getStackDisplayName } from '../domain/loanDisplay';
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -19,6 +20,28 @@ function rowToLoan(r: Record<string, unknown>): Loan {
     updatedAt: r.updated_at as string,
     deletedAt: r.deleted_at as string | undefined,
   };
+}
+
+/**
+ * Per-lender exposure for one borrower's loans: groups active loans by
+ * lender account (ID, not name — duplicate names exist), highest
+ * outstanding first. Pure for unit testing.
+ */
+export function buildLenderBreakdown(loans: Loan[]): LenderBreakdown[] {
+  const byLender = new Map<string, LenderBreakdown>();
+  for (const l of loans) {
+    if (l.status === 'settled' || l.deletedAt) continue;
+    const outstanding = Math.max(0, l.outstanding);
+    if (outstanding <= 0) continue;
+    const entry = byLender.get(l.lenderAccountId) ?? {
+      lenderAccountId: l.lenderAccountId, lent: 0, outstanding: 0, activeLoanCount: 0,
+    };
+    entry.lent += l.principal;
+    entry.outstanding += outstanding;
+    entry.activeLoanCount += 1;
+    byLender.set(l.lenderAccountId, entry);
+  }
+  return [...byLender.values()].sort((a, b) => b.outstanding - a.outstanding);
 }
 
 export class LoanDatabase {
@@ -125,10 +148,11 @@ export class LoanDatabase {
 
     const borrowerAcct = accountMap.get(borrowerId);
     const acctName = (borrowerAcct?.name as string ?? '(deleted account)');
-    const stackType = borrowerAcct?.type === 'counterparty' ? 'external' : 'internal';
+    const borrowerType = borrowerAcct?.type as string | undefined;
     const memberId = borrowerAcct?.member_id as string | undefined;
-    const name = stackType === 'internal' && memberId && memberMap.has(memberId)
-      ? `${acctName} - ${memberMap.get(memberId)}`
+    const stackType = borrowerType === 'counterparty' ? 'external' : 'internal';
+    const name = borrowerAcct
+      ? getStackDisplayName(acctName, borrowerType, memberId ? memberMap.get(memberId) : undefined)
       : acctName;
 
     const allAcctIds = new Set<string>();
@@ -179,6 +203,7 @@ export class LoanDatabase {
       settledCount: settledLoans.length,
       activeCount: activeLoanItems.length,
       loans: [...activeLoanItems, ...settledLoans],
+      lenderBreakdown: buildLenderBreakdown(loans),
       stackType,
       isSettled,
     };

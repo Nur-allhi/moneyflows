@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 import { useAccountStore } from '../stores/useAccountStore';
 import { useMemberStore } from '../stores/useMemberStore';
@@ -11,7 +11,7 @@ import { formatAmount } from '../utils/format';
 import type { Account } from '../../core/domain/Account';
 import type { ValidationErrors } from './transactionForm/validation';
 import { FormFields } from './transactionForm/formFields';
-import { SourceDestinationPickers, BorrowerPicker } from './transactionForm/pickers';
+import { SourceDestinationPickers, BorrowerPicker, LenderPicker } from './transactionForm/pickers';
 import { TransactionFormLayout } from './transactionForm/layout';
 import { EmptyAccountsState, ErrorState, LoadingState } from './transactionForm/states';
 import { TagPicker, CreatePersonModal } from './transactionForm/extraPickers';
@@ -62,6 +62,9 @@ export function TransactionFormModal({
 
   const [loanAction, setLoanAction] = useState<'lend' | 'repay'>(initialTab === 'loan' && initialBorrowerId ? 'repay' : 'lend');
   const [selectedBorrowerId, setSelectedBorrowerId] = useState(initialBorrowerId ?? '');
+  const [selectedLenderId, setSelectedLenderId] = useState('');
+  const [showLenderPicker, setShowLenderPicker] = useState(false);
+  const creditTouchedRef = useRef(false);
   const [showAddCp, setShowAddCp] = useState(false);
   const [newCpName, setNewCpName] = useState('');
   const [tagName, setTagName] = useState('');
@@ -135,6 +138,27 @@ export function TransactionFormModal({
       }));
   }, [loanStacks, locale, currency]);
 
+  const repayLenderOptions = useMemo(() => {
+    const stack = loanStacks.find((s) => s.debtorId === selectedBorrowerId);
+    return (stack?.lenderBreakdown ?? [])
+      .filter((b) => b.outstanding > 0)
+      .map((b) => ({
+        lenderId: b.lenderAccountId,
+        label: `${accountLabel(b.lenderAccountId)} - ${formatAmount(b.outstanding, locale, currency)}`,
+      }));
+  }, [loanStacks, selectedBorrowerId, accountLabel, locale, currency]);
+
+  const showLenderChoice = tab === 'loan' && loanAction === 'repay' && repayLenderOptions.length >= 2;
+
+  useEffect(() => {
+    const stack = loanStacks.find((s) => s.debtorId === selectedBorrowerId);
+    const top = (stack?.lenderBreakdown ?? []).filter((b) => b.outstanding > 0)[0]?.lenderAccountId ?? '';
+    setSelectedLenderId(top);
+    // "Credit To" prefills with the chosen lender until the user picks otherwise.
+    setDestination(top);
+    creditTouchedRef.current = false;
+  }, [selectedBorrowerId, loanStacks]);
+
   const clearError = useCallback((field: string) => {
     setErrors((prev) => {
       if (!prev[field]) return prev;
@@ -165,6 +189,7 @@ export function TransactionFormModal({
   const { handleSubmit, handleCreateCp } = useTxSubmit({
     tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName,
     accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName,
+    selectedLenderId, lenderChoiceActive: showLenderChoice,
   });
 
   const loading = acctLoading || memberLoading;
@@ -210,6 +235,10 @@ export function TransactionFormModal({
       setShowBorrowerPicker={setShowBorrowerPicker}
       selectedBorrowerId={selectedBorrowerId}
       repayStackOptions={repayStackOptions}
+      showLenderChoice={showLenderChoice}
+      repayLenderOptions={repayLenderOptions}
+      selectedLenderId={selectedLenderId}
+      setShowLenderPicker={setShowLenderPicker}
       txError={txError}
     />
   );
@@ -238,6 +267,17 @@ export function TransactionFormModal({
         selectedBorrowerId={selectedBorrowerId}
         setSelectedBorrowerId={setSelectedBorrowerId}
       />
+      <LenderPicker
+        show={showLenderPicker}
+        onClose={() => setShowLenderPicker(false)}
+        lenderOptions={repayLenderOptions}
+        selectedLenderId={selectedLenderId}
+        setSelectedLenderId={(v) => {
+          setSelectedLenderId(v);
+          if (!creditTouchedRef.current) setDestination(v);
+          clearError('destination');
+        }}
+      />
       <SourceDestinationPickers
         pickerField={pickerField}
         pickerMember={pickerMember}
@@ -247,7 +287,7 @@ export function TransactionFormModal({
         accountsByMember={accountsByMember}
         counterpartyAccounts={counterpartyAccounts}
         onSelectSource={(id) => setSource(id)}
-        onSelectDestination={(id) => setDestination(id)}
+        onSelectDestination={(id) => { setDestination(id); creditTouchedRef.current = true; }}
         setShowAddCp={setShowAddCp}
         clearError={clearError}
         locale={locale}
