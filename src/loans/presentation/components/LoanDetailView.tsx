@@ -10,6 +10,7 @@ import { useModalStore } from '../../../presentation/stores/useModalStore';
 import { formatAmount, formatAmountParts } from '../../../presentation/utils/format';
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
 import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from '../../application/computeRunningBalances';
+import { getStackDisplayName } from '../../domain/loanDisplay';
 import { ProgressBar, LedgerTable, LedgerSearch, MobileLedger } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import { Highlight } from '../../../presentation/utils/highlight';
@@ -28,7 +29,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
   const { transactions: txns, fetchTransactions } = useTransactionStore();
-  const { deleteLoanStack, fetchLoanStacks } = useLoanStore();
+  const { deleteLoanStack } = useLoanStore();
   const { accounts } = useAccountStore();
   const { members } = useMemberStore();
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -69,13 +70,14 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const accountById = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a])), [accounts]);
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
 
-  // Ledger name comes from the borrower account — refetch stacks when it is renamed elsewhere.
-  const borrowerAccountName = accountById[stack.debtorId]?.name ?? '';
-  const renameRefetchSkipped = useRef(false);
-  useEffect(() => {
-    if (!renameRefetchSkipped.current) { renameRefetchSkipped.current = true; return; }
-    fetchLoanStacks();
-  }, [borrowerAccountName, fetchLoanStacks]);
+  // Ledger name derives live from the borrower account (same rule as the
+  // database layer), so renames reflect instantly with no refetch — refetching
+  // here unmounts this view via the parent's loading skeleton and loops.
+  const borrowerAcct = accountById[stack.debtorId];
+  const borrowerMemberName = borrowerAcct?.memberId ? memberById[borrowerAcct.memberId]?.name : undefined;
+  const displayDebtorName = borrowerAcct
+    ? getStackDisplayName(borrowerAcct.name, borrowerAcct.type, borrowerMemberName)
+    : stack.debtorName;
 
   const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
   const accountMapForSearch = useMemo(() => new Map(accounts.map((a) => [a.id, { name: a.name }])), [accounts]);
@@ -115,7 +117,6 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     [stack.lenderBreakdown],
   );
 
-  const borrowerAcct = accountById[stack.debtorId];
   // Counterparty "accounts" are just people — no real balance to show.
   const showAvailable = !!borrowerAcct && borrowerAcct.type !== 'counterparty';
 
@@ -322,7 +323,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
           <div className={styles.summaryInfo}>
             <span className={styles.typeLabel}>{stack.stackType === 'internal' ? 'Internal' : 'External'}</span>
             <div className={styles.debtorName}>
-              {stack.debtorName}
+              {displayDebtorName}
               <button type="button" className={styles.renameBtn} onClick={handleRename} aria-label="Rename ledger" title="Rename ledger">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" aria-hidden="true"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
               </button>

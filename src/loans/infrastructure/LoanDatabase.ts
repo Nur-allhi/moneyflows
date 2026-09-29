@@ -1,5 +1,6 @@
 import type { Database as SqlJsDb } from 'sql.js';
 import type { Loan, LoanItem, LoanStack, LenderBreakdown } from '../domain/types';
+import { getStackDisplayName } from '../domain/loanDisplay';
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -147,10 +148,11 @@ export class LoanDatabase {
 
     const borrowerAcct = accountMap.get(borrowerId);
     const acctName = (borrowerAcct?.name as string ?? '(deleted account)');
-    const stackType = borrowerAcct?.type === 'counterparty' ? 'external' : 'internal';
+    const borrowerType = borrowerAcct?.type as string | undefined;
     const memberId = borrowerAcct?.member_id as string | undefined;
-    const name = stackType === 'internal' && memberId && memberMap.has(memberId)
-      ? `${acctName} - ${memberMap.get(memberId)}`
+    const stackType = borrowerType === 'counterparty' ? 'external' : 'internal';
+    const name = borrowerAcct
+      ? getStackDisplayName(acctName, borrowerType, memberId ? memberMap.get(memberId) : undefined)
       : acctName;
 
     const allAcctIds = new Set<string>();
