@@ -402,6 +402,12 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Page feedback: whole "Owed to" block toggles on click anywhere (header button keeps keyboard/`aria-expanded` handling with stopPropagation) (`b54ea33`)
 - Page feedback: "Owed to · 3" title centered in section, chevron pinned right (`605a22c`)
 - Page feedback follow-up: chevron vertically centered against title via `top: 50% + translateY` (`a48b904`)
+
+## Session 2026-09-29 12:54
+
+### Changes
+- Ledger rename (`11fb69b`): pencil button next to debtor name reuses existing `edit-account` modal on the borrower account; stacks refetch on rename so header/PDF update; rename-by-ID propagates to all tx references; pushed
+- Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS
 - Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS; pushed
 
 ### Skill(s) Used
