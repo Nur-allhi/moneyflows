@@ -59,6 +59,13 @@ export interface LoanItem {
   date: string;
 }
 
+export interface LenderBreakdown {
+  lenderAccountId: string;
+  lent: number;
+  outstanding: number;
+  activeLoanCount: number;
+}
+
 export interface LoanStack {
   debtorId: string;
   debtorName: string;
@@ -68,6 +75,7 @@ export interface LoanStack {
   settledCount: number;
   activeCount: number;
   loans: LoanItem[];
+  lenderBreakdown: LenderBreakdown[];
   stackType?: 'external' | 'internal';
   isSettled?: boolean;
 }

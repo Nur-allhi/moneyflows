@@ -1,5 +1,5 @@
 import type { Database as SqlJsDb } from 'sql.js';
-import type { Loan, LoanItem, LoanStack } from '../domain/types';
+import type { Loan, LoanItem, LoanStack, LenderBreakdown } from '../domain/types';
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -19,6 +19,28 @@ function rowToLoan(r: Record<string, unknown>): Loan {
     updatedAt: r.updated_at as string,
     deletedAt: r.deleted_at as string | undefined,
   };
+}
+
+/**
+ * Per-lender exposure for one borrower's loans: groups active loans by
+ * lender account (ID, not name — duplicate names exist), highest
+ * outstanding first. Pure for unit testing.
+ */
+export function buildLenderBreakdown(loans: Loan[]): LenderBreakdown[] {
+  const byLender = new Map<string, LenderBreakdown>();
+  for (const l of loans) {
+    if (l.status === 'settled' || l.deletedAt) continue;
+    const outstanding = Math.max(0, l.outstanding);
+    if (outstanding <= 0) continue;
+    const entry = byLender.get(l.lenderAccountId) ?? {
+      lenderAccountId: l.lenderAccountId, lent: 0, outstanding: 0, activeLoanCount: 0,
+    };
+    entry.lent += l.principal;
+    entry.outstanding += outstanding;
+    entry.activeLoanCount += 1;
+    byLender.set(l.lenderAccountId, entry);
+  }
+  return [...byLender.values()].sort((a, b) => b.outstanding - a.outstanding);
 }
 
 export class LoanDatabase {
@@ -179,6 +201,7 @@ export class LoanDatabase {
       settledCount: settledLoans.length,
       activeCount: activeLoanItems.length,
       loans: [...activeLoanItems, ...settledLoans],
+      lenderBreakdown: buildLenderBreakdown(loans),
       stackType,
       isSettled,
     };

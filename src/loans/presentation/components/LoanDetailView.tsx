@@ -97,6 +97,11 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     [txns]
   );
 
+  const lenderRows = useMemo(
+    () => (stack.lenderBreakdown ?? []).filter((b) => b.outstanding > 0),
+    [stack.lenderBreakdown],
+  );
+
   const filteredTxs = useMemo(() => {
     let result = sortedTxs;
 
@@ -316,6 +321,27 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
             ? `${stack.progressPercent}% repaid - ${formatAmount(stack.totalOutstanding, locale, currency)} remaining`
             : `${formatAmount(stack.totalOutstanding, locale, currency)} remaining`}
         />
+        {lenderRows.length >= 2 && (
+          <div className={styles.lenderBreakdown}>
+            <span className={styles.lenderBreakdownTitle}>Owed to</span>
+            {lenderRows.map((b) => {
+              const lenderAcct = accountById[b.lenderAccountId];
+              const lenderMember = lenderAcct?.memberId ? memberById[lenderAcct.memberId] : undefined;
+              const lenderName = lenderAcct
+                ? (lenderMember ? `${lenderAcct.name} \u2014 ${lenderMember.name}` : lenderAcct.name)
+                : '(deleted account)';
+              return (
+                <div key={b.lenderAccountId} className={styles.lenderRow}>
+                  <div className={styles.lenderInfo}>
+                    <span className={styles.lenderName}>{lenderName}</span>
+                    <span className={styles.lenderLent}>Borrowed {formatAmount(b.lent, locale, currency)}</span>
+                  </div>
+                  <span className={styles.lenderAmount}>{formatAmount(b.outstanding, locale, currency)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className={styles.actions}>
           {stack.isSettled ? (
             <span className={styles.settledBadge}>Settled</span>
