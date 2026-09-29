@@ -428,4 +428,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - senior-frontend
 
 ### Status
-- Still needs user confirmation to merge into dev + CHANGELOG entry.
+- Merged into dev as squash `bfa4eaf` (2026-09-29 13:45, user-approved) with CHANGELOG `[Unreleased]` entries; build/tsc/unit 29/29 green on merged result; `dev` + feature branch pushed.
+
+## Session 2026-09-29 13:45 (merge)
+
+### Changes
+- Squash-merged `feature/loan-lender-breakdown` → `dev` (`bfa4eaf`): per-lender breakdown, split repayment, available balance, ledger rename + freeze fix, 10 unit tests + e2e `14-loan-rename`, CHANGELOG entries
+- Pushed `dev` (`dddfac2..bfa4eaf`); feature branch also pushed
+
+### Status
+- Next: user's call — delete `feature/loan-lender-breakdown` or keep; Other Ledgers V2 on "next update".
