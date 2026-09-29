@@ -408,6 +408,20 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Changes
 - Ledger rename (`11fb69b`): pencil button next to debtor name reuses existing `edit-account` modal on the borrower account; stacks refetch on rename so header/PDF update; rename-by-ID propagates to all tx references; pushed
 - Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS
+
+## Session 2026-09-29 13:30
+
+### Changes
+- BUG: clicking any loan card froze the app (report + reproduced in two browsers). Root cause: rename refetch effect in LoanDetailView called fetchLoanStacks() → parent LoansScreen shows loading skeletons (unmounting detail) → remount refetches again → infinite mount/fetch/unmount storm (StrictMode double-effect refires it every mount)
+- Fix (`297cb8d`): deleted the effect; header name now derives live from the accounts store via shared `getStackDisplayName()` helper (also adopted by LoanDatabase — one naming rule, no refetch, no loop)
+- Verification: new e2e `14-loan-rename.spec.ts` (create loan → open ledger → rename → header asserts) PASSES 2/2; unit vitest 29/29 PASS; tsc + eslint PASS
+- Gates: typecheck PASS, lint PASS, unit 29/29, e2e rename 2/2
+
+### Skill(s) Used
+- senior-frontend, senior-backend
+
+### Status
+- Pushed. Still needs user confirmation to merge into dev + CHANGELOG entry.
 - Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS; pushed
 
 ### Skill(s) Used
