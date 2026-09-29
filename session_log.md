@@ -401,6 +401,7 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Page feedback: smooth open/close via grid-rows `0fr→1fr` slide (same pattern as accounts dropdown) (`9e9c8b1`)
 - Page feedback: whole "Owed to" block toggles on click anywhere (header button keeps keyboard/`aria-expanded` handling with stopPropagation) (`b54ea33`)
 - Page feedback: "Owed to · 3" title centered in section, chevron pinned right (`605a22c`)
+- Page feedback follow-up: chevron vertically centered against title via `top: 50% + translateY` (`a48b904`)
 - Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS; pushed
 
 ### Skill(s) Used
