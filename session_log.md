@@ -379,3 +379,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Pushed. Still needs user confirmation to merge into dev + CHANGELOG entry.
+
+## Session 2026-09-29 12:28
+
+### Changes
+- `a5658d2` on `feature/loan-lender-breakdown`: "Available in {account}" row in loan ledger header (live account balance, locale currency) — internal borrowers only, counterparty ledgers unchanged
+- Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS; pushed
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Still needs user confirmation to merge into dev + CHANGELOG entry.
