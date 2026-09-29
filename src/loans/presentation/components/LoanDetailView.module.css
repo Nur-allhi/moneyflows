@@ -125,8 +125,14 @@
 }
 
 .lenderChevron {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--color-text);
 }
 
 .lenderRow {

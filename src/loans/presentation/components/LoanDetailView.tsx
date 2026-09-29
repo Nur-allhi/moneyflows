@@ -35,7 +35,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const [exportOpen, setExportOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState<'all' | 'description'>(useSettingsStore.getState().settings.reportDetailMode ?? 'all');
   const [showFilters, setShowFilters] = useState(false);
-  const [breakdownOpen, setBreakdownOpen] = useState(true);
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [txFilter, setTxFilter] = useState<TxFilter>('all');
   const [month, setMonth] = useState('');
   const [startDate, setStartDate] = useState('');
