@@ -55,6 +55,26 @@
   color: #fff;
 }
 
+.renameBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.renameBtn:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-secondary);
+}
+
 .summaryAmount {
   text-align: right;
 }
