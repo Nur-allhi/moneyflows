@@ -391,3 +391,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Still needs user confirmation to merge into dev + CHANGELOG entry.
+
+## Session 2026-09-29 12:36
+
+### Changes
+- Page feedback: "Owed to" breakdown in loan ledger header is now collapsible (`cef7bb1`) — header button shows lender count + chevron, expanded by default, `aria-expanded` set
+- Gates: tsc PASS, eslint PASS, unit vitest 26/26 PASS; pushed
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Still needs user confirmation to merge into dev + CHANGELOG entry.
