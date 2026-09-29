@@ -141,6 +141,24 @@
   transform: rotate(180deg);
 }
 
+.lenderSlide {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--transition-normal);
+}
+
+.lenderSlideOpen {
+  grid-template-rows: 1fr;
+}
+
+.lenderSlideInner {
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .lenderRow {
   display: flex;
   align-items: baseline;

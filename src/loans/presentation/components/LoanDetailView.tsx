@@ -345,7 +345,9 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
                 <svg className={breakdownOpen ? styles.lenderChevronOpen : ''} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
               </span>
             </button>
-            {breakdownOpen && lenderRows.map((b) => {
+            <div className={`${styles.lenderSlide} ${breakdownOpen ? styles.lenderSlideOpen : ''}`}>
+              <div className={styles.lenderSlideInner}>
+                {lenderRows.map((b) => {
               const lenderAcct = accountById[b.lenderAccountId];
               const lenderMember = lenderAcct?.memberId ? memberById[lenderAcct.memberId] : undefined;
               const lenderName = lenderAcct
@@ -360,7 +362,9 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
                   <span className={styles.lenderAmount}>{formatAmount(b.outstanding, locale, currency)}</span>
                 </div>
               );
-            })}
+                })}
+              </div>
+            </div>
           </div>
         )}
         <div className={styles.actions}>
