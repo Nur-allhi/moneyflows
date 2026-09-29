@@ -130,9 +130,15 @@
   justify-content: center;
   min-width: 28px;
   height: 28px;
-  font-size: var(--text-xl);
-  line-height: 1;
   color: var(--color-text);
+}
+
+.lenderChevron svg {
+  transition: transform var(--transition-normal);
+}
+
+.lenderChevronOpen {
+  transform: rotate(180deg);
 }
 
 .lenderRow {

@@ -341,7 +341,9 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
               onClick={() => setBreakdownOpen((v) => !v)}
             >
               <span className={styles.lenderBreakdownTitle}>Owed to · {lenderRows.length}</span>
-              <span className={styles.lenderChevron}>{breakdownOpen ? '\u25BE' : '\u25B8'}</span>
+              <span className={styles.lenderChevron}>
+                <svg className={breakdownOpen ? styles.lenderChevronOpen : ''} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+              </span>
             </button>
             {breakdownOpen && lenderRows.map((b) => {
               const lenderAcct = accountById[b.lenderAccountId];
