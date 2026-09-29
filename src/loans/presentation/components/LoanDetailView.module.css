@@ -111,6 +111,24 @@
   color: var(--color-text-secondary);
 }
 
+.lenderBreakdownToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.lenderChevron {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
 .lenderRow {
   display: flex;
   align-items: baseline;

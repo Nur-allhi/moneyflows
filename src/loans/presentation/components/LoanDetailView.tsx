@@ -35,6 +35,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const [exportOpen, setExportOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState<'all' | 'description'>(useSettingsStore.getState().settings.reportDetailMode ?? 'all');
   const [showFilters, setShowFilters] = useState(false);
+  const [breakdownOpen, setBreakdownOpen] = useState(true);
   const [txFilter, setTxFilter] = useState<TxFilter>('all');
   const [month, setMonth] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -333,8 +334,16 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         />
         {lenderRows.length >= 2 && (
           <div className={styles.lenderBreakdown}>
-            <span className={styles.lenderBreakdownTitle}>Owed to</span>
-            {lenderRows.map((b) => {
+            <button
+              type="button"
+              className={styles.lenderBreakdownToggle}
+              aria-expanded={breakdownOpen}
+              onClick={() => setBreakdownOpen((v) => !v)}
+            >
+              <span className={styles.lenderBreakdownTitle}>Owed to · {lenderRows.length}</span>
+              <span className={styles.lenderChevron}>{breakdownOpen ? '\u25BE' : '\u25B8'}</span>
+            </button>
+            {breakdownOpen && lenderRows.map((b) => {
               const lenderAcct = accountById[b.lenderAccountId];
               const lenderMember = lenderAcct?.memberId ? memberById[lenderAcct.memberId] : undefined;
               const lenderName = lenderAcct
