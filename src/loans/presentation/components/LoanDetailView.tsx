@@ -333,12 +333,12 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
             : `${formatAmount(stack.totalOutstanding, locale, currency)} remaining`}
         />
         {lenderRows.length >= 2 && (
-          <div className={styles.lenderBreakdown}>
+          <div className={styles.lenderBreakdown} onClick={() => setBreakdownOpen((v) => !v)}>
             <button
               type="button"
               className={styles.lenderBreakdownToggle}
               aria-expanded={breakdownOpen}
-              onClick={() => setBreakdownOpen((v) => !v)}
+              onClick={(e) => { e.stopPropagation(); setBreakdownOpen((v) => !v); }}
             >
               <span className={styles.lenderBreakdownTitle}>Owed to · {lenderRows.length}</span>
               <span className={styles.lenderChevron}>
