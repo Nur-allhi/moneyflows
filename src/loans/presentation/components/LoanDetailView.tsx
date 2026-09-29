@@ -102,6 +102,10 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     [stack.lenderBreakdown],
   );
 
+  const borrowerAcct = accountById[stack.debtorId];
+  // Counterparty "accounts" are just people — no real balance to show.
+  const showAvailable = !!borrowerAcct && borrowerAcct.type !== 'counterparty';
+
   const filteredTxs = useMemo(() => {
     let result = sortedTxs;
 
@@ -314,6 +318,12 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
             <div className={styles.amountLabel}>Total Outstanding</div>
           </div>
         </div>
+        {showAvailable && (
+          <div className={styles.availableRow}>
+            <span className={styles.availableLabel}>Available in {borrowerAcct?.name}</span>
+            <span className={styles.availableValue}>{formatAmount(borrowerAcct?.balance ?? 0, locale, currency)}</span>
+          </div>
+        )}
         <ProgressBar
           percent={stack.progressPercent}
           label="Repayment Progress"
