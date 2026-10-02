@@ -58,6 +58,27 @@ export interface MemberReportSummary {
 export interface MemberReport {
   summary: MemberReportSummary;
   accounts: AccountSection[];
+  loans: LoanSection[];
+  otherLedgers: OtherLedgerSection[];
   filter: MemberReportFilter;
   generatedAt: string;
+}
+
+export interface LoanSection {
+  counterpartyAccountId: string;
+  counterpartyName: string;
+  totalLent: number;
+  totalRepaid: number;
+  outstanding: number;
+  rows: MemberReportRow[];
+}
+
+export interface OtherLedgerSection {
+  ledgerId: string;
+  ledgerName: string;
+  opening: number;
+  totalDebit: number;
+  totalCredit: number;
+  closing: number;
+  rows: MemberReportRow[];
 }

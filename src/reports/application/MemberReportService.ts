@@ -1,11 +1,15 @@
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
 import type { Transaction } from '../../core/domain/Transaction';
+import type { OtherLedgerEntry } from '../../otherLedgers/domain/types';
 import type {
   AccountSection,
+  LoanSection,
   MemberReport,
   MemberReportFilter,
   MemberReportRow,
+  OtherLedgerSection,
 } from '../domain/types';
+import { buildLoanSections, buildOtherLedgerSections } from './memberReportSections';
 
 const dayOf = (iso: string): string => iso.slice(0, 10);
 
@@ -59,6 +63,8 @@ export class MemberReportService {
         accountId: a.id, accountName: a.name,
         opening: a.balance, totalDebit: 0, totalCredit: 0, closing: a.balance, rows: [],
       })),
+      loans: [],
+      otherLedgers: [],
       filter,
       generatedAt,
     };
@@ -143,6 +149,43 @@ export class MemberReportService {
     const summaryDebit = sections.reduce((s, x) => s + x.totalDebit, 0);
     const summaryCredit = sections.reduce((s, x) => s + x.totalCredit, 0);
     const summaryClosing = sections.reduce((s, x) => s + x.closing, 0);
+
+    const includedIds = new Set(accounts.map((a) => a.id));
+    const scopedTxs = allTxs.filter(
+      (t) =>
+        (t.sourceAccount != null && includedIds.has(t.sourceAccount)) ||
+        (t.destAccount != null && includedIds.has(t.destAccount)),
+    );
+
+    let loans: LoanSection[] = [];
+    if (filter.includeLoans) {
+      const allNameById = new Map((await this.db.getAccounts()).map((a) => [a.id, a.name]));
+      const ownedNames = new Map(owned.map((a) => [a.id, a.name]));
+      loans = buildLoanSections(
+        scopedTxs,
+        (id) => allNameById.get(id) ?? '(deleted account)',
+        (tx, counterpartyId) => {
+          const ownId = [tx.sourceAccount, tx.destAccount].find(
+            (x) => x != null && x !== counterpartyId && ownedNames.has(x),
+          );
+          return ownId != null ? (ownedNames.get(ownId) ?? '') : '';
+        },
+        { start, end },
+      );
+    }
+
+    let otherLedgers: OtherLedgerSection[] = [];
+    if (filter.includeOtherLedgers) {
+      const mine = (await this.db.getOtherLedgers()).filter(
+        (l) => !l.deletedAt && l.ownerType === 'member' && l.ownerMemberId === member.id,
+      );
+      const entriesByLedger = new Map<string, OtherLedgerEntry[]>();
+      for (const l of mine) {
+        entriesByLedger.set(l.id, await this.db.getOtherLedgerEntries(l.id));
+      }
+      otherLedgers = buildOtherLedgerSections(mine, entriesByLedger, { start, end });
+    }
+
     return {
       summary: {
         memberId: member.id,
@@ -157,6 +200,8 @@ export class MemberReportService {
         accountCount: sections.length,
       },
       accounts: sections,
+      loans,
+      otherLedgers,
       filter,
       generatedAt,
     };

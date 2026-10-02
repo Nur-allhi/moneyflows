@@ -89,4 +89,99 @@ describe('MemberReportService (T-132 accounts section)', () => {
       'Member nope not found',
     );
   });
+
+  it('returns empty loan/other sections unless requested', async () => {
+    const report = await makeService().generateReport({ memberId: 'member-1' });
+    expect(report.loans).toEqual([]);
+    expect(report.otherLedgers).toEqual([]);
+  });
+});
+
+const ACCT_X = new Account('acct-x', '', 'Home EXP', 'cash', 8000);
+
+const LOAN_TXS = [
+  tx('l1', 'lend', 5000, '2026-08-01', 'acct-a', 'acct-x'),
+  tx('l2', 'lend', 7000, '2026-08-02', 'acct-a', 'acct-x'),
+  tx('l3', 'repay', 4000, '2026-08-04', 'acct-x', 'acct-a'),
+];
+
+function makeFullService(): MemberReportService {
+  const db = {
+    getMemberById: async (id: string) => (id === MEMBER.id ? MEMBER : null),
+    getAccounts: async (memberId?: string) =>
+      memberId === MEMBER.id ? [ACCT_A, ACCT_B] : [ACCT_A, ACCT_B, ACCT_X],
+    getTransactions: async () => [...ALL_TXS, ...LOAN_TXS],
+    getOtherLedgers: async () => [LEDGER],
+    getOtherLedgerEntries: async () => [...ENTRIES],
+  } as unknown as IDatabaseService;
+  return new MemberReportService(db);
+}
+
+const LEDGER = {
+  id: 'led-1',
+  name: 'Shop Book',
+  ownerType: 'member' as const,
+  ownerMemberId: 'member-1',
+  startingDate: '2026-08-01',
+  openingBalance: 100,
+  createdAt: '2026-08-01T00:00:00.000Z',
+  updatedAt: '2026-08-01T00:00:00.000Z',
+};
+
+function entry(id: string, date: string, debit: number, credit: number) {
+  return {
+    id,
+    ledgerId: 'led-1',
+    date,
+    description: `entry-${id}`,
+    debit,
+    credit,
+    balance: 0,
+    metadata: {},
+    createdAt: `${date}T00:00:00.000Z`,
+    updatedAt: `${date}T00:00:00.000Z`,
+  };
+}
+
+const ENTRIES = [entry('e1', '2026-08-02', 30, 0), entry('e2', '2026-08-03', 0, 50)];
+
+describe('MemberReportService (T-133 loans + other ledgers)', () => {
+  it('groups loans by counterparty with full-history balances', async () => {
+    const report = await makeFullService().generateReport({
+      memberId: 'member-1',
+      includeLoans: true,
+      includeOtherLedgers: true,
+    });
+
+    expect(report.loans.map((s) => s.counterpartyName)).toEqual(['Home EXP']);
+    const sec = report.loans[0]!;
+    expect(sec.totalLent).toBe(12000);
+    expect(sec.totalRepaid).toBe(4000);
+    expect(sec.outstanding).toBe(8000);
+    expect(sec.rows.map((r) => r.runningBalance)).toEqual([5000, 12000, 8000]);
+    expect(sec.rows[0]!.counterpartyAccount).toBe('Cash');
+
+    const book = report.otherLedgers[0]!;
+    expect(book.ledgerName).toBe('Shop Book');
+    expect(book.opening).toBe(100);
+    expect(book.totalDebit).toBe(30);
+    expect(book.totalCredit).toBe(50);
+    expect(book.closing).toBe(120);
+    expect(book.rows.map((r) => r.runningBalance)).toEqual([70, 120]);
+  });
+
+  it('trims loan/other rows by period but keeps full-history balances', async () => {
+    const report = await makeFullService().generateReport({
+      memberId: 'member-1',
+      startDate: '2026-08-04',
+      includeLoans: true,
+      includeOtherLedgers: true,
+    });
+
+    const sec = report.loans[0]!;
+    expect(sec.rows.map((r) => r.id)).toEqual(['l3']);
+    expect(sec.rows[0]!.runningBalance).toBe(8000);
+    expect(sec.outstanding).toBe(8000);
+    expect(report.otherLedgers[0]!.rows).toEqual([]);
+  });
 });
