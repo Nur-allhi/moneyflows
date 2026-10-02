@@ -765,3 +765,11 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Logged BUG-8 first per §3.11: Dashboard "New Transaction" icon + label wrapped to two lines — rollout's single `.anim-target` span collapsed the row-flex `gap: 8px`
 - Fix: two `.anim-target` spans sharing one replay key (icon + label); tree-wide audit found no other svg+text single-span wrappers
 - Gates: typecheck PASS, eslint PASS; `detect_changes` n/a (single button)
+
+## Session 2026-10-02 (merge feature/ui-polish → dev)
+
+### Changes
+- User-approved merge: `feature/ui-polish` (5 commits: header anims + app-wide rollout + BUG-8 fix + CHANGELOG `[Unreleased]` Added/Fixed) → `dev` via `--no-ff` `e6a9d41` (branch kept alive); pushed `dev`
+- Pre-merge gates on branch tip: typecheck PASS, build PASS, unit 48/48 PASS, eslint clean (1 pre-existing `LedgerSection` warning)
+- `detect_changes` vs dev: HIGH disclosed (50 files, all additive-only animation wiring, no logic changes); no version bump (feature→dev, per VERSIONING)
+- First `dev` push timed out (network, retry succeeded `427cda3..e6a9d41`); back on `feature/ui-polish` (clean, one commit behind the merge)
