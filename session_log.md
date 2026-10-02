@@ -857,3 +857,10 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Changes
 - NEW `constants/fontSizes.ts` (Small/Medium/Large, default Medium) + `AppSettings.fontSize` (deep-fill backfills old installs) + `tokens.css` `[data-font]` blocks scaling all `--text-*`/`--font-size-*` tokens + `useTheme()` sets `data-font` + index.html pre-paint mirror + `AppearanceSection` "Text size" segmented row (instant-apply, anim-pop, both Settings modal + page)
 - Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS, `detect_changes` LOW (index predates theme/accent symbols — change follows the approved accent/bg precedent, additive-only)
+
+## Session 2026-10-02 (merge feature/ui-polish → dev, round 3)
+
+### Changes
+- User-approved merge: `feature/ui-polish` (lucide nav icons + collapsible sidebar suite + CHANGELOG `[Unreleased]` entries) → `dev` via `--no-ff` `b8e9401` (branch kept); pushed `dev` (`8a6c131..b8e9401`)
+- Pre-merge gates: build PASS, unit 48/48 PASS; `detect_changes` vs dev MEDIUM (7 files, sidebar/nav scope, Playwright-verified live); no version bump
+- Staying on `dev`
