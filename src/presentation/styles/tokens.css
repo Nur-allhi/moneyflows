@@ -118,6 +118,29 @@
   --color-primary-deep: oklch(56% 0.2 350);
 }
 
+/* Background presets (Phase 17) — curated per mode; luminance stays in-lane
+   (dark ≤14%, light ≥93%) so text contrast can't break. useTheme() sets a
+   single data-bg holding the CURRENT mode's id, so dark/light blocks never
+   collide. obsidian/paper are the :root defaults, no blocks needed. */
+:root[data-bg="midnight"] {
+  --color-bg: oklch(12% 0.03 270);
+}
+:root[data-bg="forest"] {
+  --color-bg: oklch(12.5% 0.03 165);
+}
+:root[data-bg="plum"] {
+  --color-bg: oklch(13.5% 0.03 320);
+}
+:root[data-theme="light"][data-bg="sky"] {
+  --color-bg: oklch(93% 0.02 245);
+}
+:root[data-theme="light"][data-bg="sand"] {
+  --color-bg: oklch(94% 0.025 95);
+}
+:root[data-theme="light"][data-bg="mint"] {
+  --color-bg: oklch(93% 0.02 170);
+}
+
 /* Light theme (T-132) — same glass recipe, paper base. Activated via
    data-theme="light" by useTheme(). */
 :root[data-theme="light"] {

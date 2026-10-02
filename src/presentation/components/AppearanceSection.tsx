@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react';
 import { ACCENTS, DEFAULT_ACCENT_ID } from '../constants/accents';
+import { BG_DARK, BG_LIGHT, DEFAULT_BG_DARK, DEFAULT_BG_LIGHT } from '../constants/backgrounds';
 import type { ThemeMode } from '../../core/domain/AppSettings';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { useEffectiveTheme } from '../hooks/useTheme';
 import styles from './AppearanceSection.module.css';
 
 const THEME_OPTIONS: { id: ThemeMode; label: string }[] = [
@@ -18,8 +20,19 @@ const THEME_OPTIONS: { id: ThemeMode; label: string }[] = [
 export function AppearanceSection() {
   const theme = useSettingsStore((s) => s.settings.theme ?? 'dark');
   const accentId = useSettingsStore((s) => s.settings.accentId ?? DEFAULT_ACCENT_ID);
+  const bgDark = useSettingsStore((s) => s.settings.bgDark ?? DEFAULT_BG_DARK);
+  const bgLight = useSettingsStore((s) => s.settings.bgLight ?? DEFAULT_BG_LIGHT);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
+  const effective = useEffectiveTheme();
   const activeAccent = ACCENTS.some((a) => a.id === accentId) ? accentId : DEFAULT_ACCENT_ID;
+  // Background presets follow the CURRENT mode — flipping theme swaps the row.
+  const bgList = effective === 'light' ? BG_LIGHT : BG_DARK;
+  const currentBg = effective === 'light' ? bgLight : bgDark;
+  const activeBg = bgList.some((b) => b.id === currentBg)
+    ? currentBg
+    : (bgList[0]?.id ?? currentBg);
+  const setBg = (id: string) =>
+    updateSettings(effective === 'light' ? { bgLight: id } : { bgDark: id });
 
   return (
     <div className={styles.appearance}>
@@ -50,6 +63,22 @@ export function AppearanceSection() {
               aria-label={`${a.label} accent`}
               title={a.label}
               onClick={() => updateSettings({ accentId: a.id })}
+            />
+          ))}
+        </div>
+      </div>
+      <div className={styles.row} role="group" aria-label={`Background for ${effective} mode`}>
+        <span className={styles.rowLabel}>Background</span>
+        <div className={styles.swatchGrid}>
+          {bgList.map((b) => (
+            <button
+              key={b.id}
+              className={`${styles.swatch} ${activeBg === b.id ? styles.swatchActive : ''}`}
+              style={{ '--swatch-color': b.swatch } as CSSProperties}
+              aria-pressed={activeBg === b.id}
+              aria-label={`${b.label} background`}
+              title={b.label}
+              onClick={() => setBg(b.id)}
             />
           ))}
         </div>

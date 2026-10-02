@@ -130,6 +130,16 @@ Decision: A1 (`data-theme` token override, header sun/moon toggle, System/Light/
 
 Dependencies: `T-132 → T-133 → (T-134 ∥ T-135) → T-136 → T-137`. Merge to `dev` only with user confirmation.
 
+## Phase 17 — Background Presets per Mode (Option A) — In Progress
+
+Approved 2026-10-02, built on `feature/theme-accent` (theme workstream). Curated bases only — luminance stays in-lane per mode so text contrast can't break. Dark: Obsidian/Midnight/Forest/Plum. Light: Paper/Sky/Sand/Mint.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-138 | Tokens + model + hook: `[data-bg]` blocks, `bgDark`/`bgLight` in `AppSettings`, `backgrounds.ts`, `useTheme()` + pre-paint apply | `senior-frontend` | S | **Complete** |
+| T-139 | Appearance "Background" row (current-mode presets, reuses swatch styles) + `backgrounds.test.ts` sync guard | `senior-frontend` | S | **Complete** |
+| T-140 | Verification: computed bg per preset × mode, screenshots, gates | `code-reviewer` | S | **Complete** (8/8 presets resolve, dark/forest + picker screenshots, 0 errors) |
+
 ## Following Phase
 
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.

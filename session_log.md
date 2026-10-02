@@ -629,3 +629,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Pushed on `feature/theme-accent`. Next: merge confirmation (CHANGELOG entry rides with merge).
+
+## Session 2026-10-02 (Phase 17: background presets T-138..T-140)
+
+### Changes
+- User asked for background choice per mode; owner-approved option A (curated presets, luminance in-lane)
+- T-138: `[data-bg]` blocks (midnight/forest/plum + sky/sand/mint; obsidian/paper are defaults), `bgDark`/`bgLight` in `AppSettings`, `backgrounds.ts`, `useTheme()` sets single `data-bg` for current mode + bg-tinted `theme-color`, pre-paint mirror
+- T-139: Appearance "Background" row (presets follow effective mode, reuses swatch styles) + `backgrounds.test.ts` 4/4
+- T-140: live verification — 8/8 presets resolve to exact values, seeded `bgDark:forest` boots correctly, dark/forest dashboard + picker screenshots, 0 errors; typecheck + build green
+- Fixed 2 `noUncheckedIndexedAccess` errors; updated `TICKETS.md` Phase 17 → Complete
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Phase 17 complete, pushed on `feature/theme-accent`. Next: merge confirmation.

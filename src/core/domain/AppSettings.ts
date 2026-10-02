@@ -23,5 +23,8 @@ export class AppSettings {
     public theme: ThemeMode = 'dark',
     /** Accent id matching a :root[data-accent] block in tokens.css + ACCENTS. */
     public accentId: string = 'violet',
+    /** Background preset ids matching [data-bg] blocks in tokens.css + BACKGROUNDS. */
+    public bgDark: string = 'obsidian',
+    public bgLight: string = 'paper',
   ) {}
 }

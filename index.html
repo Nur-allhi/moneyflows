@@ -24,6 +24,7 @@
         var dark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         document.documentElement.dataset.accent = accent;
+        document.documentElement.dataset.bg = dark ? (st.bgDark || 'obsidian') : (st.bgLight || 'paper');
       } catch (e) { /* defaults apply */ }
     </script>
   </head>
