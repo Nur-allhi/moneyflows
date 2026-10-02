@@ -114,6 +114,22 @@ Dependencies: `T-124 → (T-125 ∥ T-126) → (T-127 ∥ T-128 ∥ T-129 ∥ T-
 
 Future V2 still `T-119..T-123` in `OTHER_LEDGERS_FUTURE_V2.md` (build on “next update”).
 
+## Phase 16 — Theme (Light/Dark) + Accent Color (A1 + B1) — Planned
+
+Plan: `docs/plans/THEME_ACCENT_PLAN.md` (approved 2026-10-02, branch `feature/theme-accent` off `dev`).
+Decision: A1 (`data-theme` token override, header sun/moon toggle, System/Light/Dark in Settings) + B1 (6 curated OKLCH accents in Settings). Defaults unchanged: dark + violet.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-132 | Token foundation: `--color-primary-deep` + replace ~15 hardcoded gradient tails + `[data-theme="light"]` block + 6 `[data-accent]` blocks in `tokens.css` | `frontend-design` | M | Todo |
+| T-133 | Settings model + `useTheme()` hook + App wiring (`theme`, `accentId` in `AppSettings`/store, `data-theme`/`data-accent` on `<html>`, `matchMedia` system resolve) | `senior-frontend` | S | Todo |
+| T-134 | Header sun/moon toggle (36px circle chrome, dark↔light flip, `aria-label`, focus-visible ring) | `senior-frontend`, `ui-ux-pro-max` | S | Todo |
+| T-135 | Settings Appearance section: theme 3-way + accent swatch grid in `SettingsModal` + `SettingsPage` | `senior-frontend`, `ui-ux-pro-max` | M | Todo |
+| T-136 | Identity + audit: `DESIGN_IDENTITY.md` §2/§17 update, hardcoded-literal audit (`labels.ts`, `Avatar`, `reset.css`, `main.tsx`), gates green | `code-reviewer`, `frontend-design` | S | Todo |
+| T-137 | Verification: 9 viewports × light/dark × 2 accents, no overflow, contrast check, vitest theme-resolve tests | `code-reviewer` | S | Todo |
+
+Dependencies: `T-132 → T-133 → (T-134 ∥ T-135) → T-136 → T-137`. Merge to `dev` only with user confirmation.
+
 ## Following Phase
 
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
