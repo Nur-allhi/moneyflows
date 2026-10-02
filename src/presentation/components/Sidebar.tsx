@@ -45,9 +45,6 @@ export function Sidebar({ items, footerLabel, footerRole, className = '' }: Side
         </div>
         <div className={`${styles.face} ${styles.faceShut} ${folded ? '' : styles.faceHidden}`} aria-hidden={!folded}>
           <span className={styles.miniMark} aria-hidden="true">M</span>
-          <button className={styles.toggleBtn} onClick={toggleSidebar} aria-label={toggleLabel} title={toggleLabel} tabIndex={folded ? 0 : -1}>
-            {chev(true)}
-          </button>
         </div>
       </div>
       <nav className={styles.nav}>

@@ -825,6 +825,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Fix: `.face.faceHidden` (doubled specificity, deterministic win). Verified: mark/toggle centers exactly at rail center, logo hidden, element screenshot clean
 - Gates: Playwright 2/2 green (specs deleted after), build PASS
 
+## Session 2026-10-02 (hide folded toggle, same branch)
+
+### Changes
+- User call: no toggle on the folded rail — removed the shut-face button; the way back is hover-peek (reveals full bar with its toggle) → click pins open
+- Playwright 2/2 green: zero toggles when folded, peek toggle pins open at 220px after mouse leaves (spec deleted after)
+- Gates: typecheck PASS, eslint PASS, build PASS
+
 ## Session 2026-10-02 (sidebar smooth fold, same branch)
 
 ### Changes
