@@ -438,3 +438,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Next: user's call — delete `feature/loan-lender-breakdown` or keep; Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (release 1.6.0)
+
+### Changes
+- Version bump `1.5.0 → 1.6.0` (MINOR per VERSIONING §2: feat + Added) in one commit `5bf47fd`: package.json + whatsNew 1.6.0 entry + CHANGELOG `[1.6.0] - 2026-10-02`
+- Merged `dev → master` no-ff (`ded577d`), tagged `v1.6.0`, pushed `master --follow-tags`; `dev` fast-forwarded to master and pushed
+- Gates on release: build PASS, tsc PASS, unit 29/29 PASS, e2e rename 2/2 PASS (earlier); lint has 1 pre-existing warning in untouched LedgerSection.tsx — disclosed, predates batch
+
+### Status
+- Released v1.6.0 on master. Next: delete local feature branches? Other Ledgers V2 on "next update".
