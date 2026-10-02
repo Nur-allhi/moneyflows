@@ -795,6 +795,12 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Pre-merge gates: build PASS, unit 48/48 PASS; `detect_changes` vs dev LOW, no affected processes; no version bump (feature→dev)
 - Back on `feature/ui-polish`, clean
 
+## Session 2026-10-02 (sidebar nav icons, same branch)
+
+### Changes
+- Page feedback: Members → lucide `Users` (`user-group` doesn't exist in lucide — verified, closest picked by user), Groups → `SquareStack`, Loans → `HandCoins`; applied to sidebar + mobile BottomNav for consistency (`App.tsx` nav configs, `size={20} strokeWidth={1.8}` matching the old inline-svg treatment)
+- Gates: typecheck PASS, eslint PASS, build PASS; impact LOW
+
 ## Session 2026-10-02 (text size setting, same branch)
 
 ### Changes
