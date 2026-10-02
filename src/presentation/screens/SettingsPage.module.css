@@ -10,13 +10,13 @@
 
 .title {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: var(--text-5xl);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .subtitle {
-  font-size: 13px;
+  font-size: var(--text-md);
   color: var(--color-text-secondary);
 }
 
@@ -44,7 +44,7 @@
 .navItem {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   color: var(--color-text-secondary);
   text-align: left;
@@ -90,12 +90,12 @@
 
 .cardHead h2 {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: var(--text-2xl);
   font-weight: 600;
 }
 
 .cardHead span {
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
 }
 
@@ -106,7 +106,7 @@
 }
 
 .fieldLabel {
-  font-size: 11px;
+  font-size: var(--text-sm);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -120,7 +120,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text);
-  font-size: 14px;
+  font-size: var(--text-lg);
   outline: none;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -138,7 +138,7 @@
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: var(--color-text-on-primary);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-md);
   box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
@@ -150,7 +150,7 @@
   background: color-mix(in oklch, var(--color-wash) 3%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   cursor: pointer;
 }
@@ -195,7 +195,7 @@
 }
 
 .sectionTitle {
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -237,11 +237,11 @@
 
 .snapshotTime {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-md);
 }
 
 .snapshotLabel {
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
 }
 
@@ -257,7 +257,7 @@
 }
 
 .statusText {
-  font-size: 13px;
+  font-size: var(--text-md);
   color: var(--color-text);
   flex: 1;
   min-width: 120px;
@@ -268,7 +268,7 @@
   border-radius: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text);
   flex-shrink: 0;
@@ -285,7 +285,7 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   color: var(--color-text);
 }
@@ -301,7 +301,7 @@
 }
 
 .emptyState {
-  font-size: 13px;
+  font-size: var(--text-md);
   color: var(--color-text-secondary);
   text-align: center;
   padding: 16px;
@@ -315,11 +315,11 @@
   border: 1px solid oklch(62% 0.18 30 / 0.2);
   border-radius: var(--radius-sm);
   color: var(--color-coral);
-  font-size: 13px;
+  font-size: var(--text-md);
 }
 
 .versionLine {
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
   text-align: center;
   padding-top: 8px;
@@ -355,7 +355,7 @@
   border-radius: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text);
   cursor: pointer;
@@ -372,7 +372,7 @@
 }
 
 .pageInfo {
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -407,13 +407,13 @@
 
 .importTitle {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: var(--text-2xl);
   font-weight: 600;
   text-align: center;
 }
 
 .importSub {
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
   text-align: center;
 }

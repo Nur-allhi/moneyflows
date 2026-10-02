@@ -162,7 +162,7 @@
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--color-expense);
-  text-align: center;
+  text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -173,7 +173,7 @@
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
-  text-align: center;
+  text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -183,7 +183,7 @@
   font-family: var(--font-body);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
-  text-align: center;
+  text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

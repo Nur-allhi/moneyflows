@@ -21,7 +21,7 @@
 
 .logo {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: var(--text-5xl);
   font-weight: 700;
   letter-spacing: -0.02em;
   background: linear-gradient(135deg, var(--color-primary), var(--color-income));
@@ -53,7 +53,7 @@
   cursor: pointer;
   display: grid;
   place-items: center;
-  font-size: 16px;
+  font-size: var(--text-2xl);
   flex-shrink: 0;
   transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -73,7 +73,7 @@
 }
 
 .breadcrumb {
-  font-size: 12px;
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -109,7 +109,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 20px;
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -171,17 +171,17 @@
   display: grid;
   place-items: center;
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
   flex-shrink: 0;
 }
 
 .footerName {
-  font-size: 12px;
+  font-size: var(--text-base);
   font-weight: 500;
 }
 
 .footerRole {
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
 }

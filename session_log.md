@@ -765,3 +765,31 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Logged BUG-8 first per §3.11: Dashboard "New Transaction" icon + label wrapped to two lines — rollout's single `.anim-target` span collapsed the row-flex `gap: 8px`
 - Fix: two `.anim-target` spans sharing one replay key (icon + label); tree-wide audit found no other svg+text single-span wrappers
 - Gates: typecheck PASS, eslint PASS; `detect_changes` n/a (single button)
+
+## Session 2026-10-02 (merge feature/ui-polish → dev)
+
+### Changes
+- User-approved merge: `feature/ui-polish` (5 commits: header anims + app-wide rollout + BUG-8 fix + CHANGELOG `[Unreleased]` Added/Fixed) → `dev` via `--no-ff` `e6a9d41` (branch kept alive); pushed `dev`
+- Pre-merge gates on branch tip: typecheck PASS, build PASS, unit 48/48 PASS, eslint clean (1 pre-existing `LedgerSection` warning)
+- `detect_changes` vs dev: HIGH disclosed (50 files, all additive-only animation wiring, no logic changes); no version bump (feature→dev, per VERSIONING)
+- First `dev` push timed out (network, retry succeeded `427cda3..e6a9d41`); back on `feature/ui-polish` (clean, one commit behind the merge)
+
+## Session 2026-10-02 (BUG-9 amount clipping, same branch)
+
+### Changes
+- Logged BUG-9 first per §3.11: big amounts clipped left in Recent Transactions (fixed 100px `.txAmount`); user picked scope 1 (dashboard + ledgers)
+- Fix: dashboard cell `width` → `min-width` (grows, desc flexes); ledger `.debit/.credit/.balance` centered → right-aligned (leading digits + ellipsis). `minmax` tracks rejected: header/rows are separate grids, content sizing would misalign them
+- Gates: build PASS, typecheck PASS; impact LOW (LedgerTable has 3 render-only consumers; RecentTxsPanel not indexed, single consumer Dashboard)
+
+## Session 2026-10-02 (font-size follow-up: sidebar + settings, same branch)
+
+### Changes
+- User report: text-size setting had no effect on sidebar + Settings page — both used fixed px (7 + 22 spots), bypassing the scaled tokens
+- Fix: mapped every fixed size to the nearest fluid token (22→text-5xl, 16→text-2xl, 14→text-lg, 13→text-md, 12→text-base, 11→text-sm, 10→text-xs); zero fixed px remain in either file
+- Gates: build PASS, typecheck PASS; impact max LOW
+
+## Session 2026-10-02 (text size setting, same branch)
+
+### Changes
+- NEW `constants/fontSizes.ts` (Small/Medium/Large, default Medium) + `AppSettings.fontSize` (deep-fill backfills old installs) + `tokens.css` `[data-font]` blocks scaling all `--text-*`/`--font-size-*` tokens + `useTheme()` sets `data-font` + index.html pre-paint mirror + `AppearanceSection` "Text size" segmented row (instant-apply, anim-pop, both Settings modal + page)
+- Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS, `detect_changes` LOW (index predates theme/accent symbols — change follows the approved accent/bg precedent, additive-only)
