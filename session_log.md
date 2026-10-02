@@ -864,3 +864,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - User-approved merge: `feature/ui-polish` (lucide nav icons + collapsible sidebar suite + CHANGELOG `[Unreleased]` entries) → `dev` via `--no-ff` `b8e9401` (branch kept); pushed `dev` (`8a6c131..b8e9401`)
 - Pre-merge gates: build PASS, unit 48/48 PASS; `detect_changes` vs dev MEDIUM (7 files, sidebar/nav scope, Playwright-verified live); no version bump
 - Staying on `dev`
+
+## Session 2026-10-02 (release 1.11.0 → master)
+
+### Changes
+- User-approved release: bump 1.10.0 → 1.11.0 MINOR (multiple feats, nothing breaking) in one commit `ea5d375`: package.json + whatsNew 1.11.0 entry (3 plain-English bullets) + CHANGELOG `[1.11.0] - 2026-10-02`
+- Gates: typecheck PASS, build PASS, 48/48 unit PASS (lint: 1 pre-existing warning in untouched LedgerSection.tsx — disclosed)
+- Merged `dev → master` no-ff `79edf85` + tagged `v1.11.0` + pushed `master --follow-tags`; `dev` fast-forwarded to `master`, pushed — on `dev`, in sync
+
+### Status
+- v1.11.0 live on master + dev. Next: user call.
