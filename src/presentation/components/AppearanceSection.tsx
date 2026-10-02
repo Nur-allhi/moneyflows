@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { useState } from 'react';
 import { ACCENTS, DEFAULT_ACCENT_ID } from '../constants/accents';
+import { FONT_SIZES, DEFAULT_FONT_SIZE_ID } from '../constants/fontSizes';
 import { BG_DARK, BG_LIGHT, DEFAULT_BG_DARK, DEFAULT_BG_LIGHT } from '../constants/backgrounds';
 import type { ThemeMode } from '../../core/domain/AppSettings';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -22,6 +23,7 @@ const THEME_OPTIONS: { id: ThemeMode; label: string }[] = [
 export function AppearanceSection() {
   const theme = useSettingsStore((s) => s.settings.theme ?? 'dark');
   const accentId = useSettingsStore((s) => s.settings.accentId ?? DEFAULT_ACCENT_ID);
+  const fontSize = useSettingsStore((s) => s.settings.fontSize ?? DEFAULT_FONT_SIZE_ID);
   const bgDark = useSettingsStore((s) => s.settings.bgDark ?? DEFAULT_BG_DARK);
   const bgLight = useSettingsStore((s) => s.settings.bgLight ?? DEFAULT_BG_LIGHT);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
@@ -41,6 +43,9 @@ export function AppearanceSection() {
   const [accentPicked, setAccentPicked] = useState<string | null>(null);
   const [bgKey, replayBg] = useReplay();
   const [bgPicked, setBgPicked] = useState<string | null>(null);
+  const activeFont = FONT_SIZES.some((f) => f.id === fontSize) ? fontSize : DEFAULT_FONT_SIZE_ID;
+  const [fontKey, replayFont] = useReplay();
+  const [fontPicked, setFontPicked] = useState<string | null>(null);
 
   return (
     <div className={styles.appearance}>
@@ -91,6 +96,21 @@ export function AppearanceSection() {
               onClick={() => { replayBg(); setBgPicked(b.id); setBg(b.id); }}
             >
               <span className="anim-target" key={`${b.id}-${bgPicked === b.id ? bgKey : 0}`} />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.row} role="group" aria-label="Text size">
+        <span className={styles.rowLabel}>Text size</span>
+        <div className={styles.segWrap}>
+          {FONT_SIZES.map((f) => (
+            <button
+              key={f.id}
+              className={`${styles.segBtn} ${activeFont === f.id ? styles.segActive : ''} ${fontPicked === f.id && fontKey > 0 ? 'anim-pop' : ''}`}
+              aria-pressed={activeFont === f.id}
+              onClick={() => { replayFont(); setFontPicked(f.id); updateSettings({ fontSize: f.id }); }}
+            >
+              <span className="anim-target" key={`${f.id}-${fontPicked === f.id ? fontKey : 0}`}>{f.label}</span>
             </button>
           ))}
         </div>
