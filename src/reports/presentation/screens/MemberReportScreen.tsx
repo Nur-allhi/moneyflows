@@ -262,7 +262,12 @@ export function MemberReportScreen() {
       )}
 
       {isDesktop ? (
-        <Modal isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} title="Report filters">
+        <Modal
+          isOpen={filtersOpen}
+          onClose={() => setFiltersOpen(false)}
+          title="Report filters"
+          footer={<></>}
+        >
           <ReportFilterSheet
             preset={preset} setPreset={setPreset}
             customStart={customStart} customEnd={customEnd}
