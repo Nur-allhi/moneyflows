@@ -122,15 +122,24 @@
    data-theme="light" by useTheme(). */
 :root[data-theme="light"] {
   --color-bg: oklch(94% 0.01 260);
-  --color-bg-glow: radial-gradient(ellipse 70% 60% at 50% 0%, color-mix(in oklch, var(--color-primary) 12%, transparent), transparent 70%);
+  --color-bg-glow: radial-gradient(ellipse 70% 60% at 50% 0%, color-mix(in oklch, var(--color-primary) 12%, transparent), transparent 70%), radial-gradient(ellipse 60% 50% at 50% 110%, color-mix(in oklch, var(--color-primary) 8%, transparent), transparent 70%);
   --color-surface: oklch(100% 0 0 / 0.72);
   --color-surface-hover: oklch(25% 0.02 260 / 0.06);
-  --color-border: oklch(25% 0.02 260 / 0.14);
+  --color-border: oklch(25% 0.02 260 / 0.16);
   --color-text: oklch(25% 0.015 260);
   --color-text-secondary: oklch(46% 0.02 260);
   --color-scrollbar: oklch(25% 0.02 260 / 0.22);
   --color-scrollbar-hover: oklch(25% 0.02 260 / 0.35);
   --color-wash: oklch(30% 0.02 260);
+  /* Light-tuned semantics: dark-mode hues fail on paper (income 2.9, gold
+     2.3, success 3.0). These clear 4.5:1 on white cards. Purple/danger pass. */
+  --color-income: oklch(50% 0.12 170);
+  --color-teal: oklch(50% 0.12 170);
+  --color-expense: oklch(52% 0.15 30);
+  --color-coral: oklch(52% 0.15 30);
+  --color-cash: oklch(55% 0.13 85);
+  --color-warning: oklch(55% 0.13 85);
+  --color-success: oklch(50% 0.12 150);
 
   --shadow-sm: 0 2px 8px rgba(30, 27, 75, 0.08);
   --shadow-md: 0 4px 16px rgba(30, 27, 75, 0.10);

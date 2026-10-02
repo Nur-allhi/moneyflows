@@ -615,3 +615,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - BUG-4 fixed on `feature/theme-accent` (unpushed, CHANGELOG deferred to `dev` merge). Next: merge confirmation.
+
+## Session 2026-10-02 (light-mode polish: semantic ramp + depth)
+
+### Changes
+- User asked to improve light background + text visibility; measured first: body ink 13.4 / muted 6.0 already good, but income 2.9 / gold 2.3 / success 3.0 on white cards failed
+- Owner-approved option B: `[data-theme="light"]` retuned semantic ramp (income 50/0.12/170, expense 52/0.15/30, cash 55/0.13/85, success 50/0.12/150 — all ≥4.9:1 on cards; purple/danger pass as-is), layered accent ambient (top + bottom wash), border 0.14→0.16
+- `DESIGN_IDENTITY.md` theming row documents the ramp
+- Verified live on :5174 (light/violet): computed tokens resolve to ramp values, dashboard screenshot legible, 0 console errors
+
+### Skill(s) Used
+- frontend-design
+
+### Status
+- Pushed on `feature/theme-accent`. Next: merge confirmation (CHANGELOG entry rides with merge).
