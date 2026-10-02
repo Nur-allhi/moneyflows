@@ -781,6 +781,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Fix: dashboard cell `width` → `min-width` (grows, desc flexes); ledger `.debit/.credit/.balance` centered → right-aligned (leading digits + ellipsis). `minmax` tracks rejected: header/rows are separate grids, content sizing would misalign them
 - Gates: build PASS, typecheck PASS; impact LOW (LedgerTable has 3 render-only consumers; RecentTxsPanel not indexed, single consumer Dashboard)
 
+## Session 2026-10-02 (font-size follow-up: sidebar + settings, same branch)
+
+### Changes
+- User report: text-size setting had no effect on sidebar + Settings page — both used fixed px (7 + 22 spots), bypassing the scaled tokens
+- Fix: mapped every fixed size to the nearest fluid token (22→text-5xl, 16→text-2xl, 14→text-lg, 13→text-md, 12→text-base, 11→text-sm, 10→text-xs); zero fixed px remain in either file
+- Gates: build PASS, typecheck PASS; impact max LOW
+
 ## Session 2026-10-02 (text size setting, same branch)
 
 ### Changes
