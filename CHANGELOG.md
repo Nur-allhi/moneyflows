@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Placeholder for upcoming changes.
 
+## [1.7.0] - 2026-10-02
+
+### Added
+- Header search is now **global** — visible on every page (was dashboard-only) with a grouped results dropdown across Transactions, Accounts, Members, Loans, Groups, Tags and Other Ledgers (↑/↓ + Enter + Esc, click opens detail or navigates). Ledger-local searches still filter only their own ledger.
+
 ## [1.6.0] - 2026-10-02
 
 ### Added

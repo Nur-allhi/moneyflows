@@ -1,7 +1,10 @@
+import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
 import { useSearchStore } from '../stores/useSearchStore';
+import { GlobalSearchResults } from './GlobalSearch';
+import { useGlobalSearch, type GlobalSearchItem } from './useGlobalSearch';
 import styles from './Header.module.css';
 
 interface BreadcrumbItem {
@@ -39,6 +42,19 @@ export function Header({
   const setQuery = useSearchStore((s) => s.setQuery);
   const isMobile = window.innerWidth < 768;
   const isDashboard = location.pathname === '/';
+  const gs = useGlobalSearch();
+  const [dropOpen, setDropOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const closeDrop = () => {
+    setDropOpen(false);
+    inputRef.current?.blur();
+  };
+
+  const handlePick = (item: GlobalSearchItem) => {
+    item.run();
+    closeDrop();
+  };
 
   return (
     <header className={`${styles.header} ${className}`}>
@@ -96,29 +112,65 @@ export function Header({
         ) : null}
       </div>
 
-      {isDashboard ? (
-        <div className={styles.searchWrap}>
+      <div
+        className={styles.searchWrap}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropOpen(false);
+        }}
+      >
         <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="7" cy="7" r="5.5" />
           <path d="M11 11l3.5 3.5" />
         </svg>
         <input
+          ref={inputRef}
           className={styles.searchInput}
-          placeholder="Search..."
+          placeholder="Search anything..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setDropOpen(true)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setDropOpen(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              gs.move(1);
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              gs.move(-1);
+            } else if (e.key === 'Enter') {
+              if (gs.selectActive()) closeDrop();
+            } else if (e.key === 'Escape') {
+              closeDrop();
+            }
+          }}
         />
         {query && (
-          <button className={styles.searchClear} onClick={() => setQuery('')} aria-label="Clear search">
+          <button
+            className={styles.searchClear}
+            onClick={() => {
+              setQuery('');
+              closeDrop();
+            }}
+            aria-label="Clear search"
+          >
             <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M3 3l6 6M9 3l-6 6" />
             </svg>
           </button>
         )}
+        {dropOpen && gs.debounced && (
+          <GlobalSearchResults
+            sections={gs.sections}
+            flat={gs.flat}
+            activeIndex={gs.activeIndex}
+            query={gs.debounced}
+            onHover={gs.setActiveIndex}
+            onPick={handlePick}
+          />
+        )}
       </div>
-      ) : (
-        <div style={{ flex: 1 }} aria-hidden="true" />
-      )}
 
       <div className={styles.right}>
         {showDate && <span className={styles.date}>{formatDate()}</span>}
@@ -128,14 +180,12 @@ export function Header({
           </svg>
         </button>
         <div className={styles.settingsWrap}>
-          {isDashboard && (
-            <button className={`${styles.mobileSearchBtn} ${searchActive ? styles.searchActiveBtn : ''}`} onClick={onSearchToggle} aria-label="Search">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                <circle cx="7" cy="7" r="5.5" />
-                <path d="M11 11l3.5 3.5" />
-              </svg>
-            </button>
-          )}
+          <button className={`${styles.mobileSearchBtn} ${searchActive ? styles.searchActiveBtn : ''}`} onClick={onSearchToggle} aria-label="Search">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+              <circle cx="7" cy="7" r="5.5" />
+              <path d="M11 11l3.5 3.5" />
+            </svg>
+          </button>
           <button className={styles.mobileSettingsBtn} onClick={() => navigate('/settings')} aria-label="Settings" title="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
               <circle cx="12" cy="12" r="3" />

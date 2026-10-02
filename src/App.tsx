@@ -119,15 +119,13 @@ function AppLayout() {
             ? [{ label: 'Other Ledgers', path: '/other-ledgers' }, { label: ledgers.find((l) => l.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
             : undefined;
 
-  const isDashboard = pathname === '/';
-
   return (
     <div className={styles.layout}>
       <RippleGlow />
       <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
       <div className={styles.main} id="app-main">
         <Header title={title} breadcrumb={breadcrumb} className="app-header" searchActive={searchOpen} onSearchToggle={toggleSearch} />
-        {isDashboard && searchOpen && (
+        {searchOpen && (
           <div className={`${styles.searchRow} ${searchClosing ? styles.searchPopin : styles.searchPopout}`}>
             <SearchBar />
             <button className={styles.searchCloseBtn} onClick={toggleSearch} aria-label="Close search">

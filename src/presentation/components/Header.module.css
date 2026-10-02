@@ -9,6 +9,12 @@
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  /* backdrop-filter makes .header a stacking context: without its own
+     z-index the global-search dropdown gets trapped below later page
+     content (filter drawers, sticky loan headers, FAB at z <= 100).
+     150 sits above page content but below fullscreen overlays
+     (WhatsNew 200, modals 300+, import overlay 999). */
+  z-index: 150;
 }
 
 .left {
@@ -25,6 +31,7 @@
   transform: translate(-50%, -50%);
   width: 100%;
   max-width: 400px;
+  z-index: 351;
 }
 
 .searchIcon {
