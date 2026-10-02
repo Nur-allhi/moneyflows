@@ -788,6 +788,70 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Fix: mapped every fixed size to the nearest fluid token (22→text-5xl, 16→text-2xl, 14→text-lg, 13→text-md, 12→text-base, 11→text-sm, 10→text-xs); zero fixed px remain in either file
 - Gates: build PASS, typecheck PASS; impact max LOW
 
+## Session 2026-10-02 (merge feature/ui-polish → dev, round 2)
+
+### Changes
+- User-approved merge: `feature/ui-polish` (text-size setting + BUG-9 amount fix + sidebar/settings token mapping + CHANGELOG `[Unreleased]` entries) → `dev` via `--no-ff` `8a6c131` (branch kept alive); pushed `dev` (`e6a9d41..8a6c131`)
+- Pre-merge gates: build PASS, unit 48/48 PASS; `detect_changes` vs dev LOW, no affected processes; no version bump (feature→dev)
+- Back on `feature/ui-polish`, clean
+
+## Session 2026-10-02 (collapsible sidebar, same branch)
+
+### Changes
+- User-picked design (plain-language choice): fold + hover peek. Arrow button on the sidebar edge folds to a 68px icon rail; hovering the rail peeks the full 220px floating over content; choice persists via `AppSettings.sidebarCollapsed`; folded icons show name tooltips; footer keeps avatar, logo becomes M mark; content area reclaims the space (`mainWide`); mobile/bottom-nav untouched
+- Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS; impact HIGH disclosed (structural — AppLayout shell; change additive, Sidebar props untouched)
+
+## Session 2026-10-02 (sidebar collapse debug via Playwright, same branch)
+
+### Changes
+- User report: sidebar "stuck" after clicking fold (content moved under it, bar stayed wide). Code review: store + classes + shipped CSS all correct (verified `width:68px` collapsed + `padding-left:100px` mainWide rules in fresh `dist` output)
+- Playwright proof on fresh server (`e2e/sidebar-fold.check`, deleted after): open=220, folded=68, hover-peek=220, unfold works, main padding 100px — 2/2 green; screenshot confirms icon rail + reclaimed content + readable amounts
+- Root cause: user's tab was on the stale :3000 dev server (served pre-collapse bundle; third such incident). Killed it, started a fresh `npm run dev` (:3000, HTTP 200)
+- No code changes needed; tree clean
+
+## Session 2026-10-02 (sidebar peek + toggle polish, same branch)
+
+### Changes
+- User feedback: peek slid UNDER the app header (header z-150 > sidebar z-100) + floating edge arrow looked tacked-on
+- Fix: peek now `z-index:160` via doubled `.sidebar.peek` selector (beats App.module z-100 regardless of bundle order; still below WhatsNew 200 / modals 300+) — toggle moved INSIDE the bar (logo row; stacks under the M mark when folded), no longer half-outside
+- Playwright verified (2/2, spec deleted after): `elementFromPoint` at peek top = aside; screenshots confirm in-flow toggle + peek floating above header
+- Gates: typecheck PASS, eslint PASS, build PASS
+
+## Session 2026-10-02 (sidebar brand-face stacking bug, same branch)
+
+### Changes
+- User report: arrow + logo misplaced when folded. Playwright reproduced: M mark rendered at x≈79–115, OUTSIDE the 68px rail
+- Root cause (mine, not stale client this time): hidden face still sized the shared grid cell (fixed via display:none), then `.faceHidden{display:none}` lost to `.faceOpen/.faceShut{display:flex}` — equal specificity, later rule won, so BOTH faces rendered stacked and overflowing
+- Fix: `.face.faceHidden` (doubled specificity, deterministic win). Verified: mark/toggle centers exactly at rail center, logo hidden, element screenshot clean
+- Gates: Playwright 2/2 green (specs deleted after), build PASS
+
+## Session 2026-10-02 (hide folded toggle, same branch)
+
+### Changes
+- User call: no toggle on the folded rail — removed the shut-face button; the way back is hover-peek (reveals full bar with its toggle) → click pins open
+- Playwright 2/2 green: zero toggles when folded, peek toggle pins open at 220px after mouse leaves (spec deleted after)
+- Gates: typecheck PASS, eslint PASS, build PASS
+
+## Session 2026-10-02 (sidebar smooth fold, same branch)
+
+### Changes
+- User report: nav buttons jumped down/up on fold — the top area changed height between states (stacked M+toggle vs logo row)
+- Fix (CSS-only): `.brandSlot` locked to a fixed 104px in both states (fits the 74px folded stack and the logo row) + padding transition; nav offset now identical, verified NAV Y = 145px before/mid/after via Playwright (spec deleted after)
+- Gates: build PASS
+
+## Session 2026-10-02 (sidebar full animation pass, same branch)
+
+### Changes
+- User asked for fully animated open/close/pin: page content padding now glides (`padding-left` 0.25s transition — measured mid-flight at 125px, proving glide not snap), peek shadow fades in, logo/M-mark crossfade in place via stacked grid faces (no size change, nav rock-solid at 145px through the transition)
+- Playwright 2/2 green (spec deleted after); screenshot confirms folded stack (M over chevron, centered) + reclaimed content
+- Gates: typecheck PASS, eslint PASS, build PASS
+
+## Session 2026-10-02 (sidebar nav icons, same branch)
+
+### Changes
+- Page feedback: Members → lucide `Users` (`user-group` doesn't exist in lucide — verified, closest picked by user), Groups → `SquareStack`, Loans → `HandCoins`; applied to sidebar + mobile BottomNav for consistency (`App.tsx` nav configs, `size={20} strokeWidth={1.8}` matching the old inline-svg treatment)
+- Gates: typecheck PASS, eslint PASS, build PASS; impact LOW
+
 ## Session 2026-10-02 (text size setting, same branch)
 
 ### Changes

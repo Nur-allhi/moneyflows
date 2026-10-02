@@ -28,5 +28,7 @@ export class AppSettings {
     public bgLight: string = 'paper',
     /** Text size id matching [data-font] blocks in tokens.css + FONT_SIZES. */
     public fontSize: string = 'medium',
+    /** Desktop sidebar folded to icons-only (hover peeks). Persisted. */
+    public sidebarCollapsed: boolean = false,
   ) {}
 }
