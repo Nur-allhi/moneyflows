@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import styles from './SplashScreen.module.css';
+import { APP_VERSION } from '../constants/appVersion';
 
 interface SplashScreenProps {
   ready: boolean;
@@ -59,6 +60,7 @@ export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
         </span>
         {!done && <span className={styles.cursor} />}
       </div>
+      <span className={styles.version}>v{APP_VERSION}</span>
     </div>
   );
 }

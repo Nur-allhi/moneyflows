@@ -673,6 +673,20 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Phase 18 merged to `dev`. Branch `feature/theme-accent` kept (next: TBD).
 
+## Session 2026-10-02 (release 1.9.0 → master)
+
+### Changes
+- User-approved release: bump 1.8.0 → 1.9.0 MINOR on `dev` (`package.json` + `whatsNew.ts` 1.9.0 entry + `CHANGELOG [1.9.0]`, one commit `a18b014`)
+- Gates: typecheck PASS, build PASS, 48/48 unit PASS (17 e2e-under-vitest pre-existing), lint 1 pre-existing warning — same caveats as 1.8.0
+- `whatsNewFor('1.9.0')` resolves (exact find); version define flows from package.json (unchanged paths)
+- Merged `dev → master` no-ff `f338c62` + tagged `v1.9.0` + pushed `master --follow-tags`; `dev` fast-forwarded to `master`, pushed
+
+### Skill(s) Used
+- gitnexus
+
+### Status
+- v1.9.0 live on master + dev. Next: user call (Other Ledgers V2 on "next update", or new work).
+
 ## Session 2026-10-02 (BUG-5 account cards)
 
 ### Changes
@@ -702,3 +716,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Merged to `dev`. Next: Phase 18 type overhaul on `feature/theme-accent`.
+
+## Session 2026-10-02 (splash version tag)
+
+### Changes
+- Splash screen now shows `v{APP_VERSION}` bottom-center (`SplashScreen.tsx:63` + `.version` in `SplashScreen.module.css`): absolute, `bottom: --space-8`, centered via `translateX(-50%)`, `text-secondary` + `font-size-xs` tokens, auto-follows theme/accent and version bumps (currently v1.9.0)
+- Gates: typecheck PASS, eslint PASS on touched file, build PASS, `detect_changes` LOW (SplashScreen touched only, no affected processes)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Complete on dev (`1ddb30d`), pushed to `origin/dev`. Next: user call (Other Ledgers V2 on "next update", or new work).
