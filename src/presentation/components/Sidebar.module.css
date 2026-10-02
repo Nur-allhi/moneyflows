@@ -19,6 +19,7 @@
   min-height: 52px;
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
 .logo {
@@ -220,23 +221,19 @@
 }
 
 .toggleBtn {
-  position: absolute;
-  top: 64px;
-  right: -13px;
-  width: 26px;
-  height: 26px;
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   color: var(--color-text-secondary);
   display: grid;
   place-items: center;
   cursor: pointer;
-  z-index: 1;
+  flex-shrink: 0;
   padding: 0;
-  transition: color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
 }
 
 .toggleBtn:hover {
@@ -262,8 +259,14 @@
 }
 
 .collapsed .brandSlot {
+  flex-direction: column;
   justify-content: center;
+  gap: 10px;
   padding: 0 0 28px;
+}
+
+.collapsed .toggleBtn {
+  margin-left: 0;
 }
 
 .collapsed .logo {
@@ -290,8 +293,12 @@
   padding: 16px 0;
 }
 
-.peek {
+.sidebar.peek {
   width: 220px;
+  /* Above the app header (z-150) so the peek never slides under it,
+     still below overlays (WhatsNew 200, modals 300+). Doubled class beats
+     App.module .sidebar z-100 regardless of bundle order. */
+  z-index: 160;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
 }
 

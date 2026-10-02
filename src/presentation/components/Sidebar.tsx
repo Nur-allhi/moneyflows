@@ -27,21 +27,21 @@ export function Sidebar({ items, footerLabel, footerRole, className = '' }: Side
       onMouseEnter={() => { if (collapsedPref) setPeeking(true); }}
       onMouseLeave={() => setPeeking(false)}
     >
-      <button
-        className={styles.toggleBtn}
-        onClick={() => { setPeeking(false); updateSettings({ sidebarCollapsed: !collapsedPref }); }}
-        aria-label={collapsedPref ? 'Expand sidebar' : 'Collapse sidebar'}
-        title={collapsedPref ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        <svg className={collapsedPref ? styles.chevFlipped : ''} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
       <div className={styles.brandSlot}>
         <span className={styles.logo}>
           Money<span className={styles.logoSpan}>Flows</span>
         </span>
         <span className={styles.miniMark} aria-hidden="true">M</span>
+        <button
+          className={styles.toggleBtn}
+          onClick={() => { setPeeking(false); updateSettings({ sidebarCollapsed: !collapsedPref }); }}
+          aria-label={collapsedPref ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsedPref ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <svg className={collapsedPref ? styles.chevFlipped : ''} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
       </div>
       <nav className={styles.nav}>
         {items.map((item) => (

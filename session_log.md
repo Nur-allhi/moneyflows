@@ -809,6 +809,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Root cause: user's tab was on the stale :3000 dev server (served pre-collapse bundle; third such incident). Killed it, started a fresh `npm run dev` (:3000, HTTP 200)
 - No code changes needed; tree clean
 
+## Session 2026-10-02 (sidebar peek + toggle polish, same branch)
+
+### Changes
+- User feedback: peek slid UNDER the app header (header z-150 > sidebar z-100) + floating edge arrow looked tacked-on
+- Fix: peek now `z-index:160` via doubled `.sidebar.peek` selector (beats App.module z-100 regardless of bundle order; still below WhatsNew 200 / modals 300+) — toggle moved INSIDE the bar (logo row; stacks under the M mark when folded), no longer half-outside
+- Playwright verified (2/2, spec deleted after): `elementFromPoint` at peek top = aside; screenshots confirm in-flow toggle + peek floating above header
+- Gates: typecheck PASS, eslint PASS, build PASS
+
 ## Session 2026-10-02 (sidebar nav icons, same branch)
 
 ### Changes
