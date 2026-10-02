@@ -140,6 +140,9 @@ export function MemberReportScreen() {
   const money = useCallback((n: number) => formatAmount(n, locale, currency), [locale, currency]);
 
   const hasActiveFilters = preset !== 'all' || excluded.length > 0 || !includeLoans || !includeOtherLedgers;
+  const customLabel = customStart || customEnd
+    ? `${customStart || '…'} – ${customEnd || '…'}`
+    : 'Custom range';
   const filterSummary = useMemo(() => {
     const label = preset === 'all'
       ? 'All time'
@@ -147,13 +150,13 @@ export function MemberReportScreen() {
         ? 'This month'
         : preset === 'last3'
           ? 'Last 3 months'
-          : `${customStart || '…'} – ${customEnd || '…'}`;
+          : customLabel;
     const parts = [label];
     if (excluded.length > 0) parts.push(`${memberAccounts.length - excluded.length} of ${memberAccounts.length} accounts`);
     if (!includeLoans) parts.push('Loans off');
     if (!includeOtherLedgers) parts.push('Other ledgers off');
     return parts.join(' · ');
-  }, [preset, customStart, customEnd, excluded, memberAccounts.length, includeLoans, includeOtherLedgers]);
+  }, [preset, customLabel, excluded, memberAccounts.length, includeLoans, includeOtherLedgers]);
 
   if (!member && !loading) {
     return (
