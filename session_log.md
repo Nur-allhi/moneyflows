@@ -530,6 +530,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Debug (user-reported "no calendar opens"): reproduced via new `e2e/report-calendar.spec.ts` — root cause was a STALE dev server on :3000 serving the pre-DatePicker bundle (HMR hadn't picked up the fix; `reuseExistingServer` kept reusing it). Killed it, fresh server → calendar opens, e2e green. Also dropped the Modal's redundant default Cancel/Save footer in the filter sheet (`footer={<></>}`). Committed `9c0fe31`, pushed.
 - Print (`9976920`, user-reported "Print takes the whole app screen"): print now isolates report content — sidebar/header/bottom-nav/ripple/search hidden, tokens flip to light paper + dark ink (`@page 12mm`), blur/shadows off, and full non-virtualized bordered tables (`ReportPrintTable`, same Date|Type|Description|Debit|Credit|Balance columns as the PDF) replace the virtualized LedgerTables with per-section page breaks. Verified by new print-media e2e (chrome hidden, print tables visible). Screen split to respect 300 LOC (`ReportSections`). Pushed.
 
+## Session 2026-10-02 (merge member-wise report → dev)
+
+### Changes
+- Squash-merged `feature/member-wise-report` → `dev` (`5f6c501`, user-approved): full member-wise report (T-132..T-137 + perspective flip, counterparty labels, per-page PDF sections, filter sheet, DatePicker fix, print isolation) + CHANGELOG `[Unreleased]` entry; pushed `dev`
+- Pre-merge gates on merged result: typecheck PASS, unit 10/10 (reports scope) PASS, build PASS
+
+### Skill(s) Used
+- senior-backend, senior-frontend
+
+### Status
+- Live on dev. Next: delete `feature/member-wise-report`? Version bump at release time per VERSIONING.md. Other Ledgers V2 on "next update".
+
 ### Skill(s) Used
 - senior-backend, senior-frontend
 
