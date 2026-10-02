@@ -12,6 +12,20 @@
     <meta name="apple-mobile-web-app-title" content="MoneyFlows" />
     <meta name="description" content="Personal finance tracker for loans, expenses, and group accounting" />
     <title>MoneyFlows</title>
+    <script>
+      // Pre-paint theme to avoid a dark flash for light/accent users.
+      // Mirrors useTheme(); keep in sync with it.
+      try {
+        var raw = localStorage.getItem('moneyflows_settings') || '{}';
+        var parsed = JSON.parse(raw);
+        var st = (parsed.state && parsed.state.settings) || parsed.settings || {};
+        var theme = st.theme || 'dark';
+        var accent = st.accentId || 'violet';
+        var dark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.dataset.accent = accent;
+      } catch (e) { /* defaults apply */ }
+    </script>
   </head>
   <body>
     <div id="root"></div>

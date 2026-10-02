@@ -18,6 +18,18 @@ export const useSettingsStore = create<SettingsState>()(
         })),
       resetSettings: () => set({ settings: new AppSettings() }),
     }),
-    { name: 'moneyflows_settings' },
+    {
+      name: 'moneyflows_settings',
+      // Deep-fill settings so installs persisted before a new field existed
+      // (e.g. theme/accentId) get defaults instead of undefined.
+      merge: (persisted, current) => ({
+        ...current,
+        ...((persisted as Partial<SettingsState>) ?? {}),
+        settings: {
+          ...new AppSettings(),
+          ...(((persisted as Partial<SettingsState>) ?? {}).settings ?? {}),
+        },
+      }),
+    },
   ),
 );
