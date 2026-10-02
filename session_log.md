@@ -509,3 +509,22 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Released v1.7.0 on master. Next: delete `feature/global-search`? Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (member-wise whole report, B+C)
+
+### Changes
+- New branch `feature/member-wise-report` off dev (user-approved B+C combined: service engine + preview screen)
+- T-132 `src/reports/` NEW: `MemberReportService` (accounts section, full-history balances, closing pinned to live `account.balance`) + 4 vitest tests
+- T-133: loan sections grouped by counterparty (reuses loan credit/debit sets) + other-ledger sections (reuses `computeOtherRunningBalances`/`sortOtherEntries`) + 3 more tests (8 total in scope, all green)
+- T-134 `memberReportPdf.ts`: cover summary + per-account/loan/ledger tables via lazy jspdf-autotable, `Member_<name>_<date>.pdf`
+- T-135 `memberReportCsv.ts`: BOM + `Section,Account,Date,Type,Description,Debit,Credit,Balance` rows with RFC4180 quoting + 1 test
+- T-136 `MemberReportScreen` (`/member/:id/report`): presets (all/month/last-3/custom), account chips, Loans/Other-ledgers toggles, summary hero, LedgerTable sections, PDF/CSV/Print, print stylesheet, mobile hero 2-col
+- T-137 wiring: lazy route + `Members / Name / Report` breadcrumb in `App.tsx` (impact LOW), Report button in `ProfileHero` desktop actions + mobile pills, CHANGELOG `[Unreleased]` entry
+- Gates: unit 8/8 (reports scope) PASS, `tsc` PASS, `eslint --max-warnings 0` PASS on touched files, `vite build` PASS
+- Note: `git push` to origin repeatedly timed out (network) — 5 commits local on branch at `71af06c`; push pending retry
+
+### Skill(s) Used
+- senior-backend, senior-frontend
+
+### Status
+- Complete on branch, NOT merged. Next: user reviews report screen live → confirm merge into dev (+ push when network recovers).
