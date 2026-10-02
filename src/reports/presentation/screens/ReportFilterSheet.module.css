@@ -47,14 +47,6 @@
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
-.dateField input {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  color: var(--color-text);
-  padding: 6px 10px;
-  font-size: var(--text-sm);
-}
 .footer {
   display: flex;
   justify-content: flex-end;

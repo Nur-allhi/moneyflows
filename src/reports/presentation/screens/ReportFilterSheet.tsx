@@ -1,3 +1,4 @@
+import { DatePicker } from '../../../components/ui/date-picker';
 import styles from './ReportFilterSheet.module.css';
 
 export type ReportPreset = 'all' | 'month' | 'last3' | 'custom';
@@ -44,10 +45,10 @@ export function ReportFilterSheet(props: FilterSheetProps) {
       {preset === 'custom' && (
         <div className={styles.dateRow}>
           <label className={styles.dateField}>From
-            <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+            <DatePicker value={customStart} onChange={setCustomStart} />
           </label>
           <label className={styles.dateField}>To
-            <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
+            <DatePicker value={customEnd} onChange={setCustomEnd} />
           </label>
         </div>
       )}
