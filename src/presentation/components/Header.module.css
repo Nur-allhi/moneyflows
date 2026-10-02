@@ -216,6 +216,34 @@
   box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
+.themeBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), transform 0.15s;
+}
+
+.themeBtn:hover {
+  background: var(--color-surface-hover);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.themeBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.themeBtn:active {
+  transform: scale(0.92);
+}
+
 .breadcrumb {
   font-size: 12px;
   color: var(--color-text-secondary);
@@ -327,6 +355,22 @@
 
   .notifBtn {
     display: none;
+  }
+
+  .themeBtn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: var(--color-surface);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--color-text-secondary);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .themeBtn:active {
+    transform: scale(0.92);
+    background: var(--color-surface-hover);
   }
 
   .addBtn {
