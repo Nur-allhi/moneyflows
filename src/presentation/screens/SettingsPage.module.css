@@ -22,7 +22,7 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 200px 1fr;
   gap: 16px;
   align-items: start;
 }
@@ -48,6 +48,7 @@
   font-weight: 500;
   color: var(--color-text-secondary);
   text-align: left;
+  white-space: nowrap;
   transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
   border: 1px solid transparent;
 }

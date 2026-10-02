@@ -47,6 +47,53 @@
   box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: var(--text-md);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.chip:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+  color: var(--color-text);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.chip:active {
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
+}
+
+.chipActive {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
+  border-color: transparent;
+  box-shadow: var(--shadow-glow);
+}
+
+.chipActive:hover {
+  color: var(--color-text-on-primary);
+}
+
 .grid {
   display: flex;
   flex-direction: column;
@@ -124,6 +171,98 @@
   font-size: var(--text-lg);
   margin-bottom: 16px;
   box-sizing: border-box;
+}
+
+.renameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: var(--bg-input, #1a1a1a);
+  border-radius: var(--radius-sm);
+}
+
+.renameName {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.renameBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.renameBtn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.renameInput {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--text-lg);
+  box-sizing: border-box;
+}
+
+.renameInput:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.renameActions {
+  display: flex;
+  gap: 8px;
+}
+
+.renameSave {
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-family: inherit;
+  font-size: var(--text-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.renameCancel {
+  padding: 8px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+
+.renameError {
+  width: 100%;
+  font-size: var(--text-md);
+  color: var(--color-coral);
 }
 
 .accountList {

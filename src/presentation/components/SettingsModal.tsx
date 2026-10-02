@@ -18,6 +18,8 @@ import {
   DASHBOARD_TX_LIMIT_MAX,
 } from '../constants/config';
 import fieldStyles from './SettingsModal.module.css';
+import { SettingsDisclosure } from './settings/SettingsDisclosure';
+import disclosureStyles from './settings/SettingsDisclosure.module.css';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -44,6 +46,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [backupFiles, setBackupFiles] = useState<{ name: string; lastModified: number }[]>([]);
   const [restoringFile, setRestoringFile] = useState<string | null>(null);
   const [installPrompt, setInstallPrompt] = useState<Event | null>(null);
+  const [showAllSnapshots, setShowAllSnapshots] = useState(false);
+  const [showAllFiles, setShowAllFiles] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -179,211 +183,274 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Settings" onSave={handleSave} className={fieldStyles.modalWrap}>
-      <div className={fieldStyles.fieldGroup}>
-        <label className={fieldStyles.fieldLabel}>Currency</label>
-        <input
-          className={fieldStyles.inputField}
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-          placeholder="e.g. BDT, USD"
-        />
-      </div>
+      <SettingsDisclosure title="Money & Region" subtitle="Currency, locale, primary member" defaultOpen badge={currency || undefined}>
+        <div className={fieldStyles.fieldGroup}>
+          <label className={fieldStyles.fieldLabel}>Currency</label>
+          <input
+            className={fieldStyles.inputField}
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+            placeholder="e.g. BDT, USD"
+          />
+        </div>
 
-      <div className={fieldStyles.fieldGroup}>
-        <label className={fieldStyles.fieldLabel}>Locale</label>
-        <input
-          className={fieldStyles.inputField}
-          value={locale}
-          onChange={(e) => setLocale(e.target.value)}
-          placeholder="e.g. en-IN, en-US, bn-BD"
-        />
-      </div>
+        <div className={fieldStyles.fieldGroup}>
+          <label className={fieldStyles.fieldLabel}>Locale</label>
+          <input
+            className={fieldStyles.inputField}
+            value={locale}
+            onChange={(e) => setLocale(e.target.value)}
+            placeholder="e.g. en-IN, en-US, bn-BD"
+          />
+        </div>
 
-      <div className={fieldStyles.separator} />
+        <div className={fieldStyles.fieldGroup}>
+          <label className={fieldStyles.fieldLabel}>Primary Member</label>
+          <select
+            className={fieldStyles.selectField}
+            value={primaryMemberId}
+            onChange={(e) => setPrimaryMemberId(e.target.value)}
+          >
+            <option value="">-- Auto-detect --</option>
+            {internalMembers.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+        </div>
+      </SettingsDisclosure>
 
-      <div className={fieldStyles.sectionTitle}>Appearance</div>
-      <AppearanceSection />
+      <SettingsDisclosure title="Appearance" subtitle="Theme, accent, background, text size" defaultOpen>
+        <AppearanceSection />
+      </SettingsDisclosure>
 
-      <div className={fieldStyles.separator} />
+      <SettingsDisclosure title="Limits" subtitle="Description, numpad, dashboard count">
+        <div className={fieldStyles.fieldGroup}>
+          <label className={fieldStyles.fieldLabel}>Description Max Length</label>
+          <input
+            className={fieldStyles.inputField}
+            type="number"
+            min={DESCRIPTION_MAX_LENGTH_MIN}
+            max={DESCRIPTION_MAX_LENGTH_MAX}
+            value={descriptionMaxLength}
+            onChange={(e) => setDescriptionMaxLength(Number(e.target.value))}
+          />
+        </div>
 
-      <div className={fieldStyles.fieldGroup}>
-        <label className={fieldStyles.fieldLabel}>Primary Member</label>
-        <select
-          className={fieldStyles.selectField}
-          value={primaryMemberId}
-          onChange={(e) => setPrimaryMemberId(e.target.value)}
-        >
-          <option value="">-- Auto-detect --</option>
-          {internalMembers.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
-          ))}
-        </select>
-      </div>
+        <div className={fieldStyles.fieldGroup}>
+          <label className={fieldStyles.fieldLabel}>Numpad Max Digits</label>
+          <input
+            className={fieldStyles.inputField}
+            type="number"
+            min={NUMPAD_MAX_DIGITS_MIN}
+            max={NUMPAD_MAX_DIGITS_MAX}
+            value={numpadMaxDigits}
+            onChange={(e) => setNumpadMaxDigits(Number(e.target.value))}
+          />
+        </div>
 
-      <div className={fieldStyles.fieldGroup}>
-        <label className={fieldStyles.fieldLabel}>Description Max Length</label>
-        <input
-          className={fieldStyles.inputField}
-          type="number"
-          min={DESCRIPTION_MAX_LENGTH_MIN}
-          max={DESCRIPTION_MAX_LENGTH_MAX}
-          value={descriptionMaxLength}
-          onChange={(e) => setDescriptionMaxLength(Number(e.target.value))}
-        />
-      </div>
+        <div className={fieldStyles.fieldGroup}>
+          <label className={fieldStyles.fieldLabel}>Dashboard Transaction Limit</label>
+          <input
+            className={fieldStyles.inputField}
+            type="number"
+            min={DASHBOARD_TX_LIMIT_MIN}
+            max={DASHBOARD_TX_LIMIT_MAX}
+            value={dashboardTxLimit}
+            onChange={(e) => setDashboardTxLimit(Number(e.target.value))}
+          />
+        </div>
+      </SettingsDisclosure>
 
-      <div className={fieldStyles.fieldGroup}>
-        <label className={fieldStyles.fieldLabel}>Numpad Max Digits</label>
-        <input
-          className={fieldStyles.inputField}
-          type="number"
-          min={NUMPAD_MAX_DIGITS_MIN}
-          max={NUMPAD_MAX_DIGITS_MAX}
-          value={numpadMaxDigits}
-          onChange={(e) => setNumpadMaxDigits(Number(e.target.value))}
-        />
-      </div>
-
-      <div className={fieldStyles.fieldGroup}>
-        <label className={fieldStyles.fieldLabel}>Dashboard Transaction Limit</label>
-        <input
-          className={fieldStyles.inputField}
-          type="number"
-          min={DASHBOARD_TX_LIMIT_MIN}
-          max={DASHBOARD_TX_LIMIT_MAX}
-          value={dashboardTxLimit}
-          onChange={(e) => setDashboardTxLimit(Number(e.target.value))}
-        />
-      </div>
-
-      <div className={fieldStyles.separator} />
-
-      <div className={fieldStyles.sectionTitle}>Restore Points</div>
-      {restoreError && <div className={fieldStyles.errorMsg}>{restoreError}</div>}
-      {snapshots.length === 0 ? (
-        <div className={fieldStyles.emptyState}>No backup snapshots found</div>
-      ) : (
-        <div className={fieldStyles.snapshotList}>
-          {snapshots.map((snap, i) => (
-            <div key={i} className={fieldStyles.snapshotRow}>
+      <SettingsDisclosure
+        title="Restore Points"
+        subtitle={snapshots.length === 0 ? 'No snapshots yet' : `Latest: ${formatSnapshotTime(snapshots[0]!.time)}`}
+        badge={snapshots.length > 0 ? `${snapshots.length}` : undefined}
+        defaultOpen
+      >
+        {restoreError && <div className={fieldStyles.errorMsg}>{restoreError}</div>}
+        {snapshots.length === 0 ? (
+          <div className={fieldStyles.emptyState}>No backup snapshots found</div>
+        ) : (
+          <>
+            <div className={fieldStyles.snapshotRow}>
               <span className={fieldStyles.snapshotDot} />
-              <span className={fieldStyles.snapshotTime}>{formatSnapshotTime(snap.time)}</span>
-              <span className={fieldStyles.snapshotLabel}>— Auto-backup</span>
+              <span className={fieldStyles.snapshotTime}>{formatSnapshotTime(snapshots[0]!.time)}</span>
+              <span className={fieldStyles.snapshotLabel}>— Latest auto-backup</span>
               <button
                 className={fieldStyles.restoreBtn}
-                onClick={() => handleRestore(i, formatSnapshotTime(snap.time))}
+                onClick={() => handleRestore(0, formatSnapshotTime(snapshots[0]!.time))}
                 disabled={restoring}
               >
                 {restoring ? 'Restoring…' : 'Restore'}
               </button>
             </div>
-          ))}
-        </div>
-      )}
+            {snapshots.length > 1 && (
+              <>
+                <button className={disclosureStyles.showAllBtn} onClick={() => setShowAllSnapshots((s) => !s)}>
+                  {showAllSnapshots ? 'Hide history' : `Show all ${snapshots.length} snapshots ▾`}
+                </button>
+                {showAllSnapshots && (
+                  <div className={fieldStyles.snapshotList}>
+                    {snapshots.slice(1).map((snap, idx) => (
+                      <div key={idx + 1} className={fieldStyles.snapshotRow}>
+                        <span className={fieldStyles.snapshotDot} />
+                        <span className={fieldStyles.snapshotTime}>{formatSnapshotTime(snap.time)}</span>
+                        <span className={fieldStyles.snapshotLabel}>— Auto-backup</span>
+                        <button
+                          className={fieldStyles.restoreBtn}
+                          onClick={() => handleRestore(idx + 1, formatSnapshotTime(snap.time))}
+                          disabled={restoring}
+                        >
+                          {restoring ? 'Restoring…' : 'Restore'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </SettingsDisclosure>
 
-      <div className={fieldStyles.separator} />
+      <SettingsDisclosure
+        title="Cloud Backup"
+        subtitle={!isFsaSupported ? 'Chrome/Edge only' : folderName ? `Backing up to ${folderName}` : 'Not connected'}
+        badge={backupFiles.length > 0 ? `${backupFiles.length}` : undefined}
+      >
+        {!isFsaSupported ? (
+          <div className={fieldStyles.emptyState}>Cloud backup requires Chrome or Edge</div>
+        ) : fsPermission === null ? (
+          <div className={fieldStyles.emptyState}>
+            <button className={fieldStyles.actionBtn} onClick={handlePickFolder}>
+              Choose backup folder
+            </button>
+          </div>
+        ) : fsPermission ? (
+          <div className={fieldStyles.statusRow}>
+            <span className={fieldStyles.statusDot} />
+            <span className={fieldStyles.statusText}>Backing up to {folderName}</span>
+            <button className={fieldStyles.restoreBtn} onClick={handleStopBackup}>Stop backup</button>
+            <button className={fieldStyles.restoreBtn} onClick={handlePickFolder}>Change folder</button>
+          </div>
+        ) : (
+          <div className={fieldStyles.statusRow}>
+            <span className={fieldStyles.statusWarnDot} />
+            <span className={fieldStyles.statusText}>Permission needed — click to re-authorize</span>
+            <button className={fieldStyles.restoreBtn} onClick={handleReauthorize}>Re-authorize</button>
+          </div>
+        )}
+        {fsPermission && (
+          <>
+            {backupFiles.length === 0 ? (
+              <div className={fieldStyles.emptyState}>No backup files found in folder</div>
+            ) : (
+              <>
+                {(() => {
+                  const f = backupFiles[0]!;
+                  const ts = f.name.replace('moneyflows-', '').replace('.db', '');
+                  const label = `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)} ${ts.slice(9, 11)}:${ts.slice(11, 13)}`;
+                  return (
+                    <div className={fieldStyles.snapshotRow}>
+                      <span className={fieldStyles.statusDot} />
+                      <span className={fieldStyles.snapshotTime}>{label}</span>
+                      <span className={fieldStyles.snapshotLabel}>— Latest file</span>
+                      <button
+                        className={fieldStyles.restoreBtn}
+                        onClick={() => handleRestoreFile(f.name)}
+                        disabled={restoringFile === f.name}
+                      >
+                        {restoringFile === f.name ? 'Restoring…' : 'Restore'}
+                      </button>
+                    </div>
+                  );
+                })()}
+                {backupFiles.length > 1 && (
+                  <>
+                    <button className={disclosureStyles.showAllBtn} onClick={() => setShowAllFiles((s) => !s)}>
+                      {showAllFiles ? 'Hide files' : `Show all ${backupFiles.length} files ▾`}
+                    </button>
+                    {showAllFiles && (
+                      <div className={fieldStyles.snapshotList}>
+                        {backupFiles.slice(1, 10).map((f) => {
+                          const ts = f.name.replace('moneyflows-', '').replace('.db', '');
+                          const label = `${ts.slice(0, 4)}-${ts.slice(4, 6)}-${ts.slice(6, 8)} ${ts.slice(9, 11)}:${ts.slice(11, 13)}`;
+                          return (
+                            <div key={f.name} className={fieldStyles.snapshotRow}>
+                              <span className={fieldStyles.statusDot} />
+                              <span className={fieldStyles.snapshotTime}>{label}</span>
+                              <button
+                                className={fieldStyles.restoreBtn}
+                                onClick={() => handleRestoreFile(f.name)}
+                                disabled={restoringFile === f.name}
+                              >
+                                {restoringFile === f.name ? 'Restoring…' : 'Restore'}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </SettingsDisclosure>
 
-      <div className={fieldStyles.sectionTitle}>Cloud Backup</div>
-      {!isFsaSupported ? (
-        <div className={fieldStyles.emptyState}>Cloud backup requires Chrome or Edge</div>
-      ) : fsPermission === null ? (
-        <div className={fieldStyles.emptyState}>
-          <button className={fieldStyles.actionBtn} onClick={handlePickFolder}>
-            Choose backup folder
+      <SettingsDisclosure
+        title="Storage"
+        subtitle={storageHealth ? (storageHealth.backend === 'opfs' ? 'OPFS fast local file' : 'Browser storage') : 'Engine status'}
+        defaultOpen
+      >
+        {storageHealth && (
+          <div className={fieldStyles.statusRow}>
+            <span className={storageHealth.lastFlushFailed ? fieldStyles.statusWarnDot : fieldStyles.statusDot} />
+            <span className={fieldStyles.statusText}>
+              {storageHealth.backend === 'opfs' ? 'OPFS (fast local file)' : 'Browser storage'}
+              {' — '}
+              {storageHealth.lastFlushFailed
+                ? 'last save failed; check disk space'
+                : storageHealth.lastFlushAt
+                  ? `saved ${new Date(storageHealth.lastFlushAt).toLocaleTimeString(settings.locale, { hour: 'numeric', minute: '2-digit', hour12: true })}`
+                  : 'ready'}
+            </span>
+          </div>
+        )}
+        <div className={fieldStyles.actionsRow}>
+          <button className={fieldStyles.actionBtn} onClick={() => getDatabase().exportToFile()}>
+            ↓ Export Database
+          </button>
+          <button className={fieldStyles.actionBtn} onClick={() => getDatabase().importFromFile()}>
+            ↑ Import Database
           </button>
         </div>
-      ) : fsPermission ? (
+      </SettingsDisclosure>
+
+      <SettingsDisclosure title="App" subtitle={`MoneyFlows v${APP_VERSION}`} defaultOpen>
+        {installPrompt && (
+          <div className={fieldStyles.statusRow}>
+            <span className={fieldStyles.statusDot} />
+            <span className={fieldStyles.statusText}>Install MoneyFlows on your device</span>
+            <button className={fieldStyles.restoreBtn} onClick={async () => {
+              (installPrompt as unknown as { prompt: () => Promise<void> }).prompt();
+              const result = await (installPrompt as unknown as { userChoice: Promise<{ outcome: string }> }).userChoice;
+              if (result.outcome === 'accepted') setInstallPrompt(null);
+            }}>
+              Install
+            </button>
+          </div>
+        )}
+
         <div className={fieldStyles.statusRow}>
           <span className={fieldStyles.statusDot} />
-          <span className={fieldStyles.statusText}>Backing up to {folderName}</span>
-          <button className={fieldStyles.restoreBtn} onClick={handleStopBackup}>Stop backup</button>
-          <button className={fieldStyles.restoreBtn} onClick={handlePickFolder}>Change folder</button>
+          <span className={fieldStyles.statusText}>See what&apos;s new in v{APP_VERSION}</span>
+          <button className={fieldStyles.restoreBtn} onClick={() => setWhatsNewOpen(true)}>View</button>
         </div>
-      ) : (
-        <div className={fieldStyles.statusRow}>
-          <span className={fieldStyles.statusWarnDot} />
-          <span className={fieldStyles.statusText}>Permission needed — click to re-authorize</span>
-          <button className={fieldStyles.restoreBtn} onClick={handleReauthorize}>Re-authorize</button>
-        </div>
-      )}
-      {fsPermission && (
-        <div className={fieldStyles.snapshotList} style={{ marginTop: 8 }}>
-          {backupFiles.length === 0 ? (
-            <div className={fieldStyles.emptyState}>No backup files found in folder</div>
-          ) : (
-            backupFiles.slice(0, 10).map((f) => {
-              const ts = f.name.replace('moneyflows-', '').replace('.db', '');
-              const y = ts.slice(0, 4), M = ts.slice(4, 6), d = ts.slice(6, 8);
-              const h = ts.slice(9, 11), m = ts.slice(11, 13);
-              const label = `${y}-${M}-${d} ${h}:${m}`;
-              return (
-                <div key={f.name} className={fieldStyles.snapshotRow}>
-                  <span className={fieldStyles.statusDot} />
-                  <span className={fieldStyles.snapshotTime}>{label}</span>
-                  <button
-                    className={fieldStyles.restoreBtn}
-                    onClick={() => handleRestoreFile(f.name)}
-                    disabled={restoringFile === f.name}
-                  >
-                    {restoringFile === f.name ? 'Restoring…' : 'Restore'}
-                  </button>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
 
-      <div className={fieldStyles.separator} />
-
-      <div className={fieldStyles.sectionTitle}>Storage</div>
-      {storageHealth && (
-        <div className={fieldStyles.statusRow}>
-          <span className={storageHealth.lastFlushFailed ? fieldStyles.statusWarnDot : fieldStyles.statusDot} />
-          <span className={fieldStyles.statusText}>
-            {storageHealth.backend === 'opfs' ? 'OPFS (fast local file)' : 'Browser storage'}
-            {' — '}
-            {storageHealth.lastFlushFailed
-              ? 'last save failed; check disk space'
-              : storageHealth.lastFlushAt
-                ? `saved ${new Date(storageHealth.lastFlushAt).toLocaleTimeString(settings.locale, { hour: 'numeric', minute: '2-digit', hour12: true })}`
-                : 'ready'}
-          </span>
-        </div>
-      )}
-
-      <div className={fieldStyles.separator} />
-
-      {installPrompt && (
-        <div className={fieldStyles.statusRow}>
-          <span className={fieldStyles.statusDot} />
-          <span className={fieldStyles.statusText}>Install MoneyFlows on your device</span>
-          <button className={fieldStyles.restoreBtn} onClick={async () => {
-            (installPrompt as unknown as { prompt: () => Promise<void> }).prompt();
-            const result = await (installPrompt as unknown as { userChoice: Promise<{ outcome: string }> }).userChoice;
-            if (result.outcome === 'accepted') setInstallPrompt(null);
-          }}>
-            Install
-          </button>
-        </div>
-      )}
-
-      <div className={fieldStyles.actionsRow}>
-        <button className={fieldStyles.actionBtn} onClick={() => getDatabase().exportToFile()}>
-          ↓ Export Database
-        </button>
-        <button className={fieldStyles.actionBtn} onClick={() => getDatabase().importFromFile()}>
-          ↑ Import Database
-        </button>
-      </div>
-
-      <div className={fieldStyles.statusRow}>
-        <span className={fieldStyles.statusDot} />
-        <span className={fieldStyles.statusText}>See what&apos;s new in v{APP_VERSION}</span>
-        <button className={fieldStyles.restoreBtn} onClick={() => setWhatsNewOpen(true)}>View</button>
-      </div>
-
-      <div className={fieldStyles.versionLine}>MoneyFlows v{APP_VERSION}</div>
+        <div className={fieldStyles.versionLine}>MoneyFlows v{APP_VERSION}</div>
+      </SettingsDisclosure>
 
       <WhatsNewModal
         isOpen={whatsNewOpen}
