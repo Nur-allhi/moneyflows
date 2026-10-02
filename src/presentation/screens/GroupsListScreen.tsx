@@ -26,6 +26,16 @@ export function GroupsListScreen() {
   const [detailGroup, setDetailGroup] = useState<AccountGroup & { accountIds: string[] } | null>(null);
   const [editing, setEditing] = useState(false);
   const [editSelected, setEditSelected] = useState<Set<string>>(new Set());
+  const [renameEditing, setRenameEditing] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameError, setRenameError] = useState('');
+  const [sortBy, setSortBy] = useState<'created' | 'name' | 'balance' | 'count'>('created');
+  const SORT_OPTIONS = [
+    { id: 'created', label: 'Created' },
+    { id: 'name', label: 'Name A–Z' },
+    { id: 'balance', label: 'Highest balance' },
+    { id: 'count', label: 'Most accounts' },
+  ] as const;
   const [mobileSearch, setMobileSearch] = useState('');
 
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -84,6 +94,9 @@ export function GroupsListScreen() {
     setDetailGroup(g);
     setEditing(false);
     setEditSelected(new Set(g.accountIds));
+    setRenameEditing(false);
+    setRenameValue(g.name);
+    setRenameError('');
   };
 
   const saveEdit = async () => {
@@ -102,6 +115,33 @@ export function GroupsListScreen() {
     }
   };
 
+  const handleRenameSave = async () => {
+    if (!detailGroup) return;
+    const clean = renameValue.trim();
+    if (!clean) {
+      setRenameError('Name cannot be empty.');
+      return;
+    }
+    const duplicate = groups.some(
+      (g) => g.id !== detailGroup.id && g.name.toLowerCase() === clean.toLowerCase(),
+    );
+    if (duplicate) {
+      setRenameError('A group with this name already exists.');
+      return;
+    }
+    try {
+      const db = getDatabase();
+      const updated = new AccountGroup(detailGroup.id, clean, detailGroup.sortOrder, detailGroup.metadata);
+      await db.saveAccountGroup(updated);
+      setDetailGroup({ ...detailGroup, name: clean });
+      setGroups((prev) => prev.map((g) => g.id === detailGroup.id ? { ...g, name: clean } : g));
+      setRenameEditing(false);
+      setRenameError('');
+    } catch (err) {
+      setRenameError('Failed to rename: ' + (err as Error).message);
+    }
+  };
+
   const groupBalances = groups.map((g) => {
     const total = g.accountIds.reduce((sum, id) => {
       const acct = accounts.find((a) => a.id === id);
@@ -115,6 +155,18 @@ export function GroupsListScreen() {
   const filteredGroups = effectiveSearch
     ? groups.filter((g) => g.name.toLowerCase().includes(effectiveSearch.toLowerCase()))
     : groups;
+  const sortedGroups = [...filteredGroups].sort((a, b) => {
+    switch (sortBy) {
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'balance':
+        return (balanceMap.get(b.id) ?? 0) - (balanceMap.get(a.id) ?? 0);
+      case 'count':
+        return b.accountIds.length - a.accountIds.length;
+      default:
+        return 0;
+    }
+  });
 
   if (loading) {
     return (
@@ -158,11 +210,24 @@ export function GroupsListScreen() {
         <button className={styles.addBtn} onClick={() => setShowCreate(true)}>+ New Group</button>
       </div>
 
-      {filteredGroups.length === 0 ? (
+      <div className={styles.chips} role="group" aria-label="Sort groups">
+        {SORT_OPTIONS.map((opt) => (
+          <button
+            key={opt.id}
+            className={`${styles.chip} ${sortBy === opt.id ? styles.chipActive : ''}`}
+            onClick={() => setSortBy(opt.id)}
+            aria-pressed={sortBy === opt.id}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {sortedGroups.length === 0 ? (
         <div className={styles.empty}>{effectiveSearch ? 'No groups match your search' : 'No groups yet. Create one to combine account ledgers.'}</div>
       ) : (
         <div className={styles.grid}>
-          {filteredGroups.map((g) => (
+          {sortedGroups.map((g) => (
             <button key={g.id} className={styles.card} onClick={() => openDetail(g)}>
               <div className={styles.cardLeft}>
                 <div className={styles.cardAvatar} style={{ background: ledgerGradient(g.name) }}>
@@ -266,6 +331,42 @@ export function GroupsListScreen() {
             </div>
           ) : (
             <div className={styles.detailBody}>
+              {!editing && (
+                renameEditing ? (
+                  <div className={styles.renameRow}>
+                    <input
+                      className={styles.renameInput}
+                      value={renameValue}
+                      onChange={(e) => { setRenameValue(e.target.value); setRenameError(''); }}
+                      autoFocus
+                      maxLength={60}
+                      aria-label="Group name"
+                    />
+                    <div className={styles.renameActions}>
+                      <button className={styles.renameSave} onClick={handleRenameSave}>Save</button>
+                      <button
+                        className={styles.renameCancel}
+                        onClick={() => { setRenameEditing(false); setRenameValue(detailGroup.name); setRenameError(''); }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {renameError && <span className={styles.renameError}>{renameError}</span>}
+                  </div>
+                ) : (
+                  <div className={styles.renameRow}>
+                    <span className={styles.renameName}>{detailGroup.name}</span>
+                    <button
+                      className={styles.renameBtn}
+                      onClick={() => { setRenameEditing(true); setRenameValue(detailGroup.name); setRenameError(''); }}
+                      aria-label="Rename group"
+                      title="Rename group"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                    </button>
+                  </div>
+                )
+              )}
               {detailGroup.accountIds.length === 0 ? (
                 <div className={styles.empty}>No accounts in this group.</div>
               ) : (
@@ -319,6 +420,42 @@ export function GroupsListScreen() {
             </div>
           ) : (
             <div className={styles.detailBody}>
+              {!editing && (
+                renameEditing ? (
+                  <div className={styles.renameRow}>
+                    <input
+                      className={styles.renameInput}
+                      value={renameValue}
+                      onChange={(e) => { setRenameValue(e.target.value); setRenameError(''); }}
+                      autoFocus
+                      maxLength={60}
+                      aria-label="Group name"
+                    />
+                    <div className={styles.renameActions}>
+                      <button className={styles.renameSave} onClick={handleRenameSave}>Save</button>
+                      <button
+                        className={styles.renameCancel}
+                        onClick={() => { setRenameEditing(false); setRenameValue(detailGroup.name); setRenameError(''); }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {renameError && <span className={styles.renameError}>{renameError}</span>}
+                  </div>
+                ) : (
+                  <div className={styles.renameRow}>
+                    <span className={styles.renameName}>{detailGroup.name}</span>
+                    <button
+                      className={styles.renameBtn}
+                      onClick={() => { setRenameEditing(true); setRenameValue(detailGroup.name); setRenameError(''); }}
+                      aria-label="Rename group"
+                      title="Rename group"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                    </button>
+                  </div>
+                )
+              )}
               {detailGroup.accountIds.length === 0 ? (
                 <div className={styles.empty}>No accounts in this group.</div>
               ) : (

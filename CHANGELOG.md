@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Groups list: rename any group from its detail view (pencil button, desktop + mobile) with empty/duplicate validation; sort chips (Created / Name A–Z / Highest balance / Most accounts) matching the ledger filter style.
+
+### Fixed
+- Member ledger header buttons (Download PDF, Show filters) had clipped/misplaced icons — the icon wrapper broke the button flex layout and the centering rules never matched (CSS Modules hashed a global class); icons now centered, hover expand verified.
+
 ## [1.11.0] - 2026-10-02
 
 ### Added

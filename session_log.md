@@ -886,3 +886,60 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Committed on dev. Next: user call.
 
+
+## Session 2026-10-02 (groups rename + sort, on dev)
+
+### Changes
+- GroupsListScreen.tsx: rename in detail body (desktop Modal + mobile BottomSheet) via pencil button — Modal title is string-only so body row mirrors name; validation empty + duplicate (case-insensitive) with inline error; persists via saveAccountGroup UPSERT, updates list + detail state
+- GroupsListScreen.tsx: sort dropdown (Created order | Name A-Z | Highest balance | Most accounts), view-only, desktop header + mobile toolbar above list; combines with existing search
+- GroupsListScreen.module.css: sortLabel/sortSelect/mobileToolbar + renameRow/renameName/renameBtn/renameInput/renameActions/renameSave/renameCancel/renameError, tokens only, no new inline styles
+- Gates: tsc PASS, eslint PASS (tsx), detect_changes MEDIUM groups-scope only; file now 495 LOC (was 365, limit 300 — T-092 split deferred, disclosed)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev. Next: user verifies UI then commit.
+
+
+## Session 2026-10-02 (groups sort restyle to chips, on dev)
+
+### Changes
+- Replaced native sort <select> (deprecated per DESIGN_IDENTITY §9) with filter chips row: Created / Name A-Z / Highest balance / Most accounts; single row visible desktop+mobile, aria-pressed, active = primary gradient + glow
+- CSS: removed sortLabel/sortSelect/mobileToolbar; added chips/chip/chipActive per §15 recipe (pill, wash 6%, 4 states incl. focus-visible 2px)
+- Gates: tsc PASS, eslint PASS
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev. Next: user verifies UI then commit.
+
+
+## Session 2026-10-02 (member ledger header icon fix, on dev)
+
+### Changes
+- Page feedback /member/:id desktop: Download PDF + Show-filters buttons had icons misplaced — .anim-target inline span broke pdfBtn flex layout (baseline icon, dead hover gap) and pdfBtnIcon class sat directly on <svg>
+- LedgerSection.tsx: wrapped both header svgs in <span pdfBtnIcon> (GroupLedgerScreen pattern); MemberProfile.module.css: .pdfBtn .anim-target inline-flex centered, hover gap moved onto .anim-target (6px, drawerToggle 4px), .pdfBtnIcon centers + sizes inner svg
+- Gates: tsc PASS; eslint 1 pre-existing warning (useEffect scheduleClose dep, untouched line 98 — disclosed)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev (with groups rename+chips). Next: user verifies then commit.
+
+
+## Session 2026-10-02 (ledger header icons root-cause fix, on dev)
+
+### Changes
+- Follow-up: icons still broken after first fix — zoomed screenshot showed PDF icon fully clipped + chevron riding top edge. Root cause: .anim-target rules in MemberProfile.module.css were dead — CSS Modules hashes .anim-target (plain class in tsx stays global), so inline-flex centering never applied; verified only 3 occurrences, all mine
+- Fix: :global(.anim-target) on the 3 rules. Verified with seeded Playwright screenshots: rest = search/download/chevron all centered; hover = Download PDF pill expands with proper icon-label gap
+- Scratch spec + screenshots removed. Gates: tsc PASS; eslint 1 pre-existing warning (line 98, untouched)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev (with groups rename+chips). Next: user verifies then commit.
+

@@ -565,9 +565,12 @@
 .drawerToggle.pdfBtn:hover {
   width: 74px;
   border-radius: 999px;
-  gap: 4px;
   padding: 0 6px;
   justify-content: center;
+}
+
+.drawerToggle.pdfBtn:hover :global(.anim-target) {
+  gap: 4px;
 }
 .drawerToggle.pdfBtn:hover .pdfBtnLabel {
   opacity: 1;
@@ -636,10 +639,19 @@
 .pdfBtn:hover {
   width: 130px;
   border-radius: 999px;
-  gap: 6px;
   padding-left: 5px;
   border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+.pdfBtn:hover :global(.anim-target) {
+  gap: 6px;
+}
+
+.pdfBtn :global(.anim-target) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pdfBtn:hover .pdfBtnLabel {
@@ -657,6 +669,14 @@
   width: 16px;
   height: 16px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdfBtnIcon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .pdfBtnLabel {
