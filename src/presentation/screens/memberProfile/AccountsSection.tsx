@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { AccountCard } from '../../components';
+import { useReplay } from '../../hooks/useReplay';
 import { useModalStore } from '../../stores/useModalStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { formatAmount } from '../../utils/format';
@@ -20,6 +21,7 @@ interface Props {
 
 export function AccountsSection({ memberAccounts, selectedAccountId, accountsOpen, setAccountsOpen, onAccountClick, isDesktop, memberId, onSelectAccount }: Props) {
   const { locale, currency } = useSettingsStore((s) => s.settings);
+  const [editAcctKey, replayEditAcct] = useReplay();
   const dropdownRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!accountsOpen || !isDesktop) return;
@@ -52,8 +54,8 @@ export function AccountsSection({ memberAccounts, selectedAccountId, accountsOpe
                     onClick={() => onAccountClick(acct.id)}
                     selected={selectedAccountId === acct.id}
                     actions={
-                      <button className={styles.acctActionBtn} title="Edit account" aria-label={`Edit ${acct.name}`} onClick={() => useModalStore.getState().open('edit-account', { accountId: acct.id })}>
-                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M10.5 1.5l2 2L5 11l-2.7.7L3 8.9l7.5-7.4z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <button className={`${styles.acctActionBtn} ${editAcctKey > 0 ? 'anim-twist' : ''}`} title="Edit account" aria-label={`Edit ${acct.name}`} onClick={() => { replayEditAcct(); useModalStore.getState().open('edit-account', { accountId: acct.id }); }}>
+                        <svg key={editAcctKey} width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M10.5 1.5l2 2L5 11l-2.7.7L3 8.9l7.5-7.4z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
                       </button>
                     }
                   />

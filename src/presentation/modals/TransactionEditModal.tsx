@@ -5,6 +5,7 @@ import { useTransactionStore } from '../stores/useTransactionStore';
 import { Transaction } from '../../core/domain/Transaction';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { useTagStore } from '../stores/useTagStore';
+import { useReplay } from '../hooks/useReplay';
 import styles from './TransactionEditModal.module.css';
 
 interface TransactionEditModalProps {
@@ -74,6 +75,8 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
   }, [transaction, amount, desc, date, txType, updateTransaction, onClose, tagName]);
 
   const showTypeToggle = editableTypes.includes(transaction?.type as typeof editableTypes[number]) && !isOpeningBalance;
+  const [incomeKey, replayIncome] = useReplay();
+  const [expenseKey, replayExpense] = useReplay();
 
   if (!transaction) return null;
 
@@ -101,16 +104,16 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
       {showTypeToggle && (
         <div className={styles.typeToggle}>
           <button
-            onClick={() => setTxType('income')}
-            className={`${styles.typeBtn} ${styles.income} ${txType === 'income' ? styles.active : ''}`}
+            onClick={() => { replayIncome(); setTxType('income'); }}
+            className={`${styles.typeBtn} ${styles.income} ${txType === 'income' ? styles.active : ''} ${incomeKey > 0 ? 'anim-pop' : ''}`}
           >
-            Income (Credit)
+            <span className="anim-target" key={incomeKey}>Income (Credit)</span>
           </button>
           <button
-            onClick={() => setTxType('expense')}
-            className={`${styles.typeBtn} ${styles.expense} ${txType === 'expense' ? styles.active : ''}`}
+            onClick={() => { replayExpense(); setTxType('expense'); }}
+            className={`${styles.typeBtn} ${styles.expense} ${txType === 'expense' ? styles.active : ''} ${expenseKey > 0 ? 'anim-pop' : ''}`}
           >
-            Expense (Debit)
+            <span className="anim-target" key={expenseKey}>Expense (Debit)</span>
           </button>
         </div>
       )}

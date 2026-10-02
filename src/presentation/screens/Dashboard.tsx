@@ -3,6 +3,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FAB } from '../components';
 import { useAnimatedValue } from '../hooks';
+import { useReplay } from '../hooks/useReplay';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
@@ -29,6 +30,9 @@ export function Dashboard() {
   const visibleCount = [showWhere, showRecent, showLoans].filter(Boolean).length;
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [closingMembers, setClosingMembers] = useState<Set<string>>(new Set());
+  const [retryKey, replayRetry] = useReplay();
+  const [newTxKey, replayNewTx] = useReplay();
+  const [quickLoanKey, replayQuickLoan] = useReplay();
   const closingRef = useRef<Set<string>>(new Set());
   const toggleMember = useCallback((mid: string) => {
     if (expandedMembers.has(mid)) {
@@ -41,14 +45,14 @@ export function Dashboard() {
   const filteredActiveLoanStacks = (activeLoanStacks as any[]).filter(() => true);
   const searchQuery = (d as any).rawQuery ?? '';
   if (loading) return <div className={styles.dashboard}><div className="skeleton skeleton-wizard" style={{ height: 64, borderRadius: 12 }} /><div className={styles.metrics}>{[1, 2, 3].map((i) => <div key={i} className="skeleton skeleton-metric" />)}</div><div className="skeleton skeleton-row" style={{ height: 56, borderRadius: 12 }} /><div className={styles.content}><div className="skeleton skeleton-card" style={{ height: 300 }} /><div className="skeleton skeleton-card" style={{ height: 300 }} /></div></div>;
-  if (error) return <div className={styles.dashboard}><div className={`${styles.panel} ${styles.monthSummary}`}><div className="error-state"><div className="error-state-icon">{'\u26A0\uFE0F'}</div><p className="error-state-text">Could not load dashboard data</p><button className="retry-btn" onClick={() => fetchAccounts()}>Retry</button></div></div></div>;
+  if (error) return <div className={styles.dashboard}><div className={`${styles.panel} ${styles.monthSummary}`}><div className="error-state"><div className="error-state-icon">{'\u26A0\uFE0F'}</div><p className="error-state-text">Could not load dashboard data</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchAccounts(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div></div></div>;
   return (
     <div className={styles.dashboard}>
       <MetricCards assetsChange={assetsChange} cashChange={cashChange} banksChange={banksChange} loansChange={loansChange} locale={locale} currency={currency} animTotalAssets={animTotalAssets} animCashInHand={animCashInHand} animTotalInBanks={animTotalInBanks} animActiveLoans={animActiveLoans} totalAssetsIncludeLoans={totalAssetsIncludeLoans} animLoansAdded={animLoansAdded} />
       <MonthSummary thisMonthIncome={thisMonthIncome} thisMonthExpenses={thisMonthExpenses} thisMonthNet={thisMonthNet} locale={locale} currency={currency} />
       <div className={styles.actions}>
-        <button className={`${styles.actBtn} ${styles.actPrimary}`} onClick={openWizard}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>New Transaction</button>
-        <button className={styles.actBtn} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'loan' })}>Quick Loan</button>
+        <button className={`${styles.actBtn} ${styles.actPrimary} ${newTxKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNewTx(); openWizard(); }}><span className="anim-target" key={newTxKey}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>New Transaction</span></button>
+        <button className={`${styles.actBtn} ${quickLoanKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayQuickLoan(); useModalStore.getState().open('transaction-form', { initialTab: 'loan' }); }}><span className="anim-target" key={quickLoanKey}>Quick Loan</span></button>
       </div>
       <div className={styles.content} data-cols={visibleCount || 1}>
         {showWhere && <div className={styles.panel}><div className={styles.panelHeader}><h2>Where Your Money Is</h2></div><WhereMoneyIsPanel filteredAccountsByMember={filteredAccountsByMember} memberById={memberById} internalMembers={internalMembers} expandedMembers={expandedMembers} closingMembers={closingMembers} toggleMember={toggleMember} memberTotalBalance={memberTotalBalance} searchQuery={searchQuery} locale={locale} currency={currency} /></div>}

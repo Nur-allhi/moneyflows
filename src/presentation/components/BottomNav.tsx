@@ -1,6 +1,7 @@
 import { type ReactNode, useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { BottomSheet } from './BottomSheet';
+import { useReplay } from '../hooks/useReplay';
 import styles from './BottomNav.module.css';
 
 interface BottomNavItem {
@@ -36,6 +37,9 @@ export function BottomNav({ items, className = '' }: BottomNavProps) {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const navigate = useNavigate();
+  const [moreKey, replayMore] = useReplay();
+  const [moreListKey, replayMoreList] = useReplay();
+  const [morePicked, setMorePicked] = useState<string | null>(null);
 
   useEffect(() => {
     const main = document.getElementById('app-main') as HTMLElement | null;
@@ -103,9 +107,9 @@ export function BottomNav({ items, className = '' }: BottomNavProps) {
           </NavLink>
         ))}
 
-        <button className={styles.item} onClick={() => setMoreOpen(true)} aria-label="More">
-          <span className={styles.icon}><MoreIcon /></span>
-          More
+        <button className={`${styles.item} ${moreKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMore(); setMoreOpen(true); }} aria-label="More">
+          <span className="anim-target" key={moreKey}><span className={styles.icon}><MoreIcon /></span>
+          More</span>
         </button>
       </nav>
 
@@ -114,11 +118,13 @@ export function BottomNav({ items, className = '' }: BottomNavProps) {
           {others.map((item) => (
             <button
               key={item.path}
-              className={styles.moreBlock}
-              onClick={() => { setMoreOpen(false); navigate(item.path); }}
+              className={`${styles.moreBlock} ${morePicked === item.path && moreListKey > 0 ? 'anim-pop' : ''}`}
+              onClick={() => { replayMoreList(); setMorePicked(item.path); setMoreOpen(false); navigate(item.path); }}
             >
+              <span className="anim-target" key={`${item.path}-${morePicked === item.path ? moreListKey : 0}`}>
               <span className={styles.moreIcon}>{item.icon}</span>
               <span className={styles.moreLabel}>{item.label}</span>
+              </span>
             </button>
           ))}
         </div>

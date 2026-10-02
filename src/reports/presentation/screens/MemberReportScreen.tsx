@@ -13,6 +13,7 @@ import type { ReportPreset } from './ReportFilterSheet';
 import { ReportSections } from './ReportSections';
 import { downloadMemberReportPdf } from '../memberReportPdf';
 import { downloadMemberReportCsv } from '../memberReportCsv';
+import { useReplay } from '../../../presentation/hooks/useReplay';
 import styles from './MemberReportScreen.module.css';
 
 function presetRange(preset: ReportPreset, customStart: string, customEnd: string): { start?: string; end?: string; month?: string } {
@@ -50,6 +51,10 @@ export function MemberReportScreen() {
   const [report, setReport] = useState<MemberReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filterKey, replayFilter] = useReplay();
+  const [pdfKey, replayPdf] = useReplay();
+  const [csvKey, replayCsv] = useReplay();
+  const [printKey, replayPrint] = useReplay();
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -164,16 +169,16 @@ export function MemberReportScreen() {
         </div>
         <div className={`${styles.actions} ${styles.printHide}`}>
           <button
-            className={`${styles.iconBtn} ${hasActiveFilters ? styles.iconActive : ''}`}
-            onClick={() => setFiltersOpen(true)}
+            className={`${styles.iconBtn} ${hasActiveFilters ? styles.iconActive : ''} ${filterKey > 0 ? 'anim-pop' : ''}`}
+            onClick={() => { replayFilter(); setFiltersOpen(true); }}
             aria-label="Report filters"
             title={`Filters · ${filterSummary}`}
           >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
+            <svg key={filterKey} viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
           </button>
-          <button className={styles.actionBtn} onClick={handlePdf} disabled={!report}>PDF</button>
-          <button className={styles.actionBtn} onClick={handleCsv} disabled={!report}>CSV</button>
-          <button className={styles.actionBtn} onClick={handlePrint} disabled={!report}>Print</button>
+          <button className={`${styles.actionBtn} ${pdfKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayPdf(); handlePdf(); }} disabled={!report}><span className="anim-target" key={pdfKey}>PDF</span></button>
+          <button className={`${styles.actionBtn} ${csvKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCsv(); handleCsv(); }} disabled={!report}><span className="anim-target" key={csvKey}>CSV</span></button>
+          <button className={`${styles.actionBtn} ${printKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayPrint(); handlePrint(); }} disabled={!report}><span className="anim-target" key={printKey}>Print</span></button>
         </div>
       </div>
 

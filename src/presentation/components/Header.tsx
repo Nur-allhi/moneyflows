@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
+import { useReplay } from '../hooks/useReplay';
 import { useSearchStore } from '../stores/useSearchStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useEffectiveTheme } from '../hooks/useTheme';
@@ -27,12 +28,6 @@ interface HeaderProps {
 function formatDate(): string {
   const d = new Date();
   return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-}
-
-/** One-shot click animation replay: bump the key to remount the icon and restart its keyframe. */
-function useReplay(): [number, () => void] {
-  const [n, setN] = useState(0);
-  return [n, () => setN((v) => v + 1)];
 }
 
 export function Header({

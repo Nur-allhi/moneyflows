@@ -8,6 +8,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { useReplay } from "@/presentation/hooks/useReplay"
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react"
 
 function Calendar({
@@ -24,10 +25,12 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
+  const [navKey, replayNav] = useReplay()
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      onMonthChange={(month) => { replayNav(); props.onMonthChange?.(month); }}
       className={cn(
         "group/calendar bg-transparent p-1 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(9)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -55,11 +58,13 @@ function Calendar({
         button_previous: cn(
           buttonVariants({ variant: buttonVariant }),
           "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
+          `${navKey > 0 ? 'anim-nudge' : ''}`,
           defaultClassNames.button_previous
         ),
         button_next: cn(
           buttonVariants({ variant: buttonVariant }),
           "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
+          `${navKey > 0 ? 'anim-nudge' : ''}`,
           defaultClassNames.button_next
         ),
         month_caption: cn(
@@ -145,13 +150,13 @@ function Calendar({
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === "left") {
             return (
-              <ChevronLeftIcon className={cn("size-4", className)} {...props} />
+              <ChevronLeftIcon key={navKey} className={cn("size-4", className)} {...props} />
             )
           }
 
           if (orientation === "right") {
             return (
-              <ChevronRightIcon className={cn("size-4", className)} {...props} />
+              <ChevronRightIcon key={navKey} className={cn("size-4", className)} {...props} />
             )
           }
 

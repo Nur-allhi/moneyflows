@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { formatAmount } from '../../utils/format';
 import type { Account } from '../../../core/domain/Account';
 import type { Member } from '../../../core/domain/Member';
+import { useReplay } from '../../hooks/useReplay';
 import styles from '../TransactionFormModal.module.css';
 
 interface PickerProps {
@@ -22,25 +24,32 @@ interface PickerProps {
 
 export function SourceDestinationPickers(props: PickerProps) {
   const { pickerField, pickerMember, setPickerField, setPickerMember, internalMembers, accountsByMember, counterpartyAccounts, onSelectSource, onSelectDestination, setShowAddCp, clearError, locale, currency, tab } = props;
+  const [backKey, replayBack] = useReplay();
+  const [closeKey, replayClose] = useReplay();
+  const [listKey, replayList] = useReplay();
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const [createKey, replayCreate] = useReplay();
   if (!pickerField) return null;
   return (
     <div className={styles.pickerOverlay} onClick={() => { setPickerField(null); setPickerMember(null); }}>
       <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.pickerHeader}>
-          <button className={styles.pickerBack} onClick={() => setPickerMember(null)} style={{ visibility: !pickerMember ? 'hidden' : 'visible' }}>{'\u25C0'}</button>
+          <button className={`${styles.pickerBack} ${backKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack(); setPickerMember(null); }} style={{ visibility: !pickerMember ? 'hidden' : 'visible' }}><span className="anim-target" key={backKey}>{'\u25C0'}</span></button>
           <span className={styles.pickerTitle}>{pickerMember ? 'Select Account' : 'Select Member'}</span>
-          <button className={styles.pickerClose} onClick={() => { setPickerField(null); setPickerMember(null); }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          <button className={`${styles.pickerClose} ${closeKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClose(); setPickerField(null); setPickerMember(null); }}>
+            <svg key={closeKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
           </button>
         </div>
         <div className={styles.pickerBody}>
           {!pickerMember ? (
             <div className={styles.pickerList}>
               {internalMembers.map((m) => (
-                <button key={m.id} className={styles.pickerItem} onClick={() => setPickerMember(m.id)}>
+                <button key={m.id} className={`${styles.pickerItem} ${pickedId === m.id && listKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayList(); setPickedId(m.id); setPickerMember(m.id); }}>
+                  <span className="anim-target" key={`${m.id}-${pickedId === m.id ? listKey : 0}`}>
                   <span className={styles.pickerItemName}>{m.name}</span>
                   {m.shortName && <span className={styles.pickerItemMeta}>{m.shortName}</span>}
                   <span className={styles.pickerItemCount}>{accountsByMember[m.id]?.length ?? 0} accounts</span>
+                  </span>
                 </button>
               ))}
               {tab === 'loan' && pickerField === 'destination' && (
@@ -52,21 +61,24 @@ export function SourceDestinationPickers(props: PickerProps) {
                     counterpartyAccounts.map((a) => (
                       <button
                         key={a.id}
-                        className={styles.pickerItem}
+                        className={`${styles.pickerItem} ${pickedId === a.id && listKey > 0 ? 'anim-pop' : ''}`}
                         onClick={() => {
+                          replayList(); setPickedId(a.id);
                           onSelectDestination(a.id);
                           clearError('destination');
                           setPickerField(null);
                           setPickerMember(null);
                         }}
                       >
+                        <span className="anim-target" key={`${a.id}-${pickedId === a.id ? listKey : 0}`}>
                         <span className={styles.pickerItemName}>{a.name}</span>
                         <span className={styles.pickerItemMeta}>Counterparty</span>
                         <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+                        </span>
                       </button>
                     ))
                   )}
-                  <button className={styles.pickerCreateBtn} onClick={() => { setShowAddCp(true); setPickerField(null); setPickerMember(null); }}>+ Create New Person</button>
+                  <button className={`${styles.pickerCreateBtn} ${createKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCreate(); setShowAddCp(true); setPickerField(null); setPickerMember(null); }}><span className="anim-target" key={createKey}>+ Create New Person</span></button>
                 </>
               )}
             </div>
@@ -78,8 +90,9 @@ export function SourceDestinationPickers(props: PickerProps) {
                 (accountsByMember[pickerMember] ?? []).map((a) => (
                   <button
                     key={a.id}
-                    className={styles.pickerItem}
+                    className={`${styles.pickerItem} ${pickedId === a.id && listKey > 0 ? 'anim-pop' : ''}`}
                     onClick={() => {
+                      replayList(); setPickedId(a.id);
                       if (pickerField === 'source') onSelectSource(a.id);
                       else onSelectDestination(a.id);
                       clearError(pickerField);
@@ -87,9 +100,11 @@ export function SourceDestinationPickers(props: PickerProps) {
                       setPickerMember(null);
                     }}
                   >
+                    <span className="anim-target" key={`${a.id}-${pickedId === a.id ? listKey : 0}`}>
                     <span className={styles.pickerItemName}>{a.name}</span>
                     <span className={styles.pickerItemMeta}>{a.type.replace('_', ' ')}</span>
                     <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+                    </span>
                   </button>
                 ))
               )}
@@ -108,14 +123,17 @@ export function LenderPicker({ show, onClose, lenderOptions, selectedLenderId, s
   selectedLenderId: string;
   setSelectedLenderId: (v: string) => void;
 }) {
+  const [lenderCloseKey, replayLenderClose] = useReplay();
+  const [lenderListKey, replayLenderList] = useReplay();
+  const [lenderPicked, setLenderPicked] = useState<string | null>(null);
   if (!show) return null;
   return (
     <div className={styles.pickerOverlay} onClick={onClose}>
       <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.pickerHeader}>
           <span className={styles.pickerTitle}>Pay To — Select Lender</span>
-          <button className={styles.pickerClose} onClick={onClose}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          <button className={`${styles.pickerClose} ${lenderCloseKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayLenderClose(); onClose(); }}>
+            <svg key={lenderCloseKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
           </button>
         </div>
         <div className={styles.pickerBody}>
@@ -126,13 +144,14 @@ export function LenderPicker({ show, onClose, lenderOptions, selectedLenderId, s
               {lenderOptions.map((opt) => (
                 <button
                   key={opt.lenderId}
-                  className={`${styles.pickerItem} ${selectedLenderId === opt.lenderId ? styles.pickerItemActive : ''}`}
+                  className={`${styles.pickerItem} ${selectedLenderId === opt.lenderId ? styles.pickerItemActive : ''} ${lenderPicked === opt.lenderId && lenderListKey > 0 ? 'anim-pop' : ''}`}
                   onClick={() => {
+                    replayLenderList(); setLenderPicked(opt.lenderId);
                     setSelectedLenderId(opt.lenderId);
                     onClose();
                   }}
                 >
-                  <span className={styles.pickerItemName}>{opt.label}</span>
+                  <span className="anim-target" key={`${opt.lenderId}-${lenderPicked === opt.lenderId ? lenderListKey : 0}`}><span className={styles.pickerItemName}>{opt.label}</span></span>
                 </button>
               ))}
             </div>
@@ -150,14 +169,17 @@ export function BorrowerPicker({ show, onClose, repayStackOptions, selectedBorro
   selectedBorrowerId: string;
   setSelectedBorrowerId: (v: string) => void;
 }) {
+  const [borrowerCloseKey, replayBorrowerClose] = useReplay();
+  const [borrowerListKey, replayBorrowerList] = useReplay();
+  const [borrowerPicked, setBorrowerPicked] = useState<string | null>(null);
   if (!show) return null;
   return (
     <div className={styles.pickerOverlay} onClick={onClose}>
       <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.pickerHeader}>
           <span className={styles.pickerTitle}>Select Counterparty</span>
-          <button className={styles.pickerClose} onClick={onClose}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          <button className={`${styles.pickerClose} ${borrowerCloseKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayBorrowerClose(); onClose(); }}>
+            <svg key={borrowerCloseKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
           </button>
         </div>
         <div className={styles.pickerBody}>
@@ -168,13 +190,14 @@ export function BorrowerPicker({ show, onClose, repayStackOptions, selectedBorro
               {repayStackOptions.map((opt) => (
                 <button
                   key={opt.borrowerId}
-                  className={`${styles.pickerItem} ${selectedBorrowerId === opt.borrowerId ? styles.pickerItemActive : ''}`}
+                  className={`${styles.pickerItem} ${selectedBorrowerId === opt.borrowerId ? styles.pickerItemActive : ''} ${borrowerPicked === opt.borrowerId && borrowerListKey > 0 ? 'anim-pop' : ''}`}
                   onClick={() => {
+                    replayBorrowerList(); setBorrowerPicked(opt.borrowerId);
                     setSelectedBorrowerId(opt.borrowerId);
                     onClose();
                   }}
                 >
-                  <span className={styles.pickerItemName}>{opt.label}</span>
+                  <span className="anim-target" key={`${opt.borrowerId}-${borrowerPicked === opt.borrowerId ? borrowerListKey : 0}`}><span className={styles.pickerItemName}>{opt.label}</span></span>
                 </button>
               ))}
             </div>

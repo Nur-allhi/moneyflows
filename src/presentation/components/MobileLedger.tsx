@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { useReplay } from '../hooks/useReplay';
 import styles from './MobileLedger.module.css';
 
 interface FilterOption {
@@ -28,6 +29,12 @@ export function MobileLedger({
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const trayRef = useRef<HTMLDivElement>(null);
+  const [filterTglKey, replayFilterTgl] = useReplay();
+  const [searchTglKey, replaySearchTgl] = useReplay();
+  const [dlKey, replayDl] = useReplay();
+  const [pillKey, replayPill] = useReplay();
+  const [pillPicked, setPillPicked] = useState<string | null>(null);
+  const [clearKey, replayClear] = useReplay();
 
   useEffect(() => {
     if (!filterOpen && !searchOpen) return;
@@ -48,26 +55,32 @@ export function MobileLedger({
           <div className={styles.title}>{title}</div>
           <span className={styles.badge}>{count}</span>
           <div className={styles.actions}>
-            <button className={styles.iconBtn} onClick={() => setFilterOpen((o) => !o)} aria-label="Filter">
+            <button className={`${styles.iconBtn} ${filterTglKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayFilterTgl(); setFilterOpen((o) => !o); }} aria-label="Filter">
+              <span className="anim-target" key={filterTglKey}>
               <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                 <path d="M2 4.5h14M4.5 9h9M7 13.5h4" />
                 <circle cx="4.5" cy="4.5" r="1.5" fill="currentColor" stroke="none" />
                 <circle cx="13.5" cy="9" r="1.5" fill="currentColor" stroke="none" />
                 <circle cx="9" cy="13.5" r="1.5" fill="currentColor" stroke="none" />
               </svg>
+              </span>
             </button>
-            <button className={styles.iconBtn} onClick={() => setSearchOpen((o) => !o)} aria-label="Search">
+            <button className={`${styles.iconBtn} ${searchTglKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySearchTgl(); setSearchOpen((o) => !o); }} aria-label="Search">
+              <span className="anim-target" key={searchTglKey}>
               <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                 <circle cx="8" cy="8" r="5.5" />
                 <path d="M12 12l4 4" />
               </svg>
+              </span>
             </button>
-            <button className={styles.iconBtn} onClick={onDownloadPdf} aria-label="Download PDF">
+            <button className={`${styles.iconBtn} ${dlKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayDl(); onDownloadPdf(); }} aria-label="Download PDF">
+              <span className="anim-target" key={dlKey}>
               <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                 <path d="M15 12v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2" />
                 <polyline points="6 9 9 12 12 9" />
                 <line x1="9" y1="3" x2="9" y2="12" />
               </svg>
+              </span>
             </button>
           </div>
         </div>
@@ -77,9 +90,9 @@ export function MobileLedger({
             {filterOptions.map((f) => (
               <button
                 key={f.key}
-                className={`${styles.filterPill} ${activeFilter === f.key ? styles.filterPillActive : ''}`}
-                onClick={() => onFilterChange(f.key)}
-              >{f.label}</button>
+                className={`${styles.filterPill} ${activeFilter === f.key ? styles.filterPillActive : ''} ${pillPicked === f.key && pillKey > 0 ? 'anim-pop' : ''}`}
+                onClick={() => { replayPill(); setPillPicked(f.key); onFilterChange(f.key); }}
+              ><span className="anim-target" key={`${f.key}-${pillPicked === f.key ? pillKey : 0}`}>{f.label}</span></button>
             ))}
           </div>
         </div>
@@ -92,8 +105,8 @@ export function MobileLedger({
             </svg>
             <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => onSearchChange(e.target.value)} />
             {searchQuery && (
-              <button className={styles.searchClear} onClick={() => onSearchChange('')} aria-label="Clear">
-                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+              <button className={`${styles.searchClear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); onSearchChange(''); }} aria-label="Clear">
+                <svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                   <path d="M3 3l6 6M9 3l-6 6" />
                 </svg>
               </button>

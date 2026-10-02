@@ -3,6 +3,7 @@ import { RecycleRow, GlassPanel } from '../components';
 import { useRecycleStore } from '../stores/useRecycleStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
+import { useReplay } from '../hooks/useReplay';
 import styles from './RecycleBin.module.css';
 
 function timeAgo(iso: string): string {
@@ -19,6 +20,11 @@ export function RecycleBin() {
   const { deletedItems, loading, error, fetchDeleted, restore, purge } = useRecycleStore();
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const [mobileSearch, setMobileSearch] = useState('');
+  const [retryKey, replayRetry] = useReplay();
+  const [clearKey, replayClear] = useReplay();
+  const [refreshKey, replayRefresh] = useReplay();
+  const [tabKey, replayTab] = useReplay();
+  const [tabPicked, setTabPicked] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDeleted();
@@ -64,7 +70,7 @@ export function RecycleBin() {
           <div className="error-state">
             <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
             <p className="error-state-text">Could not load recycle bin</p>
-            <button className="retry-btn" onClick={() => fetchDeleted()}>Retry</button>
+            <button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchDeleted(); }}><span className="anim-target" key={retryKey}>Retry</span></button>
           </div>
         </GlassPanel>
       </div>
@@ -88,8 +94,8 @@ export function RecycleBin() {
             onChange={(e) => setMobileSearch(e.target.value)}
           />
           {mobileSearch && (
-            <button className={styles.searchClear} onClick={() => setMobileSearch('')} aria-label="Clear search">
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <button className={`${styles.searchClear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); setMobileSearch(''); }} aria-label="Clear search">
+              <svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                 <path d="M3 3l6 6M9 3l-6 6" />
               </svg>
             </button>
@@ -111,7 +117,7 @@ export function RecycleBin() {
           <span className={styles.statLabel}>Days Until Auto-Purge</span>
         </div>
         <div className={styles.actionBar}>
-          <button className={styles.pillBtn} onClick={() => fetchDeleted()}>{'\u{1F504}'} Refresh</button>
+          <button className={`${styles.pillBtn} ${refreshKey > 0 ? 'anim-spin' : ''}`} onClick={() => { replayRefresh(); fetchDeleted(); }}><span className="anim-target" key={refreshKey}>{'\u{1F504}'}</span> Refresh</button>
         </div>
       </div>
 
@@ -123,12 +129,14 @@ export function RecycleBin() {
             return (
               <button
                 key={key}
-                className={`${styles.tabBtn} ${isActive ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(key)}
+                className={`${styles.tabBtn} ${isActive ? styles.tabActive : ''} ${tabPicked === key && tabKey > 0 ? 'anim-pop' : ''}`}
+                onClick={() => { replayTab(); setTabPicked(key); setActiveTab(key); }}
               >
+                <span className="anim-target" key={`${key}-${tabPicked === key ? tabKey : 0}`}>
                 {labels[key] ?? key}
                 <span className={`${styles.tabBadge} ${isActive ? styles.tabBadgeActive : ''}`}>
                   {tabCount(key)}
+                </span>
                 </span>
               </button>
             );

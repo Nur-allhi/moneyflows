@@ -753,3 +753,10 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Header click animations (same session)
 - `Header.tsx`/`Header.module.css` on `feature/ui-polish`: one-shot icon replays via `useReplay()` remount keys — gear 360° spin, theme rotate-in swap, plus 90° twist, bell ring swing, back nudge, search pop, clear twist; `prefers-reduced-motion` disables all; existing hover/active states untouched
 - Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS, `detect_changes` LOW (Header only, no affected processes; pre-edit impact HIGH disclosed — structural, change is additive-only)
+
+### App-wide button animations (same session)
+- Shared infra: `hooks/useReplay.ts` + `styles/click-anims.css` (global `anim-pop/spin/twist/ring/nudge/swap` + reduced-motion guard, imported in `main.tsx`); `Header` refactored to shared hook
+- 44 files wired (~250 buttons, 3 parallel batches): chrome, dashboard, members, loans, groups, tags, reports, all modals/pickers, recycle, other ledgers, shadcn `Button` (covers calendar day cells) + calendar nav
+- Fixed 2 real layout breaks from review: `MemberList` + `OtherLedgersIndex` space-between cards now use per-child spans sharing one replay key (single wrapper collapsed the balance alignment)
+- Skipped (user-approved): 6 oversized files already >300 LOC (`LoanDetailView`, `GroupLedgerScreen`, `GroupsListScreen`, `SettingsPage`, `SettingsModal`, `OtherLedgerDetail` — wire when split per T-092) + `ErrorBoundary` (class component)
+- Gates: typecheck PASS, eslint clean (1 pre-existing `LedgerSection` warning, untouched), build PASS, unit 48/48 PASS, `detect_changes` HIGH disclosed (44 files, additive-only, no logic changes)

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { DatePicker } from '../../../components/ui/date-picker';
+import { useReplay } from '../../../presentation/hooks/useReplay';
 import styles from './ReportFilterSheet.module.css';
 
 export type ReportPreset = 'all' | 'month' | 'last3' | 'custom';
@@ -28,6 +30,14 @@ export function ReportFilterSheet(props: FilterSheetProps) {
     includeLoans, setIncludeLoans, includeOtherLedgers, setIncludeOtherLedgers,
     onReset, onApply,
   } = props;
+  const [presetKey, replayPreset] = useReplay();
+  const [pickedPreset, setPickedPreset] = useState<ReportPreset | null>(null);
+  const [acctKey, replayAcct] = useReplay();
+  const [pickedAcct, setPickedAcct] = useState<string | null>(null);
+  const [loansKey, replayLoans] = useReplay();
+  const [ledgersKey, replayLedgers] = useReplay();
+  const [resetKey, replayReset] = useReplay();
+  const [applyKey, replayApply] = useReplay();
   return (
     <div className={styles.sheet}>
       <h3 className={styles.groupLabel}>Period</h3>
@@ -35,10 +45,10 @@ export function ReportFilterSheet(props: FilterSheetProps) {
         {(['all', 'month', 'last3', 'custom'] as ReportPreset[]).map((p) => (
           <button
             key={p}
-            className={`${styles.chip} ${preset === p ? styles.chipActive : ''}`}
-            onClick={() => setPreset(p)}
+            className={`${styles.chip} ${preset === p ? styles.chipActive : ''} ${pickedPreset === p && presetKey > 0 ? 'anim-pop' : ''}`}
+            onClick={() => { replayPreset(); setPickedPreset(p); setPreset(p); }}
           >
-            {p === 'all' ? 'All time' : p === 'month' ? 'This month' : p === 'last3' ? 'Last 3 months' : 'Custom'}
+            <span className="anim-target" key={`${p}-${pickedPreset === p ? presetKey : 0}`}>{p === 'all' ? 'All time' : p === 'month' ? 'This month' : p === 'last3' ? 'Last 3 months' : 'Custom'}</span>
           </button>
         ))}
       </div>
@@ -60,11 +70,11 @@ export function ReportFilterSheet(props: FilterSheetProps) {
             {memberAccounts.map((a) => (
               <button
                 key={a.id}
-                className={`${styles.chip} ${excluded.includes(a.id) ? '' : styles.chipActive}`}
-                onClick={() => toggleExcluded(a.id)}
+                className={`${styles.chip} ${excluded.includes(a.id) ? '' : styles.chipActive} ${pickedAcct === a.id && acctKey > 0 ? 'anim-pop' : ''}`}
+                onClick={() => { replayAcct(); setPickedAcct(a.id); toggleExcluded(a.id); }}
                 title={excluded.includes(a.id) ? 'Include in report' : 'Exclude from report'}
               >
-                {a.name}
+                <span className="anim-target" key={`${a.id}-${pickedAcct === a.id ? acctKey : 0}`}>{a.name}</span>
               </button>
             ))}
           </div>
@@ -74,22 +84,22 @@ export function ReportFilterSheet(props: FilterSheetProps) {
       <h3 className={styles.groupLabel}>Sections</h3>
       <div className={styles.chipRow}>
         <button
-          className={`${styles.chip} ${includeLoans ? styles.chipActive : ''}`}
-          onClick={() => setIncludeLoans(!includeLoans)}
+          className={`${styles.chip} ${includeLoans ? styles.chipActive : ''} ${loansKey > 0 ? 'anim-pop' : ''}`}
+          onClick={() => { replayLoans(); setIncludeLoans(!includeLoans); }}
         >
-          Loans
+          <span className="anim-target" key={loansKey}>Loans</span>
         </button>
         <button
-          className={`${styles.chip} ${includeOtherLedgers ? styles.chipActive : ''}`}
-          onClick={() => setIncludeOtherLedgers(!includeOtherLedgers)}
+          className={`${styles.chip} ${includeOtherLedgers ? styles.chipActive : ''} ${ledgersKey > 0 ? 'anim-pop' : ''}`}
+          onClick={() => { replayLedgers(); setIncludeOtherLedgers(!includeOtherLedgers); }}
         >
-          Other ledgers
+          <span className="anim-target" key={ledgersKey}>Other ledgers</span>
         </button>
       </div>
 
       <div className={styles.footer}>
-        <button className={styles.resetBtn} onClick={onReset}>Reset</button>
-        <button className={styles.applyBtn} onClick={onApply}>Apply</button>
+        <button className={`${styles.resetBtn} ${resetKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayReset(); onReset(); }}><span className="anim-target" key={resetKey}>Reset</span></button>
+        <button className={`${styles.applyBtn} ${applyKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayApply(); onApply(); }}><span className="anim-target" key={applyKey}>Apply</span></button>
       </div>
     </div>
   );

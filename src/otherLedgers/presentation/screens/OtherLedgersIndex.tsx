@@ -7,6 +7,7 @@ import { formatAmount } from '../../../presentation/utils/format';
 import { Highlight } from '../../../presentation/utils/highlight';
 import { Modal, BottomSheet } from '../../../presentation/components';
 import { ledgerGradient } from '../../../presentation/constants/gradients';
+import { useReplay } from '../../../presentation/hooks/useReplay';
 import { CreateLedgerModal } from '../components/CreateLedgerModal';
 import { AddEntryModal } from '../components/AddEntryModal';
 import styles from './OtherLedgersIndex.module.css';
@@ -23,6 +24,16 @@ export function OtherLedgersIndex() {
   const [entryLedgerId, setEntryLedgerId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [clearKey, replayClear] = useReplay();
+  const [entryKey, replayEntry] = useReplay();
+  const [newLedgerKey, replayNewLedger] = useReplay();
+  const [cardKey, replayCard] = useReplay();
+  const [cardPicked, setCardPicked] = useState<string | null>(null);
+  const [cardDelKey, replayCardDel] = useReplay();
+  const [pickerKey, replayPicker] = useReplay();
+  const [pickerPicked, setPickerPicked] = useState<string | null>(null);
+  const [cancelKey, replayCancel] = useReplay();
+  const [deleteKey, replayDelete] = useReplay();
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
@@ -92,10 +103,10 @@ export function OtherLedgersIndex() {
               </svg>
             </span>
             <input placeholder="Search ledgers..." value={search} onChange={(e) => setSearch(e.target.value)} />
-            {search && <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>}
+            {search && <button className={`${styles.searchClear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); setSearch(''); }} aria-label="Clear"><svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>}
           </div>
-          <button className={styles.addBtn} onClick={() => setShowEntryPicker(true)} title="Add entry">+ Entry</button>
-          <button className={styles.addBtn} onClick={() => setShowCreate(true)}>+ New Ledger</button>
+          <button className={`${styles.addBtn} ${entryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEntry(); setShowEntryPicker(true); }} title="Add entry"><span className="anim-target" key={entryKey}>+ Entry</span></button>
+          <button className={`${styles.addBtn} ${newLedgerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNewLedger(); setShowCreate(true); }}><span className="anim-target" key={newLedgerKey}>+ New Ledger</span></button>
         </div>
       </div>
 
@@ -121,7 +132,8 @@ export function OtherLedgersIndex() {
                   const bal = getBalance(l.id, l.openingBalance);
                   return (
                     <div key={l.id} className={styles.cardWrap}>
-                      <button className={styles.card} onClick={() => navigate(`/other-ledgers/${l.id}`)}>
+                      <button className={`${styles.card} ${cardPicked === l.id && cardKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCard(); setCardPicked(l.id); navigate(`/other-ledgers/${l.id}`); }}>
+                        <span className="anim-target" key={`${l.id}-${cardPicked === l.id ? cardKey : 0}-l`}>
                         <span className={styles.cardLeft}>
                           <span className={styles.cardAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
                           <span className={styles.cardInfo}>
@@ -129,17 +141,21 @@ export function OtherLedgersIndex() {
                             <span className={styles.cardTag}>{getCount(l.id)} entries · {l.startingDate}</span>
                           </span>
                         </span>
+                        </span>
+                        <span className="anim-target" key={`${l.id}-${cardPicked === l.id ? cardKey : 0}-b`}>
                         <span className={styles.cardBalance}>{formatAmount(bal, locale, currency)}</span>
+                        </span>
                       </button>
                       <button
-                        className={styles.cardDelete}
+                        className={`${styles.cardDelete} ${cardDelKey > 0 ? 'anim-twist' : ''}`}
                         aria-label={`Delete ${l.name}`}
                         onClick={(e) => {
+                          replayCardDel();
                           e.stopPropagation();
                           setDeleteTarget({ id: l.id, name: l.name });
                         }}
                       >
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
+                        <svg key={cardDelKey} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
                       </button>
                     </div>
                   );
@@ -157,7 +173,7 @@ export function OtherLedgersIndex() {
             <div className={styles.pickerTitle}>Choose ledger</div>
             <div className={styles.pickerList}>
               {ledgers.map((l) => (
-                <button key={l.id} className={styles.pickerItem} onClick={() => { setEntryLedgerId(l.id); setShowEntryPicker(false); }}>{l.name}</button>
+                <button key={l.id} className={`${styles.pickerItem} ${pickerPicked === l.id && pickerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayPicker(); setPickerPicked(l.id); setEntryLedgerId(l.id); setShowEntryPicker(false); }}><span className="anim-target" key={`${l.id}-${pickerPicked === l.id ? pickerKey : 0}`}>{l.name}</span></button>
               ))}
               {ledgers.length === 0 && <div className={styles.empty}>No ledgers — create one first</div>}
             </div>
@@ -172,8 +188,8 @@ export function OtherLedgersIndex() {
           <BottomSheet isOpen onClose={() => setDeleteTarget(null)} title="Delete Ledger">
             <p style={descStyle}>Are you sure you want to delete “{deleteTarget.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
             <div style={{ display: 'flex', gap: 10, padding: '8px 0 4px' }}>
-              <button onClick={() => setDeleteTarget(null)} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleDelete} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Delete</button>
+              <button onClick={() => { replayCancel(); setDeleteTarget(null); }} className={cancelKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}><span className="anim-target" key={cancelKey}>Cancel</span></button>
+              <button onClick={() => { replayDelete(); void handleDelete(); }} className={deleteKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}><span className="anim-target" key={deleteKey}>Delete</span></button>
             </div>
           </BottomSheet>
         ) : (
