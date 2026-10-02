@@ -788,6 +788,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Fix: mapped every fixed size to the nearest fluid token (22→text-5xl, 16→text-2xl, 14→text-lg, 13→text-md, 12→text-base, 11→text-sm, 10→text-xs); zero fixed px remain in either file
 - Gates: build PASS, typecheck PASS; impact max LOW
 
+## Session 2026-10-02 (merge feature/ui-polish → dev, round 2)
+
+### Changes
+- User-approved merge: `feature/ui-polish` (text-size setting + BUG-9 amount fix + sidebar/settings token mapping + CHANGELOG `[Unreleased]` entries) → `dev` via `--no-ff` `8a6c131` (branch kept alive); pushed `dev` (`e6a9d41..8a6c131`)
+- Pre-merge gates: build PASS, unit 48/48 PASS; `detect_changes` vs dev LOW, no affected processes; no version bump (feature→dev)
+- Back on `feature/ui-polish`, clean
+
 ## Session 2026-10-02 (text size setting, same branch)
 
 ### Changes
