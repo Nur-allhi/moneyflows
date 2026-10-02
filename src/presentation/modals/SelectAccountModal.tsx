@@ -5,6 +5,7 @@ import { formatAmount } from '../utils/format';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
 import { ACCOUNT_TYPE_GRADIENT_THREE, displayType } from '../constants/labels';
+import { useReplay } from '../hooks/useReplay';
 import styles from './SelectAccountModal.module.css';
 
 interface SelectAccountModalProps {
@@ -22,6 +23,7 @@ export function SelectAccountModal({ memberId, selectedAccountId, onSelect, onCl
     () => accounts.filter((a) => a.memberId === memberId && !a.deletedAt),
     [accounts, memberId],
   );
+  const [editKey, replayEdit] = useReplay();
 
   return (
     <Modal isOpen onClose={onClose} title="Linked Accounts" footer={null}>
@@ -64,12 +66,12 @@ export function SelectAccountModal({ memberId, selectedAccountId, onSelect, onCl
                 className={styles.gridCard}
                 actions={
                   <button
-                    className={styles.acctActionBtn}
+                    className={`${styles.acctActionBtn} ${editKey > 0 ? 'anim-pop' : ''}`}
                     title="Edit account"
                     aria-label={`Edit ${acct.name}`}
-                    onClick={() => { onClose(); useModalStore.getState().open('edit-account', { accountId: acct.id }); }}
+                    onClick={() => { replayEdit(); onClose(); useModalStore.getState().open('edit-account', { accountId: acct.id }); }}
                   >
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                    <svg key={editKey} width="12" height="12" viewBox="0 0 14 14" fill="none">
                       <path d="M10.5 1.5l2 2L5 11l-2.7.7L3 8.9l7.5-7.4z" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>

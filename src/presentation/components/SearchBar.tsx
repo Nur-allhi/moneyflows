@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useSearchStore } from '../stores/useSearchStore';
+import { useReplay } from '../hooks/useReplay';
 import { GlobalSearchResults } from './GlobalSearch';
 import { useGlobalSearch, type GlobalSearchItem } from './useGlobalSearch';
 import styles from './SearchBar.module.css';
@@ -10,6 +11,7 @@ export function SearchBar() {
   const gs = useGlobalSearch();
   const [dropOpen, setDropOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [clearKey, replayClear] = useReplay();
 
   const closeDrop = () => {
     setDropOpen(false);
@@ -59,14 +61,15 @@ export function SearchBar() {
         />
         {query && (
           <button
-            className={styles.clear}
+            className={`${styles.clear} ${clearKey > 0 ? 'anim-twist' : ''}`}
             onClick={() => {
+              replayClear();
               setQuery('');
               closeDrop();
             }}
             aria-label="Clear search"
           >
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M3 3l6 6M9 3l-6 6" />
             </svg>
           </button>

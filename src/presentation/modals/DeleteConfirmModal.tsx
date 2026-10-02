@@ -2,6 +2,7 @@ import { Modal, BottomSheet } from '../components';
 import { useState, useEffect } from 'react';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useLoanStore } from '../../loans/presentation/stores/useLoanStore';
+import { useReplay } from '../hooks/useReplay';
 
 interface DeleteConfirmModalProps {
   txId: string;
@@ -12,6 +13,8 @@ export function DeleteConfirmModal({ txId, onClose }: DeleteConfirmModalProps) {
   const softDeleteTransaction = useTransactionStore((s) => s.softDeleteTransaction);
   const reverseRepayment = useLoanStore((s) => s.reverseRepayment);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [cancelKey, replayCancel] = useReplay();
+  const [deleteKey, replayDelete] = useReplay();
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
@@ -36,8 +39,8 @@ export function DeleteConfirmModal({ txId, onClose }: DeleteConfirmModalProps) {
           Are you sure you want to delete this transaction? It will be moved to the Recycle Bin and can be restored within 30 days.
         </p>
         <div style={{ display: 'flex', gap: 10, padding: '8px 0 4px' }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Cancel</button>
-          <button onClick={handleDelete} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Delete</button>
+          <button onClick={() => { replayCancel(); onClose(); }} className={cancelKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}><span className="anim-target" key={cancelKey}>Cancel</span></button>
+          <button onClick={() => { replayDelete(); void handleDelete(); }} className={deleteKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}><span className="anim-target" key={deleteKey}>Delete</span></button>
         </div>
       </BottomSheet>
     );

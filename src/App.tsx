@@ -5,6 +5,7 @@ import { Sidebar, BottomNav, Header, PageTransition, RippleGlow, SearchBar } fro
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
+import { useReplay } from './presentation/hooks/useReplay';
 import { useTheme } from './presentation/hooks/useTheme';
 import { useOtherLedgerStore } from './otherLedgers/presentation/stores/useOtherLedgerStore';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
@@ -101,6 +102,7 @@ function AppLayout() {
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchClosing, setSearchClosing] = useState(false);
+  const [searchCloseKey, replaySearchClose] = useReplay();
   const toggleSearch = useCallback(() => {
     if (searchOpen) {
       setSearchClosing(true);
@@ -135,8 +137,8 @@ function AppLayout() {
         {searchOpen && (
           <div className={`${styles.searchRow} ${searchClosing ? styles.searchPopin : styles.searchPopout}`}>
             <SearchBar />
-            <button className={styles.searchCloseBtn} onClick={toggleSearch} aria-label="Close search">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <button className={`${styles.searchCloseBtn} ${searchCloseKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replaySearchClose(); toggleSearch(); }} aria-label="Close search">
+              <svg key={searchCloseKey} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M4 4l8 8M12 4l-8 8" />
               </svg>
             </button>

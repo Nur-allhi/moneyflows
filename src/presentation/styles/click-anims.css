@@ -1,0 +1,85 @@
+/* One-shot click animations — global layer for per-button replays.
+   Wiring (see hooks/useReplay.ts): the host button gets `anim-<kind>`
+   when its replay key > 0; the inner `svg` or `.anim-target` span carries
+   `key={replayKey}` so the remount restarts the keyframe on every click.
+   Token-only, no per-component CSS needed. */
+
+@keyframes clickPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.93); }
+  100% { transform: scale(1); }
+}
+
+@keyframes clickSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes clickTwist {
+  from { transform: rotate(0); }
+  to { transform: rotate(90deg); }
+}
+
+@keyframes clickRing {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(18deg); }
+  40% { transform: rotate(-14deg); }
+  60% { transform: rotate(8deg); }
+  80% { transform: rotate(-6deg); }
+}
+
+@keyframes clickNudge {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes clickSwap {
+  from { transform: rotate(-90deg) scale(0.6); opacity: 0; }
+  to { transform: rotate(0) scale(1); opacity: 1; }
+}
+
+.anim-pop .anim-target {
+  display: inline-block;
+  animation: clickPop 0.25s ease;
+}
+
+.anim-spin svg, .anim-spin .anim-target {
+  animation: clickSpin 0.5s ease;
+  transform-origin: center;
+}
+
+.anim-twist svg, .anim-twist .anim-target {
+  animation: clickTwist 0.3s ease;
+  transform-origin: center;
+}
+
+.anim-ring svg, .anim-ring .anim-target {
+  display: inline-block;
+  animation: clickRing 0.6s ease;
+  transform-origin: top center;
+}
+
+.anim-nudge svg, .anim-nudge .anim-target {
+  animation: clickNudge 0.25s ease;
+}
+
+.anim-swap .anim-target {
+  display: inline-block;
+  animation: clickSwap 0.35s ease;
+}
+
+/* Kind map: text/CTA -> anim-pop · settings/refresh/sync icons -> anim-spin
+   plus/close/clear icons -> anim-twist · bell-like -> anim-ring
+   back/forward nav -> anim-nudge · search toggles -> anim-pop
+   sun/moon-style swaps -> anim-swap. */
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-pop .anim-target,
+  .anim-spin svg, .anim-spin .anim-target,
+  .anim-twist svg, .anim-twist .anim-target,
+  .anim-ring svg, .anim-ring .anim-target,
+  .anim-nudge svg, .anim-nudge .anim-target,
+  .anim-swap .anim-target {
+    animation: none;
+  }
+}

@@ -11,6 +11,7 @@ import { LoanDetailView } from '../components/LoanDetailView';
 import { getDatabase } from '../../../infrastructure/database/getDatabase';
 import type { Transaction } from '../../../core/domain/Transaction';
 import { ledgerGradient } from '../../../presentation/constants/gradients';
+import { useReplay } from '../../../presentation/hooks/useReplay';
 import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
 import styles from './LoansScreen.module.css';
 
@@ -25,6 +26,16 @@ export function LoansScreen() {
   const [sortBy, setSortBy] = useState<'alpha' | 'lastTx' | 'lastRepay'>('alpha');
   const [showSortPicker, setShowSortPicker] = useState(false);
   const [txs, setTxs] = useState<Transaction[]>([]);
+  const [retryKey, replayRetry] = useReplay();
+  const [viewAllKey, replayViewAll] = useReplay();
+  const [clearKey, replayClear] = useReplay();
+  const [filterKey, replayFilter] = useReplay();
+  const [pickedFilter, setPickedFilter] = useState<'active' | 'settled' | 'all' | null>(null);
+  const [sortKey, replaySort] = useReplay();
+  const [addKey, replayAdd] = useReplay();
+  const [pickerCloseKey, replayPickerClose] = useReplay();
+  const [sortOptKey, replaySortOpt] = useReplay();
+  const [pickedSort, setPickedSort] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLoanStacks();
@@ -93,7 +104,7 @@ export function LoansScreen() {
           <div className="error-state">
             <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
             <p className="error-state-text">Could not load loan data</p>
-            <button className="retry-btn" onClick={fetchLoanStacks}>Retry</button>
+            <button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchLoanStacks(); }}><span className="anim-target" key={retryKey}>Retry</span></button>
           </div>
         </GlassPanel>
       </div>
@@ -111,7 +122,7 @@ export function LoansScreen() {
           <div className="empty-state">
             <div className="empty-state-icon">{'\u{1F50D}'}</div>
             <p className="empty-state-text">Counterparty not found</p>
-            <button className="retry-btn" onClick={() => navigate('/loans')}>View all</button>
+            <button className={`retry-btn ${viewAllKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayViewAll(); navigate('/loans'); }}><span className="anim-target" key={viewAllKey}>View all</span></button>
           </div>
         </GlassPanel>
       </div>
@@ -135,8 +146,8 @@ export function LoansScreen() {
             onChange={(e) => setMobileSearch(e.target.value)}
           />
           {mobileSearch && (
-            <button className={styles.searchClear} onClick={() => setMobileSearch('')} aria-label="Clear search">
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <button className={`${styles.searchClear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); setMobileSearch(''); }} aria-label="Clear search">
+              <svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                 <path d="M3 3l6 6M9 3l-6 6" />
               </svg>
             </button>
@@ -147,23 +158,23 @@ export function LoansScreen() {
       <div className={styles.header}>
         <h2 className={styles.title}>Your Loans</h2>
         <div className={styles.filterStrip}>
-          <button className={`${styles.filterBtn} ${filter === 'active' ? styles.filterActive : ''}`} onClick={() => setFilter('active')}>
-            Active <span className={styles.filterAmt}>{formatAmount(totals.active, locale, currency)}</span>
+          <button className={`${styles.filterBtn} ${filter === 'active' ? styles.filterActive : ''} ${pickedFilter === 'active' && filterKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayFilter(); setPickedFilter('active'); setFilter('active'); }}>
+            <span className="anim-target" key={`active-${pickedFilter === 'active' ? filterKey : 0}`}>Active <span className={styles.filterAmt}>{formatAmount(totals.active, locale, currency)}</span></span>
           </button>
-          <button className={`${styles.filterBtn} ${filter === 'settled' ? styles.filterActive : ''}`} onClick={() => setFilter('settled')}>
-            Settled <span className={styles.filterAmt}>{formatAmount(totals.settled, locale, currency)}</span>
+          <button className={`${styles.filterBtn} ${filter === 'settled' ? styles.filterActive : ''} ${pickedFilter === 'settled' && filterKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayFilter(); setPickedFilter('settled'); setFilter('settled'); }}>
+            <span className="anim-target" key={`settled-${pickedFilter === 'settled' ? filterKey : 0}`}>Settled <span className={styles.filterAmt}>{formatAmount(totals.settled, locale, currency)}</span></span>
           </button>
-          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''}`} onClick={() => setFilter('all')}>
-            All <span className={styles.filterAmt}>{formatAmount(totals.all, locale, currency)}</span>
+          <button className={`${styles.filterBtn} ${filter === 'all' ? styles.filterActive : ''} ${pickedFilter === 'all' && filterKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayFilter(); setPickedFilter('all'); setFilter('all'); }}>
+            <span className="anim-target" key={`all-${pickedFilter === 'all' ? filterKey : 0}`}>All <span className={styles.filterAmt}>{formatAmount(totals.all, locale, currency)}</span></span>
           </button>
         </div>
         <div className={styles.headerActions}>
-          <button type="button" className={txStyles.pickerTrigger} style={{ width: 'auto', minWidth: 0, flexShrink: 0, whiteSpace: 'nowrap', padding: '8px 12px', gap: 8 }} onClick={() => setShowSortPicker(true)}>
-            <span className={txStyles.pickerValue} style={{ whiteSpace: 'nowrap' }}>{sortBy === 'alpha' ? 'Alphabetically' : sortBy === 'lastTx' ? 'Last transaction' : 'Last repayment'}</span>
-            <span className={txStyles.pickerArrow} style={{ flexShrink: 0 }}>▾</span>
+          <button type="button" className={`${txStyles.pickerTrigger} ${sortKey > 0 ? 'anim-swap' : ''}`} style={{ width: 'auto', minWidth: 0, flexShrink: 0, whiteSpace: 'nowrap', padding: '8px 12px', gap: 8 }} onClick={() => { replaySort(); setShowSortPicker(true); }}>
+            <span className="anim-target" key={sortKey}><span className={txStyles.pickerValue} style={{ whiteSpace: 'nowrap' }}>{sortBy === 'alpha' ? 'Alphabetically' : sortBy === 'lastTx' ? 'Last transaction' : 'Last repayment'}</span>
+            <span className={txStyles.pickerArrow} style={{ flexShrink: 0 }}>▾</span></span>
           </button>
           <span className={styles.count} style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>{filteredStacks.length} Account{filteredStacks.length !== 1 ? 's' : ''}</span>
-          <button className={styles.addBtn} style={{ whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'loan' })}>+ New Loan</button>
+          <button className={`${styles.addBtn} ${addKey > 0 ? 'anim-pop' : ''}`} style={{ whiteSpace: 'nowrap', flexShrink: 0 }} onClick={() => { replayAdd(); useModalStore.getState().open('transaction-form', { initialTab: 'loan' }); }}><span className="anim-target" key={addKey}>+ New Loan</span></button>
         </div>
       </div>
 
@@ -172,8 +183,8 @@ export function LoansScreen() {
           <div className={txStyles.pickerModal} onClick={(e) => e.stopPropagation()}>
             <div className={txStyles.pickerHeader}>
               <span className={txStyles.pickerTitle}>Sort by</span>
-              <button className={txStyles.pickerClose} onClick={() => setShowSortPicker(false)}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              <button className={`${txStyles.pickerClose} ${pickerCloseKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayPickerClose(); setShowSortPicker(false); }}>
+                <svg key={pickerCloseKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
               </button>
             </div>
             <div className={txStyles.pickerList}>
@@ -182,8 +193,8 @@ export function LoansScreen() {
                 { key: 'lastTx' as const, label: 'Last transaction' },
                 { key: 'lastRepay' as const, label: 'Last repayment' },
               ].map((opt) => (
-                <button key={opt.key} className={txStyles.pickerItem} onClick={() => { setSortBy(opt.key); setShowSortPicker(false); }} style={sortBy === opt.key ? { background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', borderRadius: 10 } : undefined}>
-                  <span className={txStyles.pickerItemName}>{opt.label}</span>
+                <button key={opt.key} className={`${txStyles.pickerItem} ${pickedSort === opt.key && sortOptKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySortOpt(); setPickedSort(opt.key); setSortBy(opt.key); setShowSortPicker(false); }} style={sortBy === opt.key ? { background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', borderRadius: 10 } : undefined}>
+                  <span className="anim-target" key={`${opt.key}-${pickedSort === opt.key ? sortOptKey : 0}`}><span className={txStyles.pickerItemName}>{opt.label}</span></span>
                 </button>
               ))}
             </div>

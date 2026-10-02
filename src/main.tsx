@@ -8,6 +8,7 @@ import { whatsNewFor } from './presentation/constants/whatsNew';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
 import { APP_VERSION } from './presentation/constants/appVersion';
+import { useReplay } from './presentation/hooks/useReplay';
 import { logger } from './core/logging';
 // Self-hosted variable fonts (offline-first; replaces the Google Fonts @import).
 import '@fontsource-variable/manrope';
@@ -19,12 +20,15 @@ import './presentation/styles/reset.css';
 import './presentation/styles/tokens.css';
 import './presentation/styles/typography.css';
 import './presentation/styles/glassmorphism.css';
+import './presentation/styles/click-anims.css';
 
 function Root() {
   const [ready, setReady] = useState(false);
   const [showApp, setShowApp] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
   const [whatsNew, setWhatsNew] = useState<{ version: string; items: string[] } | null>(null);
+  const [restoreKey, replayRestore] = useReplay();
+  const [freshKey, replayFresh] = useReplay();
 
   const handleFinish = useCallback(() => setShowApp(true), []);
 
@@ -100,6 +104,7 @@ function Root() {
         </p>
         <button
           onClick={async () => {
+            replayRestore();
             try {
               const ok = await getDatabase().restoreNewestSnapshot();
               if (ok) window.location.reload();
@@ -108,15 +113,17 @@ function Root() {
               setDbError(e instanceof Error ? e.message : 'Restore failed');
             }
           }}
+          className={restoreKey > 0 ? 'anim-pop' : ''}
           style={{ marginTop: 8, padding: '10px 24px', border: 'none', borderRadius: 8, background: '#22c55e', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
-          Restore Latest Backup
+          <span className="anim-target" key={restoreKey}>Restore Latest Backup</span>
         </button>
         <button
-          onClick={() => { void getDatabase().resetStorage().then(() => window.location.reload()); }}
+          onClick={() => { replayFresh(); void getDatabase().resetStorage().then(() => window.location.reload()); }}
+          className={freshKey > 0 ? 'anim-pop' : ''}
           style={{ padding: '10px 24px', border: 'none', borderRadius: 8, background: '#6c5ce7', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
-          Start Fresh
+          <span className="anim-target" key={freshKey}>Start Fresh</span>
         </button>
       </div>
     );

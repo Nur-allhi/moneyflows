@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Avatar, Modal, FormInput } from '../components';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
+import { useReplay } from '../hooks/useReplay';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { Member } from '../../core/domain/Member';
 import { formatAmountParts } from '../utils/format';
@@ -19,6 +20,13 @@ export function MemberList() {
   const [newName, setNewName] = useState('');
   const [newShortName, setNewShortName] = useState('');
   const [mobileSearch, setMobileSearch] = useState('');
+  const [retryKey, replayRetry] = useReplay();
+  const [clearKey, replayClear] = useReplay();
+  const [addKey, replayAdd] = useReplay();
+  const [emptyKey, replayEmpty] = useReplay();
+  const [cardKey, replayCard] = useReplay();
+  const [cardPicked, setCardPicked] = useState<string | null>(null);
+  const [addCellKey, replayAddCell] = useReplay();
 
   useEffect(() => {
     fetchMembers();
@@ -56,7 +64,7 @@ export function MemberList() {
         <div className="error-state">
           <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
           <p className="error-state-text">{error}</p>
-          <button className="retry-btn" onClick={() => { fetchMembers(); fetchAccounts(); }}>Retry</button>
+          <button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchMembers(); fetchAccounts(); }}><span className="anim-target" key={retryKey}>Retry</span></button>
         </div>
       </div>
     );
@@ -80,8 +88,8 @@ export function MemberList() {
             onChange={(e) => setMobileSearch(e.target.value)}
           />
           {mobileSearch && (
-            <button className={styles.searchClear} onClick={() => setMobileSearch('')} aria-label="Clear search">
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <button className={`${styles.searchClear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); setMobileSearch(''); }} aria-label="Clear search">
+              <svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                 <path d="M3 3l6 6M9 3l-6 6" />
               </svg>
             </button>
@@ -92,7 +100,7 @@ export function MemberList() {
       <div className={styles.header}>
         <h2 className={styles.title}>Family Members</h2>
         <p className={styles.subtitle}>{filteredMembers.length} member{filteredMembers.length !== 1 ? 's' : ''}</p>
-        <button className={styles.addBtn} onClick={() => setShowModal(true)}>+ New Member</button>
+        <button className={`${styles.addBtn} ${addKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayAdd(); setShowModal(true); }}><span className="anim-target" key={addKey}>+ New Member</span></button>
       </div>
 
       {familyMembers.length === 0 && (
@@ -100,7 +108,7 @@ export function MemberList() {
           <div className={styles.emptyIcon}>{'+'}</div>
           <div className={styles.emptyTitle}>No members yet</div>
           <div className={styles.emptyDesc}>Add your first family member to start tracking finances together</div>
-          <button className={styles.emptyBtn} onClick={() => setShowModal(true)}>Add First Member</button>
+          <button className={`${styles.emptyBtn} ${emptyKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEmpty(); setShowModal(true); }}><span className="anim-target" key={emptyKey}>Add First Member</span></button>
         </div>
       )}
 
@@ -116,9 +124,10 @@ export function MemberList() {
           filteredMembers.map((m) => (
           <button
             key={m.id}
-            className={styles.card}
-            onClick={() => navigate(`/member/${m.id}`)}
+            className={`${styles.card} ${cardPicked === m.id && cardKey > 0 ? 'anim-pop' : ''}`}
+            onClick={() => { replayCard(); setCardPicked(m.id); navigate(`/member/${m.id}`); }}
           >
+            <span className="anim-target" key={`${m.id}-${cardPicked === m.id ? cardKey : 0}-l`}>
             <div className={styles.cardLeft}>
               <Avatar
                 initial={m.shortName?.[0] ?? m.name[0]!}
@@ -131,13 +140,16 @@ export function MemberList() {
                 <span className={styles.cardTag}>Member</span>
               </div>
             </div>
+            </span>
+            <span className="anim-target" key={`${m.id}-${cardPicked === m.id ? cardKey : 0}-b`}>
             <span className={styles.cardBalance}>{formatAmountParts(getBalance(m.id), locale, currency).amount}<span className={styles.currencyLabel}>{formatAmountParts(getBalance(m.id), locale, currency).currency}</span></span>
+            </span>
           </button>
           ))
         )}
         {familyMembers.length > 0 && (
-          <button className={styles.addCell} onClick={() => setShowModal(true)} aria-label="Add member">
-            <div className={styles.addIcon}>{'+'}</div>
+          <button className={`${styles.addCell} ${addCellKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayAddCell(); setShowModal(true); }} aria-label="Add member">
+            <div className={styles.addIcon}><span className="anim-target" key={addCellKey}>+</span></div>
           </button>
         )}
       </div>

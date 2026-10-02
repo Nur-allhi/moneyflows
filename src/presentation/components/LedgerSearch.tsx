@@ -1,3 +1,4 @@
+import { useReplay } from '../hooks/useReplay';
 import styles from './LedgerSearch.module.css';
 
 interface LedgerSearchProps {
@@ -6,6 +7,7 @@ interface LedgerSearchProps {
 }
 
 export function LedgerSearch({ value, onChange }: LedgerSearchProps) {
+  const [clearKey, replayClear] = useReplay();
   return (
     <div className={`${styles.wrap} ${value ? styles.hasValue : ''}`}>
       <svg className={styles.icon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -20,8 +22,8 @@ export function LedgerSearch({ value, onChange }: LedgerSearchProps) {
         onChange={(e) => onChange(e.target.value)}
       />
       {value && (
-        <button className={styles.clear} onClick={() => onChange('')} title="Clear search">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <button className={`${styles.clear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); onChange(''); }} title="Clear search">
+          <svg key={clearKey} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>

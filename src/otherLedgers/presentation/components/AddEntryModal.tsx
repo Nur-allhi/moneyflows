@@ -3,6 +3,7 @@ import { Modal, BottomSheet } from '../../../presentation/components';
 import { DatePicker } from '../../../components/ui/date-picker';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
 import { useTagStore } from '../../../presentation/stores/useTagStore';
+import { useReplay } from '../../../presentation/hooks/useReplay';
 import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
 
 export function AddEntryModal({ isOpen, ledgerId, entryId, onClose }: { isOpen: boolean; ledgerId: string; entryId?: string; onClose: () => void }) {
@@ -19,6 +20,18 @@ export function AddEntryModal({ isOpen, ledgerId, entryId, onClose }: { isOpen: 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [debitKey, replayDebit] = useReplay();
+  const [creditKey, replayCredit] = useReplay();
+  const [tagTrigKey, replayTagTrig] = useReplay();
+  const [delEntryKey, replayDelEntry] = useReplay();
+  const [tagCloseKey, replayTagClose] = useReplay();
+  const [tagAddKey, replayTagAdd] = useReplay();
+  const [tagListKey, replayTagList] = useReplay();
+  const [tagPicked, setTagPicked] = useState<string | null>(null);
+  const [cancelKey, replayCancel] = useReplay();
+  const [saveKey, replaySave] = useReplay();
+  const [delCancelKey, replayDelCancel] = useReplay();
+  const [delConfirmKey, replayDelConfirm] = useReplay();
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
@@ -55,8 +68,8 @@ export function AddEntryModal({ isOpen, ledgerId, entryId, onClose }: { isOpen: 
   const form = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => setSide('debit')} style={{ flex: 1, padding: 10, borderRadius: 9999, border: side === 'debit' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: side === 'debit' ? 'var(--color-primary)' : 'var(--color-surface)', color: side === 'debit' ? 'white' : 'var(--color-text)' }}>Debit</button>
-        <button onClick={() => setSide('credit')} style={{ flex: 1, padding: 10, borderRadius: 9999, border: side === 'credit' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: side === 'credit' ? 'var(--color-primary)' : 'var(--color-surface)', color: side === 'credit' ? 'white' : 'var(--color-text)' }}>Credit</button>
+        <button onClick={() => { replayDebit(); setSide('debit'); }} className={debitKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: side === 'debit' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: side === 'debit' ? 'var(--color-primary)' : 'var(--color-surface)', color: side === 'debit' ? 'white' : 'var(--color-text)' }}><span className="anim-target" key={debitKey}>Debit</span></button>
+        <button onClick={() => { replayCredit(); setSide('credit'); }} className={creditKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: side === 'credit' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: side === 'credit' ? 'var(--color-primary)' : 'var(--color-surface)', color: side === 'credit' ? 'white' : 'var(--color-text)' }}><span className="anim-target" key={creditKey}>Credit</span></button>
       </div>
       <div className={txStyles.fieldGroup}>
         <span className={txStyles.fieldLabel}>Date</span>
@@ -66,18 +79,21 @@ export function AddEntryModal({ isOpen, ledgerId, entryId, onClose }: { isOpen: 
       <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount" style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }} />
       <div className={txStyles.fieldGroup}>
         <span className={txStyles.fieldLabel}>Tag (optional)</span>
-        <button type="button" className={`${txStyles.pickerTrigger} ${tag ? txStyles.hasValue : ''}`} onClick={() => setShowTagPicker(true)}>
-          {tag ? <><span className={txStyles.pickerValue}>{tag}</span><span className={txStyles.pickerArrow}>▾</span></> : <span className={txStyles.pickerPlaceholder}>Select tag (optional)</span>}
+        <button type="button" className={`${txStyles.pickerTrigger} ${tag ? txStyles.hasValue : ''} ${tagTrigKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayTagTrig(); setShowTagPicker(true); }}>
+          <span className="anim-target" key={tagTrigKey}>{tag ? <><span className={txStyles.pickerValue}>{tag}</span><span className={txStyles.pickerArrow}>▾</span></> : <span className={txStyles.pickerPlaceholder}>Select tag (optional)</span>}</span>
         </button>
       </div>
       {error && <div style={{ color: 'var(--color-expense)', fontSize: 13 }}>{error}</div>}
       {existing && (
         <button
-          onClick={() => setShowDeleteConfirm(true)}
+          onClick={() => { replayDelEntry(); setShowDeleteConfirm(true); }}
+          className={delEntryKey > 0 ? 'anim-pop' : ''}
           style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid oklch(62% 0.22 25 / 0.28)', background: 'oklch(62% 0.22 25 / 0.10)', color: 'var(--color-expense)', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
         >
+          <span className="anim-target" key={delEntryKey}>
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
           Delete entry
+          </span>
         </button>
       )}
     </div>
@@ -88,17 +104,17 @@ export function AddEntryModal({ isOpen, ledgerId, entryId, onClose }: { isOpen: 
       <div className={txStyles.pickerModal} onClick={(e) => e.stopPropagation()}>
         <div className={txStyles.pickerHeader}>
           <span className={txStyles.pickerTitle}>Select tag</span>
-          <button className={txStyles.pickerClose} onClick={() => setShowTagPicker(false)}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          <button className={`${txStyles.pickerClose} ${tagCloseKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayTagClose(); setShowTagPicker(false); }}>
+            <svg key={tagCloseKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
           </button>
         </div>
         <div className={txStyles.tagPickerCreate}>
           <input className={txStyles.inputField} value={newTagName} maxLength={30} placeholder="New tag name" onChange={(e) => setNewTagName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && newTagName.trim()) { useTagStore.getState().addTag(newTagName.trim()); setTag(newTagName.trim()); setNewTagName(''); setShowTagPicker(false); } }} />
-          <button className={txStyles.tagPickerAdd} disabled={!newTagName.trim()} onClick={() => { useTagStore.getState().addTag(newTagName.trim()); setTag(newTagName.trim()); setNewTagName(''); setShowTagPicker(false); }}>Add</button>
+          <button className={`${txStyles.tagPickerAdd} ${tagAddKey > 0 ? 'anim-pop' : ''}`} disabled={!newTagName.trim()} onClick={() => { replayTagAdd(); useTagStore.getState().addTag(newTagName.trim()); setTag(newTagName.trim()); setNewTagName(''); setShowTagPicker(false); }}><span className="anim-target" key={tagAddKey}>Add</span></button>
         </div>
         <div className={txStyles.pickerList}>
-          <button className={txStyles.pickerItem} onClick={() => { setTag(''); setShowTagPicker(false); }}><span className={txStyles.pickerPlaceholder}>No tag</span></button>
-          {tags.map((t) => <button key={t} className={txStyles.pickerItem} onClick={() => { setTag(t); setShowTagPicker(false); }}><span className={txStyles.pickerItemName}>{t}</span></button>)}
+          <button className={`${txStyles.pickerItem} ${tagPicked === '' && tagListKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayTagList(); setTagPicked(''); setTag(''); setShowTagPicker(false); }}><span className="anim-target" key={`none-${tagPicked === '' ? tagListKey : 0}`}><span className={txStyles.pickerPlaceholder}>No tag</span></span></button>
+          {tags.map((t) => <button key={t} className={`${txStyles.pickerItem} ${tagPicked === t && tagListKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayTagList(); setTagPicked(t); setTag(t); setShowTagPicker(false); }}><span className="anim-target" key={`${t}-${tagPicked === t ? tagListKey : 0}`}><span className={txStyles.pickerItemName}>{t}</span></span></button>)}
           {tags.length === 0 && <div className={txStyles.pickerEmpty}>No tags yet — create one above</div>}
         </div>
       </div>
@@ -110,8 +126,8 @@ export function AddEntryModal({ isOpen, ledgerId, entryId, onClose }: { isOpen: 
     <BottomSheet isOpen onClose={() => setShowDeleteConfirm(false)} title="Delete Entry">
       <p style={descStyle}>Are you sure you want to delete this entry? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
       <div style={{ display: 'flex', gap: 10, padding: '8px 0 4px' }}>
-        <button onClick={() => setShowDeleteConfirm(false)} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Cancel</button>
-        <button onClick={handleDelete} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Delete</button>
+        <button onClick={() => { replayDelCancel(); setShowDeleteConfirm(false); }} className={delCancelKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}><span className="anim-target" key={delCancelKey}>Cancel</span></button>
+        <button onClick={() => { replayDelConfirm(); void handleDelete(); }} className={delConfirmKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}><span className="anim-target" key={delConfirmKey}>Delete</span></button>
       </div>
     </BottomSheet>
   ) : (
@@ -125,8 +141,8 @@ export function AddEntryModal({ isOpen, ledgerId, entryId, onClose }: { isOpen: 
       <BottomSheet isOpen={isOpen} onClose={onClose} title={existing ? 'Edit Entry' : 'Add Entry'}>
         {form}
         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}>Cancel</button>
-          <button onClick={handleSave} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', border: 'none' }}>{existing ? 'Save' : 'Add'}</button>
+          <button onClick={() => { replayCancel(); onClose(); }} className={cancelKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}><span className="anim-target" key={cancelKey}>Cancel</span></button>
+          <button onClick={() => { replaySave(); void handleSave(); }} className={saveKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', border: 'none' }}><span className="anim-target" key={saveKey}>{existing ? 'Save' : 'Add'}</span></button>
         </div>
       </BottomSheet>
       {tagModal}
