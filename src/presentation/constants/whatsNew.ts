@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.12.0',
+    items: [
+      'Settings is tidier now — sections collapse, and backup & storage live together with the newest first.',
+      'Groups can be renamed from the group details, and sorted: newest, name, highest balance or most accounts.',
+    ],
+  },
+  {
     version: '1.11.0',
     items: [
       'Every button now reacts when you tap it, and the header icons play little animations.',

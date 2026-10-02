@@ -943,3 +943,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Uncommitted on dev (with groups rename+chips). Next: user verifies then commit.
 
+
+## Session 2026-10-02 (commit, on dev)
+
+### Changes
+- CHANGELOG Unreleased: Added (groups rename + sort chips) + Fixed (ledger header icons)
+- Gates pre-commit: tsc PASS, unit 48/48 PASS (17 e2e files fail under vitest — pre-existing config issue, same as prior session), eslint 1 pre-existing warning (LedgerSection:98 untouched)
+- Committed d8c3301 on dev + pushed
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Clean on dev. NOTE: session_log commit entry itself uncommitted — amend or include next commit.
+

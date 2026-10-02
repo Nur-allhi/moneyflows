@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-02
+
 ### Added
+- Settings reorganized: collapsible sections, Backup & Storage merged with latest-first history.
 - Groups list: rename any group from its detail view (pencil button, desktop + mobile) with empty/duplicate validation; sort chips (Created / Name A–Z / Highest balance / Most accounts) matching the ledger filter style.
 
 ### Fixed
