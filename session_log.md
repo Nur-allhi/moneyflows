@@ -481,3 +481,9 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
   WhatsNew stay above it) but below modal overlays (300+) and import overlay (999).
 - Verified live with screenshot on member profile: dropdown crisp above hero cards + ledger table.
 - Gates: CSS-only change (no tsc/lint surface change); build + 29 unit tests green from parent commit.
+
+### Follow-up fix 2 (same session)
+- Feedback: dropdown background too glassy, results hard to read over busy ledgers.
+- Fix: `.dropdown` background → `oklch(16% 0.015 260 / 0.92)` (frosted, near-opaque) instead of
+  glassy `--color-surface` (/0.55); blur24 kept. Verified via screenshot — ledger no longer
+  bleeds through, rows fully legible.
