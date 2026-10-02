@@ -487,3 +487,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Fix: `.dropdown` background → `oklch(16% 0.015 260 / 0.92)` (frosted, near-opaque) instead of
   glassy `--color-surface` (/0.55); blur24 kept. Verified via screenshot — ledger no longer
   bleeds through, rows fully legible.
+
+## Session 2026-10-02 (merge to dev)
+
+### Changes
+- Merged `feature/global-search` → `dev` as squash `a641ba9` (user-approved): global header
+  search + z-index fix + frosted dropdown + CHANGELOG `[Unreleased]` entry; pushed `dev`
+- Pre-merge gates on branch tip: typecheck PASS, build PASS, unit 29/29 PASS, lint clean on
+  touched files (1 pre-existing LedgerSection.tsx warning, also on dev — disclosed)
+- `detect_changes()` vs dev: 10 files, Header/SearchBar touched + 3 new files, LOW risk, no affected processes
+
+### Status
+- Live on dev. Next: delete `feature/global-search`? Other Ledgers V2 on "next update".
