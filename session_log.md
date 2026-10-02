@@ -583,3 +583,21 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Plan committed on `feature/theme-accent` (unpushed). Next: build T-132 token foundation on user go-ahead.
+
+## Session 2026-10-02 (Phase 16 build: theme + accent T-132..T-137)
+
+### Changes
+- T-132 token foundation (`868a5d9`, 25 files): `--color-primary-deep`, `[data-theme="light"]`, 6 `[data-accent]` blocks, glow/mark via `color-mix` (auto-follow), gradient tails swapped, tailwind `@theme inline` aliased to tokens (shadcn follows theme+accent, verified in dist CSS)
+- T-133 settings + hook (`a4202d9`): `theme`/`accentId` in `AppSettings`, deep-fill `merge` in store (backfills old installs), `ACCENTS` constants, `useTheme()` + pre-paint script in `index.html`, wired in `AppLayout`
+- T-134 header toggle (`d2ae6ff`): sun/moon 36px button in `settingsWrap` (desktop + mobile), `useEffectiveTheme()`, all 4 states
+- T-135 appearance pickers (`3c3f004`): shared `AppearanceSection` (theme 3-way + swatch grid, instant-apply) in `SettingsModal` + `SettingsPage`
+- T-136 audit (`cf25eb4`, 41 files): `--color-wash` sweep (~100 white washes), `dark:` custom-variant follows app theme, `DESIGN_IDENTITY.md` §2/§17
+- T-136b + T-137 (`0849c8c`, 32 files): verification found gold/teal white-text fail → new `--color-text-on-primary` (dark ink for teal/gold) swept across all primary buttons + shadcn; dark slabs (Modal/Search/pickers/drawers) made adaptive; fixed pre-existing `actPrimary` missing white text (invisible in light); `accents.test.ts` 5/5 (palette↔CSS sync guard)
+- Live verification (dev :5174, fresh boot): header toggle flips + persists, store merge backfills defaults, 1440 dark/violet + light/violet + light/gold + 390 light/gold screenshots, overflow 0, 0 console errors, contrast body 13-15:1 / white-on-primary 3.6-4 / ink-on-teal-gold 6.5-7; 39/39 unit tests pass (17 e2e-under-vitest fails pre-existing)
+- Gates: typecheck PASS, build PASS, lint 1 pre-existing warning (`LedgerSection.tsx:82`)
+
+### Skill(s) Used
+- frontend-design, senior-frontend, code-reviewer
+
+### Status
+- Phase 16 complete on `feature/theme-accent` (unpushed). Next: user confirms merge to `dev` (REPO_RULES §3) — then push + Other Ledgers V2 on "next update".
