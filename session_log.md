@@ -448,3 +448,42 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Released v1.6.0 on master. Next: delete local feature branches? Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (global search)
+
+### Changes
+- New branch `feature/global-search` off dev (already contains master `ded577d`), pushed to origin
+- Header search is now global: always visible on every page (was dashboard-only), grouped dropdown
+  overlay across Transactions / Accounts / Members / Loans / Groups / Tags / Other Ledgers
+  - NEW `useGlobalSearch.ts` — shared query store + 200ms debounce, per-entity caps, keyboard nav
+    (move/selectActive), actions (tx→detail modal, others→routes); never touches ledger-local state
+  - NEW `GlobalSearch.tsx` + `GlobalSearch.module.css` — glass dropdown (tokens only, §17 states)
+  - `Header.tsx`/`SearchBar.tsx` — focus/blur wrapper, ArrowUp/Down+Enter/Esc, Highlight matches;
+    mobile search toggle + SearchBar row now available on all pages (`App.tsx` gate removed)
+  - Ledger-local `LedgerSearch`/`MobileLedger` states untouched — still scoped to their own ledger
+- Gates: typecheck PASS, build PASS, unit vitest 29/29 PASS, lint clean on touched files
+  (1 pre-existing warning in untouched LedgerSection.tsx, also fails on dev)
+- Live verified on :3000: search visible on /member, "Eftynur" → Accounts+Members groups with
+  highlight, click navigates to /member/:id, 0 console errors
+- Committed `552c127`, pushed `origin/feature/global-search`
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, playwright verification
+
+### Status
+- Complete on branch. Next: user confirmation to merge into dev (+ CHANGELOG [Unreleased] entry at merge time per REPO_RULES §5).
+
+### Follow-up fix (same session)
+- Bug: global-search dropdown painted behind page content (filter drawers, sticky loan headers, FAB).
+  Root cause: `.header` has `backdrop-filter` → stacking context with z-auto, trapping the
+  z-351 dropdown below later DOM content with its own z-index.
+- Fix: `.header` gets `z-index: 150` — above page content (max 200, non-overlapping BottomNav/
+  WhatsNew stay above it) but below modal overlays (300+) and import overlay (999).
+- Verified live with screenshot on member profile: dropdown crisp above hero cards + ledger table.
+- Gates: CSS-only change (no tsc/lint surface change); build + 29 unit tests green from parent commit.
+
+### Follow-up fix 2 (same session)
+- Feedback: dropdown background too glassy, results hard to read over busy ledgers.
+- Fix: `.dropdown` background → `oklch(16% 0.015 260 / 0.92)` (frosted, near-opaque) instead of
+  glassy `--color-surface` (/0.55); blur24 kept. Verified via screenshot — ledger no longer
+  bleeds through, rows fully legible.
