@@ -75,7 +75,19 @@ export class MemberReportService {
     const allTxs = (await this.db.getTransactions({ accountIds: allIds }))
       .slice()
       .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
-    const nameById = new Map(owned.map((a) => [a.id, a.name]));
+    const allAccounts = await this.db.getAccounts();
+    const accountById = new Map(allAccounts.map((a) => [a.id, a]));
+    const memberNameById = new Map((await this.db.getMembers()).map((m) => [m.id, m.name]));
+    // Counterparty label: same-member accounts show the bare name, other
+    // members show "Member / Account" so linked rows stay identifiable.
+    // Only a truly missing account reads as "(deleted account)".
+    const counterpartyLabel = (otherId: string): string => {
+      const acct = accountById.get(otherId);
+      if (!acct) return '(deleted account)';
+      if (!acct.memberId || acct.memberId === filter.memberId) return acct.name;
+      const owner = memberNameById.get(acct.memberId);
+      return owner ? `${owner} / ${acct.name}` : acct.name;
+    };
     const inPeriod = (tx: Transaction): boolean => {
       const d = dayOf(tx.date);
       if (start && d < start) return false;
@@ -117,7 +129,7 @@ export class MemberReportService {
         const otherId = credit > 0 ? tx.sourceAccount : tx.destAccount;
         const counterpartyAccount = !otherId || otherId === acct.id
           ? ''
-          : (nameById.get(otherId) ?? '(deleted account)');
+          : counterpartyLabel(otherId);
         rows.push({
           id: tx.id,
           date: tx.date,
@@ -159,11 +171,17 @@ export class MemberReportService {
 
     let loans: LoanSection[] = [];
     if (filter.includeLoans) {
-      const allNameById = new Map((await this.db.getAccounts()).map((a) => [a.id, a.name]));
+      const allNameById = (id: string): string => {
+        const a = accountById.get(id);
+        if (!a) return '(deleted account)';
+        if (!a.memberId || a.memberId === member.id) return a.name;
+        const owner = memberNameById.get(a.memberId);
+        return owner ? `${owner} / ${a.name}` : a.name;
+      };
       const ownedNames = new Map(owned.map((a) => [a.id, a.name]));
       loans = buildLoanSections(
         scopedTxs,
-        (id) => allNameById.get(id) ?? '(deleted account)',
+        allNameById,
         (tx, counterpartyId) => {
           const ownId = [tx.sourceAccount, tx.destAccount].find(
             (x) => x != null && x !== counterpartyId && ownedNames.has(x),

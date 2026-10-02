@@ -29,8 +29,9 @@ const ALL_TXS = [
 function makeService(txs: Transaction[] = ALL_TXS): MemberReportService {
   const db = {
     getMemberById: async (id: string) => (id === MEMBER.id ? MEMBER : null),
+    getMembers: async () => [MEMBER],
     getAccounts: async (memberId?: string) =>
-      memberId === MEMBER.id ? [ACCT_A, ACCT_B] : [],
+      memberId === MEMBER.id ? [ACCT_A, ACCT_B] : [ACCT_A, ACCT_B],
     getTransactions: async () => txs,
   } as unknown as IDatabaseService;
   return new MemberReportService(db);
@@ -108,6 +109,7 @@ const LOAN_TXS = [
 function makeFullService(): MemberReportService {
   const db = {
     getMemberById: async (id: string) => (id === MEMBER.id ? MEMBER : null),
+    getMembers: async () => [MEMBER],
     getAccounts: async (memberId?: string) =>
       memberId === MEMBER.id ? [ACCT_A, ACCT_B] : [ACCT_A, ACCT_B, ACCT_X],
     getTransactions: async () => [...ALL_TXS, ...LOAN_TXS],
@@ -194,6 +196,7 @@ describe('MemberReportService (T-133 loans + other ledgers)', () => {
   it('shows money received by the member as credit (borrower perspective)', async () => {
     const db = {
       getMemberById: async (id: string) => (id === MEMBER.id ? MEMBER : null),
+      getMembers: async () => [MEMBER],
       getAccounts: async (memberId?: string) =>
         memberId === MEMBER.id ? [ACCT_A, ACCT_B] : [ACCT_A, ACCT_B, ACCT_X],
       getTransactions: async () => [tx('b1', 'lend', 2000, '2026-08-05', 'acct-x', 'acct-b')],
@@ -208,5 +211,27 @@ describe('MemberReportService (T-133 loans + other ledgers)', () => {
     const row = report.loans[0]!.rows[0]!;
     expect([row.debit, row.credit]).toEqual([0, 2000]);
     expect(row.runningBalance).toBe(2000);
+  });
+
+  it('labels cross-member counterparties, unknowns stay deleted', async () => {
+    const otherMember = new Member('member-2', 'Other Member');
+    const otherCash = new Account('acct-c', 'member-2', 'Other Cash', 'cash', 0);
+    const db = {
+      getMemberById: async (id: string) => (id === MEMBER.id ? MEMBER : null),
+      getMembers: async () => [MEMBER, otherMember],
+      getAccounts: async (memberId?: string) =>
+        memberId === MEMBER.id ? [ACCT_A, ACCT_B] : [ACCT_A, ACCT_B, otherCash],
+      getTransactions: async () => [
+        tx('x1', 'transfer', 100, '2026-08-06', 'acct-a', 'acct-c'),
+        tx('x2', 'expense', 50, '2026-08-07', 'acct-a', 'gone'),
+      ],
+      getOtherLedgers: async () => [],
+      getOtherLedgerEntries: async () => [],
+    } as unknown as IDatabaseService;
+    const report = await new MemberReportService(db).generateReport({ memberId: 'member-1' });
+
+    const rows = report.accounts[0]!.rows;
+    expect(rows[0]!.counterpartyAccount).toBe('Other Member / Other Cash');
+    expect(rows[1]!.counterpartyAccount).toBe('(deleted account)');
   });
 });
