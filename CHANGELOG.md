@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Appearance theming: light/dark mode (header sun/moon toggle, System/Light/Dark in Settings), 6 accent colors, and per-mode background presets (Obsidian/Midnight/Forest/Plum + Paper/Sky/Sand/Mint). Persisted in settings, applied pre-paint with no flash; light mode ships a retuned semantic ramp and deeper glass for readability.
+- Settings → Appearance section (theme 3-way + accent swatches + background dots) in both the Settings modal and the Settings page.
+
+### Fixed
+- Dashboard "+ New Transaction" label washed out on hover in light mode (ghost-button hover stomped the gradient; variant hover now re-asserts it).
+- Account card text unreadable in light mode (cards keep dark bank gradients, ink pinned white); solid-violet buttons without adaptive text fixed under gold/teal accents.
+
 ## [1.8.0] - 2026-10-02
 
 ### Added
