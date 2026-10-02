@@ -1,9 +1,12 @@
 import type { CSSProperties } from 'react';
+import { useState } from 'react';
 import { ACCENTS, DEFAULT_ACCENT_ID } from '../constants/accents';
+import { FONT_SIZES, DEFAULT_FONT_SIZE_ID } from '../constants/fontSizes';
 import { BG_DARK, BG_LIGHT, DEFAULT_BG_DARK, DEFAULT_BG_LIGHT } from '../constants/backgrounds';
 import type { ThemeMode } from '../../core/domain/AppSettings';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useEffectiveTheme } from '../hooks/useTheme';
+import { useReplay } from '../hooks/useReplay';
 import styles from './AppearanceSection.module.css';
 
 const THEME_OPTIONS: { id: ThemeMode; label: string }[] = [
@@ -20,6 +23,7 @@ const THEME_OPTIONS: { id: ThemeMode; label: string }[] = [
 export function AppearanceSection() {
   const theme = useSettingsStore((s) => s.settings.theme ?? 'dark');
   const accentId = useSettingsStore((s) => s.settings.accentId ?? DEFAULT_ACCENT_ID);
+  const fontSize = useSettingsStore((s) => s.settings.fontSize ?? DEFAULT_FONT_SIZE_ID);
   const bgDark = useSettingsStore((s) => s.settings.bgDark ?? DEFAULT_BG_DARK);
   const bgLight = useSettingsStore((s) => s.settings.bgLight ?? DEFAULT_BG_LIGHT);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
@@ -33,6 +37,15 @@ export function AppearanceSection() {
     : (bgList[0]?.id ?? currentBg);
   const setBg = (id: string) =>
     updateSettings(effective === 'light' ? { bgLight: id } : { bgDark: id });
+  const [themeKey, replayTheme] = useReplay();
+  const [themePicked, setThemePicked] = useState<string | null>(null);
+  const [accentKey, replayAccent] = useReplay();
+  const [accentPicked, setAccentPicked] = useState<string | null>(null);
+  const [bgKey, replayBg] = useReplay();
+  const [bgPicked, setBgPicked] = useState<string | null>(null);
+  const activeFont = FONT_SIZES.some((f) => f.id === fontSize) ? fontSize : DEFAULT_FONT_SIZE_ID;
+  const [fontKey, replayFont] = useReplay();
+  const [fontPicked, setFontPicked] = useState<string | null>(null);
 
   return (
     <div className={styles.appearance}>
@@ -42,11 +55,11 @@ export function AppearanceSection() {
           {THEME_OPTIONS.map((o) => (
             <button
               key={o.id}
-              className={`${styles.segBtn} ${theme === o.id ? styles.segActive : ''}`}
+              className={`${styles.segBtn} ${theme === o.id ? styles.segActive : ''} ${themePicked === o.id && themeKey > 0 ? 'anim-pop' : ''}`}
               aria-pressed={theme === o.id}
-              onClick={() => updateSettings({ theme: o.id })}
+              onClick={() => { replayTheme(); setThemePicked(o.id); updateSettings({ theme: o.id }); }}
             >
-              {o.label}
+              <span className="anim-target" key={`${o.id}-${themePicked === o.id ? themeKey : 0}`}>{o.label}</span>
             </button>
           ))}
         </div>
@@ -57,13 +70,15 @@ export function AppearanceSection() {
           {ACCENTS.map((a) => (
             <button
               key={a.id}
-              className={`${styles.swatch} ${activeAccent === a.id ? styles.swatchActive : ''}`}
+              className={`${styles.swatch} ${activeAccent === a.id ? styles.swatchActive : ''} ${accentPicked === a.id && accentKey > 0 ? 'anim-pop' : ''}`}
               style={{ '--swatch-color': a.swatch } as CSSProperties}
               aria-pressed={activeAccent === a.id}
               aria-label={`${a.label} accent`}
               title={a.label}
-              onClick={() => updateSettings({ accentId: a.id })}
-            />
+              onClick={() => { replayAccent(); setAccentPicked(a.id); updateSettings({ accentId: a.id }); }}
+            >
+              <span className="anim-target" key={`${a.id}-${accentPicked === a.id ? accentKey : 0}`} />
+            </button>
           ))}
         </div>
       </div>
@@ -73,13 +88,30 @@ export function AppearanceSection() {
           {bgList.map((b) => (
             <button
               key={b.id}
-              className={`${styles.swatch} ${activeBg === b.id ? styles.swatchActive : ''}`}
+              className={`${styles.swatch} ${activeBg === b.id ? styles.swatchActive : ''} ${bgPicked === b.id && bgKey > 0 ? 'anim-pop' : ''}`}
               style={{ '--swatch-color': b.swatch } as CSSProperties}
               aria-pressed={activeBg === b.id}
               aria-label={`${b.label} background`}
               title={b.label}
-              onClick={() => setBg(b.id)}
-            />
+              onClick={() => { replayBg(); setBgPicked(b.id); setBg(b.id); }}
+            >
+              <span className="anim-target" key={`${b.id}-${bgPicked === b.id ? bgKey : 0}`} />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.row} role="group" aria-label="Text size">
+        <span className={styles.rowLabel}>Text size</span>
+        <div className={styles.segWrap}>
+          {FONT_SIZES.map((f) => (
+            <button
+              key={f.id}
+              className={`${styles.segBtn} ${activeFont === f.id ? styles.segActive : ''} ${fontPicked === f.id && fontKey > 0 ? 'anim-pop' : ''}`}
+              aria-pressed={activeFont === f.id}
+              onClick={() => { replayFont(); setFontPicked(f.id); updateSettings({ fontSize: f.id }); }}
+            >
+              <span className="anim-target" key={`${f.id}-${fontPicked === f.id ? fontKey : 0}`}>{f.label}</span>
+            </button>
           ))}
         </div>
       </div>

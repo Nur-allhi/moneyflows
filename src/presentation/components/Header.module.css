@@ -316,6 +316,85 @@
   position: relative;
 }
 
+/* One-shot click animations — replayed from Header.tsx via remount keys. */
+@keyframes gearSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes iconTwist {
+  from { transform: rotate(0); }
+  to { transform: rotate(90deg); }
+}
+
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(18deg); }
+  40% { transform: rotate(-14deg); }
+  60% { transform: rotate(8deg); }
+  80% { transform: rotate(-6deg); }
+}
+
+@keyframes backNudge {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes iconPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+@keyframes themeSwap {
+  from { transform: rotate(-90deg) scale(0.6); opacity: 0; }
+  to { transform: rotate(0) scale(1); opacity: 1; }
+}
+
+.gearSpin svg {
+  animation: gearSpin 0.5s ease;
+  transform-origin: center;
+}
+
+.addTwist svg, .clearTwist svg {
+  animation: iconTwist 0.3s ease;
+  transform-origin: center;
+}
+
+.bellRing {
+  animation: bellRing 0.6s ease;
+  transform-origin: top center;
+}
+
+.backNudge svg {
+  animation: backNudge 0.25s ease;
+}
+
+.searchPop svg {
+  animation: iconPop 0.25s ease;
+}
+
+.themeIcon {
+  display: inline-flex;
+}
+
+.themeSwap {
+  display: inline-flex;
+  animation: themeSwap 0.35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gearSpin svg,
+  .addTwist svg,
+  .clearTwist svg,
+  .bellRing,
+  .backNudge svg,
+  .searchPop svg,
+  .themeSwap {
+    animation: none;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     gap: 10px;

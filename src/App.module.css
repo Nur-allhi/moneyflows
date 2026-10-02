@@ -88,6 +88,11 @@
     padding: 16px;
     padding-left: calc(220px + 16px + 16px);
     padding-bottom: 16px;
+    transition: padding-left 0.25s ease;
+  }
+
+  .mainWide {
+    padding-left: calc(68px + 16px + 16px);
   }
 }
 

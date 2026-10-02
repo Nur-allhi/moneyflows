@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { handleFormFocus } from '../utils/focus';
+import { useReplay } from '../hooks/useReplay';
 import styles from './Modal.module.css';
 
 interface ModalProps {
@@ -28,6 +29,10 @@ export function Modal({
   onSave,
   className = '',
 }: ModalProps) {
+  const [closeKey, replayClose] = useReplay();
+  const [cancelKey, replayCancel] = useReplay();
+  const [saveKey, replaySave] = useReplay();
+
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -55,15 +60,15 @@ export function Modal({
       >
         <div className={styles.header}>
           <h2 className={styles.title}>{title}</h2>
-          <button className={styles.close} onClick={onClose} aria-label="Close">&times;</button>
+          <button className={`${styles.close} ${closeKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClose(); onClose(); }} aria-label="Close"><span className="anim-target" key={closeKey}>&times;</span></button>
         </div>
         <div className={styles.body} onFocus={handleFormFocus}>
           {children}
         </div>
         {footer ?? (
           <div className={styles.footer}>
-            <button className={styles.btnCancel} onClick={handleCancel}>{cancelLabel}</button>
-            <button className={styles.btnSave} onClick={onSave}>{saveLabel}</button>
+            <button className={`${styles.btnCancel} ${cancelKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCancel(); handleCancel(); }}><span className="anim-target" key={cancelKey}>{cancelLabel}</span></button>
+            <button className={`${styles.btnSave} ${saveKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySave(); onSave?.(); }}><span className="anim-target" key={saveKey}>{saveLabel}</span></button>
           </div>
         )}
       </div>

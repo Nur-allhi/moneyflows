@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GlassPanel } from '../components';
+import { useReplay } from '../hooks/useReplay';
 import { useModalStore } from '../stores/useModalStore';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import styles from './MemberProfile.module.css';
@@ -12,6 +13,7 @@ import { downloadMemberPdf } from './memberProfile/pdfExport';
 
 export function MemberProfile() {
   const navigate = useNavigate();
+  const [homeKey, replayHome] = useReplay();
   const { transactions } = useTransactionStore();
   const data = useMemberData();
   const {
@@ -48,7 +50,7 @@ export function MemberProfile() {
   if (!member) {
     return (
       <div className={styles.memberProfile}>
-        <GlassPanel className={styles.notFound}><p>Member not found</p><button onClick={() => navigate('/')}>Go home</button></GlassPanel>
+        <GlassPanel className={styles.notFound}><p>Member not found</p><button className={homeKey > 0 ? 'anim-pop' : ''} onClick={() => { replayHome(); navigate('/'); }}><span className="anim-target" key={homeKey}>Go home</span></button></GlassPanel>
       </div>
     );
   }

@@ -7,6 +7,7 @@ import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
+import { useReplay } from '../hooks/useReplay';
 import { formatAmount } from '../utils/format';
 import { TX_TYPE_ICON, displayTxType } from '../constants/labels';
 import styles from './TransactionDetailModal.module.css';
@@ -30,6 +31,12 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
   const members = useMemberStore((s) => s.members);
   const accounts = useAccountStore((s) => s.accounts);
   const { locale, currency } = useSettingsStore((s) => s.settings);
+  const [mLedgerKey, replayMLedger] = useReplay();
+  const [mEditKey, replayMEdit] = useReplay();
+  const [mDeleteKey, replayMDelete] = useReplay();
+  const [ledgerKey, replayLedger] = useReplay();
+  const [editKey, replayEdit] = useReplay();
+  const [deleteKey, replayDelete] = useReplay();
 
   const transaction = txProp ?? storeTx;
 
@@ -197,17 +204,23 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
       <BottomSheet isOpen onClose={onClose} title={`${TX_TYPE_ICON[transaction.type] ?? ''} Transaction Details`}>
         {detailContent}
         <div className={styles.mobSheetFooter}>
-          <button className={styles.mobSheetBtn} onClick={handleOpenLedger}>
+          <button className={`${styles.mobSheetBtn} ${mLedgerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMLedger(); handleOpenLedger(); }}>
+            <span className="anim-target" key={mLedgerKey}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
             Ledger
+            </span>
           </button>
-          <button className={styles.mobSheetBtn} onClick={handleEdit}>
+          <button className={`${styles.mobSheetBtn} ${mEditKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMEdit(); handleEdit(); }}>
+            <span className="anim-target" key={mEditKey}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
             Edit
+            </span>
           </button>
-          <button className={`${styles.mobSheetBtn} ${styles.mobSheetDanger}`} onClick={handleDelete}>
+          <button className={`${styles.mobSheetBtn} ${styles.mobSheetDanger} ${mDeleteKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMDelete(); handleDelete(); }}>
+            <span className="anim-target" key={mDeleteKey}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
             Delete
+            </span>
           </button>
         </div>
       </BottomSheet>
@@ -221,23 +234,29 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
       title={`${TX_TYPE_ICON[transaction.type] ?? ''} Transaction Details`}
       footer={
         <div className={styles.footer}>
-          <button className={styles.ledgerBtn} onClick={handleOpenLedger} title="Open in Ledger">
+          <button className={`${styles.ledgerBtn} ${ledgerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayLedger(); handleOpenLedger(); }} title="Open in Ledger">
+            <span className="anim-target" key={ledgerKey}>
             <span className={styles.icon}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
             </span>
             <span className={styles.btnLabel}>Open in Ledger</span>
+            </span>
           </button>
-          <button className={styles.iconBtn} onClick={handleEdit} title="Edit">
+          <button className={`${styles.iconBtn} ${editKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEdit(); handleEdit(); }} title="Edit">
+            <span className="anim-target" key={editKey}>
             <span className={styles.icon}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
             </span>
             <span className={styles.btnLabel}>Edit</span>
+            </span>
           </button>
-          <button className={styles.iconBtn} onClick={handleDelete} title="Delete">
+          <button className={`${styles.iconBtn} ${deleteKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayDelete(); handleDelete(); }} title="Delete">
+            <span className="anim-target" key={deleteKey}>
             <span className={styles.icon}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
             </span>
             <span className={styles.btnLabel}>Delete</span>
+            </span>
           </button>
         </div>
       }

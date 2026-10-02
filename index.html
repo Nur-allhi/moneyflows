@@ -25,6 +25,7 @@
         document.documentElement.dataset.theme = dark ? 'dark' : 'light';
         document.documentElement.dataset.accent = accent;
         document.documentElement.dataset.bg = dark ? (st.bgDark || 'obsidian') : (st.bgLight || 'paper');
+        document.documentElement.dataset.font = (st.fontSize === 'small' || st.fontSize === 'large') ? st.fontSize : 'medium';
       } catch (e) { /* defaults apply */ }
     </script>
   </head>

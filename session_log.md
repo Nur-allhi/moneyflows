@@ -728,3 +728,139 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Complete on dev (`1ddb30d`), pushed to `origin/dev`. Next: user call (Other Ledgers V2 on "next update", or new work).
+
+## Session 2026-10-02 (release 1.10.0 → master)
+
+### Changes
+- User-approved release: bump 1.9.0 → 1.10.0 MINOR (user chose MINOR over PATCH) in one commit `b1c3f1b`: package.json + whatsNew 1.10.0 entry ('loading screen now shows the app version at the bottom') + CHANGELOG `## [1.10.0] - 2026-10-02` Added
+- Gates: typecheck PASS, build PASS, unit 48/48 PASS, eslint clean on touched file (1 pre-existing warning in untouched LedgerSection.tsx — disclosed), `detect_changes` vs master LOW (SplashScreen only, no affected processes)
+- Merged `dev → master` no-ff `104eeaa` + tagged `v1.10.0` + pushed `master --follow-tags`; `dev` fast-forwarded to `master`, pushed — back on `dev`
+
+### Skill(s) Used
+- senior-frontend, gitnexus
+
+### Status
+- v1.10.0 live on master + dev. Next: user call (Other Ledgers V2 on "next update", or new work).
+
+## Session 2026-10-02 (branch feature/ui-polish)
+
+### Changes
+- New branch `feature/ui-polish` off `dev` (user-approved name), pushed to origin with upstream tracking — clean base at `427cda3` (post-1.10.0)
+
+### Status
+- Ready for UI fixes. Next: user lists the fixes.
+
+### Header click animations (same session)
+- `Header.tsx`/`Header.module.css` on `feature/ui-polish`: one-shot icon replays via `useReplay()` remount keys — gear 360° spin, theme rotate-in swap, plus 90° twist, bell ring swing, back nudge, search pop, clear twist; `prefers-reduced-motion` disables all; existing hover/active states untouched
+- Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS, `detect_changes` LOW (Header only, no affected processes; pre-edit impact HIGH disclosed — structural, change is additive-only)
+
+### App-wide button animations (same session)
+- Shared infra: `hooks/useReplay.ts` + `styles/click-anims.css` (global `anim-pop/spin/twist/ring/nudge/swap` + reduced-motion guard, imported in `main.tsx`); `Header` refactored to shared hook
+- 44 files wired (~250 buttons, 3 parallel batches): chrome, dashboard, members, loans, groups, tags, reports, all modals/pickers, recycle, other ledgers, shadcn `Button` (covers calendar day cells) + calendar nav
+- Fixed 2 real layout breaks from review: `MemberList` + `OtherLedgersIndex` space-between cards now use per-child spans sharing one replay key (single wrapper collapsed the balance alignment)
+- Skipped (user-approved): 6 oversized files already >300 LOC (`LoanDetailView`, `GroupLedgerScreen`, `GroupsListScreen`, `SettingsPage`, `SettingsModal`, `OtherLedgerDetail` — wire when split per T-092) + `ErrorBoundary` (class component)
+- Gates: typecheck PASS, eslint clean (1 pre-existing `LedgerSection` warning, untouched), build PASS, unit 48/48 PASS, `detect_changes` HIGH disclosed (44 files, additive-only, no logic changes)
+
+### BUG-8 fix (same session, page feedback on `/`)
+- Logged BUG-8 first per §3.11: Dashboard "New Transaction" icon + label wrapped to two lines — rollout's single `.anim-target` span collapsed the row-flex `gap: 8px`
+- Fix: two `.anim-target` spans sharing one replay key (icon + label); tree-wide audit found no other svg+text single-span wrappers
+- Gates: typecheck PASS, eslint PASS; `detect_changes` n/a (single button)
+
+## Session 2026-10-02 (merge feature/ui-polish → dev)
+
+### Changes
+- User-approved merge: `feature/ui-polish` (5 commits: header anims + app-wide rollout + BUG-8 fix + CHANGELOG `[Unreleased]` Added/Fixed) → `dev` via `--no-ff` `e6a9d41` (branch kept alive); pushed `dev`
+- Pre-merge gates on branch tip: typecheck PASS, build PASS, unit 48/48 PASS, eslint clean (1 pre-existing `LedgerSection` warning)
+- `detect_changes` vs dev: HIGH disclosed (50 files, all additive-only animation wiring, no logic changes); no version bump (feature→dev, per VERSIONING)
+- First `dev` push timed out (network, retry succeeded `427cda3..e6a9d41`); back on `feature/ui-polish` (clean, one commit behind the merge)
+
+## Session 2026-10-02 (BUG-9 amount clipping, same branch)
+
+### Changes
+- Logged BUG-9 first per §3.11: big amounts clipped left in Recent Transactions (fixed 100px `.txAmount`); user picked scope 1 (dashboard + ledgers)
+- Fix: dashboard cell `width` → `min-width` (grows, desc flexes); ledger `.debit/.credit/.balance` centered → right-aligned (leading digits + ellipsis). `minmax` tracks rejected: header/rows are separate grids, content sizing would misalign them
+- Gates: build PASS, typecheck PASS; impact LOW (LedgerTable has 3 render-only consumers; RecentTxsPanel not indexed, single consumer Dashboard)
+
+## Session 2026-10-02 (font-size follow-up: sidebar + settings, same branch)
+
+### Changes
+- User report: text-size setting had no effect on sidebar + Settings page — both used fixed px (7 + 22 spots), bypassing the scaled tokens
+- Fix: mapped every fixed size to the nearest fluid token (22→text-5xl, 16→text-2xl, 14→text-lg, 13→text-md, 12→text-base, 11→text-sm, 10→text-xs); zero fixed px remain in either file
+- Gates: build PASS, typecheck PASS; impact max LOW
+
+## Session 2026-10-02 (merge feature/ui-polish → dev, round 2)
+
+### Changes
+- User-approved merge: `feature/ui-polish` (text-size setting + BUG-9 amount fix + sidebar/settings token mapping + CHANGELOG `[Unreleased]` entries) → `dev` via `--no-ff` `8a6c131` (branch kept alive); pushed `dev` (`e6a9d41..8a6c131`)
+- Pre-merge gates: build PASS, unit 48/48 PASS; `detect_changes` vs dev LOW, no affected processes; no version bump (feature→dev)
+- Back on `feature/ui-polish`, clean
+
+## Session 2026-10-02 (collapsible sidebar, same branch)
+
+### Changes
+- User-picked design (plain-language choice): fold + hover peek. Arrow button on the sidebar edge folds to a 68px icon rail; hovering the rail peeks the full 220px floating over content; choice persists via `AppSettings.sidebarCollapsed`; folded icons show name tooltips; footer keeps avatar, logo becomes M mark; content area reclaims the space (`mainWide`); mobile/bottom-nav untouched
+- Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS; impact HIGH disclosed (structural — AppLayout shell; change additive, Sidebar props untouched)
+
+## Session 2026-10-02 (sidebar collapse debug via Playwright, same branch)
+
+### Changes
+- User report: sidebar "stuck" after clicking fold (content moved under it, bar stayed wide). Code review: store + classes + shipped CSS all correct (verified `width:68px` collapsed + `padding-left:100px` mainWide rules in fresh `dist` output)
+- Playwright proof on fresh server (`e2e/sidebar-fold.check`, deleted after): open=220, folded=68, hover-peek=220, unfold works, main padding 100px — 2/2 green; screenshot confirms icon rail + reclaimed content + readable amounts
+- Root cause: user's tab was on the stale :3000 dev server (served pre-collapse bundle; third such incident). Killed it, started a fresh `npm run dev` (:3000, HTTP 200)
+- No code changes needed; tree clean
+
+## Session 2026-10-02 (sidebar peek + toggle polish, same branch)
+
+### Changes
+- User feedback: peek slid UNDER the app header (header z-150 > sidebar z-100) + floating edge arrow looked tacked-on
+- Fix: peek now `z-index:160` via doubled `.sidebar.peek` selector (beats App.module z-100 regardless of bundle order; still below WhatsNew 200 / modals 300+) — toggle moved INSIDE the bar (logo row; stacks under the M mark when folded), no longer half-outside
+- Playwright verified (2/2, spec deleted after): `elementFromPoint` at peek top = aside; screenshots confirm in-flow toggle + peek floating above header
+- Gates: typecheck PASS, eslint PASS, build PASS
+
+## Session 2026-10-02 (sidebar brand-face stacking bug, same branch)
+
+### Changes
+- User report: arrow + logo misplaced when folded. Playwright reproduced: M mark rendered at x≈79–115, OUTSIDE the 68px rail
+- Root cause (mine, not stale client this time): hidden face still sized the shared grid cell (fixed via display:none), then `.faceHidden{display:none}` lost to `.faceOpen/.faceShut{display:flex}` — equal specificity, later rule won, so BOTH faces rendered stacked and overflowing
+- Fix: `.face.faceHidden` (doubled specificity, deterministic win). Verified: mark/toggle centers exactly at rail center, logo hidden, element screenshot clean
+- Gates: Playwright 2/2 green (specs deleted after), build PASS
+
+## Session 2026-10-02 (hide folded toggle, same branch)
+
+### Changes
+- User call: no toggle on the folded rail — removed the shut-face button; the way back is hover-peek (reveals full bar with its toggle) → click pins open
+- Playwright 2/2 green: zero toggles when folded, peek toggle pins open at 220px after mouse leaves (spec deleted after)
+- Gates: typecheck PASS, eslint PASS, build PASS
+
+## Session 2026-10-02 (sidebar smooth fold, same branch)
+
+### Changes
+- User report: nav buttons jumped down/up on fold — the top area changed height between states (stacked M+toggle vs logo row)
+- Fix (CSS-only): `.brandSlot` locked to a fixed 104px in both states (fits the 74px folded stack and the logo row) + padding transition; nav offset now identical, verified NAV Y = 145px before/mid/after via Playwright (spec deleted after)
+- Gates: build PASS
+
+## Session 2026-10-02 (sidebar full animation pass, same branch)
+
+### Changes
+- User asked for fully animated open/close/pin: page content padding now glides (`padding-left` 0.25s transition — measured mid-flight at 125px, proving glide not snap), peek shadow fades in, logo/M-mark crossfade in place via stacked grid faces (no size change, nav rock-solid at 145px through the transition)
+- Playwright 2/2 green (spec deleted after); screenshot confirms folded stack (M over chevron, centered) + reclaimed content
+- Gates: typecheck PASS, eslint PASS, build PASS
+
+## Session 2026-10-02 (sidebar nav icons, same branch)
+
+### Changes
+- Page feedback: Members → lucide `Users` (`user-group` doesn't exist in lucide — verified, closest picked by user), Groups → `SquareStack`, Loans → `HandCoins`; applied to sidebar + mobile BottomNav for consistency (`App.tsx` nav configs, `size={20} strokeWidth={1.8}` matching the old inline-svg treatment)
+- Gates: typecheck PASS, eslint PASS, build PASS; impact LOW
+
+## Session 2026-10-02 (text size setting, same branch)
+
+### Changes
+- NEW `constants/fontSizes.ts` (Small/Medium/Large, default Medium) + `AppSettings.fontSize` (deep-fill backfills old installs) + `tokens.css` `[data-font]` blocks scaling all `--text-*`/`--font-size-*` tokens + `useTheme()` sets `data-font` + index.html pre-paint mirror + `AppearanceSection` "Text size" segmented row (instant-apply, anim-pop, both Settings modal + page)
+- Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS, `detect_changes` LOW (index predates theme/accent symbols — change follows the approved accent/bg precedent, additive-only)
+
+## Session 2026-10-02 (merge feature/ui-polish → dev, round 3)
+
+### Changes
+- User-approved merge: `feature/ui-polish` (lucide nav icons + collapsible sidebar suite + CHANGELOG `[Unreleased]` entries) → `dev` via `--no-ff` `b8e9401` (branch kept); pushed `dev` (`8a6c131..b8e9401`)
+- Pre-merge gates: build PASS, unit 48/48 PASS; `detect_changes` vs dev MEDIUM (7 files, sidebar/nav scope, Playwright-verified live); no version bump
+- Staying on `dev`

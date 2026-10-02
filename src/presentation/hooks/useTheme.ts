@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { DEFAULT_ACCENT_ID, isAccentId } from '../constants/accents';
+import { DEFAULT_FONT_SIZE_ID, isFontSizeId } from '../constants/fontSizes';
 import {
   BG_DARK,
   BG_LIGHT,
@@ -47,12 +48,13 @@ function bgSwatch(mode: 'light' | 'dark', bg: string): string {
 /**
  * Applies the appearance settings to `<html>`:
  * `data-theme="light|dark"` + `data-accent="<id>"` + `data-bg="<id>"` +
- * `color-scheme`. `data-bg` always holds the CURRENT mode's id, so dark/light
- * `[data-bg]` blocks never collide. Call once in AppLayout. Pre-paint
- * defaults come from index.html.
+ * `data-font="small|medium|large"` + `color-scheme`. `data-bg` always holds
+ * the CURRENT mode's id, so dark/light `[data-bg]` blocks never collide.
+ * Call once in AppLayout. Pre-paint defaults come from index.html.
  */
 export function useTheme(): void {
   const accentId = useSettingsStore((s) => s.settings.accentId ?? DEFAULT_ACCENT_ID);
+  const fontSize = useSettingsStore((s) => s.settings.fontSize ?? DEFAULT_FONT_SIZE_ID);
   const bgDark = useSettingsStore((s) => s.settings.bgDark ?? DEFAULT_BG_DARK);
   const bgLight = useSettingsStore((s) => s.settings.bgLight ?? DEFAULT_BG_LIGHT);
   const effective = useEffectiveTheme();
@@ -71,9 +73,10 @@ export function useTheme(): void {
     root.dataset.theme = effective;
     root.dataset.accent = accent;
     root.dataset.bg = bg;
+    root.dataset.font = isFontSizeId(fontSize) ? fontSize : DEFAULT_FONT_SIZE_ID;
     root.style.colorScheme = effective;
     document
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', bgSwatch(effective, bg));
-  }, [effective, accentId, bgDark, bgLight]);
+  }, [effective, accentId, bgDark, bgLight, fontSize]);
 }

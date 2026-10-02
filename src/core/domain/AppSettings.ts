@@ -26,5 +26,9 @@ export class AppSettings {
     /** Background preset ids matching [data-bg] blocks in tokens.css + BACKGROUNDS. */
     public bgDark: string = 'obsidian',
     public bgLight: string = 'paper',
+    /** Text size id matching [data-font] blocks in tokens.css + FONT_SIZES. */
+    public fontSize: string = 'medium',
+    /** Desktop sidebar folded to icons-only (hover peeks). Persisted. */
+    public sidebarCollapsed: boolean = false,
   ) {}
 }

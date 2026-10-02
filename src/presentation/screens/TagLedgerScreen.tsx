@@ -10,6 +10,7 @@ import { Highlight } from '../utils/highlight';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { matchesTx } from '../utils/search';
 import { shortDate } from '../constants/dates';
+import { useReplay } from '../hooks/useReplay';
 import { LedgerSearch } from '../components';
 import styles from './TagLedgerScreen.module.css';
 
@@ -44,6 +45,19 @@ export function TagLedgerScreen() {
   const [renaming, setRenaming] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [addTagKey, replayAddTag] = useReplay();
+  const [renameKey, replayRename] = useReplay();
+  const [pickedRename, setPickedRename] = useState<string | null>(null);
+  const [saveKey, replaySave] = useReplay();
+  const [cancelKey, replayCancel] = useReplay();
+  const [noKey, replayNo] = useReplay();
+  const [yesKey, replayYes] = useReplay();
+  const [openKey, replayOpen] = useReplay();
+  const [pickedOpen, setPickedOpen] = useState<string | null>(null);
+  const [delKey, replayDel] = useReplay();
+  const [pickedDel, setPickedDel] = useState<string | null>(null);
+  const [backKey, replayBack] = useReplay();
+  const [delEmptyKey, replayDelEmpty] = useReplay();
 
   /** Rewrites the tag inside every matching transaction's metadata. */
   const applyToTxs = async (tag: string, transform: (tags: string[]) => string[]) => {
@@ -136,8 +150,8 @@ export function TagLedgerScreen() {
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { void handleCreate(); } }}
           />
-          <button className={styles.addBtn} onClick={() => void handleCreate()} disabled={!newName.trim()}>
-            Add tag
+          <button className={`${styles.addBtn} ${addTagKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayAddTag(); void handleCreate(); }} disabled={!newName.trim()}>
+            <span className="anim-target" key={addTagKey}>Add tag</span>
           </button>
         </div>
 
@@ -163,12 +177,12 @@ export function TagLedgerScreen() {
               >
                 {count > 0 && renaming !== name && deleting !== name && (
                   <button
-                    className={styles.tagRenameBtn}
+                    className={`${styles.tagRenameBtn} ${pickedRename === name && renameKey > 0 ? 'anim-swap' : ''}`}
                     title="Rename tag"
                     aria-label={`Rename ${name}`}
-                    onClick={(e) => { e.stopPropagation(); setRenaming(name); setRenameValue(name); }}
+                    onClick={(e) => { replayRename(); setPickedRename(name); e.stopPropagation(); setRenaming(name); setRenameValue(name); }}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></svg>
+                    <svg key={`${name}-${pickedRename === name ? renameKey : 0}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" /></svg>
                   </button>
                 )}
                 {renaming === name ? (
@@ -183,13 +197,13 @@ export function TagLedgerScreen() {
                       onKeyDown={(e) => { if (e.key === 'Enter') void handleRename(name); if (e.key === 'Escape') setRenaming(null); }}
                     />
                     <div className={styles.renameActions}>
-                      <button className={styles.actBtn} aria-label="Save name" title="Save"
-                        onClick={(e) => { e.stopPropagation(); void handleRename(name); }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <button className={`${styles.actBtn} ${saveKey > 0 ? 'anim-pop' : ''}`} aria-label="Save name" title="Save"
+                        onClick={(e) => { replaySave(); e.stopPropagation(); void handleRename(name); }}>
+                        <svg key={saveKey} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                       </button>
-                      <button className={styles.actBtn} aria-label="Cancel" title="Cancel"
-                        onClick={(e) => { e.stopPropagation(); setRenaming(null); }}>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+                      <button className={`${styles.actBtn} ${cancelKey > 0 ? 'anim-twist' : ''}`} aria-label="Cancel" title="Cancel"
+                        onClick={(e) => { replayCancel(); e.stopPropagation(); setRenaming(null); }}>
+                        <svg key={cancelKey} width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg>
                       </button>
                     </div>
                   </div>
@@ -201,8 +215,8 @@ export function TagLedgerScreen() {
                         : `Remove this tag from ${count} transaction${count === 1 ? '' : 's'}?`}
                     </span>
                     <div className={styles.deleteActions}>
-                      <button className={styles.cancelBtn} onClick={() => setDeleting(null)}>No</button>
-                      <button className={styles.confirmBtn} onClick={() => void handleDelete(name)}>Yes, remove</button>
+                      <button className={`${styles.cancelBtn} ${noKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNo(); setDeleting(null); }}><span className="anim-target" key={noKey}>No</span></button>
+                      <button className={`${styles.confirmBtn} ${yesKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayYes(); void handleDelete(name); }}><span className="anim-target" key={yesKey}>Yes, remove</span></button>
                     </div>
                   </div>
                 ) : (
@@ -211,15 +225,15 @@ export function TagLedgerScreen() {
                     <span className={styles.tagCount}>{count} transaction{count === 1 ? '' : 's'}</span>
                     <div className={styles.cardActions}>
                       <button
-                        className={styles.openBtn}
-                        onClick={(e) => { e.stopPropagation(); navigate(`/tags/${encodeURIComponent(name)}`); }}
+                        className={`${styles.openBtn} ${pickedOpen === name && openKey > 0 ? 'anim-pop' : ''}`}
+                        onClick={(e) => { replayOpen(); setPickedOpen(name); e.stopPropagation(); navigate(`/tags/${encodeURIComponent(name)}`); }}
                         disabled={count === 0}
                       >
-                        Open ledger
+                        <span className="anim-target" key={`${name}-${pickedOpen === name ? openKey : 0}`}>Open ledger</span>
                       </button>
-                      <button className={`${styles.actBtn} ${styles.actDanger}`} title="Delete tag" aria-label={`Delete ${name}`}
-                        onClick={(e) => { e.stopPropagation(); setDeleting(name); }}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                      <button className={`${styles.actBtn} ${styles.actDanger} ${pickedDel === name && delKey > 0 ? 'anim-twist' : ''}`} title="Delete tag" aria-label={`Delete ${name}`}
+                        onClick={(e) => { replayDel(); setPickedDel(name); e.stopPropagation(); setDeleting(name); }}>
+                        <svg key={`${name}-${pickedDel === name ? delKey : 0}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                       </button>
                     </div>
                   </>
@@ -242,7 +256,7 @@ export function TagLedgerScreen() {
 
   return (
     <div className={styles.page}>
-      <button className={styles.backBtn} onClick={() => navigate('/tags')}>← All tags</button>
+      <button className={`${styles.backBtn} ${backKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack(); navigate('/tags'); }}><span className="anim-target" key={backKey}>← All tags</span></button>
       <h2 className={styles.heading}>
         #{tag}
         <span className={styles.sub}> {tagged.length} transaction{tagged.length === 1 ? '' : 's'} · across all members</span>
@@ -259,8 +273,8 @@ export function TagLedgerScreen() {
           {sorted.length === 0 ? (
             <>
               No transactions carry this tag anymore.{' '}
-              <button className={styles.deleteInline} onClick={() => void handleDelete(tag!)}>
-                Delete this empty tag
+              <button className={`${styles.deleteInline} ${delEmptyKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayDelEmpty(); void handleDelete(tag!); }}>
+                <span className="anim-target" key={delEmptyKey}>Delete this empty tag</span>
               </button>
             </>
           ) : (

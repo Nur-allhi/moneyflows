@@ -4,6 +4,7 @@ import { DatePicker } from '../../../components/ui/date-picker';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
 import { useMemberStore } from '../../../presentation/stores/useMemberStore';
 import { useAccountStore } from '../../../presentation/stores/useAccountStore';
+import { useReplay } from '../../../presentation/hooks/useReplay';
 import type { OtherLedger } from '../../domain/types';
 import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
 
@@ -23,6 +24,19 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
   const [newOwnerName, setNewOwnerName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [memberTKey, replayMemberT] = useReplay();
+  const [extTKey, replayExtT] = useReplay();
+  const [memberTrigKey, replayMemberTrig] = useReplay();
+  const [ownerTrigKey, replayOwnerTrig] = useReplay();
+  const [memberCloseKey, replayMemberClose] = useReplay();
+  const [memberListKey, replayMemberList] = useReplay();
+  const [memberPicked, setMemberPicked] = useState<string | null>(null);
+  const [ownerCloseKey, replayOwnerClose] = useReplay();
+  const [ownerAddKey, replayOwnerAdd] = useReplay();
+  const [ownerListKey, replayOwnerList] = useReplay();
+  const [ownerPicked, setOwnerPicked] = useState<string | null>(null);
+  const [cancelKey, replayCancel] = useReplay();
+  const [saveKey, replaySave] = useReplay();
 
   useEffect(() => {
     if (isOpen) {
@@ -78,25 +92,25 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
         <DatePicker value={startingDate} onChange={setStartingDate} />
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => setOwnerType('member')} style={{ flex: 1, padding: 10, borderRadius: 9999, border: ownerType === 'member' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: ownerType === 'member' ? 'var(--color-primary)' : 'var(--color-surface)', color: ownerType === 'member' ? 'white' : 'var(--color-text)' }}>Member</button>
-        <button onClick={() => setOwnerType('external')} style={{ flex: 1, padding: 10, borderRadius: 9999, border: ownerType === 'external' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: ownerType === 'external' ? 'var(--color-primary)' : 'var(--color-surface)', color: ownerType === 'external' ? 'white' : 'var(--color-text)' }}>Other person</button>
+        <button onClick={() => { replayMemberT(); setOwnerType('member'); }} className={memberTKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: ownerType === 'member' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: ownerType === 'member' ? 'var(--color-primary)' : 'var(--color-surface)', color: ownerType === 'member' ? 'white' : 'var(--color-text)' }}><span className="anim-target" key={memberTKey}>Member</span></button>
+        <button onClick={() => { replayExtT(); setOwnerType('external'); }} className={extTKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: ownerType === 'external' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: ownerType === 'external' ? 'var(--color-primary)' : 'var(--color-surface)', color: ownerType === 'external' ? 'white' : 'var(--color-text)' }}><span className="anim-target" key={extTKey}>Other person</span></button>
       </div>
       {ownerType === 'member' ? (
         <div className={txStyles.fieldGroup}>
           <span className={txStyles.fieldLabel}>Member</span>
-          <button type="button" className={`${txStyles.pickerTrigger} ${ownerMemberId ? txStyles.pickerHasValue : ''}`} onClick={() => setShowMemberPicker(true)}>
-            {ownerMemberId
+          <button type="button" className={`${txStyles.pickerTrigger} ${ownerMemberId ? txStyles.pickerHasValue : ''} ${memberTrigKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMemberTrig(); setShowMemberPicker(true); }}>
+            <span className="anim-target" key={memberTrigKey}>{ownerMemberId
               ? <><span className={txStyles.pickerValue}>{members.find((m) => m.id === ownerMemberId)?.name ?? 'Select member'}</span><span className={txStyles.pickerArrow}>▾</span></>
-              : <span className={txStyles.pickerPlaceholder}>Select member</span>}
+              : <span className={txStyles.pickerPlaceholder}>Select member</span>}</span>
           </button>
         </div>
       ) : (
         <div className={txStyles.fieldGroup}>
           <span className={txStyles.fieldLabel}>Other Person</span>
-          <button type="button" className={`${txStyles.pickerTrigger} ${ownerName ? txStyles.pickerHasValue : ''}`} onClick={() => setShowOwnerPicker(true)}>
-            {ownerName
+          <button type="button" className={`${txStyles.pickerTrigger} ${ownerName ? txStyles.pickerHasValue : ''} ${ownerTrigKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayOwnerTrig(); setShowOwnerPicker(true); }}>
+            <span className="anim-target" key={ownerTrigKey}>{ownerName
               ? <><span className={txStyles.pickerValue}>{ownerName}</span><span className={txStyles.pickerArrow}>▾</span></>
-              : <span className={txStyles.pickerPlaceholder}>Select person or write new</span>}
+              : <span className={txStyles.pickerPlaceholder}>Select person or write new</span>}</span>
           </button>
         </div>
       )}
@@ -111,16 +125,16 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
           <div className={txStyles.pickerModal} onClick={(e) => e.stopPropagation()}>
             <div className={txStyles.pickerHeader}>
               <span className={txStyles.pickerTitle}>Select Member</span>
-              <button className={txStyles.pickerClose} onClick={() => setShowMemberPicker(false)}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              <button className={`${txStyles.pickerClose} ${memberCloseKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayMemberClose(); setShowMemberPicker(false); }}>
+                <svg key={memberCloseKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
               </button>
             </div>
             <div className={txStyles.pickerList}>
               {members.length === 0
                 ? <div className={txStyles.pickerEmpty}>No members yet</div>
                 : members.map((m) => (
-                    <button key={m.id} className={txStyles.pickerItem} onClick={() => { setOwnerMemberId(m.id); setShowMemberPicker(false); }}>
-                      <span className={txStyles.pickerItemName}>{m.name}</span>
+                    <button key={m.id} className={`${txStyles.pickerItem} ${memberPicked === m.id && memberListKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMemberList(); setMemberPicked(m.id); setOwnerMemberId(m.id); setShowMemberPicker(false); }}>
+                      <span className="anim-target" key={`${m.id}-${memberPicked === m.id ? memberListKey : 0}`}><span className={txStyles.pickerItemName}>{m.name}</span></span>
                     </button>
                   ))}
             </div>
@@ -133,8 +147,8 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
           <div className={txStyles.pickerModal} onClick={(e) => e.stopPropagation()}>
             <div className={txStyles.pickerHeader}>
               <span className={txStyles.pickerTitle}>Select Other Person</span>
-              <button className={txStyles.pickerClose} onClick={() => setShowOwnerPicker(false)}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              <button className={`${txStyles.pickerClose} ${ownerCloseKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayOwnerClose(); setShowOwnerPicker(false); }}>
+                <svg key={ownerCloseKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
               </button>
             </div>
             <div className={txStyles.tagPickerCreate}>
@@ -145,16 +159,17 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
                   setShowOwnerPicker(false);
                 }
               }} />
-              <button className={txStyles.tagPickerAdd} disabled={!newOwnerName.trim()} onClick={() => {
+              <button className={`${txStyles.tagPickerAdd} ${ownerAddKey > 0 ? 'anim-pop' : ''}`} disabled={!newOwnerName.trim()} onClick={() => {
+                replayOwnerAdd();
                 if (newOwnerName.trim()) { setOwnerName(newOwnerName.trim()); setNewOwnerName(''); setShowOwnerPicker(false); }
-              }}>Add</button>
+              }}><span className="anim-target" key={ownerAddKey}>Add</span></button>
             </div>
             <div className={txStyles.pickerList}>
               {allExternalNames.length === 0
                 ? <div className={txStyles.pickerEmpty}>No other persons yet — write one above</div>
                 : allExternalNames.map((n) => (
-                    <button key={n} className={txStyles.pickerItem} onClick={() => { setOwnerName(n); setShowOwnerPicker(false); }}>
-                      <span className={txStyles.pickerItemName}>{n}</span>
+                    <button key={n} className={`${txStyles.pickerItem} ${ownerPicked === n && ownerListKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayOwnerList(); setOwnerPicked(n); setOwnerName(n); setShowOwnerPicker(false); }}>
+                      <span className="anim-target" key={`${n}-${ownerPicked === n ? ownerListKey : 0}`}><span className={txStyles.pickerItemName}>{n}</span></span>
                     </button>
                   ))}
             </div>
@@ -164,6 +179,6 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
     </div>
   );
 
-  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="Rename Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}>Cancel</button><button onClick={handleSave} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', border: 'none' }}>Save</button></div></BottomSheet>;
+  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="Rename Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={() => { replayCancel(); onClose(); }} className={cancelKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}><span className="anim-target" key={cancelKey}>Cancel</span></button><button onClick={() => { replaySave(); void handleSave(); }} className={saveKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', border: 'none' }}><span className="anim-target" key={saveKey}>Save</span></button></div></BottomSheet>;
   return <Modal isOpen={isOpen} onClose={onClose} title="Rename Ledger" onSave={handleSave} saveLabel="Save">{form}</Modal>;
 }

@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.11.0',
+    items: [
+      'Every button now reacts when you tap it, and the header icons play little animations.',
+      'Text size option in Settings → Appearance — Small, Medium or Large, applied everywhere instantly.',
+      'The sidebar now folds away to icons (hover to peek), with fresh icons for Members, Groups and Loans.',
+    ],
+  },
+  {
     version: '1.10.0',
     items: [
       'The loading screen now shows the app version at the bottom.',

@@ -5,6 +5,7 @@ import { useTransactionStore } from '../stores/useTransactionStore';
 import { Account } from '../../core/domain/Account';
 import type { AccountType } from '../../core/domain/Account';
 import { ACCOUNT_TYPE_OPTIONS } from '../constants/labels';
+import { useReplay } from '../hooks/useReplay';
 import styles from './EditAccountModal.module.css';
 
 interface EditAccountModalProps {
@@ -24,6 +25,9 @@ export function EditAccountModal({ accountId, onClose }: EditAccountModalProps) 
   const [type, setType] = useState<AccountType>('bank');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteKey, replayDelete] = useReplay();
+  const [cancelKey, replayCancel] = useReplay();
+  const [confirmKey, replayConfirm] = useReplay();
 
   useEffect(() => {
     if (account) {
@@ -78,13 +82,13 @@ export function EditAccountModal({ accountId, onClose }: EditAccountModalProps) 
                 : 'No transactions reference this account. '}
               Deleting moves it to the Recycle Bin — restorable for 30 days.
             </p>
-            <button className={styles.deleteBtn} onClick={() => setConfirmDelete(true)}>Delete Account</button>
+            <button className={`${styles.deleteBtn} ${deleteKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayDelete(); setConfirmDelete(true); }}><span className="anim-target" key={deleteKey}>Delete Account</span></button>
           </>
         ) : (
           <div className={styles.confirmRow}>
             <span className={styles.confirmText}>Are you sure?</span>
-            <button className={styles.cancelBtn} onClick={() => setConfirmDelete(false)}>Cancel</button>
-            <button className={styles.confirmBtn} onClick={handleDelete}>Yes, delete</button>
+            <button className={`${styles.cancelBtn} ${cancelKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCancel(); setConfirmDelete(false); }}><span className="anim-target" key={cancelKey}>Cancel</span></button>
+            <button className={`${styles.confirmBtn} ${confirmKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayConfirm(); void handleDelete(); }}><span className="anim-target" key={confirmKey}>Yes, delete</span></button>
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import type { AccountType } from '../../core/domain/Account';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
+import { useReplay } from '../hooks/useReplay';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { ACCOUNT_TYPE_LABEL, ACCOUNT_TYPE_OPTIONS } from '../constants/labels';
 import { ledgerGradient } from '../constants/gradients';
@@ -24,6 +25,19 @@ export function SetupWizard() {
   const [accountDraft, setAccountDraft] = useState<{ memberIdx: number; name: string; type: AccountType; balance: string }>({ memberIdx: 0, name: '', type: 'bank', balance: '0' });
   const [accountsAdded, setAccountsAdded] = useState<{ name: string; type: AccountType; memberName: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [skipKey, replaySkip] = useReplay();
+  const [startKey, replayStart] = useReplay();
+  const [addMemberKey, replayAddMember] = useReplay();
+  const [back1Key, replayBack1] = useReplay();
+  const [cont1Key, replayCont1] = useReplay();
+  const [addAcctKey, replayAddAcct] = useReplay();
+  const [back2Key, replayBack2] = useReplay();
+  const [cont2Key, replayCont2] = useReplay();
+  const [back3Key, replayBack3] = useReplay();
+  const [nextKey, replayNext] = useReplay();
+  const [emptyKey, replayEmpty] = useReplay();
+  const [sampleKey, replaySample] = useReplay();
+  const [back4Key, replayBack4] = useReplay();
 
   const finish = (goDashboard = true) => {
     updateSettings({ setupComplete: true });
@@ -93,7 +107,7 @@ export function SetupWizard() {
               <span key={i} className={`${styles.dot} ${i <= step ? styles.dotActive : ''}`} />
             ))}
           </div>
-          <button className={styles.skip} onClick={() => finish()}>Skip → Dashboard</button>
+          <button className={`${styles.skip} ${skipKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replaySkip(); finish(); }}><span className="anim-target" key={skipKey}>Skip → Dashboard</span></button>
         </div>
         <div className={styles.progressWrap}><div className={styles.progressFill} style={{ width: `${progress}%` }} /></div>
 
@@ -108,7 +122,7 @@ export function SetupWizard() {
                 <span className={styles.illusCard}>📒 Ledger</span>
                 <span className={styles.illusCard}>🔒 Safe</span>
               </div>
-              <button className={styles.primary} onClick={() => setStep(1)}>Get Started</button>
+              <button className={`${styles.primary} ${startKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayStart(); setStep(1); }}><span className="anim-target" key={startKey}>Get Started</span></button>
             </div>
           )}
 
@@ -123,12 +137,12 @@ export function SetupWizard() {
                     <input className={styles.input} placeholder={i === 0 ? 'You (Admin)' : 'Member name'} value={n} onChange={(e) => handleMemberChange(i, e.target.value)} />
                   </div>
                 ))}
-                <button className={styles.ghost} onClick={handleAddMemberRow}>+ Add member</button>
+                <button className={`${styles.ghost} ${addMemberKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayAddMember(); handleAddMemberRow(); }}><span className="anim-target" key={addMemberKey}>+ Add member</span></button>
               </div>
               {error && <div className={styles.error}>{error}</div>}
               <div className={styles.actions}>
-                <button className={styles.secondary} onClick={() => setStep(0)}>Back</button>
-                <button className={styles.primary} onClick={handleContinueMembers}>Continue → Add your money</button>
+                <button className={`${styles.secondary} ${back1Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack1(); setStep(0); }}><span className="anim-target" key={back1Key}>Back</span></button>
+                <button className={`${styles.primary} ${cont1Key > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCont1(); void handleContinueMembers(); }}><span className="anim-target" key={cont1Key}>Continue → Add your money</span></button>
               </div>
             </div>
           )}
@@ -148,7 +162,7 @@ export function SetupWizard() {
               </div>
               <input className={styles.input} placeholder="Account name (e.g. bKash)" value={accountDraft.name} onChange={(e) => setAccountDraft((p) => ({ ...p, name: e.target.value }))} />
               <input className={styles.input} placeholder="Starting balance (optional)" inputMode="numeric" value={accountDraft.balance} onChange={(e) => setAccountDraft((p) => ({ ...p, balance: e.target.value.replace(/[^0-9]/g, '') }))} />
-              <button className={styles.ghost} onClick={handleAddAccount}>+ Add account</button>
+              <button className={`${styles.ghost} ${addAcctKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayAddAcct(); void handleAddAccount(); }}><span className="anim-target" key={addAcctKey}>+ Add account</span></button>
               {accountsAdded.length > 0 && (
                 <div className={styles.added}>
                   {accountsAdded.map((a, i) => (
@@ -158,8 +172,8 @@ export function SetupWizard() {
               )}
               {error && <div className={styles.error}>{error}</div>}
               <div className={styles.actions}>
-                <button className={styles.secondary} onClick={() => setStep(1)}>Back</button>
-                <button className={styles.primary} onClick={() => setStep(3)}>Continue → See how it works</button>
+                <button className={`${styles.secondary} ${back2Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack2(); setStep(1); }}><span className="anim-target" key={back2Key}>Back</span></button>
+                <button className={`${styles.primary} ${cont2Key > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCont2(); setStep(3); }}><span className="anim-target" key={cont2Key}>Continue → See how it works</span></button>
               </div>
             </div>
           )}
@@ -178,8 +192,8 @@ export function SetupWizard() {
               </div>
               <p className={styles.sub}>Tap any row to edit. Use search and filters on every ledger.</p>
               <div className={styles.actions}>
-                <button className={styles.secondary} onClick={() => setStep(2)}>Back</button>
-                <button className={styles.primary} onClick={() => setStep(4)}>Next</button>
+                <button className={`${styles.secondary} ${back3Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack3(); setStep(2); }}><span className="anim-target" key={back3Key}>Back</span></button>
+                <button className={`${styles.primary} ${nextKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNext(); setStep(4); }}><span className="anim-target" key={nextKey}>Next</span></button>
               </div>
             </div>
           )}
@@ -189,11 +203,11 @@ export function SetupWizard() {
               <h2 className={styles.h2}>Try it</h2>
               <p className={styles.sub}>Start empty or load a sample family to explore instantly. Sample data can be deleted from Recycle Bin anytime.</p>
               <div className={styles.choices}>
-                <button className={styles.choice} onClick={() => finish()}><span className={styles.choiceTitle}>Start empty</span><span className={styles.choiceSub}>Recommended — your real data</span></button>
-                <button className={styles.choicePrimary} onClick={handleLoadSample}><span className={styles.choiceTitle}>Load sample family</span><span className={styles.choiceSub}>4 members · 6 accounts · 12 transactions</span></button>
+                <button className={`${styles.choice} ${emptyKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEmpty(); finish(); }}><span className="anim-target" key={emptyKey}><span className={styles.choiceTitle}>Start empty</span><span className={styles.choiceSub}>Recommended — your real data</span></span></button>
+                <button className={`${styles.choicePrimary} ${sampleKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySample(); void handleLoadSample(); }}><span className="anim-target" key={sampleKey}><span className={styles.choiceTitle}>Load sample family</span><span className={styles.choiceSub}>4 members · 6 accounts · 12 transactions</span></span></button>
               </div>
               <div className={styles.actions}>
-                <button className={styles.secondary} onClick={() => setStep(3)}>Back</button>
+                <button className={`${styles.secondary} ${back4Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack4(); setStep(3); }}><span className="anim-target" key={back4Key}>Back</span></button>
               </div>
             </div>
           )}
