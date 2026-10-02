@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.7.0',
+    items: [
+      'The top search bar now searches everything — transactions, accounts, members, loans, groups, tags and other ledgers — from any page.',
+      'Start typing to see grouped results, then tap one to jump straight to it.',
+      'Each ledger still has its own search that looks only inside that ledger.',
+    ],
+  },
+  {
     version: '1.6.0',
     items: [
       'Loan ledgers now break down what you owe per lender — tap Owed to to see each bank or person separately.',
