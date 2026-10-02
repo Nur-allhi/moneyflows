@@ -137,6 +137,9 @@
   text-align: center;
   color: var(--color-text-secondary);
 }
+.printTable {
+  display: none;
+}
 @media (max-width: 640px) {
   .container {
     padding: 16px;
@@ -155,5 +158,31 @@
   }
   .section + .section {
     break-before: page;
+  }
+  .screenTable {
+    display: none;
+  }
+  .printTable {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    color: var(--color-text);
+  }
+  .printTable th,
+  .printTable td {
+    border: 1px solid var(--color-border);
+    padding: 4px 6px;
+    text-align: left;
+  }
+  .printTable thead th {
+    background: oklch(93% 0 0);
+    font-weight: 700;
+  }
+  .printTable td:nth-child(4),
+  .printTable td:nth-child(5),
+  .printTable td:nth-child(6) {
+    text-align: right;
+    white-space: nowrap;
   }
 }
