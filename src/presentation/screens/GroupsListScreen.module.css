@@ -43,7 +43,7 @@
 
 .addBtn:hover {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
   box-shadow: 0 0 20px var(--color-primary-glow);
 }
 

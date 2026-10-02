@@ -644,3 +644,19 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Phase 17 complete, pushed on `feature/theme-accent`. Next: merge confirmation.
+
+## Session 2026-10-02 (BUG-5 account cards)
+
+### Changes
+- User report: card text doesn't adapt to light mode; asked all components auto-adjust
+- Diagnosed: cards keep fixed dark gradients but inherit theme ink (dark-on-dark in light); audited all remaining `color:#fff/white` — avatars/badges/semantic are correct, found missed solid-primary whites (filter pills, add hovers, obBtn, filterIconBox) breaking under gold/teal
+- Note: user's :3000 runs pre-theme code (no header toggle) — verified there that old build has no light mode; all verification done on :5174 (feature branch) with demo.db
+- Logged BUG-5 first per §3.11; owner-approved option A (dark cards, white ink)
+- Fix: `.card` pins white ink, actions white, `:active` → press-scale (was gradient-stomping wash, BUG-4 pattern); missed on-primary whites → ink token; identity AccountCard row notes pinned ink
+- Verified live on demo.db (7 real cards, light mode): gradient bg + all-white text via computed styles; build green
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-5 fixed, pushed on `feature/theme-accent` (CHANGELOG deferred to `dev` merge). Next: merge confirmation.

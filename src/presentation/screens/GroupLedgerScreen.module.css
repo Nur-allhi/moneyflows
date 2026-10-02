@@ -110,12 +110,12 @@
 .filterPillActive {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: white;
+  color: var(--color-text-on-primary);
   box-shadow: 0 0 16px var(--color-primary-glow);
 }
 .filterPillActive:hover {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-text-on-primary);
 }
 .filterIcon { display: flex; flex-shrink: 0; }
 .loading {
