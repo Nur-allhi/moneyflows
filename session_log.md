@@ -728,3 +728,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Complete on dev (`1ddb30d`), pushed to `origin/dev`. Next: user call (Other Ledgers V2 on "next update", or new work).
+
+## Session 2026-10-02 (release 1.10.0 → master)
+
+### Changes
+- User-approved release: bump 1.9.0 → 1.10.0 MINOR (user chose MINOR over PATCH) in one commit `b1c3f1b`: package.json + whatsNew 1.10.0 entry ('loading screen now shows the app version at the bottom') + CHANGELOG `## [1.10.0] - 2026-10-02` Added
+- Gates: typecheck PASS, build PASS, unit 48/48 PASS, eslint clean on touched file (1 pre-existing warning in untouched LedgerSection.tsx — disclosed), `detect_changes` vs master LOW (SplashScreen only, no affected processes)
+- Merged `dev → master` no-ff `104eeaa` + tagged `v1.10.0` + pushed `master --follow-tags`; `dev` fast-forwarded to `master`, pushed — back on `dev`
+
+### Skill(s) Used
+- senior-frontend, gitnexus
+
+### Status
+- v1.10.0 live on master + dev. Next: user call (Other Ledgers V2 on "next update", or new work).
