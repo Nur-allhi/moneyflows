@@ -6,6 +6,7 @@ import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { isFsaSupported, folderSync } from '../../infrastructure/database/FolderSync';
 import type { SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
 import { WhatsNewModal } from './WhatsNewModal';
+import { AppearanceSection } from './AppearanceSection';
 import { whatsNewFor } from '../constants/whatsNew';
 import { APP_VERSION } from '../constants/appVersion';
 import {
@@ -197,6 +198,13 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           placeholder="e.g. en-IN, en-US, bn-BD"
         />
       </div>
+
+      <div className={fieldStyles.separator} />
+
+      <div className={fieldStyles.sectionTitle}>Appearance</div>
+      <AppearanceSection />
+
+      <div className={fieldStyles.separator} />
 
       <div className={fieldStyles.fieldGroup}>
         <label className={fieldStyles.fieldLabel}>Primary Member</label>
