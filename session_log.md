@@ -749,3 +749,7 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Ready for UI fixes. Next: user lists the fixes.
+
+### Header click animations (same session)
+- `Header.tsx`/`Header.module.css` on `feature/ui-polish`: one-shot icon replays via `useReplay()` remount keys — gear 360° spin, theme rotate-in swap, plus 90° twist, bell ring swing, back nudge, search pop, clear twist; `prefers-reduced-motion` disables all; existing hover/active states untouched
+- Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS, `detect_changes` LOW (Header only, no affected processes; pre-edit impact HIGH disclosed — structural, change is additive-only)

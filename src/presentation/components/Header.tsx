@@ -29,6 +29,12 @@ function formatDate(): string {
   return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+/** One-shot click animation replay: bump the key to remount the icon and restart its keyframe. */
+function useReplay(): [number, () => void] {
+  const [n, setN] = useState(0);
+  return [n, () => setN((v) => v + 1)];
+}
+
 export function Header({
   title,
   showLogo = true,
@@ -48,7 +54,15 @@ export function Header({
   const [dropOpen, setDropOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const effectiveTheme = useEffectiveTheme();
+  const [backKey, replayBack] = useReplay();
+  const [addKey, replayAdd] = useReplay();
+  const [searchKey, replaySearch] = useReplay();
+  const [gearKey, replayGear] = useReplay();
+  const [themeKey, replayTheme] = useReplay();
+  const [bellKey, replayBell] = useReplay();
+  const [clearKey, replayClear] = useReplay();
   const toggleTheme = () => {
+    replayTheme();
     useSettingsStore
       .getState()
       .updateSettings({ theme: effectiveTheme === 'light' ? 'dark' : 'light' });
@@ -76,8 +90,8 @@ export function Header({
             )
           ) : (
             <>
-              <button onClick={() => navigate(-1)} className={styles.backBtn} aria-label="Back">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
+              <button onClick={() => { replayBack(); navigate(-1); }} className={`${styles.backBtn} ${backKey > 0 ? styles.backNudge : ''}`} aria-label="Back">
+                <svg key={backKey} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
                   <line x1="19" y1="12" x2="5" y2="12" />
                   <polyline points="12 19 5 12 12 5" />
                 </svg>
@@ -156,14 +170,15 @@ export function Header({
         />
         {query && (
           <button
-            className={styles.searchClear}
+            className={`${styles.searchClear} ${clearKey > 0 ? styles.clearTwist : ''}`}
             onClick={() => {
+              replayClear();
               setQuery('');
               closeDrop();
             }}
             aria-label="Clear search"
           >
-            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M3 3l6 6M9 3l-6 6" />
             </svg>
           </button>
@@ -182,20 +197,20 @@ export function Header({
 
       <div className={styles.right}>
         {showDate && <span className={styles.date}>{formatDate()}</span>}
-        <button className={styles.addBtn} onClick={() => useModalStore.getState().open('transaction-form')} aria-label="New transaction">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <button className={`${styles.addBtn} ${addKey > 0 ? styles.addTwist : ''}`} onClick={() => { replayAdd(); useModalStore.getState().open('transaction-form'); }} aria-label="New transaction">
+          <svg key={addKey} width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
         <div className={styles.settingsWrap}>
-          <button className={`${styles.mobileSearchBtn} ${searchActive ? styles.searchActiveBtn : ''}`} onClick={onSearchToggle} aria-label="Search">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+          <button className={`${styles.mobileSearchBtn} ${searchActive ? styles.searchActiveBtn : ''} ${searchKey > 0 ? styles.searchPop : ''}`} onClick={() => { replaySearch(); onSearchToggle?.(); }} aria-label="Search">
+            <svg key={searchKey} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
               <circle cx="7" cy="7" r="5.5" />
               <path d="M11 11l3.5 3.5" />
             </svg>
           </button>
-          <button className={styles.mobileSettingsBtn} onClick={() => navigate('/settings')} aria-label="Settings" title="Settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+          <button className={`${styles.mobileSettingsBtn} ${gearKey > 0 ? styles.gearSpin : ''}`} onClick={() => { replayGear(); navigate('/settings'); }} aria-label="Settings" title="Settings">
+            <svg key={gearKey} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
@@ -206,6 +221,7 @@ export function Header({
             aria-label={effectiveTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
             title={effectiveTheme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
+            <span key={`${effectiveTheme}-${themeKey}`} className={themeKey > 0 ? styles.themeSwap : styles.themeIcon}>
             {effectiveTheme === 'light' ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
@@ -223,9 +239,10 @@ export function Header({
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
               </svg>
             )}
+            </span>
           </button>
         </div>
-        <button className={styles.notifBtn} aria-label="Notifications">
+        <button className={`${styles.notifBtn} ${bellKey > 0 ? styles.bellRing : ''}`} onClick={replayBell} aria-label="Notifications">
           {'\uD83D\uDD14'}
         </button>
       </div>
