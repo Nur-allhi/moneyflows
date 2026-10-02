@@ -82,7 +82,11 @@ export async function downloadMemberReportPdf(
   let cursorY = 52;
   let started = false;
   const section = (title: string, sub: string, rows: MemberReportRow[]): void => {
-    if (started) cursorY = tableY() + 12;
+    // Every section starts on a fresh page — never two accounts on one page.
+    if (started) {
+      doc.addPage();
+      cursorY = 20;
+    }
     started = true;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);

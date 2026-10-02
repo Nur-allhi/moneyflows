@@ -163,4 +163,7 @@
     max-width: none;
     padding: 0;
   }
+  .section + .section {
+    break-before: page;
+  }
 }
