@@ -727,4 +727,4 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - senior-frontend
 
 ### Status
-- Complete on dev (uncommitted). Next: user call (Other Ledgers V2 on "next update", or new work).
+- Complete on dev (`1ddb30d`), pushed to `origin/dev`. Next: user call (Other Ledgers V2 on "next update", or new work).
