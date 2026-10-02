@@ -13,6 +13,8 @@ import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_D
 import { getStackDisplayName } from '../../domain/loanDisplay';
 import { ProgressBar, LedgerTable, LedgerSearch, MobileLedger } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
+import { useReplay } from '../../../presentation/hooks/useReplay';
+import { Filter, BanknoteArrowUp, BanknoteArrowDown } from 'lucide-react';
 import { Highlight } from '../../../presentation/utils/highlight';
 import { useDebouncedValue } from '../../../presentation/utils/useDebouncedValue';
 import { matchesTx } from '../../../presentation/utils/search';
@@ -45,6 +47,21 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const [ledgerQuery, setLedgerQuery] = useState('');
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const filterRef = useRef<HTMLDivElement>(null);
+  const [pdfKey, replayPdf] = useReplay();
+  const [drawerKey, replayDrawer] = useReplay();
+  const [typeFKey, replayTypeF] = useReplay();
+  const [typeFPicked, setTypeFPicked] = useState<string | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+  const scheduleClose = useCallback(() => {
+    clearCloseTimer();
+    closeTimerRef.current = window.setTimeout(() => setShowFilters(false), 500);
+  }, [clearCloseTimer]);
 
   useEffect(() => {
     fetchTransactions({ accountId: stack.debtorId });
@@ -58,14 +75,22 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   }, []);
 
   useEffect(() => {
+    if (!showFilters) {
+      clearCloseTimer();
+      return;
+    }
     const handler = (e: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
         setShowFilters(false);
       }
     };
-    if (showFilters) document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showFilters]);
+    document.addEventListener('mousedown', handler);
+    scheduleClose();
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      clearCloseTimer();
+    };
+  }, [showFilters, scheduleClose, clearCloseTimer]);
 
   const accountById = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a])), [accounts]);
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
@@ -480,62 +505,108 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
       ) : (
         <div className={styles.ledgerSection}>
           <div className={styles.ledgerHead}>
-            <h3 className={styles.ledgerTitle}>Transaction Ledger</h3>
-            <div className={styles.ledgerActions}>
-              <button className={styles.pdfBtn} onClick={openExportChooser} title="Download PDF">
-                <svg className={styles.pdfBtnIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, flexShrink: 0 }}>
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg> <span className={styles.pdfBtnLabel}>Download PDF</span>
-              </button>
+            <h3 className={styles.ledgerTitle}>Transaction Ledger <span className={styles.txCount}>{filteredTxs.length}</span></h3>
+            <div className={styles.ledgerActions} ref={filterRef}>
               <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
-              <div className={styles.filterWrap} ref={filterRef}>
-                <button
-                  className={`${styles.filterBtn} ${activeFilterCount > 0 ? styles.filterActive : ''}`}
-                  onClick={() => setShowFilters((s) => !s)}
-                >
-                  {'\u{1F50D}'} Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
-                </button>
-                {showFilters && (
-                  <div className={styles.filterDropdown}>
-                    <div className={styles.filterGroup}>
-                      <span className={styles.filterGroupLabel}>Type</span>
-                      <div className={styles.filterPills}>
-                        {(['all', 'lend', 'repay'] as const).map((f) => (
-                          <button
-                            key={f}
-                            className={`${styles.pill} ${txFilter === f ? styles.pillActive : ''}`}
-                            onClick={() => setTxFilter(f)}
-                          >{f === 'all' ? 'All' : f === 'lend' ? 'Loans Issued' : 'Repayments'}</button>
-                        ))}
-                      </div>
+              <button
+                className={`${styles.pdfBtn} ${pdfKey > 0 ? 'anim-pop' : ''}`}
+                onClick={() => { replayPdf(); openExportChooser(); }}
+                title="Download PDF"
+                aria-label="Download PDF"
+              >
+                <span className="anim-target" key={pdfKey}>
+                  <span className={styles.pdfBtnIcon}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                  </span>
+                  <span className={styles.pdfBtnLabel}>Download PDF</span>
+                </span>
+              </button>
+              <button
+                className={`${styles.pdfBtn} ${styles.drawerToggle} ${showFilters ? styles.drawerToggleOpen : ''} ${drawerKey > 0 ? 'anim-pop' : ''}`}
+                onClick={() => { replayDrawer(); setShowFilters((s) => !s); }}
+                title={showFilters ? 'Hide filters' : 'Show filters'}
+                aria-label={showFilters ? 'Hide filters' : 'Show filters'}
+                aria-expanded={showFilters}
+              >
+                <span className="anim-target" key={drawerKey}>
+                  <span className={styles.pdfBtnIcon}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                  </span>
+                  <span className={styles.pdfBtnLabel}>More</span>
+                  {activeFilterCount > 0 && <span className={styles.filterCount}>{activeFilterCount}</span>}
+                </span>
+              </button>
+              <div
+                className={`${styles.filterDrawer} ${showFilters ? styles.filterDrawerOpen : ''}`}
+                onMouseEnter={clearCloseTimer}
+                onMouseLeave={scheduleClose}
+                onMouseMove={() => {
+                  clearCloseTimer();
+                  scheduleClose();
+                }}
+              >
+                <div className={styles.filterDrawerInner}>
+                  <div className={styles.drawerFiltersRow}>
+                    <div className={styles.ledgerFilterPills}>
+                      {([
+                        { key: 'all', label: 'All' },
+                        { key: 'lend', label: 'Loans Issued' },
+                        { key: 'repay', label: 'Repayments' },
+                      ] as const).map((f) => (
+                        <button
+                          key={f.key}
+                          className={`${styles.ledgerFilterIconBtn} ${txFilter === f.key ? styles.ledgerFilterIconBtnActive : ''} ${typeFPicked === f.key && typeFKey > 0 ? 'anim-pop' : ''}`}
+                          onClick={() => {
+                            replayTypeF();
+                            setTypeFPicked(f.key);
+                            setTxFilter(f.key);
+                            clearCloseTimer();
+                            scheduleClose();
+                          }}
+                          title={f.label}
+                          aria-label={f.label}
+                          aria-pressed={txFilter === f.key}
+                        >
+                          <span className="anim-target" key={`${f.key}-${typeFPicked === f.key ? typeFKey : 0}`}>
+                            <span className={styles.filterIconBox}>
+                              {f.key === 'all' ? (
+                                <Filter size={14} strokeWidth={1.8} />
+                              ) : f.key === 'lend' ? (
+                                <BanknoteArrowDown size={14} strokeWidth={1.8} />
+                              ) : (
+                                <BanknoteArrowUp size={14} strokeWidth={1.8} />
+                              )}
+                            </span>
+                            <span className={styles.filterLabel}>{f.label}</span>
+                          </span>
+                        </button>
+                      ))}
                     </div>
-                    <div className={styles.filterGroup}>
-                      <span className={styles.filterGroupLabel}>Date</span>
-                      <div className={styles.filterPills}>
-                        {(['none', 'month', 'range'] as const).map((d) => (
-                          <button
-                            key={d}
-                            className={`${styles.pill} ${dateMode === d ? styles.pillActive : ''}`}
-                            onClick={() => setDateMode(d)}
-                          >{d === 'none' ? 'All' : d === 'month' ? 'Month' : 'Range'}</button>
-                        ))}
-                      </div>
-                      {dateMode === 'month' && (
-                        <input type="month" className={styles.filterInput} value={month} onChange={(e) => setMonth(e.target.value)} />
-                      )}
-                      {dateMode === 'range' && (
-                        <div className={styles.dateRangeRow}>
-                          <input type="date" className={styles.filterInput} value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="Start" />
-                          <span className={styles.dateSep}>to</span>
-                          <input type="date" className={styles.filterInput} value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="End" />
-                        </div>
-                      )}
-                    </div>
-                    <button className={styles.clearBtn} onClick={clearFilters}>Clear Filters</button>
                   </div>
-                )}
+                  <div className={styles.drawerDateRow}>
+                    <span className={styles.filterGroupLabel}>Date</span>
+                    <div className={styles.filterPills}>
+                      {(['none', 'month', 'range'] as const).map((d) => (
+                        <button
+                          key={d}
+                          className={`${styles.pill} ${dateMode === d ? styles.pillActive : ''}`}
+                          onClick={() => { setDateMode(d); clearCloseTimer(); scheduleClose(); }}
+                        >{d === 'none' ? 'All' : d === 'month' ? 'Month' : 'Range'}</button>
+                      ))}
+                    </div>
+                    {dateMode === 'month' && (
+                      <input type="month" className={styles.filterInput} value={month} onChange={(e) => setMonth(e.target.value)} />
+                    )}
+                    {dateMode === 'range' && (
+                      <div className={styles.dateRangeRow}>
+                        <input type="date" className={styles.filterInput} value={startDate} onChange={(e) => setStartDate(e.target.value)} placeholder="Start" />
+                        <span className={styles.dateSep}>to</span>
+                        <input type="date" className={styles.filterInput} value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="End" />
+                      </div>
+                    )}
+                  </div>
+                  <button className={styles.clearBtn} onClick={clearFilters}>Clear Filters</button>
+                </div>
               </div>
             </div>
           </div>

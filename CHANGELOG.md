@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Loan ledger header unified with the accounts ledger: title + count, expanding Download PDF / More circle buttons, filter drawer with type icon pills, date pills and Clear Filters.
+
 ## [1.12.0] - 2026-10-02
 
 ### Added
