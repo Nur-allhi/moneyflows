@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { GlassPanel, LedgerTable } from '../../../presentation/components';
+import { GlassPanel, LedgerTable, Modal, BottomSheet } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import { useMemberStore } from '../../../presentation/stores/useMemberStore';
 import { useAccountStore } from '../../../presentation/stores/useAccountStore';
@@ -10,13 +10,13 @@ import { formatAmount, formatAmountParts } from '../../../presentation/utils/for
 import { shortDate } from '../../../presentation/constants/dates';
 import { MemberReportService } from '../../application/MemberReportService';
 import type { MemberReport, MemberReportRow } from '../../domain/types';
+import { ReportFilterSheet } from './ReportFilterSheet';
+import type { ReportPreset } from './ReportFilterSheet';
 import { downloadMemberReportPdf } from '../memberReportPdf';
 import { downloadMemberReportCsv } from '../memberReportCsv';
 import styles from './MemberReportScreen.module.css';
 
-type Preset = 'all' | 'month' | 'last3' | 'custom';
-
-function presetRange(preset: Preset, customStart: string, customEnd: string): { start?: string; end?: string; month?: string } {
+function presetRange(preset: ReportPreset, customStart: string, customEnd: string): { start?: string; end?: string; month?: string } {
   const today = new Date().toISOString().slice(0, 10);
   if (preset === 'month') return { month: today.slice(0, 7) };
   if (preset === 'last3') {
@@ -58,12 +58,13 @@ export function MemberReportScreen() {
   const fetchAccounts = useAccountStore((s) => s.fetchAccounts);
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
-  const [preset, setPreset] = useState<Preset>('all');
+  const [preset, setPreset] = useState<ReportPreset>('all');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [excluded, setExcluded] = useState<string[]>([]);
   const [includeLoans, setIncludeLoans] = useState(true);
   const [includeOtherLedgers, setIncludeOtherLedgers] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [report, setReport] = useState<MemberReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -119,6 +120,15 @@ export function MemberReportScreen() {
     setExcluded((prev) => (prev.includes(accountId) ? prev.filter((x) => x !== accountId) : [...prev, accountId]));
   }, []);
 
+  const handleResetFilters = useCallback(() => {
+    setPreset('all');
+    setCustomStart('');
+    setCustomEnd('');
+    setExcluded([]);
+    setIncludeLoans(true);
+    setIncludeOtherLedgers(true);
+  }, []);
+
   const handlePdf = useCallback(() => {
     if (report) void downloadMemberReportPdf(report, { locale, currency });
   }, [report, locale, currency]);
@@ -128,6 +138,22 @@ export function MemberReportScreen() {
   const handlePrint = useCallback(() => { window.print(); }, []);
 
   const money = useCallback((n: number) => formatAmount(n, locale, currency), [locale, currency]);
+
+  const hasActiveFilters = preset !== 'all' || excluded.length > 0 || !includeLoans || !includeOtherLedgers;
+  const filterSummary = useMemo(() => {
+    const label = preset === 'all'
+      ? 'All time'
+      : preset === 'month'
+        ? 'This month'
+        : preset === 'last3'
+          ? 'Last 3 months'
+          : `${customStart || '…'} – ${customEnd || '…'}`;
+    const parts = [label];
+    if (excluded.length > 0) parts.push(`${memberAccounts.length - excluded.length} of ${memberAccounts.length} accounts`);
+    if (!includeLoans) parts.push('Loans off');
+    if (!includeOtherLedgers) parts.push('Other ledgers off');
+    return parts.join(' · ');
+  }, [preset, customStart, customEnd, excluded, memberAccounts.length, includeLoans, includeOtherLedgers]);
 
   if (!member && !loading) {
     return (
@@ -149,65 +175,22 @@ export function MemberReportScreen() {
         <div className={styles.titleBlock}>
           <h1 className={styles.title}>{member?.name ?? 'Report'}</h1>
           <span className={styles.subtitle}>Whole member report · {periodLabel}</span>
+          <span className={styles.summaryLine}>{filterSummary}</span>
         </div>
         <div className={`${styles.actions} ${styles.printHide}`}>
+          <button
+            className={`${styles.iconBtn} ${hasActiveFilters ? styles.iconActive : ''}`}
+            onClick={() => setFiltersOpen(true)}
+            aria-label="Report filters"
+            title={`Filters · ${filterSummary}`}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
+          </button>
           <button className={styles.actionBtn} onClick={handlePdf} disabled={!report}>PDF</button>
           <button className={styles.actionBtn} onClick={handleCsv} disabled={!report}>CSV</button>
           <button className={styles.actionBtn} onClick={handlePrint} disabled={!report}>Print</button>
         </div>
       </div>
-
-      <GlassPanel className={`${styles.filters} ${styles.printHide}`}>
-        <div className={styles.chipRow}>
-          {(['all', 'month', 'last3', 'custom'] as Preset[]).map((p) => (
-            <button
-              key={p}
-              className={`${styles.chip} ${preset === p ? styles.chipActive : ''}`}
-              onClick={() => setPreset(p)}
-            >
-              {p === 'all' ? 'All time' : p === 'month' ? 'This month' : p === 'last3' ? 'Last 3 months' : 'Custom'}
-            </button>
-          ))}
-        </div>
-        {preset === 'custom' && (
-          <div className={styles.dateRow}>
-            <label className={styles.dateField}>From
-              <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
-            </label>
-            <label className={styles.dateField}>To
-              <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
-            </label>
-          </div>
-        )}
-        {memberAccounts.length > 0 && (
-          <div className={styles.chipRow}>
-            {memberAccounts.map((a) => (
-              <button
-                key={a.id}
-                className={`${styles.chip} ${excluded.includes(a.id) ? '' : styles.chipActive}`}
-                onClick={() => toggleExcluded(a.id)}
-                title={excluded.includes(a.id) ? 'Include in report' : 'Exclude from report'}
-              >
-                {a.name}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className={styles.chipRow}>
-          <button
-            className={`${styles.chip} ${includeLoans ? styles.chipActive : ''}`}
-            onClick={() => setIncludeLoans((v) => !v)}
-          >
-            Loans
-          </button>
-          <button
-            className={`${styles.chip} ${includeOtherLedgers ? styles.chipActive : ''}`}
-            onClick={() => setIncludeOtherLedgers((v) => !v)}
-          >
-            Other ledgers
-          </button>
-        </div>
-      </GlassPanel>
 
       {loading && (
         <GlassPanel className={styles.hero}><p>Building report…</p></GlassPanel>
@@ -276,6 +259,32 @@ export function MemberReportScreen() {
             </section>
           ))}
         </>
+      )}
+
+      {isDesktop ? (
+        <Modal isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} title="Report filters">
+          <ReportFilterSheet
+            preset={preset} setPreset={setPreset}
+            customStart={customStart} customEnd={customEnd}
+            setCustomStart={setCustomStart} setCustomEnd={setCustomEnd}
+            memberAccounts={memberAccounts} excluded={excluded} toggleExcluded={toggleExcluded}
+            includeLoans={includeLoans} setIncludeLoans={setIncludeLoans}
+            includeOtherLedgers={includeOtherLedgers} setIncludeOtherLedgers={setIncludeOtherLedgers}
+            onReset={handleResetFilters} onApply={() => setFiltersOpen(false)}
+          />
+        </Modal>
+      ) : (
+        <BottomSheet isOpen={filtersOpen} onClose={() => setFiltersOpen(false)} title="Report filters">
+          <ReportFilterSheet
+            preset={preset} setPreset={setPreset}
+            customStart={customStart} customEnd={customEnd}
+            setCustomStart={setCustomStart} setCustomEnd={setCustomEnd}
+            memberAccounts={memberAccounts} excluded={excluded} toggleExcluded={toggleExcluded}
+            includeLoans={includeLoans} setIncludeLoans={setIncludeLoans}
+            includeOtherLedgers={includeOtherLedgers} setIncludeOtherLedgers={setIncludeOtherLedgers}
+            onReset={handleResetFilters} onApply={() => setFiltersOpen(false)}
+          />
+        </BottomSheet>
       )}
     </div>
   );
