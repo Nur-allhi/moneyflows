@@ -140,6 +140,17 @@ Approved 2026-10-02, built on `feature/theme-accent` (theme workstream). Curated
 | T-139 | Appearance "Background" row (current-mode presets, reuses swatch styles) + `backgrounds.test.ts` sync guard | `senior-frontend` | S | **Complete** |
 | T-140 | Verification: computed bg per preset × mode, screenshots, gates | `code-reviewer` | S | **Complete** (8/8 presets resolve, dark/forest + picker screenshots, 0 errors) |
 
+## Phase 18 — Type Overhaul (Manrope + Inter-tnum + Anek Bangla, self-hosted) — In Progress
+
+Plan approved 2026-10-02 (full scope, Manrope headings, Anek Bangla, mono kept for chrome). Branch `feature/theme-accent`.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-141 | Font supply: fontsource variable packages (drop dead Geist + Google @import), retoken display/body, `.amount` utility | `senior-frontend` | M | **Complete** (19 woff2 bundled) |
+| T-142 | Money off mono: ~20 files amount rules → Inter tabular; mono kept for sub/snapshotTime/text-mono + JB Mono still self-hosted | `senior-frontend` | M | **Complete** |
+| T-143 | Identity docs: DESIGN_IDENTITY (§1/§2/§3/§5/§17) + DESIGN.md type tables | `skill-creator` | S | **Complete** |
+| T-144 | Verification: bn-BD/৳ fallback, table alignment, bundle weight, offline (no googleapis) | `code-reviewer` | S | **Complete** (bn digits+৳ render aligned, Inter `zero` N/A in Chrome → dropped, 560KB fonts w/ unicode-range lazy subsets, 0 CDN refs) |
+
 ## Following Phase
 
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.

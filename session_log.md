@@ -645,6 +645,22 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Phase 17 complete, pushed on `feature/theme-accent`. Next: merge confirmation.
 
+## Session 2026-10-02 (Phase 18: type overhaul T-141..T-144)
+
+### Changes
+- Merged `feature/theme-accent` → `dev` first (user order): 14 commits + CHANGELOG, `--no-ff`, gates green, pushed; branch kept alive
+- T-141 (`7aa2138`): fontsource variable Manrope/Inter/Anek Bangla (+JetBrains Mono — caught that killing the Google @import would orphan chrome mono) + dropped dead Geist dep; retokened display/body; `.amount` utility
+- T-142 (`1791466`, 20 files): all amount rules mono→Inter (tabular kept); chrome keeps mono (search sub, snapshot times, text-mono util)
+- T-143: DESIGN_IDENTITY (§1/§2/§3/§5/§17) + DESIGN.md type tables rewritten to the new contract
+- T-144: live verification on demo.db — all 4 faces `document.fonts.check` true; bn-BD/৳ renders Bengali digits aligned, no tofu; Inter `zero` does NOT activate in Chrome → dropped from `.amount`; 560KB woff2 total but unicode-range split (browser fetches used subsets only); zero `googleapis` refs in dist; restored en-IN/BDT after
+- TICKETS.md Phase 18 → Complete
+
+### Skill(s) Used
+- senior-frontend, code-reviewer
+
+### Status
+- Phase 18 complete on `feature/theme-accent` (unpushed). Next: merge confirmation for the font batch.
+
 ## Session 2026-10-02 (BUG-5 account cards)
 
 ### Changes
