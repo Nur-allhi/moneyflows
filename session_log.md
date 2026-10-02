@@ -660,3 +660,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - BUG-5 fixed, pushed on `feature/theme-accent` (CHANGELOG deferred to `dev` merge). Next: merge confirmation.
+
+## Session 2026-10-02 (merge theme-accent → dev)
+
+### Changes
+- User-approved merge: `feature/theme-accent` (14 commits + CHANGELOG entry) → `dev` via `--no-ff` (branch kept alive for Phase 18 fonts)
+- Closed: Phase 16 T-132..T-137, Phase 17 T-138..T-140, BUG-4 + BUG-5 fixed (CHANGELOG `[Unreleased]` Added/Fixed included, no version bump per VERSIONING — feature→dev)
+- Gates pre-merge: typecheck PASS, build PASS, 48/48 unit PASS (17 e2e-under-vitest pre-existing), lint 1 pre-existing warning (`LedgerSection.tsx:82`, also on dev)
+- detect_changes vs dev: MEDIUM — touched symbols exactly the theme surfaces (AppLayout, AppSettings, Header, SettingsModal/Page, store) + docs; affected processes are app-shell/settings flows, as intended
+
+### Skill(s) Used
+- gitnexus
+
+### Status
+- Merged to `dev`. Next: Phase 18 type overhaul on `feature/theme-accent`.
