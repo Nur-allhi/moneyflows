@@ -52,6 +52,17 @@
   box-shadow: 0 0 8px var(--color-primary);
 }
 
+.version {
+  position: absolute;
+  bottom: var(--space-8);
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  letter-spacing: 0.08em;
+}
+
 @keyframes blink {
   50% { opacity: 0; }
 }

@@ -716,3 +716,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Merged to `dev`. Next: Phase 18 type overhaul on `feature/theme-accent`.
+
+## Session 2026-10-02 (splash version tag)
+
+### Changes
+- Splash screen now shows `v{APP_VERSION}` bottom-center (`SplashScreen.tsx:63` + `.version` in `SplashScreen.module.css`): absolute, `bottom: --space-8`, centered via `translateX(-50%)`, `text-secondary` + `font-size-xs` tokens, auto-follows theme/accent and version bumps (currently v1.9.0)
+- Gates: typecheck PASS, eslint PASS on touched file, build PASS, `detect_changes` LOW (SplashScreen touched only, no affected processes)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Complete on dev (uncommitted). Next: user call (Other Ledgers V2 on "next update", or new work).
