@@ -160,6 +160,12 @@ describe('MemberReportService (T-133 loans + other ledgers)', () => {
     expect(sec.outstanding).toBe(8000);
     expect(sec.rows.map((r) => r.runningBalance)).toEqual([5000, 12000, 8000]);
     expect(sec.rows[0]!.counterpartyAccount).toBe('Cash');
+    // Member perspective: money out = debit, money back = credit
+    expect(sec.rows.map((r) => [r.debit, r.credit])).toEqual([
+      [5000, 0],
+      [7000, 0],
+      [0, 4000],
+    ]);
 
     const book = report.otherLedgers[0]!;
     expect(book.ledgerName).toBe('Shop Book');
@@ -183,5 +189,24 @@ describe('MemberReportService (T-133 loans + other ledgers)', () => {
     expect(sec.rows[0]!.runningBalance).toBe(8000);
     expect(sec.outstanding).toBe(8000);
     expect(report.otherLedgers[0]!.rows).toEqual([]);
+  });
+
+  it('shows money received by the member as credit (borrower perspective)', async () => {
+    const db = {
+      getMemberById: async (id: string) => (id === MEMBER.id ? MEMBER : null),
+      getAccounts: async (memberId?: string) =>
+        memberId === MEMBER.id ? [ACCT_A, ACCT_B] : [ACCT_A, ACCT_B, ACCT_X],
+      getTransactions: async () => [tx('b1', 'lend', 2000, '2026-08-05', 'acct-x', 'acct-b')],
+      getOtherLedgers: async () => [],
+      getOtherLedgerEntries: async () => [],
+    } as unknown as IDatabaseService;
+    const report = await new MemberReportService(db).generateReport({
+      memberId: 'member-1',
+      includeLoans: true,
+    });
+
+    const row = report.loans[0]!.rows[0]!;
+    expect([row.debit, row.credit]).toEqual([0, 2000]);
+    expect(row.runningBalance).toBe(2000);
   });
 });

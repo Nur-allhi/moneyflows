@@ -170,6 +170,8 @@ export class MemberReportService {
           );
           return ownId != null ? (ownedNames.get(ownId) ?? '') : '';
         },
+        // Member perspective: money leaving an included account is a debit.
+        (tx) => tx.sourceAccount != null && includedIds.has(tx.sourceAccount),
         { start, end },
       );
     }

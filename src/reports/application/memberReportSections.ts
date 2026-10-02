@@ -30,11 +30,15 @@ const loanTypeLabel = (tx: Transaction): string =>
 /**
  * Groups the member's loan txs by counterparty (the non-member side).
  * Balances run over FULL group history; the period only trims display rows.
+ * Display columns follow the MEMBER's cash flow: money out = debit, money
+ * back in = credit (`isOutflow`). `running`/outstanding stays the receivable
+ * (owed TO the member) regardless of display side.
  */
 export function buildLoanSections(
   txs: Transaction[],
   nameOfAccount: (id: string) => string,
   memberAccountName: (tx: Transaction, counterpartyId: string) => string,
+  isOutflow: (tx: Transaction) => boolean,
   period: SectionPeriod,
 ): LoanSection[] {
   const groups = new Map<string, Transaction[]>();
@@ -56,8 +60,9 @@ export function buildLoanSections(
     let totalRepaid = 0;
     const rows: MemberReportRow[] = [];
     for (const tx of sorted) {
-      const credit = LOAN_CREDIT_TYPES.has(tx.type);
-      if (credit) {
+      const lent = LOAN_CREDIT_TYPES.has(tx.type);
+      const out = isOutflow(tx);
+      if (lent) {
         running += tx.amount;
         totalLent += tx.amount;
       } else if (LOAN_DEBIT_TYPES.has(tx.type)) {
@@ -68,11 +73,11 @@ export function buildLoanSections(
       rows.push({
         id: tx.id,
         date: tx.date,
-        type: credit ? 'lend' : 'repay',
+        type: lent ? 'lend' : 'repay',
         typeLabel: loanTypeLabel(tx),
         description: tx.description,
-        debit: credit ? 0 : tx.amount,
-        credit: credit ? tx.amount : 0,
+        debit: out ? tx.amount : 0,
+        credit: out ? 0 : tx.amount,
         runningBalance: running,
         counterpartyAccount: memberAccountName(tx, counterpartyId),
       });
