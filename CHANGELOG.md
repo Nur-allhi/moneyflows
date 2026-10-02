@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Tap feedback on every button: one-shot click animations (pop, spin, twist, ring, nudge) with reduced-motion support — header gear spins, theme icon swaps in, plus twists, bell rings, back nudges.
 - Text size option in Settings → Appearance (Small/Medium/Large): scales app type instantly, persists across reloads.
+- Collapsible desktop sidebar: arrow folds to an icon rail, hovering peeks the full bar, choice persists; content glides to reclaim the space.
+- Sidebar nav icons refreshed (Members, Groups, Loans) with matching mobile bottom-nav glyphs.
 
 ### Fixed
 - Dashboard "New Transaction" icon and label wrapped to two lines after the animation rollout (single wrapper collapsed the flex gap; split into two spans sharing one key).
