@@ -673,6 +673,20 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Phase 18 merged to `dev`. Branch `feature/theme-accent` kept (next: TBD).
 
+## Session 2026-10-02 (release 1.9.0 → master)
+
+### Changes
+- User-approved release: bump 1.8.0 → 1.9.0 MINOR on `dev` (`package.json` + `whatsNew.ts` 1.9.0 entry + `CHANGELOG [1.9.0]`, one commit `a18b014`)
+- Gates: typecheck PASS, build PASS, 48/48 unit PASS (17 e2e-under-vitest pre-existing), lint 1 pre-existing warning — same caveats as 1.8.0
+- `whatsNewFor('1.9.0')` resolves (exact find); version define flows from package.json (unchanged paths)
+- Merged `dev → master` no-ff `f338c62` + tagged `v1.9.0` + pushed `master --follow-tags`; `dev` fast-forwarded to `master`, pushed
+
+### Skill(s) Used
+- gitnexus
+
+### Status
+- v1.9.0 live on master + dev. Next: user call (Other Ledgers V2 on "next update", or new work).
+
 ## Session 2026-10-02 (BUG-5 account cards)
 
 ### Changes
