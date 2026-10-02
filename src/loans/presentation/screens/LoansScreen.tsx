@@ -216,7 +216,7 @@ export function LoansScreen() {
                   <span className={styles.sectionAvatar} style={{ background: ledgerGradient(label) }}>{label[0]}</span>
                   <span className={styles.sectionInfo}>
                     <span className={styles.sectionName}>{label}</span>
-                    <span className={styles.sectionMeta}><span>{list.length} ledger{list.length !== 1 ? 's' : ''}</span><span style={{ opacity: 0.4 }}>·</span><span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(total, locale, currency)}</span></span>
+                    <span className={styles.sectionMeta}><span>{list.length} ledger{list.length !== 1 ? 's' : ''}</span><span style={{ opacity: 0.4 }}>·</span><span style={{ fontFamily: 'var(--font-body)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(total, locale, currency)}</span></span>
                   </span>
                 </div>
                 <div className={styles.grid}>

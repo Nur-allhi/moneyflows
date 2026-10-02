@@ -9,7 +9,7 @@
    `:root` vars — so aliasing tokens.css vars here keeps shadcn primitives
    (calendar, popover) following the app theme + accent at runtime. */
 @theme inline {
-  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-sans: 'Manrope', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   --color-background: var(--color-bg);

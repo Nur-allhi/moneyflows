@@ -200,3 +200,14 @@
     padding: 20px;
   }
 }
+
+/* Money amounts — Inter with tabular figures (not mono). Pair with the
+   8px .currencyLabel pattern for the currency code (see LedgerTable).
+   NOTE: Inter's slashed-zero ("zero") does not activate in Chrome — verified
+   2026-10-02 — so only "tnum" is set. */
+.amount {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
+}

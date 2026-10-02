@@ -10,7 +10,7 @@ If any detail conflicts, `DESIGN_FILES/*.html` wins, then `DESIGN.md`, then this
 
 ## 1. Design DNA
 
-**Obsidian glassmorphism.** Panels float on `oklch(14% 0.015 260)` obsidian with `radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 /0.35))` glow. Every container is `oklch(22% 0.02 260 /0.55)` + `blur(20px)` + `1px oklch(100% 0 0 /0.10)` + `radius 12px`. Accents are sparse (max 2/screen): **violet** = interaction, **teal/coral/gold/purple** = semantics (income/expense/cash/loans). Numerics are `JetBrains Mono tabular-nums`. Motion is `0.15-0.35s ease`.
+**Obsidian glassmorphism.** Panels float on `oklch(14% 0.015 260)` obsidian with `radial-gradient(ellipse 70% 60% at 50% 20%, oklch(65% 0.04 250 /0.35))` glow. Every container is `oklch(22% 0.02 260 /0.55)` + `blur(20px)` + `1px oklch(100% 0 0 /0.10)` + `radius 12px`. Accents are sparse (max 2/screen): **violet** = interaction, **teal/coral/gold/purple** = semantics (income/expense/cash/loans). Numerics are Inter tabular-nums (`tnum`). Motion is `0.15-0.35s ease`.
 
 ---
 
@@ -29,7 +29,7 @@ All values come from `src/presentation/styles/tokens.css:1-89`. Do not invent co
 | **Spacing** | `--space-1:4` `--space-2:8` `--space-3:12` `--space-4:16` `--space-5:20` `--space-6:24` `--space-8:32` `--space-10:40` `--space-12:48` `--space-16:64` | No `10px`/`13px` literals — round to nearest space token. |
 | **Radii** | `--radius-sm:8` `--radius-md:12` `--radius-lg:16` `--radius-xl:20` `--radius-pill:9999` | Panels `md`, cards `sm`, mobile panels `lg` `glassmorphism.css:191-195`. Pills/chips `pill`. |
 | **Shadows** | `--shadow-sm: 0 2px 8px /0.3`, `--shadow-md: 0 4px 16px /0.35`, `--shadow-lg: 0 8px 32px /0.4`, `--shadow-glow: 0 0 24px var(--color-primary-glow)` | Accent glows `0 0 28px /0.15` for metric cards `Dashboard.module.css:53-60`. |
-| **Typography scales** | `--font-display: 'Inter','Outfit'`, `--font-body: 'Inter','Hind Siliguri'`, `--font-mono: 'JetBrains Mono'` · `h1 clamp 1.5-2.5rem 700 -0.02em` → `h6 0.81-0.94rem 600` · `.text-label uppercase 0.68-0.81rem 500 0.05em muted` · `.text-mono 1-1.35rem 500 -0.02em` · fluid `text-3xs(7-8px)..7xl(20-28px)` | `typography.css:1-66` `tokens.css:53-77`. Import `Hind Siliguri + Inter + Outfit + JetBrains Mono` `typography.css:1`. |
+| **Typography scales** | `--font-display: 'Manrope','Inter'`, `--font-body: 'Inter','Anek Bangla'`, `--font-mono: 'JetBrains Mono'` chrome-only (numpad, dates, IDs, log timestamps) · `h1 clamp 1.5-2.5rem 700 -0.02em` → `h6 0.81-0.94rem 600` · `.text-label uppercase 0.68-0.81rem 500 0.05em muted` · `.text-mono 1-1.35rem 500 -0.02em` · fluid `text-3xs(7-8px)..7xl(20-28px)` | `typography.css:1-66` `tokens.css:53-77`. Import `Hind Siliguri + Inter + Outfit + JetBrains Mono` `typography.css:1`. |
 | **Breakpoints** | `360 / 390 / 430 / 600 / 820 / 1024 / 1366 / 1440 / 1920` — behavior flip at `768` | `tokens.css:43-51` `DESIGN.md:263-273`. See §9. |
 | **Motion** | `--transition-fast:0.2s ease`, `--transition-normal:0.3s ease`, `--transition-slow:0.4s ease`, `--animation-shimmer:1.5s ease-in-out infinite` | `tokens.css:78-82`. Details in §8. |
 | **Scrollbar** | `6px pill thumb oklch(100% 0 0 /0.12) → /0.2 hover` | `reset.css:38-59` |
@@ -43,7 +43,7 @@ All values come from `src/presentation/styles/tokens.css:1-89`. Do not invent co
 
 1. **Glass floats.** Every container is `surface blur + border`. Hover = glow, not color swap.
 2. **Violet = interaction.** Violet/primary is reserved for active, focus, hover glow, CTAs. Teal = income, coral = expense, gold = cash, purple = loans — never decoration. Max 2 accents per screen (`brand-spec.md:42`).
-3. **Mono owns money.** Every amount uses `JetBrains Mono tabular-nums` via `formatAmount()` `src/presentation/utils/format.ts` + `AmountInput` `FormField.tsx:74-91`. Body text never renders numbers.
+3. **Inter-tnum owns money.** Every amount uses Inter `tabular-nums` (`.amount` utility) via `formatAmount()` `src/presentation/utils/format.ts` + `AmountInput` `FormField.tsx:74-91`. JetBrains Mono survives only for chrome (numpad keys, date cells, IDs, log timestamps). Body text never renders numbers.
 4. **Label is an uppercase whisper.** `11px 500 0.08em var(--color-text-secondary)` above every field/metric `FormField.module.css:9-14`.
 5. **Sheets on mobile, modals on desktop — same chrome.** `≤768 BottomSheet slideUp 0.35s + handle 36×4` vs `>768 Modal fadeIn 0.25s 520px blur24 radius20` — identical header/title/close/footer.
 6. **Rows glow, never zebra.** Hover `oklch(100% 0 0 /0.04) + 0 0 20px var(--color-primary-glow)` `LedgerTable.module.css:97-100`.
@@ -81,7 +81,7 @@ All values come from `src/presentation/styles/tokens.css:1-89`. Do not invent co
 
 - **Headings:** `font-display 600-700` `h1 1.5-2.5rem -0.02em`, `h2 1.25-1.75rem`, down to `h6 0.81-0.94rem` — all `var(--color-text)` `typography.css:3-39`.
 - **Body:** `.text-body font-body base/1.5 text`, `.text-secondary muted`, `.text-label uppercase 0.68-0.81rem 500 0.05em muted` `typography.css:41-65`.
-- **Money:** `.text-mono font-mono 1-1.35rem 500 -0.02em tabular-nums` · Ledger `13px mono tabular` + `currencyLabel 8px body 0.55 0.04em` `LedgerTable.module.css:182-199` · Dashboard `text-7xl mono 1.2 -0.01em` `Dashboard.module.css:35-42`.
+- **Money:** `.amount Inter 1-1.35rem 600 -0.01em tabular-nums` · Ledger `13px Inter tabular` + `currencyLabel 8px body 0.55 0.04em` `LedgerTable.module.css:182-199` · Dashboard `text-7xl Inter 600 -0.01em` `Dashboard.module.css:35-42`.
 - **Global body:** `font-body base 1.5 + bg + bg-glow fixed min-h 100vh antialiased -webkit-tap-transparent smooth-scroll` `reset.css:9-36`.
 - **Formatting:** Use `formatAmount(n, locale, currency)` and `shortDate(iso, locale)` from `src/presentation/constants/dates.ts` + `src/presentation/utils/format.ts` — hardcoded `'BDT'` / `Intl.NumberFormat('en-IN')` is banned `FRONTEND_SPEC.md:32`.
 
@@ -288,7 +288,7 @@ Copy into every UI PR description. All boxes must be checked:
 - [ ] Reads as glass on light paper too (`data-theme="light"`) — text/hover/separators visible, no white-on-white
 - [ ] Accent switch (any of 6 in Settings) recolors interaction only — semantics (teal/coral/gold/purple) unchanged
 - [ ] Only `var(--color/space/radius/shadow/font)` — no hex, no literal spacing
-- [ ] Money uses `formatAmount` + `JetBrains Mono tabular-nums`, labels uppercase `0.08em`
+- [ ] Money uses `formatAmount` + Inter `tabular-nums` (`.amount`), mono only for chrome (numpad/dates/IDs); labels uppercase `0.08em`
 - [ ] All 4 states: `hover glow + surface-hover`, `focus-visible 2px violet`, `active /0.08 or scale 0.92`, `disabled 0.5`
 - [ ] Modal/sheet pair at `768` or overlay `bg 0.55 blur4 z300` with `0.2-0.35s` enter + `0.25s` exit
 - [ ] Dropdown is modal picker (trigger `14/10 blur12` → overlay `z350` → `360/85vw blur24 picker`) — not native select

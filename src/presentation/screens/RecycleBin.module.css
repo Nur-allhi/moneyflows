@@ -20,7 +20,7 @@
 }
 
 .statNum {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-4xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;

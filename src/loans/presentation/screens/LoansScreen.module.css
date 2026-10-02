@@ -83,7 +83,7 @@
 .filterActive:hover { color: var(--color-text-on-primary); }
 
 .filterAmt {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   opacity: 0.8;
   margin-left: 4px;
@@ -277,7 +277,7 @@
 
   .summaryValue {
     display: block;
-    font: 700 var(--text-5xl) var(--font-mono);
+    font: 700 var(--text-5xl) var(--font-body);
     font-variant-numeric: tabular-nums;
     color: var(--color-coral);
   }

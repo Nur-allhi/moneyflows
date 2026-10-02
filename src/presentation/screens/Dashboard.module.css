@@ -36,7 +36,7 @@
 }
 
 .metricValue {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -44,7 +44,7 @@
 }
 .metricValueWrap {
   display: grid;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 22px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -119,7 +119,7 @@
 }
 
 .monthStatValue {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-3xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -180,7 +180,7 @@
 }
 
 .memberTotal {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-md);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -287,7 +287,7 @@
 }
 
 .acctBalance {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-md);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -372,7 +372,7 @@
 }
 
 .loanAmount {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -534,7 +534,7 @@
 }
 
 .txAmount {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-md);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -668,7 +668,7 @@
     display: block;
     text-align: center;
     margin-top: 8px;
-    font: 500 var(--text-md) var(--font-mono);
+    font: 500 var(--text-md) var(--font-body);
     font-variant-numeric: tabular-nums;
     color: var(--color-teal);
   }
