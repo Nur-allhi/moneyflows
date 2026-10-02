@@ -230,7 +230,7 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 | T-117 | CreateLedgerModal + AddEntryModal (edit/delete, validation, tags) | **Complete** (`2c8957c`) |
 | T-118 | Wiring: Sidebar/BottomNav/routeTitles/Recycle Bin/Search/PDF | **Complete** (`2c8957c`) |
 
-All 64+6 tickets complete. Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
+**Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131). Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 

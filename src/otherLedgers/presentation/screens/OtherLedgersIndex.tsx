@@ -6,17 +6,10 @@ import { useSettingsStore } from '../../../presentation/stores/useSettingsStore'
 import { formatAmount } from '../../../presentation/utils/format';
 import { Highlight } from '../../../presentation/utils/highlight';
 import { Modal, BottomSheet } from '../../../presentation/components';
+import { ledgerGradient } from '../../../presentation/constants/gradients';
 import { CreateLedgerModal } from '../components/CreateLedgerModal';
 import { AddEntryModal } from '../components/AddEntryModal';
 import styles from './OtherLedgersIndex.module.css';
-
-function ledgerGradient(name: string): string {
-  const hues = [290, 170, 30, 85, 220, 330, 50, 190];
-  let idx = 0;
-  for (let i = 0; i < name.length; i++) idx = (idx * 31 + name.charCodeAt(i)) % hues.length;
-  const h = hues[idx]!;
-  return `linear-gradient(135deg, oklch(62% 0.22 ${h}), oklch(50% 0.2 ${h}))`;
-}
 
 export function OtherLedgersIndex() {
   const navigate = useNavigate();

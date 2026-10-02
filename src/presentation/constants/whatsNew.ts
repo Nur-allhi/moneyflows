@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.6.0',
+    items: [
+      'Loan ledgers now break down what you owe per lender — tap Owed to to see each bank or person separately.',
+      'Repaying? Choose which lender you are paying off, and separately pick where the money goes.',
+      'Loan headers show the account’s available balance, and the pencil button renames the ledger.',
+    ],
+  },
+  {
     version: '1.5.0',
     items: [
       'New setup wizard for first-time users — 5 friendly steps to add your family, your accounts, and see how Dashboard, Ledger, Loans, Groups, Other Ledgers and Tags work.',

@@ -71,6 +71,7 @@ export class LoanService {
     date: string;
     memberId: string;
     destinationAccountId?: string;
+    lenderAccountId?: string;
   }): Promise<{ tx: Transaction }> {
     if (!params.borrowerAccountId) throw new Error('borrowerAccountId is required for repayment');
 
@@ -78,18 +79,28 @@ export class LoanService {
     const activeLoans = allLoans.filter((l) => l.status !== 'settled' && l.outstanding > 0);
     if (activeLoans.length === 0) throw new Error('No active loans found for this counterparty');
 
+    if (params.lenderAccountId && !activeLoans.some((l) => l.lenderAccountId === params.lenderAccountId)) {
+      throw new Error('No active loans found for the selected lender');
+    }
+
     const now = new Date();
     const nowStr = now.toISOString();
     const [y, m, d] = params.date.split('-');
     const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
 
     const firstLoan = activeLoans[0]!;
-    const dst = params.destinationAccountId ?? firstLoan.lenderAccountId;
+    const dst = params.destinationAccountId ?? params.lenderAccountId ?? firstLoan.lenderAccountId;
 
     let remaining = params.amount;
-    const sorted = [...activeLoans].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const byAge = [...activeLoans].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    // Targeted repayment: the chosen lender's loans first (oldest first),
+    // remainder spills over to the other lenders' loans (oldest first).
+    const ordered = params.lenderAccountId
+      ? [...byAge.filter((l) => l.lenderAccountId === params.lenderAccountId),
+         ...byAge.filter((l) => l.lenderAccountId !== params.lenderAccountId)]
+      : byAge;
 
-    for (const loan of sorted) {
+    for (const loan of ordered) {
       if (remaining <= 0) break;
       if (loan.outstanding <= 0) continue;
 

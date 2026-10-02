@@ -30,6 +30,7 @@ interface LoanState {
     date: string;
     memberId: string;
     destinationAccountId?: string;
+    lenderAccountId?: string;
   }) => Promise<void>;
 
   createCounterparty: (name: string, type?: string) => Promise<{ accountId: string }>;

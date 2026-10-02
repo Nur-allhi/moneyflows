@@ -71,13 +71,7 @@ export async function createStorageAdapter(config: {
           // Legacy copy unreadable: start fresh on OPFS, leave LS untouched for manual recovery.
         }
       }
-      // Mirror only when the legacy copy still holds decodable data — protects it
-      // from being clobbered by fresh/recovery flushes.
-      if (localStorageSupported()) {
-        try {
-          if (await local.readMain()) opfs.enableMirror(local);
-        } catch { /* leave mirror off */ }
-      }
+
       try { localStorage.setItem(STORAGE_VERSION_FLAG, 'v2-opfs'); } catch { /* private mode etc. */ }
       return { adapter: opfs, backend: 'opfs', migratedFromLocalStorage: migrated };
     } catch {

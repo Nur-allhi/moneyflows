@@ -18,6 +18,7 @@ interface OtherLedgerState {
     ownerName?: string;
     openingBalance?: number;
   }) => Promise<OtherLedger>;
+  updateLedger: (id: string, patch: { name?: string; startingDate?: string; ownerType?: 'member' | 'external'; ownerMemberId?: string; ownerName?: string; openingBalance?: number }) => Promise<void>;
   createEntry: (params: {
     ledgerId: string;
     date: string;
@@ -67,6 +68,13 @@ export const useOtherLedgerStore = create<OtherLedgerState>((set, get) => ({
     const ledger = await svc.createLedger(params);
     await get().fetchLedgers();
     return ledger;
+  },
+
+  updateLedger: async (id, patch) => {
+    const db = await getDatabase();
+    const svc = new OtherLedgerService(db);
+    await svc.updateLedger(id, patch);
+    await get().fetchLedgers();
   },
 
   createEntry: async (params) => {

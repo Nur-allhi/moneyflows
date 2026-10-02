@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Placeholder for upcoming changes.
 
+## [1.6.0] - 2026-10-02
+
+### Added
+- Loan ledger header now shows an **"Owed to"** per-lender breakdown (borrowed + outstanding each) when 2+ lenders fund one borrower — collapsed by default, smooth slide toggle, whole block clickable.
+- Repayment form splits **"Paying Off"** (which lender's balance drops, oldest-first with spillover) from **"Credit To"** (any account the money lands in, prefills with the lender).
+- Loan ledger header shows **available balance** of the borrower account (internal accounts only) and a **rename** pencil reusing the account editor.
+- E2E `14-loan-rename` regression spec (create loan → open ledger → rename → header asserts).
+
+### Fixed
+- Clicking any loan card froze the app (rename refetch looped against the parent's loading skeleton); header name now derives live from the account store with no refetch.
+
 ## [1.5.0] - 2026-08-27
 
 ### Added

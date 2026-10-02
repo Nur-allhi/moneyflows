@@ -6,13 +6,17 @@ function easeOutCubic(t: number): number {
 }
 
 export function useAnimatedValue(target: number, duration = ANIMATION_DURATION): number {
-  const prevTargetRef = useRef(target);
+  const prevTargetRef = useRef<number | null>(null);
   const startTimeRef = useRef(0);
   const startValueRef = useRef(0);
   const rafRef = useRef(0);
   const [current, setCurrent] = useState(target);
 
   useEffect(() => {
+    if (prevTargetRef.current === null) {
+      prevTargetRef.current = target;
+      return;
+    }
     if (target === prevTargetRef.current) return;
 
     startValueRef.current = current;

@@ -1,7 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { LedgerTable, LedgerSearch, MobileLedger, Modal, BottomSheet } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
@@ -12,6 +10,7 @@ import { shortDate, MONTHS } from '../../../presentation/constants/dates';
 import { Highlight } from '../../../presentation/utils/highlight';
 import { useDebouncedValue } from '../../../presentation/utils/useDebouncedValue';
 import { AddEntryModal } from '../components/AddEntryModal';
+import { RenameLedgerModal } from '../components/RenameLedgerModal';
 import styles from './OtherLedgerDetail.module.css';
 
 const FILTER_TABS = [
@@ -33,6 +32,7 @@ export function OtherLedgerDetail() {
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [showDeleteLedgerConfirm, setShowDeleteLedgerConfirm] = useState(false);
+  const [showRename, setShowRename] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -101,8 +101,10 @@ export function OtherLedgerDetail() {
     if (row.id) setEditId(row.id);
   }, []);
 
-  const downloadPdf = useCallback(() => {
+  const downloadPdf = useCallback(async () => {
     if (!ledger) return;
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     doc.setFontSize(16);
@@ -183,8 +185,13 @@ export function OtherLedgerDetail() {
       ) : (
         <>
           <div className={styles.header}>
-            <div>
-              <h1 className={styles.title}>{ledger.name}</h1>
+            <div className={styles.titleBlock}>
+              <div className={styles.titleRow}>
+                <h1 className={styles.title}>{ledger.name}</h1>
+                <button className={styles.renameBtn} onClick={() => setShowRename(true)} aria-label="Rename ledger" title="Rename ledger" tabIndex={0}>
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
+                </button>
+              </div>
               <span className={styles.subtitle}>{owner} · Starting {shortDate(ledger.startingDate, locale)} · {entries.length} entries · {formatAmount(currentBalance, locale, currency)}</span>
             </div>
             <div className={styles.actions}>
@@ -205,6 +212,7 @@ export function OtherLedgerDetail() {
                 className={styles.deleteBtn}
                 aria-label="Delete ledger"
                 onClick={() => setShowDeleteLedgerConfirm(true)}
+                title="Delete ledger"
               >
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
               </button>
@@ -255,11 +263,15 @@ export function OtherLedgerDetail() {
             </span>
             <span className={styles.addBtnLabel}>New Entry</span>
           </button>
+          <button className={styles.renameBtn} onClick={() => setShowRename(true)} aria-label="Rename ledger" title="Rename ledger" style={{ width: 36, height: 36 }}>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
+          </button>
           <button
             className={styles.deleteBtn}
             aria-label="Delete ledger"
             onClick={() => setShowDeleteLedgerConfirm(true)}
             style={{ width: 36, height: 36 }}
+            title="Delete ledger"
           >
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
           </button>
@@ -268,6 +280,7 @@ export function OtherLedgerDetail() {
 
       {showAdd && id && <AddEntryModal isOpen ledgerId={id} onClose={() => setShowAdd(false)} />}
       {editId && id && <AddEntryModal isOpen ledgerId={id} entryId={editId} onClose={() => setEditId(null)} />}
+      {showRename && ledger && <RenameLedgerModal isOpen ledger={ledger} onClose={() => setShowRename(false)} />}
       {showDeleteLedgerConfirm && ledger && id && (() => {
         const descStyle: React.CSSProperties = { textAlign: 'center', fontSize: '14px', color: 'var(--color-text-secondary)', margin: '12px 0' };
         const handleDelete = async () => {

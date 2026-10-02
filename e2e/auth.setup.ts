@@ -9,11 +9,20 @@ setup('seed tiny DB', async ({ page }) => {
   const b64 = await seedTinyB64();
 
   await page.goto('/');
-  await page.evaluate((b) => {
+  await page.evaluate(async (b) => {
     localStorage.setItem('moneyflows_db', b);
     localStorage.removeItem('moneyflows_opfs_migrated');
-    // Clear OPFS flag so storage setup is deterministic
-    indexedDB.deleteDatabase('moneyflows_opfs');
+    localStorage.removeItem('moneyflows_storage');
+    localStorage.setItem('moneyflows_settings', JSON.stringify({ state: { settings: { currency: 'BDT', locale: 'en-IN', primaryMemberId: null, descriptionMaxLength: 200, numpadMaxDigits: 10, dashboardTxLimit: 10, setupComplete: true } }, version: 0 }));
+    try { indexedDB.deleteDatabase('moneyflows_opfs'); } catch {}
+    try {
+      // @ts-ignore
+      const root = await navigator.storage.getDirectory();
+      // @ts-ignore
+      await root.removeEntry('money_flows.db').catch(() => {});
+      // @ts-ignore
+      await root.removeEntry('snapshots').catch(() => {});
+    } catch {}
   }, b64);
 
   await page.reload();

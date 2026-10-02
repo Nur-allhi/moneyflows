@@ -9,17 +9,8 @@ import type { Member } from '../../core/domain/Member';
 import type { Account } from '../../core/domain/Account';
 import { formatAmount } from '../utils/format';
 import { Highlight } from '../utils/highlight';
+import { ledgerGradient } from '../constants/gradients';
 import styles from './GroupsListScreen.module.css';
-
-function groupGradient(name: string): string {
-  const hues = [290, 170, 30, 85, 220, 330, 50, 190];
-  let idx = 0;
-  for (let i = 0; i < name.length; i++) {
-    idx = (idx * 31 + name.charCodeAt(i)) % hues.length;
-  }
-  const h = hues[idx];
-  return `linear-gradient(135deg, oklch(62% 0.22 ${h}), oklch(50% 0.2 ${h}))`;
-}
 
 export function GroupsListScreen() {
   const navigate = useNavigate();
@@ -174,7 +165,7 @@ export function GroupsListScreen() {
           {filteredGroups.map((g) => (
             <button key={g.id} className={styles.card} onClick={() => openDetail(g)}>
               <div className={styles.cardLeft}>
-                <div className={styles.cardAvatar} style={{ background: groupGradient(g.name) }}>
+                <div className={styles.cardAvatar} style={{ background: ledgerGradient(g.name) }}>
                   {(g.name[0] ?? 'G').toUpperCase()}
                 </div>
                 <div className={styles.cardInfo}>
