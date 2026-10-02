@@ -462,7 +462,13 @@
   font-weight: 600;
 }
 
-.actPrimary:hover { opacity: 0.9; }
+.actPrimary:hover {
+  /* Same specificity as .actBtn:hover above, later in file: re-asserts the
+     gradient so the ghost-button wash never stomps it (BUG-4). */
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  opacity: 0.9;
+  box-shadow: 0 0 16px var(--color-primary-glow);
+}
 
 .txRow {
   display: flex;

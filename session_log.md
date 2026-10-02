@@ -601,3 +601,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Phase 16 complete on `feature/theme-accent` (unpushed). Next: user confirms merge to `dev` (REPO_RULES §3) — then push + Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (BUG-4 hover fix)
+
+### Changes
+- User report: light-mode hover on "+ New Transaction" washed the label (white on near-white)
+- Logged BUG-4 first per §3.11, diagnosed: `.actBtn:hover` wash bg (0,2,0) stomps `.actPrimary` gradient; audited all other gradient-button hovers (opacity/glow only — safe)
+- Owner-approved option A: `.actPrimary:hover` re-asserts gradient + opacity + glow
+- Verified live on :5174 (light/violet): real hover keeps gradient + white label, screenshot; 0 console errors
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-4 fixed on `feature/theme-accent` (unpushed, CHANGELOG deferred to `dev` merge). Next: merge confirmation.
