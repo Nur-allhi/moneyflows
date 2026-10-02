@@ -874,3 +874,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.11.0 live on master + dev. Next: user call.
+
+## Session 2026-10-02 (settings reorganization, on dev)
+
+### Changes
+- NEW components/settings/SettingsDisclosure.tsx + CSS: reusable collapsible section (loan-ledger chevron SVG M4 6l4 4 4-4, grid 0fr→1fr expand, tokens only)
+- SettingsPage: 6 tabs → 5 (Backup & Storage merged: Restore Points latest-hero + Show-all-N, Cloud Backup latest-file + Show-all-N, Engine Health, Import/Export); General/Dashboard/Activity/About wrapped in disclosures; sub-nav 160px → 200px nowrap
+- SettingsModal: same disclosures mirrored (Money & Region, Appearance, Limits, Restore, Cloud, Storage, App)
+- Gates: typecheck PASS, eslint PASS (touched files), build PASS, unit 48/48 PASS (17 e2e suites fail under vitest runner — pre-existing config issue, untouched); detect_changes MEDIUM, settings scope only
+
+### Status
+- Committed on dev. Next: user call.
+
