@@ -81,7 +81,7 @@
 }
 
 .balance {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;

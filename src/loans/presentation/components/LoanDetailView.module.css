@@ -80,7 +80,7 @@
 }
 
 .amountValue {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-6xl);
   font-weight: 700;
   color: var(--color-expense);
@@ -107,7 +107,7 @@
 }
 
 .availableValue {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-income);
@@ -214,7 +214,7 @@
 }
 
 .lenderAmount {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-expense);
@@ -706,7 +706,7 @@
 }
 
 .txAmount {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;

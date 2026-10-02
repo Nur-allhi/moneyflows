@@ -112,7 +112,7 @@
 
 .amt {
   text-align: right;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-body);
   white-space: nowrap;
 }
 

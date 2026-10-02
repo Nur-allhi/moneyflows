@@ -78,7 +78,7 @@
 }
 
 .amount {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-expense);

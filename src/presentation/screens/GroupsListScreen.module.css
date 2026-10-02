@@ -99,7 +99,7 @@
 }
 
 .cardBalance {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-3xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -207,7 +207,7 @@
 }
 
 .detailBal {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -225,7 +225,7 @@
 }
 
 .totalAmt {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-3xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;

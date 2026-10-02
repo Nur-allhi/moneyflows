@@ -158,7 +158,7 @@
 }
 
 .debit {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--color-expense);
@@ -169,7 +169,7 @@
 }
 
 .credit {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
@@ -180,7 +180,7 @@
 }
 
 .balance {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   text-align: center;

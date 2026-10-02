@@ -114,7 +114,7 @@
 }
 
 .cardBalance {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-3xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -327,7 +327,7 @@
 
   .cardBalance {
     font-size: var(--text-xl);
-    font-family: var(--font-mono);
+    font-family: var(--font-body);
     font-weight: 600;
     color: var(--color-teal);
     flex-shrink: 0;

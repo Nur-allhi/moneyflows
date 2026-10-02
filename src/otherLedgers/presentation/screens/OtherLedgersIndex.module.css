@@ -34,7 +34,7 @@
 .cardInfo { display: flex; flex-direction: column; min-width: 0; }
 .cardName { font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cardTag { font-size: 12px; color: var(--color-text-secondary); }
-.cardBalance { font-family: var(--font-mono, monospace); font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; }
+.cardBalance { font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; }
 .grouped { display: flex; flex-direction: column; gap: 16px; }
 .section {
   display: flex;

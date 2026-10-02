@@ -15,7 +15,7 @@
 }
 
 .amount {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 28px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
