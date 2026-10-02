@@ -817,6 +817,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Playwright verified (2/2, spec deleted after): `elementFromPoint` at peek top = aside; screenshots confirm in-flow toggle + peek floating above header
 - Gates: typecheck PASS, eslint PASS, build PASS
 
+## Session 2026-10-02 (sidebar smooth fold, same branch)
+
+### Changes
+- User report: nav buttons jumped down/up on fold — the top area changed height between states (stacked M+toggle vs logo row)
+- Fix (CSS-only): `.brandSlot` locked to a fixed 104px in both states (fits the 74px folded stack and the logo row) + padding transition; nav offset now identical, verified NAV Y = 145px before/mid/after via Playwright (spec deleted after)
+- Gates: build PASS
+
 ## Session 2026-10-02 (sidebar nav icons, same branch)
 
 ### Changes

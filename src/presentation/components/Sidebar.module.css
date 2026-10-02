@@ -15,11 +15,15 @@
 }
 
 .brandSlot {
+  /* Fixed height in BOTH states so the nav below never jumps when the
+     tall folded stack (M mark + toggle) swaps with the short logo row. */
+  height: 104px;
   padding: 0 20px 28px;
-  min-height: 52px;
+  min-height: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+  transition: padding 0.25s ease;
 }
 
 .logo {
@@ -260,7 +264,8 @@
 
 .collapsed .brandSlot {
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  align-items: center;
   gap: 10px;
   padding: 0 0 28px;
 }
@@ -304,6 +309,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
+  .brandSlot,
   .label,
   .footerText,
   .toggleBtn svg {
