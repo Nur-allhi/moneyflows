@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Tap feedback on every button: one-shot click animations (pop, spin, twist, ring, nudge) with reduced-motion support — header gear spins, theme icon swaps in, plus twists, bell rings, back nudges.
+
+### Fixed
+- Dashboard "New Transaction" icon and label wrapped to two lines after the animation rollout (single wrapper collapsed the flex gap; split into two spans sharing one key).
+
 ## [1.10.0] - 2026-10-02
 
 ### Added
