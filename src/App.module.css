@@ -109,3 +109,29 @@
     padding: 0 16px;
   }
 }
+
+@media print {
+  .layout {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .main {
+    display: block;
+    overflow: visible;
+    padding: 0;
+  }
+
+  .searchRow {
+    display: none;
+  }
+
+  .content {
+    display: block;
+  }
+}

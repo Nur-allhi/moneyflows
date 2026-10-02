@@ -384,3 +384,9 @@
     display: none;
   }
 }
+
+@media print {
+  .header {
+    display: none;
+  }
+}

@@ -67,7 +67,7 @@ export function BottomNav({ items, className = '' }: BottomNavProps) {
 
   return (
     <>
-      <nav className={`${styles.nav} ${hidden ? styles.navHidden : ''} ${className}`}>
+      <nav className={`${styles.nav} ${hidden ? styles.navHidden : ''} ${className}`} data-testid="bottom-nav">
         {left.map((item) => (
           <NavLink
             key={item.path}

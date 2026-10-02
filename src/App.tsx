@@ -20,6 +20,7 @@ const GroupsListScreen = lazy(() => import('./presentation/screens/GroupsListScr
 const TagLedgerScreen = lazy(() => import('./presentation/screens/TagLedgerScreen').then(m => ({ default: m.TagLedgerScreen })));const GroupLedgerScreen = lazy(() => import('./presentation/screens/GroupLedgerScreen').then(m => ({ default: m.GroupLedgerScreen })));
 const OtherLedgersIndex = lazy(() => import('./otherLedgers/presentation/screens/OtherLedgersIndex').then(m => ({ default: m.OtherLedgersIndex })));
 const OtherLedgerDetail = lazy(() => import('./otherLedgers/presentation/screens/OtherLedgerDetail').then(m => ({ default: m.OtherLedgerDetail })));
+const MemberReportScreen = lazy(() => import('./reports/presentation/screens/MemberReportScreen').then(m => ({ default: m.MemberReportScreen })));
 const SetupWizard = lazy(() => import('./presentation/screens/SetupWizard').then(m => ({ default: m.SetupWizard })));
 const SettingsPage = lazy(() => import('./presentation/screens/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
@@ -108,7 +109,11 @@ function AppLayout() {
   }, [searchOpen]);
 
   const breadcrumb = basePath === '/member' && segments.length >= 2
-    ? [{ label: 'Members', path: '/member' }, { label: members.find((m) => m.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? '') }]
+    ? [
+      { label: 'Members', path: '/member' },
+      { label: members.find((m) => m.id === decodeURIComponent(segments[1] ?? ''))?.name ?? decodeURIComponent(segments[1] ?? ''), path: `/member/${segments[1]}` },
+      ...(segments[2] === 'report' ? [{ label: 'Report' }] : []),
+    ]
     : basePath === '/groups' && segments.length >= 2
       ? [{ label: 'Groups', path: '/groups' }, { label: groupNameMap[decodeURIComponent(segments[1] ?? '')] ?? decodeURIComponent(segments[1] ?? '') }]
       : basePath === '/tags' && segments[1]
@@ -176,6 +181,7 @@ export function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/member" element={<MemberList />} />
             <Route path="/member/:id" element={<MemberProfile />} />
+            <Route path="/member/:id/report" element={<MemberReportScreen />} />
             <Route path="/groups" element={<GroupsListScreen />} />
             <Route path="/groups/:groupId" element={<GroupLedgerScreen />} />
             <Route path="/tags" element={<TagLedgerScreen />} />
