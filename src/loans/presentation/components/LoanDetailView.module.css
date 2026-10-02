@@ -52,7 +52,7 @@
   padding: 2px 8px;
   border-radius: 6px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .renameBtn {
@@ -258,7 +258,7 @@
   border: 1px solid var(--color-primary);
   border-radius: 8px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-family: var(--font-display);
   font-size: var(--text-base);
   font-weight: 600;
@@ -484,7 +484,7 @@
 .pillActive {
   border-color: var(--color-primary);
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .filterInput {
@@ -788,7 +788,7 @@
 .exportModal {
   padding: 20px 22px 18px;
   background: var(--color-bg, #12121c);
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--color-border, color-mix(in oklch, var(--color-wash) 6%, transparent));
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   max-width: 400px;

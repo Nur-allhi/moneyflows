@@ -7,7 +7,7 @@
   border-radius: 50%;
   border: none;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   display: grid;
   place-items: center;
   box-shadow: 0 4px 20px color-mix(in oklch, var(--color-primary) 30%, transparent);

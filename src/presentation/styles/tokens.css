@@ -6,6 +6,7 @@
   --color-border: oklch(100% 0 0 / 0.10);
   --color-primary: oklch(62% 0.22 290);
   --color-primary-deep: oklch(55% 0.22 290);
+  --color-text-on-primary: #fff;
   --color-primary-glow: color-mix(in oklch, var(--color-primary) 12%, transparent);
   --color-income: oklch(65% 0.15 170);
   --color-expense: oklch(62% 0.18 30);
@@ -101,10 +102,12 @@
 :root[data-accent="teal"] {
   --color-primary: oklch(65% 0.15 180);
   --color-primary-deep: oklch(55% 0.15 180);
+  --color-text-on-primary: oklch(20% 0.01 260);
 }
 :root[data-accent="gold"] {
   --color-primary: oklch(70% 0.15 85);
   --color-primary-deep: oklch(60% 0.15 85);
+  --color-text-on-primary: oklch(20% 0.01 260);
 }
 :root[data-accent="coral"] {
   --color-primary: oklch(62% 0.18 30);

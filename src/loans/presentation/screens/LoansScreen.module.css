@@ -39,7 +39,7 @@
   border: none;
   border-radius: 10px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 600;
@@ -77,10 +77,10 @@
 
 .filterActive {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
-.filterActive:hover { color: #fff; }
+.filterActive:hover { color: var(--color-text-on-primary); }
 
 .filterAmt {
   font-family: var(--font-mono);

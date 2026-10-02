@@ -458,6 +458,7 @@
 .actPrimary {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   border-color: transparent;
+  color: var(--color-text-on-primary);
   font-weight: 600;
 }
 

@@ -167,6 +167,7 @@
   height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-primary), var(--color-income));
+  color: var(--color-text-on-primary);
   display: grid;
   place-items: center;
   font-family: var(--font-display);

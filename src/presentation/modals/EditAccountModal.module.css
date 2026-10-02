@@ -7,7 +7,7 @@
 .dangerZone {
   margin-top: 18px;
   padding-top: 14px;
-  border-top: 1px solid var(--color-border, rgba(255, 255, 255, 0.06));
+  border-top: 1px solid var(--color-border, color-mix(in oklch, var(--color-wash) 6%, transparent));
 }
 
 .dangerHint {
@@ -48,9 +48,9 @@
 
 .cancelBtn {
   padding: 9px 16px;
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--color-border, color-mix(in oklch, var(--color-wash) 6%, transparent));
   border-radius: 8px;
-  background: var(--color-surface, rgba(255, 255, 255, 0.04));
+  background: var(--color-surface, color-mix(in oklch, var(--color-wash) 4%, transparent));
   color: var(--color-text);
   font-size: 13.5px;
   cursor: pointer;

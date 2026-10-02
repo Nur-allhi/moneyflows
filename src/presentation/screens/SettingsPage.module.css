@@ -59,7 +59,7 @@
 
 .navActive {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   box-shadow: 0 0 20px var(--color-primary-glow);
   border-color: transparent;
 }
@@ -136,7 +136,7 @@
   padding: 10px 18px;
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-weight: 600;
   font-size: 13px;
   box-shadow: 0 0 20px var(--color-primary-glow);

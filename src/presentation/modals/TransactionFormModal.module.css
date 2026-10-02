@@ -295,7 +295,7 @@
   border: 0;
   border-radius: 10px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 600;
@@ -347,7 +347,7 @@
   width: 520px;
   max-width: 90vw;
   max-height: 85vh;
-  background: oklch(16% 0.015 260 / 0.75);
+  background: color-mix(in oklch, var(--color-bg) 75%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid color-mix(in oklch, var(--color-wash) 10%, transparent);
@@ -416,7 +416,7 @@
 
 .saveBtn {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .saveBtn:hover {
@@ -609,7 +609,7 @@
   width: 360px;
   max-width: 85vw;
   max-height: 70vh;
-  background: oklch(16% 0.015 260 / 0.95);
+  background: color-mix(in oklch, var(--color-bg) 95%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid color-mix(in oklch, var(--color-wash) 10%, transparent);
@@ -802,7 +802,7 @@
 
 .loanTypeActive {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   border-color: transparent;
 }
 
@@ -854,7 +854,7 @@
 
 .createCpActions .saveBtn {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .createCpActions .saveBtn:hover {
@@ -887,7 +887,7 @@
   border: 0;
   border-radius: 10px;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-family: var(--font-display);
   font-size: 13px;
   font-weight: 600;
@@ -926,7 +926,7 @@
   border: none;
   border-radius: 8px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;

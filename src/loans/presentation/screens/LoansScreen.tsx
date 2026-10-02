@@ -182,7 +182,7 @@ export function LoansScreen() {
                 { key: 'lastTx' as const, label: 'Last transaction' },
                 { key: 'lastRepay' as const, label: 'Last repayment' },
               ].map((opt) => (
-                <button key={opt.key} className={txStyles.pickerItem} onClick={() => { setSortBy(opt.key); setShowSortPicker(false); }} style={sortBy === opt.key ? { background: 'var(--color-primary)', color: 'white', borderRadius: 10 } : undefined}>
+                <button key={opt.key} className={txStyles.pickerItem} onClick={() => { setSortBy(opt.key); setShowSortPicker(false); }} style={sortBy === opt.key ? { background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', borderRadius: 10 } : undefined}>
                   <span className={txStyles.pickerItemName}>{opt.label}</span>
                 </button>
               ))}

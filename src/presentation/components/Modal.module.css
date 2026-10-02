@@ -23,7 +23,7 @@
   width: 520px;
   max-width: 90vw;
   max-height: 85vh;
-  background: oklch(16% 0.015 260 / 0.75);
+  background: color-mix(in oklch, var(--color-bg) 75%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid color-mix(in oklch, var(--color-wash) 10%, transparent);
@@ -133,7 +133,7 @@
 
 .btnSave {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
 }
 
 .btnSave:hover {

@@ -19,7 +19,7 @@
   --color-popover: var(--color-surface);
   --color-popover-foreground: var(--color-text);
   --color-primary: var(--color-primary);
-  --color-primary-foreground: #fff;
+  --color-primary-foreground: var(--color-text-on-primary);
   --color-secondary: var(--color-surface);
   --color-secondary-foreground: var(--color-text);
   --color-muted: var(--color-surface-hover);

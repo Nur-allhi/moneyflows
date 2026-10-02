@@ -2,7 +2,7 @@
 .topBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .leftCount { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
 .rightControls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1; }
-.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: white; border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; }
+.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: var(--color-text-on-primary); border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; }
 .addBtn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
 .addBtn:active { transform: scale(0.98); }
 .searchWrap { width: 240px; max-width: 42vw; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; backdrop-filter: blur(20px); flex-shrink: 1; }

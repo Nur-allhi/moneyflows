@@ -55,7 +55,7 @@
 
 .active {
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   box-shadow: 0 0 16px var(--color-primary-glow);
   animation: popIn 0.25s ease-out;
 }

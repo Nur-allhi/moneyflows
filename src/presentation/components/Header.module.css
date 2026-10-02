@@ -175,7 +175,7 @@
   border-radius: 50%;
   border: none;
   background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
-  color: #fff;
+  color: var(--color-text-on-primary);
   cursor: pointer;
   display: flex;
   align-items: center;

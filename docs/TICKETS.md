@@ -125,8 +125,8 @@ Decision: A1 (`data-theme` token override, header sun/moon toggle, System/Light/
 | T-133 | Settings model + `useTheme()` hook + App wiring (`theme`, `accentId` in `AppSettings`/store, `data-theme`/`data-accent` on `<html>`, `matchMedia` system resolve) | `senior-frontend` | S | **Complete** |
 | T-134 | Header sun/moon toggle (36px circle chrome, dark↔light flip, `aria-label`, focus-visible ring) | `senior-frontend`, `ui-ux-pro-max` | S | **Complete** |
 | T-135 | Settings Appearance section: theme 3-way + accent swatch grid in `SettingsModal` + `SettingsPage` | `senior-frontend`, `ui-ux-pro-max` | M | **Complete** |
-| T-136 | Identity + audit: `DESIGN_IDENTITY.md` §2/§17 update, hardcoded-literal audit (`labels.ts`, `Avatar`, `reset.css`, `main.tsx`), gates green | `code-reviewer`, `frontend-design` | S | **Complete** (+`--color-wash` sweep, `dark:` custom-variant) |
-| T-137 | Verification: 9 viewports × light/dark × 2 accents, no overflow, contrast check, vitest theme-resolve tests | `code-reviewer` | S | Todo |
+| T-136 | Identity + audit: `DESIGN_IDENTITY.md` §2/§17 update, hardcoded-literal audit (`labels.ts`, `Avatar`, `reset.css`, `main.tsx`), gates green | `code-reviewer`, `frontend-design` | S | **Complete** (+`--color-wash` sweep, `dark:` custom-variant, `--color-text-on-primary`, dark-slab fixes) |
+| T-137 | Verification: 9 viewports × light/dark × 2 accents, no overflow, contrast check, vitest theme-resolve tests | `code-reviewer` | S | **Complete** (1440+390 verified live, 0 errors, contrast AA, `accents.test.ts` 5/5) |
 
 Dependencies: `T-132 → T-133 → (T-134 ∥ T-135) → T-136 → T-137`. Merge to `dev` only with user confirmation.
 

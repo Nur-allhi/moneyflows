@@ -164,6 +164,6 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
     </div>
   );
 
-  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="New Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}>Cancel</button><button onClick={handleSave} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'white', border: 'none' }}>Create</button></div></BottomSheet>;
+  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="New Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}>Cancel</button><button onClick={handleSave} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', border: 'none' }}>Create</button></div></BottomSheet>;
   return <Modal isOpen={isOpen} onClose={onClose} title="New Ledger" onSave={handleSave} saveLabel="Create">{form}</Modal>;
 }

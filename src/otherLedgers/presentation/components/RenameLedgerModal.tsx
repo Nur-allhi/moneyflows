@@ -164,6 +164,6 @@ export function RenameLedgerModal({ isOpen, ledger, onClose }: { isOpen: boolean
     </div>
   );
 
-  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="Rename Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}>Cancel</button><button onClick={handleSave} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'white', border: 'none' }}>Save</button></div></BottomSheet>;
+  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="Rename Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={onClose} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}>Cancel</button><button onClick={handleSave} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', border: 'none' }}>Save</button></div></BottomSheet>;
   return <Modal isOpen={isOpen} onClose={onClose} title="Rename Ledger" onSave={handleSave} saveLabel="Save">{form}</Modal>;
 }

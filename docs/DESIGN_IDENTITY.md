@@ -21,7 +21,7 @@ All values come from `src/presentation/styles/tokens.css:1-89`. Do not invent co
 | Family | Tokens | Notes |
 |--------|--------|-------|
 | **Color — base** | `--color-bg`, `--color-bg-glow`, `--color-surface`, `--color-surface-hover`, `--color-border`, `--color-text`, `--color-text-secondary` | `oklch` only. `surface-hover` = `oklch(100% 0 0 /0.08)`. |
-| **Color — accents** | `--color-primary` (violet `62% 0.22 290`), `--color-primary-deep` (`55% 0.22 290`, gradient tail), `--color-primary-glow` (`color-mix primary 12%`), `--color-primary-mark` (`color-mix primary 28%`), `--color-income`/`--color-teal` `65% 0.15 170`, `--color-expense`/`--color-coral` `62% 0.18 30`, `--color-cash`/`--color-warning` `75% 0.15 85`, `--color-purple` `55% 0.18 290`, `--color-success` `65% 0.15 150`, `--color-danger` `58% 0.18 30` | Alias pairs are intentional. Use semantic alias (`--color-income` for money in, `--color-expense` for money out). Glow/mark derive from `--color-primary` via `color-mix` so accents switch them automatically. |
+| **Color — accents** | `--color-primary` (violet `62% 0.22 290`), `--color-primary-deep` (`55% 0.22 290`, gradient tail), `--color-text-on-primary` (`#fff`, dark ink for teal/gold), `--color-primary-glow` (`color-mix primary 12%`), `--color-primary-mark` (`color-mix primary 28%`), `--color-income`/`--color-teal` `65% 0.15 170`, `--color-expense`/`--color-coral` `62% 0.18 30`, `--color-cash`/`--color-warning` `75% 0.15 85`, `--color-purple` `55% 0.18 290`, `--color-success` `65% 0.15 150`, `--color-danger` `58% 0.18 30` | Alias pairs are intentional. Use semantic alias (`--color-income` for money in, `--color-expense` for money out). Glow/mark derive from `--color-primary` via `color-mix` so accents switch them automatically. |
 | **Color — wash** | `--color-wash` (white `100% 0 0`, dark-ink `30% 0.02 260` in light) + `--color-scrollbar`/`--color-scrollbar-hover` | ALL neutral white washes (hovers, actives, separators, inputs) MUST be `color-mix(in oklch, var(--color-wash) <pct>%, transparent)` — never a literal white. On-accent whites (FAB ring, progress gloss) stay literal. |
 | **Theming** | `:root[data-theme="light"]` overrides base tokens only; `:root[data-accent="<id>"]` sets `--color-primary` + `--color-primary-deep` only (`violet/blue/teal/gold/coral/pink`, ids mirrored in `constants/accents.ts`) | Semantics never switch. Applied by `useTheme()` + pre-paint script in `index.html`. `dark:` Tailwind variants follow app `data-theme` via `@custom-variant`. |
 | **Gradient — interaction** | `linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))` | Used for: active `SegmentedTabs` `SegmentedTabs.module.css:56-60`, `btnSave` `Modal.module.css:135`, `FAB` `FAB.module.css:9-13`, `submitBtn` `TransactionFormModal.module.css:297` — never a hardcoded tail |
@@ -35,7 +35,7 @@ All values come from `src/presentation/styles/tokens.css:1-89`. Do not invent co
 | **Scrollbar** | `6px pill thumb oklch(100% 0 0 /0.12) → /0.2 hover` | `reset.css:38-59` |
 | **Tailwind aliases banned** | `tailwind.css:5-33` duplicates (`--color-card`, `--color-input`, `--color-ring`). New code reads `tokens.css` only. |
 
-**Rule:** No hex, no `rgba()` literals outside tokens, no hardcoded spacing/radii. Grep for `#[0-9a-f]` and `style={{` in review.
+**Rule:** No hex, no `rgba()` literals outside tokens, no hardcoded spacing/radii. Grep for `#[0-9a-f]` and `style={{` in review. Text on any primary surface (gradient, solid, shadcn) MUST be `var(--color-text-on-primary)` — never a hardcoded white.
 
 ---
 
