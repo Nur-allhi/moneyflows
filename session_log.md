@@ -773,3 +773,10 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Pre-merge gates on branch tip: typecheck PASS, build PASS, unit 48/48 PASS, eslint clean (1 pre-existing `LedgerSection` warning)
 - `detect_changes` vs dev: HIGH disclosed (50 files, all additive-only animation wiring, no logic changes); no version bump (feature→dev, per VERSIONING)
 - First `dev` push timed out (network, retry succeeded `427cda3..e6a9d41`); back on `feature/ui-polish` (clean, one commit behind the merge)
+
+## Session 2026-10-02 (BUG-9 amount clipping, same branch)
+
+### Changes
+- Logged BUG-9 first per §3.11: big amounts clipped left in Recent Transactions (fixed 100px `.txAmount`); user picked scope 1 (dashboard + ledgers)
+- Fix: dashboard cell `width` → `min-width` (grows, desc flexes); ledger `.debit/.credit/.balance` centered → right-aligned (leading digits + ellipsis). `minmax` tracks rejected: header/rows are separate grids, content sizing would misalign them
+- Gates: build PASS, typecheck PASS; impact LOW (LedgerTable has 3 render-only consumers; RecentTxsPanel not indexed, single consumer Dashboard)
