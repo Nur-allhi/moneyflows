@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.10.0',
+    items: [
+      'The loading screen now shows the app version at the bottom.',
+    ],
+  },
+  {
     version: '1.9.0',
     items: [
       'Light mode is here — tap the sun/moon button in the header, or pick System, Light or Dark in Settings → Appearance.',
