@@ -741,3 +741,11 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.10.0 live on master + dev. Next: user call (Other Ledgers V2 on "next update", or new work).
+
+## Session 2026-10-02 (branch feature/ui-polish)
+
+### Changes
+- New branch `feature/ui-polish` off `dev` (user-approved name), pushed to origin with upstream tracking — clean base at `427cda3` (post-1.10.0)
+
+### Status
+- Ready for UI fixes. Next: user lists the fixes.
