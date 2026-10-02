@@ -31,6 +31,14 @@
   cursor: not-allowed;
 }
 
+@media print {
+  .panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+}
+
 .glowViolet {
   box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
 }

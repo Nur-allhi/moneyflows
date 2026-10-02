@@ -24,6 +24,12 @@
   transform: translateY(calc(100% + env(safe-area-inset-bottom)));
 }
 
+@media print {
+  .nav {
+    display: none;
+  }
+}
+
 .item {
   display: flex;
   flex-direction: column;

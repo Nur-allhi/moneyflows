@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.8.0',
+    items: [
+      'New Report button on member profiles — full member report with a summary cover plus one table per account.',
+      'Includes loan ledgers grouped by person and owned Other Ledgers, with period presets and an account picker.',
+      'Export the report to PDF, CSV or Print — balances stay correct even when filtered.',
+    ],
+  },
+  {
     version: '1.7.0',
     items: [
       'The top search bar now searches everything — transactions, accounts, members, loans, groups, tags and other ledgers — from any page.',

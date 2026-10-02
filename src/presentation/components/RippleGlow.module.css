@@ -6,6 +6,12 @@
   overflow: hidden;
 }
 
+@media print {
+  .container {
+    display: none;
+  }
+}
+
 .ripple {
   position: absolute;
   transform: translate(-50%, -50%);

@@ -499,3 +499,63 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Live on dev. Next: delete `feature/global-search`? Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (release 1.7.0)
+
+### Changes
+- Version bump `1.6.0 → 1.7.0` (MINOR per VERSIONING §2: feat + Added) in one commit `dc858f2`: package.json + whatsNew 1.7.0 entry + CHANGELOG `[1.7.0] - 2026-10-02`
+- Merged `dev → master` no-ff (`6c1e014`), tagged `v1.7.0`, pushed `master --follow-tags`; `dev` fast-forwarded to master and pushed
+- Gates on release: build PASS, tsc PASS, unit 29/29 PASS, version string confirmed baked into bundle; lint has 1 pre-existing warning in untouched LedgerSection.tsx — disclosed, predates batch
+
+### Status
+- Released v1.7.0 on master. Next: delete `feature/global-search`? Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (member-wise whole report, B+C)
+
+### Changes
+- New branch `feature/member-wise-report` off dev (user-approved B+C combined: service engine + preview screen)
+- T-132 `src/reports/` NEW: `MemberReportService` (accounts section, full-history balances, closing pinned to live `account.balance`) + 4 vitest tests
+- T-133: loan sections grouped by counterparty (reuses loan credit/debit sets) + other-ledger sections (reuses `computeOtherRunningBalances`/`sortOtherEntries`) + 3 more tests (8 total in scope, all green)
+- T-134 `memberReportPdf.ts`: cover summary + per-account/loan/ledger tables via lazy jspdf-autotable, `Member_<name>_<date>.pdf`
+- T-135 `memberReportCsv.ts`: BOM + `Section,Account,Date,Type,Description,Debit,Credit,Balance` rows with RFC4180 quoting + 1 test
+- T-136 `MemberReportScreen` (`/member/:id/report`): presets (all/month/last-3/custom), account chips, Loans/Other-ledgers toggles, summary hero, LedgerTable sections, PDF/CSV/Print, print stylesheet, mobile hero 2-col
+- T-137 wiring: lazy route + `Members / Name / Report` breadcrumb in `App.tsx` (impact LOW), Report button in `ProfileHero` desktop actions + mobile pills, CHANGELOG `[Unreleased]` entry
+- Gates: unit 8/8 (reports scope) PASS, `tsc` PASS, `eslint --max-warnings 0` PASS on touched files, `vite build` PASS
+- Note: `git push` to origin repeatedly timed out (network) — 5 commits local on branch at `71af06c`; push pending retry
+- Follow-up (`90e71cc`): page feedback — every account/loan/ledger section now starts on a fresh PDF page (`doc.addPage()`), same rule in the print stylesheet; cover summary + first section share page 1
+- Follow-up (`e4a83b9`, user-confirmed): loan rows now follow member perspective — money out = debit, money back = credit (`isOutflow` vs included accounts); receivable/outstanding unchanged; 9/9 tests green; push to origin failing again (network), commit local
+- Fix (`f1dcdc4`, user-reported): linked rows showed "(deleted account)" because the name map only knew the member's own accounts. Now resolves against ALL accounts — same-member shows bare name, other members show "Member / Account" (also in loan sections); only truly missing accounts read as deleted. 10/10 tests green, pushed.
+- UI (`d0c1a62`, user-approved option B): filters moved off the page into a funnel-button sheet — desktop Modal / mobile BottomSheet (`ReportFilterSheet`: period, accounts, sections, Reset/Apply); header keeps a one-line summary (`This month · 3 of 5 accounts`), funnel shows a dot when filters differ from default. Pushed.
+- Fix (`27955a7`, user-reported): custom From/To used native date inputs — now uses the shared shadcn `DatePicker` calendar like every other screen. Pushed.
+- Debug (user-reported "no calendar opens"): reproduced via new `e2e/report-calendar.spec.ts` — root cause was a STALE dev server on :3000 serving the pre-DatePicker bundle (HMR hadn't picked up the fix; `reuseExistingServer` kept reusing it). Killed it, fresh server → calendar opens, e2e green. Also dropped the Modal's redundant default Cancel/Save footer in the filter sheet (`footer={<></>}`). Committed `9c0fe31`, pushed.
+- Print (`9976920`, user-reported "Print takes the whole app screen"): print now isolates report content — sidebar/header/bottom-nav/ripple/search hidden, tokens flip to light paper + dark ink (`@page 12mm`), blur/shadows off, and full non-virtualized bordered tables (`ReportPrintTable`, same Date|Type|Description|Debit|Credit|Balance columns as the PDF) replace the virtualized LedgerTables with per-section page breaks. Verified by new print-media e2e (chrome hidden, print tables visible). Screen split to respect 300 LOC (`ReportSections`). Pushed.
+
+## Session 2026-10-02 (merge member-wise report → dev)
+
+### Changes
+- Squash-merged `feature/member-wise-report` → `dev` (`5f6c501`, user-approved): full member-wise report (T-132..T-137 + perspective flip, counterparty labels, per-page PDF sections, filter sheet, DatePicker fix, print isolation) + CHANGELOG `[Unreleased]` entry; pushed `dev`
+- Pre-merge gates on merged result: typecheck PASS, unit 10/10 (reports scope) PASS, build PASS
+
+### Skill(s) Used
+- senior-backend, senior-frontend
+
+### Status
+- Live on dev. Next: delete `feature/member-wise-report`? Version bump at release time per VERSIONING.md. Other Ledgers V2 on "next update".
+
+### Skill(s) Used
+- senior-backend, senior-frontend
+
+### Status
+- Complete on branch, NOT merged. Next: user reviews report screen live → confirm merge into dev (+ push when network recovers).
+
+## Session 2026-10-02 (release bump 1.7.0 → 1.8.0)
+
+### Changes
+- MINOR bump per VERSIONING.md §2 (feat(report) member-wise report → Added): `package.json:4` 1.7.0→1.8.0 + `whatsNew.ts:8` new 1.8.0 entry (3 plain-English bullets) + `CHANGELOG.md:8` `[Unreleased]`→`## [1.8.0] - 2026-10-02`, committed `b126de3` on dev
+- Gates on bump: typecheck PASS, build PASS, `detect_changes` LOW (WHATS_NEW only, no processes); lint has 1 pre-existing warning in untouched `LedgerSection.tsx:82` (scheduleClose dep) — out of scope for atomic version commit
+
+### Skill(s) Used
+- gitnexus
+
+### Status
+- 1.8.0 live on dev (unpushed). Next: user confirms `merge dev to master` → merge + tag v1.8.0 per VERSIONING.md §5.

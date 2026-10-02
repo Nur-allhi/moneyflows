@@ -77,8 +77,7 @@
   --text-7xl: clamp(20px, 2.5vw + 11px, 28px);
 
   --transition-fast: 0.2s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.4s ease;
+  --transition-normal: 0.3s ease;  --transition-slow: 0.4s ease;
 
   --animation-shimmer: 1.5s ease-in-out infinite;
 }
@@ -86,5 +85,30 @@
 @media (max-width: 768px) {
   :root {
     --font-size-base: clamp(14px, 3.5vw, 16px);
+  }
+}
+
+@page {
+  margin: 12mm;
+}
+
+/* Print reads like the exported PDF: light paper, dark ink, no glow. */
+@media print {
+  :root {
+    --color-bg: oklch(100% 0 0);
+    --color-surface: oklch(100% 0 0);
+    --color-surface-hover: oklch(95% 0 0);
+    --color-border: oklch(85% 0 0);
+    --color-text: oklch(25% 0 0);
+    --color-text-secondary: oklch(45% 0 0);
+    --color-primary-glow: oklch(62% 0.22 290 / 0);
+    --color-primary-mark: oklch(62% 0.22 290 / 0.12);
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-glow: none;
+  }
+  html, body {
+    background: oklch(100% 0 0);
   }
 }
