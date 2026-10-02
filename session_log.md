@@ -547,3 +547,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Complete on branch, NOT merged. Next: user reviews report screen live → confirm merge into dev (+ push when network recovers).
+
+## Session 2026-10-02 (release bump 1.7.0 → 1.8.0)
+
+### Changes
+- MINOR bump per VERSIONING.md §2 (feat(report) member-wise report → Added): `package.json:4` 1.7.0→1.8.0 + `whatsNew.ts:8` new 1.8.0 entry (3 plain-English bullets) + `CHANGELOG.md:8` `[Unreleased]`→`## [1.8.0] - 2026-10-02`, committed `b126de3` on dev
+- Gates on bump: typecheck PASS, build PASS, `detect_changes` LOW (WHATS_NEW only, no processes); lint has 1 pre-existing warning in untouched `LedgerSection.tsx:82` (scheduleClose dep) — out of scope for atomic version commit
+
+### Skill(s) Used
+- gitnexus
+
+### Status
+- 1.8.0 live on dev (unpushed). Next: user confirms `merge dev to master` → merge + tag v1.8.0 per VERSIONING.md §5.
