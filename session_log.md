@@ -824,6 +824,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Fix (CSS-only): `.brandSlot` locked to a fixed 104px in both states (fits the 74px folded stack and the logo row) + padding transition; nav offset now identical, verified NAV Y = 145px before/mid/after via Playwright (spec deleted after)
 - Gates: build PASS
 
+## Session 2026-10-02 (sidebar full animation pass, same branch)
+
+### Changes
+- User asked for fully animated open/close/pin: page content padding now glides (`padding-left` 0.25s transition — measured mid-flight at 125px, proving glide not snap), peek shadow fades in, logo/M-mark crossfade in place via stacked grid faces (no size change, nav rock-solid at 145px through the transition)
+- Playwright 2/2 green (spec deleted after); screenshot confirms folded stack (M over chevron, centered) + reclaimed content
+- Gates: typecheck PASS, eslint PASS, build PASS
+
 ## Session 2026-10-02 (sidebar nav icons, same branch)
 
 ### Changes

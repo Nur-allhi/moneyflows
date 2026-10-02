@@ -11,19 +11,49 @@
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   position: relative;
-  transition: width 0.25s ease;
+  transition: width 0.25s ease, box-shadow 0.25s ease;
 }
 
 .brandSlot {
-  /* Fixed height in BOTH states so the nav below never jumps when the
-     tall folded stack (M mark + toggle) swaps with the short logo row. */
+  /* Fixed height in BOTH states so the nav below never moves. The two
+     faces (logo row / M-mark stack) share one grid cell and crossfade —
+     the container height never changes, so nothing jumps. */
   height: 104px;
   padding: 0 20px 28px;
   min-height: 0;
+  display: grid;
+}
+
+.face {
+  grid-area: 1 / 1;
+  align-self: start;
+  transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+}
+
+.face:not(.faceHidden) {
+  transition: opacity 0.2s ease, visibility 0s;
+}
+
+.faceHidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.faceOpen {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
-  transition: padding 0.25s ease;
+}
+
+.faceOpen .toggleBtn {
+  margin-left: auto;
+}
+
+.faceShut {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .logo {
@@ -35,6 +65,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
 .logoSpan {
@@ -203,7 +234,6 @@
 }
 
 .miniMark {
-  display: none;
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -212,6 +242,7 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-2xl);
+  display: grid;
   place-items: center;
   flex-shrink: 0;
 }
@@ -225,7 +256,6 @@
 }
 
 .toggleBtn {
-  margin-left: auto;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -263,23 +293,7 @@
 }
 
 .collapsed .brandSlot {
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 10px;
   padding: 0 0 28px;
-}
-
-.collapsed .toggleBtn {
-  margin-left: 0;
-}
-
-.collapsed .logo {
-  display: none;
-}
-
-.collapsed .miniMark {
-  display: grid;
 }
 
 .collapsed .item {
@@ -309,7 +323,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
-  .brandSlot,
+  .face,
   .label,
   .footerText,
   .toggleBtn svg {
