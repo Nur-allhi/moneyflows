@@ -29,7 +29,7 @@
 }
 
 .glass-input {
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in oklch, var(--color-wash) 3%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--color-border);
@@ -62,7 +62,7 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--color-surface) 25%, rgba(255, 255, 255, 0.08) 50%, var(--color-surface) 75%);
+  background: linear-gradient(90deg, var(--color-surface) 25%, color-mix(in oklch, var(--color-wash) 8%, transparent) 50%, var(--color-surface) 75%);
   background-size: 200% 100%;
   animation: shimmer var(--animation-shimmer);
   border-radius: var(--radius-sm);
@@ -180,7 +180,7 @@
 }
 
 .retry-btn:active {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .retry-btn:disabled {

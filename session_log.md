@@ -571,3 +571,92 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.8.0 live on master + dev. Next: Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (theme + accent planning)
+
+### Changes
+- User approved A1+B1: `data-theme` token override + header sun/moon toggle; 6 curated OKLCH accents in Settings
+- Created branch `feature/theme-accent` off `dev`; committed `fa51dab`: `docs/plans/THEME_ACCENT_PLAN.md` (NEW) + Phase 16 T-132..T-137 in `docs/TICKETS.md`
+
+### Skill(s) Used
+- frontend-design, senior-frontend
+
+### Status
+- Plan committed on `feature/theme-accent` (unpushed). Next: build T-132 token foundation on user go-ahead.
+
+## Session 2026-10-02 (Phase 16 build: theme + accent T-132..T-137)
+
+### Changes
+- T-132 token foundation (`868a5d9`, 25 files): `--color-primary-deep`, `[data-theme="light"]`, 6 `[data-accent]` blocks, glow/mark via `color-mix` (auto-follow), gradient tails swapped, tailwind `@theme inline` aliased to tokens (shadcn follows theme+accent, verified in dist CSS)
+- T-133 settings + hook (`a4202d9`): `theme`/`accentId` in `AppSettings`, deep-fill `merge` in store (backfills old installs), `ACCENTS` constants, `useTheme()` + pre-paint script in `index.html`, wired in `AppLayout`
+- T-134 header toggle (`d2ae6ff`): sun/moon 36px button in `settingsWrap` (desktop + mobile), `useEffectiveTheme()`, all 4 states
+- T-135 appearance pickers (`3c3f004`): shared `AppearanceSection` (theme 3-way + swatch grid, instant-apply) in `SettingsModal` + `SettingsPage`
+- T-136 audit (`cf25eb4`, 41 files): `--color-wash` sweep (~100 white washes), `dark:` custom-variant follows app theme, `DESIGN_IDENTITY.md` §2/§17
+- T-136b + T-137 (`0849c8c`, 32 files): verification found gold/teal white-text fail → new `--color-text-on-primary` (dark ink for teal/gold) swept across all primary buttons + shadcn; dark slabs (Modal/Search/pickers/drawers) made adaptive; fixed pre-existing `actPrimary` missing white text (invisible in light); `accents.test.ts` 5/5 (palette↔CSS sync guard)
+- Live verification (dev :5174, fresh boot): header toggle flips + persists, store merge backfills defaults, 1440 dark/violet + light/violet + light/gold + 390 light/gold screenshots, overflow 0, 0 console errors, contrast body 13-15:1 / white-on-primary 3.6-4 / ink-on-teal-gold 6.5-7; 39/39 unit tests pass (17 e2e-under-vitest fails pre-existing)
+- Gates: typecheck PASS, build PASS, lint 1 pre-existing warning (`LedgerSection.tsx:82`)
+
+### Skill(s) Used
+- frontend-design, senior-frontend, code-reviewer
+
+### Status
+- Phase 16 complete on `feature/theme-accent` (unpushed). Next: user confirms merge to `dev` (REPO_RULES §3) — then push + Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (BUG-4 hover fix)
+
+### Changes
+- User report: light-mode hover on "+ New Transaction" washed the label (white on near-white)
+- Logged BUG-4 first per §3.11, diagnosed: `.actBtn:hover` wash bg (0,2,0) stomps `.actPrimary` gradient; audited all other gradient-button hovers (opacity/glow only — safe)
+- Owner-approved option A: `.actPrimary:hover` re-asserts gradient + opacity + glow
+- Verified live on :5174 (light/violet): real hover keeps gradient + white label, screenshot; 0 console errors
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-4 fixed on `feature/theme-accent` (unpushed, CHANGELOG deferred to `dev` merge). Next: merge confirmation.
+
+## Session 2026-10-02 (light-mode polish: semantic ramp + depth)
+
+### Changes
+- User asked to improve light background + text visibility; measured first: body ink 13.4 / muted 6.0 already good, but income 2.9 / gold 2.3 / success 3.0 on white cards failed
+- Owner-approved option B: `[data-theme="light"]` retuned semantic ramp (income 50/0.12/170, expense 52/0.15/30, cash 55/0.13/85, success 50/0.12/150 — all ≥4.9:1 on cards; purple/danger pass as-is), layered accent ambient (top + bottom wash), border 0.14→0.16
+- `DESIGN_IDENTITY.md` theming row documents the ramp
+- Verified live on :5174 (light/violet): computed tokens resolve to ramp values, dashboard screenshot legible, 0 console errors
+
+### Skill(s) Used
+- frontend-design
+
+### Status
+- Pushed on `feature/theme-accent`. Next: merge confirmation (CHANGELOG entry rides with merge).
+
+## Session 2026-10-02 (Phase 17: background presets T-138..T-140)
+
+### Changes
+- User asked for background choice per mode; owner-approved option A (curated presets, luminance in-lane)
+- T-138: `[data-bg]` blocks (midnight/forest/plum + sky/sand/mint; obsidian/paper are defaults), `bgDark`/`bgLight` in `AppSettings`, `backgrounds.ts`, `useTheme()` sets single `data-bg` for current mode + bg-tinted `theme-color`, pre-paint mirror
+- T-139: Appearance "Background" row (presets follow effective mode, reuses swatch styles) + `backgrounds.test.ts` 4/4
+- T-140: live verification — 8/8 presets resolve to exact values, seeded `bgDark:forest` boots correctly, dark/forest dashboard + picker screenshots, 0 errors; typecheck + build green
+- Fixed 2 `noUncheckedIndexedAccess` errors; updated `TICKETS.md` Phase 17 → Complete
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Phase 17 complete, pushed on `feature/theme-accent`. Next: merge confirmation.
+
+## Session 2026-10-02 (BUG-5 account cards)
+
+### Changes
+- User report: card text doesn't adapt to light mode; asked all components auto-adjust
+- Diagnosed: cards keep fixed dark gradients but inherit theme ink (dark-on-dark in light); audited all remaining `color:#fff/white` — avatars/badges/semantic are correct, found missed solid-primary whites (filter pills, add hovers, obBtn, filterIconBox) breaking under gold/teal
+- Note: user's :3000 runs pre-theme code (no header toggle) — verified there that old build has no light mode; all verification done on :5174 (feature branch) with demo.db
+- Logged BUG-5 first per §3.11; owner-approved option A (dark cards, white ink)
+- Fix: `.card` pins white ink, actions white, `:active` → press-scale (was gradient-stomping wash, BUG-4 pattern); missed on-primary whites → ink token; identity AccountCard row notes pinned ink
+- Verified live on demo.db (7 real cards, light mode): gradient bg + all-white text via computed styles; build green
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-5 fixed, pushed on `feature/theme-accent` (CHANGELOG deferred to `dev` merge). Next: merge confirmation.

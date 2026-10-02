@@ -232,6 +232,8 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131). Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
 
+**Phase 16: Theme (Light/Dark) + Accent Color (A1+B1)** — **complete, unmerged** on `feature/theme-accent` off `dev` (`docs/plans/THEME_ACCENT_PLAN.md` T-132..T-137). Header sun/moon toggle, Settings theme 3-way + 6 accent swatches, `useTheme()` + pre-paint, `--color-wash`/`--color-text-on-primary` tokens, `accents.test.ts` 5/5, live-verified 1440+390. Needs user confirmation to merge → `dev` (REPO_RULES §3).
+
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 
 <!-- gitnexus:start -->

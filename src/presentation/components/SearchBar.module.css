@@ -53,7 +53,7 @@
   height: 22px;
   border-radius: 50%;
   border: none;
-  background: oklch(100% 0 0 / 0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   color: var(--color-text-secondary);
   cursor: pointer;
   display: grid;

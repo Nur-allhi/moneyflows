@@ -6,6 +6,7 @@ import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { isFsaSupported, folderSync } from '../../infrastructure/database/FolderSync';
 import type { SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
 import { WhatsNewModal } from '../components/WhatsNewModal';
+import { AppearanceSection } from '../components/AppearanceSection';
 import { whatsNewFor } from '../constants/whatsNew';
 import { APP_VERSION } from '../constants/appVersion';
 import { logger } from '../../core/logging';
@@ -298,6 +299,10 @@ export function SettingsPage() {
                 <label className={styles.fieldLabel}>Locale</label>
                 <input className={styles.inputField} value={locale} onChange={(e) => setLocale(e.target.value)} placeholder="e.g. en-IN, en-US, bn-BD" />
               </div>
+              <div className={styles.separator} />
+              <div className={styles.sectionTitle}>Appearance</div>
+              <AppearanceSection />
+              <div className={styles.separator} />
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Primary Member</label>
                 <select className={styles.selectField} value={primaryMemberId} onChange={(e) => setPrimaryMemberId(e.target.value)}>

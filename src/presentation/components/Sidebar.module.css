@@ -69,7 +69,7 @@
 }
 
 .backBtn:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .breadcrumb {
@@ -120,7 +120,7 @@
 
 .item:hover {
   color: var(--color-text);
-  background: oklch(100% 0 0 / 0.04);
+  background: color-mix(in oklch, var(--color-wash) 4%, transparent);
   box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
@@ -131,7 +131,7 @@
 }
 
 .item:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .item:disabled {
@@ -142,7 +142,7 @@
 .itemActive {
   color: var(--color-primary);
   border-left-color: var(--color-primary);
-  background: oklch(62% 0.22 290 / 0.08);
+  background: color-mix(in oklch, var(--color-primary) 8%, transparent);
 }
 
 .icon {
@@ -167,6 +167,7 @@
   height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-primary), var(--color-income));
+  color: var(--color-text-on-primary);
   display: grid;
   place-items: center;
   font-family: var(--font-display);

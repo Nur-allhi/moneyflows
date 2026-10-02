@@ -23,7 +23,7 @@
 }
 
 .panel:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .panel:disabled {
@@ -40,7 +40,7 @@
 }
 
 .glowViolet {
-  box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
+  box-shadow: 0 0 24px var(--color-primary-glow);
 }
 
 .glowGold {

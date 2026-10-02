@@ -62,7 +62,7 @@
 }
 
 .searchCloseBtn:hover {
-  background: oklch(100% 0 0 / 0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
   color: var(--color-text);
 }
 

@@ -5,7 +5,9 @@
   --color-surface-hover: oklch(100% 0 0 / 0.08);
   --color-border: oklch(100% 0 0 / 0.10);
   --color-primary: oklch(62% 0.22 290);
-  --color-primary-glow: oklch(62% 0.22 290 / 0.12);
+  --color-primary-deep: oklch(55% 0.22 290);
+  --color-text-on-primary: #fff;
+  --color-primary-glow: color-mix(in oklch, var(--color-primary) 12%, transparent);
   --color-income: oklch(65% 0.15 170);
   --color-expense: oklch(62% 0.18 30);
   --color-cash: oklch(75% 0.15 85);
@@ -17,7 +19,11 @@
   --color-success: oklch(65% 0.15 150);
   --color-warning: oklch(75% 0.15 85);
   --color-danger: oklch(58% 0.18 30);
-  --color-primary-mark: oklch(62% 0.22 290 / 0.28);
+  --color-primary-mark: color-mix(in oklch, var(--color-primary) 28%, transparent);
+  /* Neutral white wash for hovers/actives/separators — dark-ink in light theme. */
+  --color-wash: oklch(100% 0 0);
+  --color-scrollbar: oklch(100% 0 0 / 0.12);
+  --color-scrollbar-hover: oklch(100% 0 0 / 0.2);
 
   --space-1: 4px;
   --space-2: 8px;
@@ -80,6 +86,87 @@
   --transition-normal: 0.3s ease;  --transition-slow: 0.4s ease;
 
   --animation-shimmer: 1.5s ease-in-out infinite;
+}
+
+/* Accent palette (T-132) — only interaction tokens switch here; semantic
+   tokens (income/expense/cash/purple/success/warning/danger) stay fixed.
+   `violet` matches the :root defaults, declared explicitly for clarity. */
+:root[data-accent="violet"] {
+  --color-primary: oklch(62% 0.22 290);
+  --color-primary-deep: oklch(55% 0.22 290);
+}
+:root[data-accent="blue"] {
+  --color-primary: oklch(60% 0.18 250);
+  --color-primary-deep: oklch(52% 0.18 250);
+}
+:root[data-accent="teal"] {
+  --color-primary: oklch(65% 0.15 180);
+  --color-primary-deep: oklch(55% 0.15 180);
+  --color-text-on-primary: oklch(20% 0.01 260);
+}
+:root[data-accent="gold"] {
+  --color-primary: oklch(70% 0.15 85);
+  --color-primary-deep: oklch(60% 0.15 85);
+  --color-text-on-primary: oklch(20% 0.01 260);
+}
+:root[data-accent="coral"] {
+  --color-primary: oklch(62% 0.18 30);
+  --color-primary-deep: oklch(54% 0.18 30);
+}
+:root[data-accent="pink"] {
+  --color-primary: oklch(65% 0.2 350);
+  --color-primary-deep: oklch(56% 0.2 350);
+}
+
+/* Background presets (Phase 17) — curated per mode; luminance stays in-lane
+   (dark ≤14%, light ≥93%) so text contrast can't break. useTheme() sets a
+   single data-bg holding the CURRENT mode's id, so dark/light blocks never
+   collide. obsidian/paper are the :root defaults, no blocks needed. */
+:root[data-bg="midnight"] {
+  --color-bg: oklch(12% 0.03 270);
+}
+:root[data-bg="forest"] {
+  --color-bg: oklch(12.5% 0.03 165);
+}
+:root[data-bg="plum"] {
+  --color-bg: oklch(13.5% 0.03 320);
+}
+:root[data-theme="light"][data-bg="sky"] {
+  --color-bg: oklch(93% 0.02 245);
+}
+:root[data-theme="light"][data-bg="sand"] {
+  --color-bg: oklch(94% 0.025 95);
+}
+:root[data-theme="light"][data-bg="mint"] {
+  --color-bg: oklch(93% 0.02 170);
+}
+
+/* Light theme (T-132) — same glass recipe, paper base. Activated via
+   data-theme="light" by useTheme(). */
+:root[data-theme="light"] {
+  --color-bg: oklch(94% 0.01 260);
+  --color-bg-glow: radial-gradient(ellipse 70% 60% at 50% 0%, color-mix(in oklch, var(--color-primary) 12%, transparent), transparent 70%), radial-gradient(ellipse 60% 50% at 50% 110%, color-mix(in oklch, var(--color-primary) 8%, transparent), transparent 70%);
+  --color-surface: oklch(100% 0 0 / 0.72);
+  --color-surface-hover: oklch(25% 0.02 260 / 0.06);
+  --color-border: oklch(25% 0.02 260 / 0.16);
+  --color-text: oklch(25% 0.015 260);
+  --color-text-secondary: oklch(46% 0.02 260);
+  --color-scrollbar: oklch(25% 0.02 260 / 0.22);
+  --color-scrollbar-hover: oklch(25% 0.02 260 / 0.35);
+  --color-wash: oklch(30% 0.02 260);
+  /* Light-tuned semantics: dark-mode hues fail on paper (income 2.9, gold
+     2.3, success 3.0). These clear 4.5:1 on white cards. Purple/danger pass. */
+  --color-income: oklch(50% 0.12 170);
+  --color-teal: oklch(50% 0.12 170);
+  --color-expense: oklch(52% 0.15 30);
+  --color-coral: oklch(52% 0.15 30);
+  --color-cash: oklch(55% 0.13 85);
+  --color-warning: oklch(55% 0.13 85);
+  --color-success: oklch(50% 0.12 150);
+
+  --shadow-sm: 0 2px 8px rgba(30, 27, 75, 0.08);
+  --shadow-md: 0 4px 16px rgba(30, 27, 75, 0.10);
+  --shadow-lg: 0 8px 32px rgba(30, 27, 75, 0.12);
 }
 
 @media (max-width: 768px) {

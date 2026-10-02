@@ -12,6 +12,9 @@
   transition: transform var(--transition-fast);
   will-change: transform;
   background: var(--card-bg);
+  /* Cards keep their dark bank gradients in both modes (like real bank
+     cards), so their ink is pinned white — never the theme text (BUG-5). */
+  color: #fff;
 }
 
 .cardIcon {
@@ -34,7 +37,7 @@
 }
 
 .card:active {
-  background: rgba(255,255,255,0.08);
+  transform: scale(0.98);
 }
 
 .card:disabled {
@@ -127,7 +130,7 @@
 
 .actions button {
   border: none;
-  color: var(--color-text-secondary, #94a3b8);
+  color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
   width: 24px;
   height: 24px;
@@ -139,6 +142,6 @@
 }
 
 .actions button:hover {
-  color: var(--color-text);
-  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
 }

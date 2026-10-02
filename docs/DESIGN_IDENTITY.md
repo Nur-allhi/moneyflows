@@ -21,8 +21,10 @@ All values come from `src/presentation/styles/tokens.css:1-89`. Do not invent co
 | Family | Tokens | Notes |
 |--------|--------|-------|
 | **Color — base** | `--color-bg`, `--color-bg-glow`, `--color-surface`, `--color-surface-hover`, `--color-border`, `--color-text`, `--color-text-secondary` | `oklch` only. `surface-hover` = `oklch(100% 0 0 /0.08)`. |
-| **Color — accents** | `--color-primary` (violet `62% 0.22 290`), `--color-primary-glow` (`/0.12`), `--color-income`/`--color-teal` `65% 0.15 170`, `--color-expense`/`--color-coral` `62% 0.18 30`, `--color-cash`/`--color-warning` `75% 0.15 85`, `--color-purple` `55% 0.18 290`, `--color-success` `65% 0.15 150`, `--color-danger` `58% 0.18 30` | Alias pairs are intentional. Use semantic alias (`--color-income` for money in, `--color-expense` for money out). |
-| **Gradient — interaction** | `linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290))` | Used for: active `SegmentedTabs` `SegmentedTabs.module.css:56-60`, `btnSave` `Modal.module.css:135`, `FAB` `FAB.module.css:9-13`, `submitBtn` `TransactionFormModal.module.css:297` |
+| **Color — accents** | `--color-primary` (violet `62% 0.22 290`), `--color-primary-deep` (`55% 0.22 290`, gradient tail), `--color-text-on-primary` (`#fff`, dark ink for teal/gold), `--color-primary-glow` (`color-mix primary 12%`), `--color-primary-mark` (`color-mix primary 28%`), `--color-income`/`--color-teal` `65% 0.15 170`, `--color-expense`/`--color-coral` `62% 0.18 30`, `--color-cash`/`--color-warning` `75% 0.15 85`, `--color-purple` `55% 0.18 290`, `--color-success` `65% 0.15 150`, `--color-danger` `58% 0.18 30` | Alias pairs are intentional. Use semantic alias (`--color-income` for money in, `--color-expense` for money out). Glow/mark derive from `--color-primary` via `color-mix` so accents switch them automatically. |
+| **Color — wash** | `--color-wash` (white `100% 0 0`, dark-ink `30% 0.02 260` in light) + `--color-scrollbar`/`--color-scrollbar-hover` | ALL neutral white washes (hovers, actives, separators, inputs) MUST be `color-mix(in oklch, var(--color-wash) <pct>%, transparent)` — never a literal white. On-accent whites (FAB ring, progress gloss) stay literal. |
+| **Theming** | `:root[data-theme="light"]` overrides base tokens only — plus a retuned semantic ramp (income/expense/cash/success darkened to clear 4.5:1 on paper; purple/danger pass as-is); `:root[data-accent="<id>"]` sets `--color-primary` + `--color-primary-deep` only (`violet/blue/teal/gold/coral/pink`, ids mirrored in `constants/accents.ts`) | Semantics never switch. Applied by `useTheme()` + pre-paint script in `index.html`. `dark:` Tailwind variants follow app `data-theme` via `@custom-variant`. |
+| **Gradient — interaction** | `linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))` | Used for: active `SegmentedTabs` `SegmentedTabs.module.css:56-60`, `btnSave` `Modal.module.css:135`, `FAB` `FAB.module.css:9-13`, `submitBtn` `TransactionFormModal.module.css:297` — never a hardcoded tail |
 | **Gradients — account/counterparty** | `ACCOUNT_TYPE_GRADIENT` / `ACCOUNT_TYPE_GRADIENT_THREE` / `ACCOUNT_TYPE_ACCENT` in `src/presentation/constants/labels.ts:13-40` | Bank `#1a237e→#283593`, Savings `#004d40→#00695c`, Mobile `#d81b60→#e91e63`, Cash `#37474f→#455a64`, Business/Counterparty `#4a148c→#6a1b9a`. Never hardcode stops elsewhere. |
 | **Spacing** | `--space-1:4` `--space-2:8` `--space-3:12` `--space-4:16` `--space-5:20` `--space-6:24` `--space-8:32` `--space-10:40` `--space-12:48` `--space-16:64` | No `10px`/`13px` literals — round to nearest space token. |
 | **Radii** | `--radius-sm:8` `--radius-md:12` `--radius-lg:16` `--radius-xl:20` `--radius-pill:9999` | Panels `md`, cards `sm`, mobile panels `lg` `glassmorphism.css:191-195`. Pills/chips `pill`. |
@@ -33,7 +35,7 @@ All values come from `src/presentation/styles/tokens.css:1-89`. Do not invent co
 | **Scrollbar** | `6px pill thumb oklch(100% 0 0 /0.12) → /0.2 hover` | `reset.css:38-59` |
 | **Tailwind aliases banned** | `tailwind.css:5-33` duplicates (`--color-card`, `--color-input`, `--color-ring`). New code reads `tokens.css` only. |
 
-**Rule:** No hex, no `rgba()` literals outside tokens, no hardcoded spacing/radii. Grep for `#[0-9a-f]` and `style={{` in review.
+**Rule:** No hex, no `rgba()` literals outside tokens, no hardcoded spacing/radii. Grep for `#[0-9a-f]` and `style={{` in review. Text on any primary surface (gradient, solid, shadcn) MUST be `var(--color-text-on-primary)` — never a hardcoded white.
 
 ---
 
@@ -95,7 +97,7 @@ Every interactive element **MUST** implement hover, focus-visible, active, disab
 | **focus-visible** | `outline: 2px solid var(--color-primary); outline-offset: 2px` (inset `-1px` inside inputs) | `FormField.module.css:47-50` `Modal.module.css:86-88` `Header.module.css:107-110` |
 | **active** | `background: rgba(255,255,255,0.08)` or `transform: scale(0.92)` for FAB/icons | `FAB.module.css:20-23` `Sidebar.module.css:57-59` |
 | **disabled** | `opacity: 0.5; cursor: not-allowed; pointer-events: none` | `glassmorphism.css:54-57` `button.tsx:7` |
-| **selected/active** | `linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290)) color #fff + shadow-glow` + Sidebar `left-border 2px violet + /0.08 bg` + Avatar `inset -3px border 2px` | `SegmentedTabs.module.css:56-60` `Sidebar.module.css:66-70` `Avatar.module.css:46-53` |
+| **selected/active** | `linear-gradient(135deg, var(--color-primary), var(--color-primary-deep)) color #fff + shadow-glow` + Sidebar `left-border 2px violet + /0.08 bg` + Avatar `inset -3px border 2px` | `SegmentedTabs.module.css:56-60` `Sidebar.module.css:66-70` `Avatar.module.css:46-53` |
 
 `will-change: box-shadow | transform | background-position` only on animated nodes `GlassPanel.module.css:9`.
 
@@ -188,7 +190,7 @@ CSS: `trigger pad14/10 blur12 radius10 14 border` → hover `primary` focus `out
 |-----------|------|-----|
 | **LedgerTable** | Container `surface blur20 border radius-lg overflow hidden + fillHeight flex1` · virtual `height var(--total-height) absolute top var(--row-top)` · header `grid 55 55 1fr 55 55 55 gap8 pad12/14 10 uppercase 0.08em 600 border-bottom` desktop `90 pad10/20` · row `same grid pad10/14 13 align start border-bottom /0.04 transition fast pointer hover glow+/0.04` · cells `date 12 muted tabular / desc 500 / typeCell 11/600 uppercase center (teal/coral/primary)` · amounts `debit expense / credit income 13 mono + currencyLabel 8 body 0.55` · empty `40/20 center 13 muted` | `LedgerTable.module.css:1-219` `config.ts:15-17 ROW 54/56 OVERSCAN 3` |
 | **MobileLedger** | Compact single-column treatment — same tokens, reduced grid | `MobileLedger.module.css` |
-| **AccountCard** | `min180 h130 radius14 pad12 flex column relative overflow hidden pointer transform fast bg --card-bg ::before border overlay cardIcon 16/0.6 hover translateY -2px glow selected glow+inset 2px primary name14/600 -0.01em type10 uppercase 0.08em 0.65 balance mono 16/600 tabular chip 32×22 gold #ffd700→#ffecb3 actions top8 right8 gap4 btn24 circle` | `AccountCard.module.css:1-133` |
+| **AccountCard** | `min180 h130 radius14 pad12 flex column relative overflow hidden pointer transform fast bg --card-bg ::before border overlay cardIcon 16/0.6 hover translateY -2px glow selected glow+inset 2px primary name14/600 -0.01em type10 uppercase 0.08em 0.65 balance mono 16/600 tabular chip 32×22 gold #ffd700→#ffecb3 actions top8 right8 gap4 btn24 circle` + ink pinned `#fff` (cards stay dark in both modes, BUG-5) | `AccountCard.module.css:1-144` |
 | **LoanCard** | `flex gap10 pad16 surface blur12 border radius14 pointer hover primary glow top space-between avatar 40 gradient #4a148c→#6a1b9a name text-lg/600 badge text-sm uppercase primary amount mono text-xl/700 expense meta text-base muted` | `LoanCard.module.css:1-93` |
 | **ProgressBar** | `gap6 header 12 muted track 100% h12 bg /0.06 radius999 overflow fill w var(--progress-width) gradient income→150 radius999 width 0.6s + ::after 20px /0.2 gloss` | `ProgressBar.module.css:1-42` |
 | **LedgerSearch** | `relative input surface blur12 radius10 pad 10/36 13 focus glow clear 12 circle` + `filter chips pill 5/14 radius999 13/500 /0.06 → active primary` | `LedgerSearch.module.css` `MemberProfile.module.css:700-800` |
@@ -250,7 +252,7 @@ Rules: Durations `0.2 fast / 0.25 modal / 0.3 page / 0.35 sheet / 0.6 progress` 
 ```css
 .chip { padding: 5px 14px; border-radius: var(--radius-pill); background: oklch(100% 0 0 /0.06);
   color: var(--color-text-secondary); font-size: 13px; font-weight: 500; border: 1px solid var(--color-border); }
-.chipActive { background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290)); color: #fff; box-shadow: var(--shadow-glow); }
+.chipActive { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep)); color: #fff; box-shadow: var(--shadow-glow); }
 ```
 
 ### New metric/card glow
@@ -283,6 +285,8 @@ Rules: Durations `0.2 fast / 0.25 modal / 0.3 page / 0.35 sheet / 0.6 progress` 
 Copy into every UI PR description. All boxes must be checked:
 
 - [ ] Reads as glass on obsidian at `360px` and `1920px` — no horizontal overflow
+- [ ] Reads as glass on light paper too (`data-theme="light"`) — text/hover/separators visible, no white-on-white
+- [ ] Accent switch (any of 6 in Settings) recolors interaction only — semantics (teal/coral/gold/purple) unchanged
 - [ ] Only `var(--color/space/radius/shadow/font)` — no hex, no literal spacing
 - [ ] Money uses `formatAmount` + `JetBrains Mono tabular-nums`, labels uppercase `0.08em`
 - [ ] All 4 states: `hover glow + surface-hover`, `focus-visible 2px violet`, `active /0.08 or scale 0.92`, `disabled 0.5`

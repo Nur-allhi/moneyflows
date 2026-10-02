@@ -17,5 +17,5 @@
 
 .acctActionBtn:hover {
   color: var(--color-text);
-  background: rgba(255,255,255,0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
 }

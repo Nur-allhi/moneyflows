@@ -81,7 +81,7 @@
 .up { color: var(--color-teal); }
 .down { color: var(--color-coral); }
 
-.glowViolet { box-shadow: 0 0 28px oklch(62% 0.22 290 / 0.15); }
+.glowViolet { box-shadow: 0 0 28px color-mix(in oklch, var(--color-primary) 15%, transparent); }
 .glowGold { box-shadow: 0 0 28px oklch(75% 0.15 85 / 0.15); }
 .glowCoral { box-shadow: 0 0 28px oklch(62% 0.18 30 / 0.15); }
 
@@ -319,7 +319,7 @@
   cursor: pointer;
 }
 
-.loanRow:hover { background: oklch(100% 0 0 / 0.04); }
+.loanRow:hover { background: color-mix(in oklch, var(--color-wash) 4%, transparent); }
 
 .loanTop {
   display: flex;
@@ -392,7 +392,7 @@
 .loanBarWrap {
   width: 100%;
   height: 4px;
-  background: oklch(100% 0 0 / 0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -440,8 +440,8 @@
 }
 
 .actBtn:hover {
-  background: oklch(100% 0 0 / 0.08);
-  border-color: oklch(100% 0 0 / 0.2);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
+  border-color: color-mix(in oklch, var(--color-wash) 20%, transparent);
 }
 
 .actBtn:focus-visible {
@@ -450,18 +450,25 @@
 }
 
 .actBtn:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .actBtn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
 .actPrimary {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   border-color: transparent;
+  color: var(--color-text-on-primary);
   font-weight: 600;
 }
 
-.actPrimary:hover { opacity: 0.9; }
+.actPrimary:hover {
+  /* Same specificity as .actBtn:hover above, later in file: re-asserts the
+     gradient so the ghost-button wash never stomps it (BUG-4). */
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  opacity: 0.9;
+  box-shadow: 0 0 16px var(--color-primary-glow);
+}
 
 .txRow {
   display: flex;
@@ -472,7 +479,7 @@
   transition: background 0.15s;
 }
 
-.txRow:hover { background: oklch(100% 0 0 / 0.04); }
+.txRow:hover { background: color-mix(in oklch, var(--color-wash) 4%, transparent); }
 
 .txArrow {
   display: flex;
@@ -771,7 +778,7 @@
   }
 
   .txType[data-type="transfer"] {
-    background: oklch(62% 0.22 290 / 0.2);
+    background: color-mix(in oklch, var(--color-primary) 20%, transparent);
   }
 
   .txDay {
