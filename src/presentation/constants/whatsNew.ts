@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.13.0',
+    items: [
+      'Loan ledgers now look and work like account ledgers — same header, same buttons, same filter card.',
+    ],
+  },
+  {
     version: '1.12.0',
     items: [
       'Settings is tidier now — sections collapse, and backup & storage live together with the newest first.',

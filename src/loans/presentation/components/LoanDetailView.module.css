@@ -346,103 +346,258 @@
 .ledgerTitle {
   margin: 0;
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--color-text);
-}
-
-.ledgerActions {
   display: flex;
   align-items: center;
   gap: 8px;
+  line-height: 1;
+}
+
+.txCount {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
+  padding: 1px 8px;
+  border-radius: 99px;
+  line-height: 1.6;
+  margin-left: 4px;
+}
+
+.ledgerActions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .pdfBtn {
-  padding: 8px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--color-text-secondary);
-  font-family: var(--font-display);
-  font-size: var(--text-base);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition-fast);
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: inherit;
+  font-size: var(--text-md);
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: width var(--transition-normal), border-radius var(--transition-normal), background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  padding: 0;
 }
 
 .pdfBtn:hover {
+  width: 130px;
+  border-radius: 999px;
+  padding-left: 5px;
   border-color: var(--color-primary);
-  color: var(--color-text);
+  color: var(--color-primary);
+}
+
+.pdfBtn:hover :global(.anim-target) {
+  gap: 6px;
+}
+
+.pdfBtn :global(.anim-target) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdfBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.pdfBtnIcon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdfBtnIcon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
 }
 
 .pdfBtnLabel {
-  display: none;
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  transition: opacity var(--transition-fast), max-width var(--transition-normal);
+  font-size: var(--text-base);
+  white-space: nowrap;
 }
 
-@media (min-width: 600px) {
-  .pdfBtnLabel { display: inline; }
+.pdfBtn:hover .pdfBtnLabel {
+  opacity: 1;
+  max-width: 90px;
 }
 
-.filterWrap {
-  position: relative;
+.filterCount {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text-on-primary);
+  background: var(--color-primary);
+  padding: 1px 8px;
+  border-radius: 99px;
+  line-height: 1.6;
+  flex-shrink: 0;
 }
 
-.filterBtn {
-  padding: 8px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+.drawerToggle {
+  flex-shrink: 0;
+}
+
+.drawerToggle svg {
+  transition: transform var(--transition-normal);
+}
+
+.drawerToggleOpen svg {
+  transform: rotate(180deg);
+}
+
+.drawerToggle.pdfBtn:hover {
+  width: 102px;
+  border-radius: 999px;
+  padding: 0 6px;
+  justify-content: center;
+}
+
+.drawerToggle.pdfBtn:hover :global(.anim-target) {
+  gap: 4px;
+}
+
+.drawerToggle.pdfBtn:hover .pdfBtnLabel {
+  opacity: 1;
+  max-width: 36px;
+}
+
+.filterDrawer {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: fit-content;
+  max-width: min(360px, 85vw);
+  z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  transition: opacity var(--transition-normal), transform var(--transition-normal), visibility var(--transition-normal);
+}
+
+.filterDrawerOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.filterDrawerInner {
+  background: var(--color-bg);
+  border: 1px solid color-mix(in oklch, var(--color-wash) 8%, transparent);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px oklch(0% 0 0 / 0.38), 0 0 0 1px color-mix(in oklch, var(--color-wash) 6%, transparent);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.drawerFiltersRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ledgerFilterPills {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.ledgerFilterIconBtn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border: none;
   background: transparent;
   color: var(--color-text-secondary);
-  font-family: var(--font-display);
-  font-size: var(--text-base);
-  font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition-fast);
-  display: flex;
+  min-width: 48px;
+  transition: color var(--transition-fast);
+}
+
+.ledgerFilterIconBtn :global(.anim-target) {
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
   gap: 4px;
 }
 
-.filterBtn:hover {
+.ledgerFilterIconBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.filterIconBox {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: grid;
+  place-items: center;
+  transition: all var(--transition-fast);
+  color: inherit;
+}
+
+.ledgerFilterIconBtn:hover .filterIconBox {
   border-color: var(--color-primary);
   color: var(--color-text);
 }
 
-.filterActive {
+.ledgerFilterIconBtnActive .filterIconBox {
+  background: var(--color-primary);
   border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.filterLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.ledgerFilterIconBtnActive .filterLabel {
   color: var(--color-primary);
-  background: color-mix(in oklch, var(--color-primary) 10%, transparent);
 }
 
-.filterDropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 50;
-  min-width: 280px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  background: var(--color-surface);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-  animation: fadeIn 0.15s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.filterGroup {
+.drawerDateRow {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -621,12 +776,6 @@
   .ledgerActions {
     width: 100%;
     flex-wrap: wrap;
-  }
-
-  .filterDropdown {
-    right: auto;
-    left: 0;
-    min-width: 260px;
   }
 
   .overlay {

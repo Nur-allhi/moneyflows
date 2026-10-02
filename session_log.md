@@ -957,3 +957,47 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Clean on dev. NOTE: session_log commit entry itself uncommitted — amend or include next commit.
 
+
+## Session 2026-10-02 (release v1.12.0 + feature branch, on feature/loan-ledger-header)
+
+### Changes
+- User-approved: merge dev -> master + version bump, then feature branch for loan ledger header
+- Bump per VERSIONING §2: MINOR (feat present) 1.11.0 -> 1.12.0 — package.json + whatsNew 1.12.0 (2 plain-English bullets) + CHANGELOG [1.12.0] - 2026-10-02; backfilled missing settings-reorg CHANGELOG entry (82ecc6e had none)
+- Gates: typecheck PASS, build PASS (8.01s), unit 48/48 PASS (17 e2e files fail under vitest — pre-existing config issue), lint 1 pre-existing warning (LedgerSection:98 untouched, same as 1.11.0); detect_changes vs master HIGH but scope-expected (settings+groups+metadata only)
+- Release flow: commit eb2ee8c on dev -> merge dev->master ebe69ee (no-ff) -> tag v1.12.0 -> pushed master --follow-tags; dev ff to master + pushed
+- New branch feature/loan-ledger-header off ebe69ee, switched. Next: rebuild loan ledger header on accounts pattern (copy-adapted + accounts-style drawer, per user picks)
+
+### Skill(s) Used
+- gitnexus, senior-frontend
+
+### Status
+- v1.12.0 live on master + dev. On feature/loan-ledger-header, clean. Awaiting go-ahead to implement loan header.
+
+
+## Session 2026-10-02 (loan ledger header unify, on feature/loan-ledger-header)
+
+### Changes
+- LoanDetailView desktop header rebuilt on accounts-ledger pattern (copy-adapted, accounts-style drawer per user picks): title + txCount pill, LedgerSearch, 30px circle-expand Download PDF, More toggle with chevron-rotate + active-filter count badge, drawer with Type icon-pills (All/Loans Issued/Repayments, lucide) + Date pills/inputs + Clear Filters
+- Behavior matches accounts: mousedown-outside + 500ms hover auto-close (useCallback timers, no new lint warnings); removed emoji Filter button (banned per DESIGN_IDENTITY §11) + inline svg style; dead CSS (filterBtn/filterDropdown/fadeIn/filterGroup) removed
+- Gates: tsc PASS, eslint --max-warnings 0 PASS, loans vitest 20/20 PASS; seeded Playwright verification (create loan -> open ledger): header rest + drawer open screenshots, type filter hides repay rows, Clear Filters restores; scratch spec removed
+- NOTE: LoanDetailView.tsx now ~680 LOC (was 547, limit 300 — T-092 split deferred, disclosed); mobile keeps shared MobileLedger unchanged
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on feature/loan-ledger-header. Next: user verifies, then commit -> PR into dev (needs explicit merge approval).
+
+
+## Session 2026-10-02 (loan header merge to dev)
+
+### Changes
+- User-approved: commit + merge feature/loan-ledger-header -> dev (squash 568185d, pushed); branch kept
+- CHANGELOG [Unreleased] Added entry included; detect_changes LOW, no affected flows
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- On dev, merged content pushed. session_log note uncommitted (rides next commit). Next: user call.
+
