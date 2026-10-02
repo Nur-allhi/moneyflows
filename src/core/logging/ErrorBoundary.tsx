@@ -23,7 +23,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>Something went wrong</div>
             <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>{this.state.msg}</div>
-            <button onClick={() => window.location.reload()} style={{ padding: '10px 18px', borderRadius: 8, background: 'linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290))', color: '#fff', border: 'none', cursor: 'pointer' }}>Reload</button>
+            <button onClick={() => window.location.reload()} style={{ padding: '10px 18px', borderRadius: 8, background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))', color: 'var(--color-text-on-primary)', border: 'none', cursor: 'pointer' }}>Reload</button>
           </div>
         </div>
       );

@@ -182,7 +182,7 @@ export function LoansScreen() {
                 { key: 'lastTx' as const, label: 'Last transaction' },
                 { key: 'lastRepay' as const, label: 'Last repayment' },
               ].map((opt) => (
-                <button key={opt.key} className={txStyles.pickerItem} onClick={() => { setSortBy(opt.key); setShowSortPicker(false); }} style={sortBy === opt.key ? { background: 'var(--color-primary)', color: 'white', borderRadius: 10 } : undefined}>
+                <button key={opt.key} className={txStyles.pickerItem} onClick={() => { setSortBy(opt.key); setShowSortPicker(false); }} style={sortBy === opt.key ? { background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', borderRadius: 10 } : undefined}>
                   <span className={txStyles.pickerItemName}>{opt.label}</span>
                 </button>
               ))}
@@ -216,7 +216,7 @@ export function LoansScreen() {
                   <span className={styles.sectionAvatar} style={{ background: ledgerGradient(label) }}>{label[0]}</span>
                   <span className={styles.sectionInfo}>
                     <span className={styles.sectionName}>{label}</span>
-                    <span className={styles.sectionMeta}><span>{list.length} ledger{list.length !== 1 ? 's' : ''}</span><span style={{ opacity: 0.4 }}>·</span><span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(total, locale, currency)}</span></span>
+                    <span className={styles.sectionMeta}><span>{list.length} ledger{list.length !== 1 ? 's' : ''}</span><span style={{ opacity: 0.4 }}>·</span><span style={{ fontFamily: 'var(--font-body)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(total, locale, currency)}</span></span>
                   </span>
                 </div>
                 <div className={styles.grid}>

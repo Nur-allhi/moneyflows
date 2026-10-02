@@ -1,0 +1,93 @@
+.appearance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.rowLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.segWrap {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+}
+
+.segBtn {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast), transform 0.15s;
+}
+
+.segBtn:hover {
+  color: var(--color-text);
+}
+
+.segBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.segBtn:active {
+  transform: scale(0.96);
+}
+
+.segActive {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.swatchGrid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--swatch-color);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow var(--transition-fast);
+}
+
+.swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 16px var(--swatch-color);
+}
+
+.swatch:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.swatch:active {
+  transform: scale(0.92);
+}
+
+.swatchActive {
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--swatch-color);
+}

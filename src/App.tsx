@@ -5,6 +5,7 @@ import { Sidebar, BottomNav, Header, PageTransition, RippleGlow, SearchBar } fro
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
+import { useTheme } from './presentation/hooks/useTheme';
 import { useOtherLedgerStore } from './otherLedgers/presentation/stores/useOtherLedgerStore';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { getDatabase } from './infrastructure/database/getDatabase';
@@ -68,6 +69,7 @@ function AppLayout() {
 
   const members = useMemberStore((s) => s.members);
   const fetchMembers = useMemberStore((s) => s.fetchMembers);
+  useTheme();
   useEffect(() => { fetchMembers(); }, [fetchMembers]);
 
   const ledgers = useOtherLedgerStore((s) => s.ledgers);

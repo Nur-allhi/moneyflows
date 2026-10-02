@@ -53,13 +53,13 @@
 }
 
 .navItem:hover {
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   color: var(--color-text);
 }
 
 .navActive {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
-  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
   box-shadow: 0 0 20px var(--color-primary-glow);
   border-color: transparent;
 }
@@ -116,7 +116,7 @@
 .inputField,
 .selectField {
   padding: 12px 14px;
-  background: rgba(255,255,255,0.03);
+  background: color-mix(in oklch, var(--color-wash) 3%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -135,8 +135,8 @@
   align-self: flex-start;
   padding: 10px 18px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
-  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
   font-weight: 600;
   font-size: 13px;
   box-shadow: 0 0 20px var(--color-primary-glow);
@@ -147,7 +147,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  background: rgba(255,255,255,0.03);
+  background: color-mix(in oklch, var(--color-wash) 3%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   font-size: 13px;
@@ -159,7 +159,7 @@
   width: 44px;
   height: 24px;
   border-radius: 9999px;
-  background: oklch(100% 0 0 / 0.12);
+  background: color-mix(in oklch, var(--color-wash) 12%, transparent);
   border: 1px solid var(--color-border);
   position: relative;
   cursor: pointer;
@@ -168,7 +168,7 @@
 }
 
 .switchOn {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   border-color: transparent;
   box-shadow: 0 0 16px var(--color-primary-glow);
 }
@@ -213,7 +213,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: rgba(255,255,255,0.03);
+  background: color-mix(in oklch, var(--color-wash) 3%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
 }
@@ -250,7 +250,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px;
-  background: rgba(255,255,255,0.03);
+  background: color-mix(in oklch, var(--color-wash) 3%, transparent);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   flex-wrap: wrap;
@@ -334,11 +334,11 @@
   gap: 8px;
   padding-right: 4px;
   scrollbar-width: thin;
-  scrollbar-color: oklch(100% 0 0 / 0.12) transparent;
+  scrollbar-color: color-mix(in oklch, var(--color-wash) 12%, transparent) transparent;
 }
 
 .logContainer::-webkit-scrollbar { width: 6px; }
-.logContainer::-webkit-scrollbar-thumb { background: oklch(100% 0 0 / 0.12); border-radius: 9999px; }
+.logContainer::-webkit-scrollbar-thumb { background: color-mix(in oklch, var(--color-wash) 12%, transparent); border-radius: 9999px; }
 
 .pagination {
   display: flex;

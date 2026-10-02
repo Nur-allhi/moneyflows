@@ -9,6 +9,11 @@ import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
 import { APP_VERSION } from './presentation/constants/appVersion';
 import { logger } from './core/logging';
+// Self-hosted variable fonts (offline-first; replaces the Google Fonts @import).
+import '@fontsource-variable/manrope';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/anek-bangla';
+import '@fontsource-variable/jetbrains-mono';
 import './presentation/styles/tailwind.css';
 import './presentation/styles/reset.css';
 import './presentation/styles/tokens.css';

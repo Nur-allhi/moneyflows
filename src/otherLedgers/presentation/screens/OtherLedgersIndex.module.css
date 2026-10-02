@@ -2,7 +2,7 @@
 .topBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .leftCount { font-size: 13px; color: var(--color-text-secondary); white-space: nowrap; }
 .rightControls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1; }
-.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: white; border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; }
+.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: var(--color-text-on-primary); border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; }
 .addBtn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
 .addBtn:active { transform: scale(0.98); }
 .searchWrap { width: 240px; max-width: 42vw; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; backdrop-filter: blur(20px); flex-shrink: 1; }
@@ -21,7 +21,7 @@
   height: 28px;
   border-radius: 9999px;
   border: 1px solid transparent;
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   color: var(--color-text-secondary);
   display: grid;
   place-items: center;
@@ -34,7 +34,7 @@
 .cardInfo { display: flex; flex-direction: column; min-width: 0; }
 .cardName { font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cardTag { font-size: 12px; color: var(--color-text-secondary); }
-.cardBalance { font-family: var(--font-mono, monospace); font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; }
+.cardBalance { font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--color-text); white-space: nowrap; }
 .grouped { display: flex; flex-direction: column; gap: 16px; }
 .section {
   display: flex;
@@ -64,7 +64,7 @@
 .pickerSheet { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; padding: 16px; width: 360px; max-width: 85vw; backdrop-filter: blur(24px); display: flex; flex-direction: column; gap: 8px; }
 .pickerTitle { font-weight: 700; color: var(--color-text); }
 .pickerList { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
-.pickerItem { padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid transparent; text-align: left; cursor: pointer; color: var(--color-text); }
+.pickerItem { padding: 10px 12px; border-radius: 10px; background: color-mix(in oklch, var(--color-wash) 4%, transparent); border: 1px solid transparent; text-align: left; cursor: pointer; color: var(--color-text); }
 .pickerItem:hover { border-color: var(--color-primary); }
 @media (max-width: 768px) {
   .grid { grid-template-columns: 1fr; }

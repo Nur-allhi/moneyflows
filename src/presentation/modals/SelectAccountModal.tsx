@@ -33,7 +33,7 @@ export function SelectAccountModal({ memberId, selectedAccountId, onSelect, onCl
             padding: '12px 14px',
             borderRadius: 12,
             border: selectedAccountId === null ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-            background: selectedAccountId === null ? 'oklch(62% 0.22 290 / 0.1)' : 'transparent',
+            background: selectedAccountId === null ? 'color-mix(in oklch, var(--color-primary) 10%, transparent)' : 'transparent',
             cursor: 'pointer',
             fontFamily: 'var(--font-display)',
             fontWeight: 600,

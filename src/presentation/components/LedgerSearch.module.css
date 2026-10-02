@@ -66,7 +66,7 @@
   height: 18px;
   border: none;
   border-radius: 50%;
-  background: oklch(100% 0 0 / 0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   color: var(--color-text-secondary);
   cursor: pointer;
   display: grid;
@@ -76,7 +76,7 @@
 }
 
 .clear:hover {
-  background: oklch(100% 0 0 / 0.18);
+  background: color-mix(in oklch, var(--color-wash) 18%, transparent);
 }
 
 .clear svg {

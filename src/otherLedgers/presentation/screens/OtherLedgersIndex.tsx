@@ -112,7 +112,7 @@ export function OtherLedgersIndex() {
                   <span className={styles.sectionMeta}>
                     <span>{group.ledgers.length} ledger{group.ledgers.length !== 1 ? 's' : ''}</span>
                     <span style={{ opacity: 0.4 }}>·</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(group.totalBalance, locale, currency)}</span>
+                    <span style={{ fontFamily: 'var(--font-body)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(group.totalBalance, locale, currency)}</span>
                   </span>
                 </span>
               </div>

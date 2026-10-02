@@ -30,9 +30,10 @@
 
 | Role | Font Stack | Sizes | Weight |
 |------|-----------|-------|--------|
-| Display/Headings | `'Outfit', -apple-system, system-ui, sans-serif` | 16px–36px | 600–700 |
-| Body/UI | `-apple-system, 'Segoe UI', system-ui, sans-serif` | 12px–15px | 400–500 |
-| Monospace/Numerics | `'JetBrains Mono', ui-monospace, monospace` | 12px–32px | 500–600 |
+| Display/Headings | `'Manrope', 'Inter', system-ui, sans-serif` | 16px–36px | 600–700 |
+| Body/UI | `'Inter', 'Anek Bangla', system-ui, sans-serif` | 12px–15px | 400–500 |
+| Monospace/Chrome | `'JetBrains Mono', ui-monospace, monospace` | 12px (dates, IDs, logs) | 400–500 |
+| Money/Numerics | `'Inter', 'Anek Bangla', sans-serif` + `tabular-nums` (`tnum`) | 12px–32px | 500–600 |
 
 - Base body: 14px / 1.5 line-height
 - All-caps labels: `letter-spacing: 0.08em`

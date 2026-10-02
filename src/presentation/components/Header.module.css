@@ -77,7 +77,7 @@
   height: 22px;
   border-radius: 50%;
   border: none;
-  background: oklch(100% 0 0 / 0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   color: var(--color-text-secondary);
   cursor: pointer;
   display: grid;
@@ -86,7 +86,7 @@
 }
 
 .searchClear:hover {
-  background: oklch(100% 0 0 / 0.18);
+  background: color-mix(in oklch, var(--color-wash) 18%, transparent);
 }
 
 .searchClear svg {
@@ -123,7 +123,7 @@
 }
 
 .backBtn:active, .notifBtn:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .backBtn:disabled, .notifBtn:disabled {
@@ -174,8 +174,8 @@
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
-  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -214,6 +214,34 @@
 .notifBtn:hover {
   background: var(--color-surface-hover);
   box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.themeBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), transform 0.15s;
+}
+
+.themeBtn:hover {
+  background: var(--color-surface-hover);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.themeBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.themeBtn:active {
+  transform: scale(0.92);
 }
 
 .breadcrumb {
@@ -309,7 +337,7 @@
 
   .backBtn:active {
     transform: scale(0.92);
-    background: oklch(100% 0 0 / 0.08);
+    background: color-mix(in oklch, var(--color-wash) 8%, transparent);
   }
 
   .right {
@@ -327,6 +355,22 @@
 
   .notifBtn {
     display: none;
+  }
+
+  .themeBtn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: var(--color-surface);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: var(--color-text-secondary);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .themeBtn:active {
+    transform: scale(0.92);
+    background: var(--color-surface-hover);
   }
 
   .addBtn {
@@ -350,7 +394,7 @@
 
   .mobileSettingsBtn:active {
     transform: scale(0.92);
-    background: oklch(100% 0 0 / 0.08);
+    background: color-mix(in oklch, var(--color-wash) 8%, transparent);
   }
 
   .mobileSearchBtn {
@@ -370,7 +414,7 @@
 
   .mobileSearchBtn:active {
     transform: scale(0.92);
-    background: oklch(100% 0 0 / 0.08);
+    background: color-mix(in oklch, var(--color-wash) 8%, transparent);
   }
 
   .settingsWrap {

@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.9.0',
+    items: [
+      'Light mode is here — tap the sun/moon button in the header, or pick System, Light or Dark in Settings → Appearance.',
+      'Make it yours: 6 accent colors and 8 backgrounds (4 dark, 4 light) in Settings → Appearance.',
+      'Fresh new look for text — clearer headings and easier-to-read amounts, now working fully offline.',
+    ],
+  },
+  {
     version: '1.8.0',
     items: [
       'New Report button on member profiles — full member report with a summary cover plus one table per account.',

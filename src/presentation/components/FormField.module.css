@@ -41,7 +41,7 @@
 }
 
 .input:active, .amountInput:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .input:disabled, .amountInput:disabled, select:disabled {
@@ -100,7 +100,7 @@
 
 .amountWrap:focus-within {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px oklch(62% 0.22 290 / 0.15);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 15%, transparent);
 }
 
 .amountCurrency {
@@ -116,7 +116,7 @@
   border: 0;
   background: transparent;
   box-shadow: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 24px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;

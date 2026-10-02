@@ -43,7 +43,7 @@
 
 .addBtn:hover {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text-on-primary);
   box-shadow: 0 0 20px var(--color-primary-glow);
 }
 
@@ -87,7 +87,7 @@
 }
 
 .card:active {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .cardLeft {
@@ -114,7 +114,7 @@
 }
 
 .cardBalance {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-3xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -213,7 +213,7 @@
     height: 24px;
     border-radius: 50%;
     border: none;
-    background: oklch(100% 0 0 / 0.1);
+    background: color-mix(in oklch, var(--color-wash) 10%, transparent);
     color: var(--color-text-secondary);
     cursor: pointer;
     display: grid;
@@ -222,7 +222,7 @@
   }
 
   .searchClear:active {
-    background: oklch(100% 0 0 / 0.18);
+    background: color-mix(in oklch, var(--color-wash) 18%, transparent);
   }
 
   .searchClear svg {
@@ -267,8 +267,8 @@
     padding: 12px 24px;
     border: none;
     border-radius: 12px;
-    background: linear-gradient(135deg, var(--color-primary), oklch(50% 0.2 290));
-    color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
     font: 600 var(--text-lg) var(--font-display);
     cursor: pointer;
     transition: opacity 0.15s;
@@ -327,7 +327,7 @@
 
   .cardBalance {
     font-size: var(--text-xl);
-    font-family: var(--font-mono);
+    font-family: var(--font-body);
     font-weight: 600;
     color: var(--color-teal);
     flex-shrink: 0;

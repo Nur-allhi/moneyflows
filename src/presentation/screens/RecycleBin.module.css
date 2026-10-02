@@ -20,7 +20,7 @@
 }
 
 .statNum {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: var(--text-4xl);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -73,7 +73,7 @@
 }
 
 .pillBtn:active, .pillDanger:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .pillBtn:disabled, .pillDanger:disabled {
@@ -118,14 +118,14 @@
 
 .tabBadge {
   font-size: var(--text-sm);
-  background: oklch(100% 0 0 / 0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
   padding: 1px 7px;
   border-radius: 999px;
   margin-left: 6px;
 }
 
 .tabBadgeActive {
-  background: oklch(62% 0.22 290 / 0.15);
+  background: color-mix(in oklch, var(--color-primary) 15%, transparent);
 }
 
 .actionsLabel {
@@ -237,7 +237,7 @@
     height: 24px;
     border-radius: 50%;
     border: none;
-    background: oklch(100% 0 0 / 0.1);
+    background: color-mix(in oklch, var(--color-wash) 10%, transparent);
     color: var(--color-text-secondary);
     cursor: pointer;
     place-items: center;
@@ -245,7 +245,7 @@
   }
 
   .searchClear:active {
-    background: oklch(100% 0 0 / 0.18);
+    background: color-mix(in oklch, var(--color-wash) 18%, transparent);
   }
 
   .searchClear svg {

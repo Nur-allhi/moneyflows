@@ -75,7 +75,7 @@
   padding: 10px 14px;
   font-size: 13px;
   align-items: start;
-  border-bottom: 1px solid oklch(100% 0 0 / 0.04);
+  border-bottom: 1px solid color-mix(in oklch, var(--color-wash) 4%, transparent);
   transition: background var(--transition-fast);
   cursor: pointer;
 }
@@ -96,7 +96,7 @@
 
 .row:hover {
   box-shadow: 0 0 20px var(--color-primary-glow);
-  background: oklch(100% 0 0 / 0.04);
+  background: color-mix(in oklch, var(--color-wash) 4%, transparent);
 }
 
 .row:focus-visible {
@@ -106,7 +106,7 @@
 }
 
 .row:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .row:disabled {
@@ -158,7 +158,7 @@
 }
 
 .debit {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--color-expense);
@@ -169,7 +169,7 @@
 }
 
 .credit {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
@@ -180,7 +180,7 @@
 }
 
 .balance {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   text-align: center;

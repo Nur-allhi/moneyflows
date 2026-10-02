@@ -42,7 +42,7 @@
   width: 36px;
   height: 4px;
   border-radius: 2px;
-  background: oklch(100% 0 0 / 0.2);
+  background: color-mix(in oklch, var(--color-wash) 20%, transparent);
   margin: 10px auto 12px;
   flex-shrink: 0;
 }

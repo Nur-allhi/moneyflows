@@ -148,12 +148,12 @@
 .filterPillActive {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: white;
+  color: var(--color-text-on-primary);
   box-shadow: 0 0 16px var(--color-primary-glow);
 }
 .filterPillActive:hover {
   background: var(--color-primary);
-  color: white;
+  color: var(--color-text-on-primary);
 }
 .filterIcon { display: flex; flex-shrink: 0; }
 .addBtn {
@@ -161,7 +161,7 @@
   height: 30px;
   border-radius: 50%;
   background: var(--color-primary);
-  color: white;
+  color: var(--color-text-on-primary);
   border: none;
   display: flex;
   align-items: center;
@@ -251,7 +251,7 @@
   cursor: pointer;
   transition: var(--transition-fast);
 }
-.txRow:hover { background: oklch(100% 0 0 / 0.04); }
+.txRow:hover { background: color-mix(in oklch, var(--color-wash) 4%, transparent); }
 .txType {
   width: 44px;
   height: 44px;
@@ -261,14 +261,14 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: oklch(62% 0.22 290 / 0.2);
+  background: color-mix(in oklch, var(--color-primary) 20%, transparent);
 }
 .txType[data-type="debit"] { background: oklch(62% 0.18 30 / 0.2); }
 .txType[data-type="credit"] { background: oklch(65% 0.15 170 / 0.2); }
 .txDay { font-size: var(--text-xl); font-weight: 700; color: var(--color-text); }
 .txMonth { font-size: var(--text-3xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-secondary); }
 .txDesc { flex: 1; font-size: var(--text-lg); color: var(--color-text); min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.txAmount { font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 600; text-align: right; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.txAmount { font-family: var(--font-body); font-size: var(--text-lg); font-weight: 600; text-align: right; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .txCurrency { font-size: var(--text-3xs); opacity: 0.55; margin-left: 2px; }
 .txArrow { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; }
 .txArrowIn { background: oklch(65% 0.15 150 / 0.15); color: var(--color-teal); }
@@ -298,6 +298,6 @@
     gap: 4px;
   }
   .heroLabel { display: block; font: 600 var(--text-sm) var(--font-display); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-secondary); }
-  .heroValue { display: block; font: 700 var(--text-7xl) var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--color-primary); }
+  .heroValue { display: block; font: 700 var(--text-7xl) var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--color-primary); }
   .heroMeta { display: block; font: 400 var(--text-base) var(--font-body); color: var(--color-text-secondary); }
 }

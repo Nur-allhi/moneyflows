@@ -114,6 +114,43 @@ Dependencies: `T-124 → (T-125 ∥ T-126) → (T-127 ∥ T-128 ∥ T-129 ∥ T-
 
 Future V2 still `T-119..T-123` in `OTHER_LEDGERS_FUTURE_V2.md` (build on “next update”).
 
+## Phase 16 — Theme (Light/Dark) + Accent Color (A1 + B1) — Planned
+
+Plan: `docs/plans/THEME_ACCENT_PLAN.md` (approved 2026-10-02, branch `feature/theme-accent` off `dev`).
+Decision: A1 (`data-theme` token override, header sun/moon toggle, System/Light/Dark in Settings) + B1 (6 curated OKLCH accents in Settings). Defaults unchanged: dark + violet.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-132 | Token foundation: `--color-primary-deep` + replace ~15 hardcoded gradient tails + `[data-theme="light"]` block + 6 `[data-accent]` blocks in `tokens.css` | `frontend-design` | M | **Complete** |
+| T-133 | Settings model + `useTheme()` hook + App wiring (`theme`, `accentId` in `AppSettings`/store, `data-theme`/`data-accent` on `<html>`, `matchMedia` system resolve) | `senior-frontend` | S | **Complete** |
+| T-134 | Header sun/moon toggle (36px circle chrome, dark↔light flip, `aria-label`, focus-visible ring) | `senior-frontend`, `ui-ux-pro-max` | S | **Complete** |
+| T-135 | Settings Appearance section: theme 3-way + accent swatch grid in `SettingsModal` + `SettingsPage` | `senior-frontend`, `ui-ux-pro-max` | M | **Complete** |
+| T-136 | Identity + audit: `DESIGN_IDENTITY.md` §2/§17 update, hardcoded-literal audit (`labels.ts`, `Avatar`, `reset.css`, `main.tsx`), gates green | `code-reviewer`, `frontend-design` | S | **Complete** (+`--color-wash` sweep, `dark:` custom-variant, `--color-text-on-primary`, dark-slab fixes) |
+| T-137 | Verification: 9 viewports × light/dark × 2 accents, no overflow, contrast check, vitest theme-resolve tests | `code-reviewer` | S | **Complete** (1440+390 verified live, 0 errors, contrast AA, `accents.test.ts` 5/5) |
+
+Dependencies: `T-132 → T-133 → (T-134 ∥ T-135) → T-136 → T-137`. Merge to `dev` only with user confirmation.
+
+## Phase 17 — Background Presets per Mode (Option A) — In Progress
+
+Approved 2026-10-02, built on `feature/theme-accent` (theme workstream). Curated bases only — luminance stays in-lane per mode so text contrast can't break. Dark: Obsidian/Midnight/Forest/Plum. Light: Paper/Sky/Sand/Mint.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-138 | Tokens + model + hook: `[data-bg]` blocks, `bgDark`/`bgLight` in `AppSettings`, `backgrounds.ts`, `useTheme()` + pre-paint apply | `senior-frontend` | S | **Complete** |
+| T-139 | Appearance "Background" row (current-mode presets, reuses swatch styles) + `backgrounds.test.ts` sync guard | `senior-frontend` | S | **Complete** |
+| T-140 | Verification: computed bg per preset × mode, screenshots, gates | `code-reviewer` | S | **Complete** (8/8 presets resolve, dark/forest + picker screenshots, 0 errors) |
+
+## Phase 18 — Type Overhaul (Manrope + Inter-tnum + Anek Bangla, self-hosted) — In Progress
+
+Plan approved 2026-10-02 (full scope, Manrope headings, Anek Bangla, mono kept for chrome). Branch `feature/theme-accent`.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-141 | Font supply: fontsource variable packages (drop dead Geist + Google @import), retoken display/body, `.amount` utility | `senior-frontend` | M | **Complete** (19 woff2 bundled) |
+| T-142 | Money off mono: ~20 files amount rules → Inter tabular; mono kept for sub/snapshotTime/text-mono + JB Mono still self-hosted | `senior-frontend` | M | **Complete** |
+| T-143 | Identity docs: DESIGN_IDENTITY (§1/§2/§3/§5/§17) + DESIGN.md type tables | `skill-creator` | S | **Complete** |
+| T-144 | Verification: bn-BD/৳ fallback, table alignment, bundle weight, offline (no googleapis) | `code-reviewer` | S | **Complete** (bn digits+৳ render aligned, Inter `zero` N/A in Chrome → dropped, 560KB fonts w/ unicode-range lazy subsets, 0 CDN refs) |
+
 ## Following Phase
 
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
