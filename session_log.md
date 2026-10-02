@@ -988,3 +988,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Uncommitted on feature/loan-ledger-header. Next: user verifies, then commit -> PR into dev (needs explicit merge approval).
 
+
+## Session 2026-10-02 (loan header merge to dev)
+
+### Changes
+- User-approved: commit + merge feature/loan-ledger-header -> dev (squash 568185d, pushed); branch kept
+- CHANGELOG [Unreleased] Added entry included; detect_changes LOW, no affected flows
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- On dev, merged content pushed. session_log note uncommitted (rides next commit). Next: user call.
+
