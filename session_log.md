@@ -795,6 +795,12 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Pre-merge gates: build PASS, unit 48/48 PASS; `detect_changes` vs dev LOW, no affected processes; no version bump (feature→dev)
 - Back on `feature/ui-polish`, clean
 
+## Session 2026-10-02 (collapsible sidebar, same branch)
+
+### Changes
+- User-picked design (plain-language choice): fold + hover peek. Arrow button on the sidebar edge folds to a 68px icon rail; hovering the rail peeks the full 220px floating over content; choice persists via `AppSettings.sidebarCollapsed`; folded icons show name tooltips; footer keeps avatar, logo becomes M mark; content area reclaims the space (`mainWide`); mobile/bottom-nav untouched
+- Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS; impact HIGH disclosed (structural — AppLayout shell; change additive, Sidebar props untouched)
+
 ## Session 2026-10-02 (sidebar nav icons, same branch)
 
 ### Changes

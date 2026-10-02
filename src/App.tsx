@@ -104,6 +104,7 @@ function AppLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchClosing, setSearchClosing] = useState(false);
   const [searchCloseKey, replaySearchClose] = useReplay();
+  const sidebarWide = useSettingsStore((s) => s.settings.sidebarCollapsed ?? false);
   const toggleSearch = useCallback(() => {
     if (searchOpen) {
       setSearchClosing(true);
@@ -133,7 +134,7 @@ function AppLayout() {
     <div className={styles.layout}>
       <RippleGlow />
       <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
-      <div className={styles.main} id="app-main">
+      <div className={`${styles.main} ${sidebarWide ? styles.mainWide : ''}`} id="app-main">
         <Header title={title} breadcrumb={breadcrumb} className="app-header" searchActive={searchOpen} onSearchToggle={toggleSearch} />
         {searchOpen && (
           <div className={`${styles.searchRow} ${searchClosing ? styles.searchPopin : styles.searchPopout}`}>

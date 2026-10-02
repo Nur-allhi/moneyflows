@@ -10,6 +10,8 @@
   flex-shrink: 0;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  position: relative;
+  transition: width 0.25s ease;
 }
 
 .brandSlot {
@@ -184,4 +186,120 @@
 .footerRole {
   font-size: var(--text-xs);
   color: var(--color-text-secondary);
+}
+
+/* Folded (icons-only) + hover peek. Peek reuses the full 220px layout by
+   simply not applying .collapsed while hovering. */
+.label {
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 160px;
+  transition: opacity 0.2s ease, max-width 0.25s ease;
+}
+
+.miniMark {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-income));
+  color: var(--color-text-on-primary);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-2xl);
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.footerText {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 160px;
+  transition: opacity 0.2s ease, max-width 0.25s ease;
+}
+
+.toggleBtn {
+  position: absolute;
+  top: 64px;
+  right: -13px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 1;
+  padding: 0;
+  transition: color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.toggleBtn:hover {
+  color: var(--color-text);
+  box-shadow: 0 0 16px var(--color-primary-glow);
+}
+
+.toggleBtn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.toggleBtn svg {
+  transition: transform 0.25s ease;
+}
+
+.chevFlipped {
+  transform: rotate(180deg);
+}
+
+.collapsed {
+  width: 68px;
+}
+
+.collapsed .brandSlot {
+  justify-content: center;
+  padding: 0 0 28px;
+}
+
+.collapsed .logo {
+  display: none;
+}
+
+.collapsed .miniMark {
+  display: grid;
+}
+
+.collapsed .item {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.collapsed .label,
+.collapsed .footerText {
+  opacity: 0;
+  max-width: 0;
+}
+
+.collapsed .footer {
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.peek {
+  width: 220px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .label,
+  .footerText,
+  .toggleBtn svg {
+    transition: none;
+  }
 }
