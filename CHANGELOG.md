@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-02
+
 ### Added
 - Tap feedback on every button: one-shot click animations (pop, spin, twist, ring, nudge) with reduced-motion support — header gear spins, theme icon swaps in, plus twists, bell rings, back nudges.
 - Text size option in Settings → Appearance (Small/Medium/Large): scales app type instantly, persists across reloads.
