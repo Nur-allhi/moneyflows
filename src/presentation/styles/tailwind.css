@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* `dark:` variants follow the APP theme (data-theme), not the OS scheme. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* NOTE: `@theme inline` inlines these values into utilities instead of emitting
    `:root` vars — so aliasing tokens.css vars here keeps shadcn primitives
    (calendar, popover) following the app theme + accent at runtime. */

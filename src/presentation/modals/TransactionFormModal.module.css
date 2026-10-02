@@ -37,7 +37,7 @@
   width: 36px;
   height: 4px;
   border-radius: 4px;
-  background: oklch(100% 0 0 / 0.15);
+  background: color-mix(in oklch, var(--color-wash) 15%, transparent);
   margin: 10px auto 6px;
   flex-shrink: 0;
 }
@@ -84,7 +84,7 @@
 }
 
 .closeBtn:active, .cancelBtn:active, .saveBtn:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .closeBtn:disabled, .cancelBtn:disabled, .saveBtn:disabled {
@@ -317,7 +317,7 @@
 }
 
 .submitBtn:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .submitBtn:disabled {
@@ -350,7 +350,7 @@
   background: oklch(16% 0.015 260 / 0.75);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid oklch(100% 0 0 / 0.10);
+  border: 1px solid color-mix(in oklch, var(--color-wash) 10%, transparent);
   border-radius: 20px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px color-mix(in oklch, var(--color-primary) 6%, transparent);
   display: flex;
@@ -403,13 +403,13 @@
 }
 
 .cancelBtn {
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
 }
 
 .cancelBtn:hover {
-  background: oklch(100% 0 0 / 0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   color: var(--color-text);
   box-shadow: 0 0 20px var(--color-primary-glow);
 }
@@ -612,7 +612,7 @@
   background: oklch(16% 0.015 260 / 0.95);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid oklch(100% 0 0 / 0.10);
+  border: 1px solid color-mix(in oklch, var(--color-wash) 10%, transparent);
   border-radius: 16px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -647,7 +647,7 @@
 }
 
 .pickerBack:hover {
-  background: oklch(100% 0 0 / 0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .pickerTitle {
@@ -673,7 +673,7 @@
 }
 
 .pickerClose:hover {
-  background: oklch(100% 0 0 / 0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .pickerBody {
@@ -706,7 +706,7 @@
 }
 
 .pickerItem:hover {
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
 }
 
 .pickerItem:focus-visible {
@@ -797,7 +797,7 @@
 }
 
 .loanTypeBtn:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .loanTypeActive {
@@ -841,13 +841,13 @@
 }
 
 .createCpActions .cancelBtn {
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
 }
 
 .createCpActions .cancelBtn:hover {
-  background: oklch(100% 0 0 / 0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   color: var(--color-text);
   box-shadow: 0 0 20px var(--color-primary-glow);
 }

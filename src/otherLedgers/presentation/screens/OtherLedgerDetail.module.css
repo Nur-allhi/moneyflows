@@ -251,7 +251,7 @@
   cursor: pointer;
   transition: var(--transition-fast);
 }
-.txRow:hover { background: oklch(100% 0 0 / 0.04); }
+.txRow:hover { background: color-mix(in oklch, var(--color-wash) 4%, transparent); }
 .txType {
   width: 44px;
   height: 44px;

@@ -41,7 +41,7 @@
 }
 
 .input:active, .amountInput:active {
-  background: rgba(255,255,255,0.08);
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
 }
 
 .input:disabled, .amountInput:disabled, select:disabled {

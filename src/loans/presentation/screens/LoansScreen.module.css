@@ -210,7 +210,7 @@
     height: 24px;
     border-radius: 50%;
     border: none;
-    background: oklch(100% 0 0 / 0.1);
+    background: color-mix(in oklch, var(--color-wash) 10%, transparent);
     color: var(--color-text-secondary);
     cursor: pointer;
     place-items: center;
@@ -218,7 +218,7 @@
   }
 
   .searchClear:active {
-    background: oklch(100% 0 0 / 0.18);
+    background: color-mix(in oklch, var(--color-wash) 18%, transparent);
   }
 
   .searchClear svg {

@@ -19,6 +19,8 @@
   --color-warning: oklch(75% 0.15 85);
   --color-danger: oklch(58% 0.18 30);
   --color-primary-mark: color-mix(in oklch, var(--color-primary) 28%, transparent);
+  /* Neutral white wash for hovers/actives/separators — dark-ink in light theme. */
+  --color-wash: oklch(100% 0 0);
   --color-scrollbar: oklch(100% 0 0 / 0.12);
   --color-scrollbar-hover: oklch(100% 0 0 / 0.2);
 
@@ -125,6 +127,7 @@
   --color-text-secondary: oklch(46% 0.02 260);
   --color-scrollbar: oklch(25% 0.02 260 / 0.22);
   --color-scrollbar-hover: oklch(25% 0.02 260 / 0.35);
+  --color-wash: oklch(30% 0.02 260);
 
   --shadow-sm: 0 2px 8px rgba(30, 27, 75, 0.08);
   --shadow-md: 0 4px 16px rgba(30, 27, 75, 0.10);

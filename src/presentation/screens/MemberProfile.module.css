@@ -166,7 +166,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: oklch(100% 0 0 / 0.15);
+  background: color-mix(in oklch, var(--color-wash) 15%, transparent);
   transition: all var(--transition-fast);
   cursor: pointer;
 }
@@ -352,7 +352,7 @@
   font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-secondary);
-  background: rgba(255,255,255,0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   padding: 1px 8px;
   border-radius: 99px;
   line-height: 1.6;
@@ -395,7 +395,7 @@
 }
 .accountsOpen .accountsSlideInner {
   background: oklch(16% 0.015 260);
-  border-color: oklch(100% 0 0 / 0.08);
+  border-color: color-mix(in oklch, var(--color-wash) 8%, transparent);
   padding: 16px;
   box-shadow: 0 8px 24px oklch(0% 0 0 / 0.28);
 }
@@ -456,7 +456,7 @@
   font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-secondary);
-  background: rgba(255,255,255,0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   padding: 1px 8px;
   border-radius: 99px;
   line-height: 1.6;
@@ -594,9 +594,9 @@
 }
 .filterDrawerInner {
   background: oklch(16% 0.015 260);
-  border: 1px solid oklch(100% 0 0 / 0.08);
+  border: 1px solid color-mix(in oklch, var(--color-wash) 8%, transparent);
   border-radius: var(--radius-md);
-  box-shadow: 0 16px 40px oklch(0% 0 0 / 0.38), 0 0 0 1px oklch(100% 0 0 / 0.06);
+  box-shadow: 0 16px 40px oklch(0% 0 0 / 0.38), 0 0 0 1px color-mix(in oklch, var(--color-wash) 6%, transparent);
   overflow: hidden;
 }
 .drawerFiltersRow {
@@ -1042,7 +1042,7 @@
   font-size: var(--text-base);
   font-weight: 500;
   color: var(--color-text-secondary);
-  background: oklch(100% 0 0 / 0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   padding: 1px 8px;
   border-radius: 99px;
   line-height: 1.6;
@@ -1075,7 +1075,7 @@
   height: 36px;
   border-radius: 10px;
   border: none;
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -1085,7 +1085,7 @@
 }
 
 .ledgerFilterBtn:active {
-  background: oklch(100% 0 0 / 0.12);
+  background: color-mix(in oklch, var(--color-wash) 12%, transparent);
   color: var(--color-text);
 }
 
@@ -1097,7 +1097,7 @@
   height: 36px;
   border-radius: 10px;
   border: none;
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -1106,7 +1106,7 @@
 }
 
 .downloadBtn:active {
-  background: oklch(100% 0 0 / 0.12);
+  background: color-mix(in oklch, var(--color-wash) 12%, transparent);
   color: var(--color-text);
 }
 
@@ -1184,7 +1184,7 @@
   height: 22px;
   border-radius: 50%;
   border: none;
-  background: oklch(100% 0 0 / 0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
   color: var(--color-text-secondary);
   cursor: pointer;
   display: grid;
@@ -1194,7 +1194,7 @@
 }
 
 .searchClear:active {
-  background: oklch(100% 0 0 / 0.18);
+  background: color-mix(in oklch, var(--color-wash) 18%, transparent);
 }
 
 .searchClear svg {
@@ -1212,7 +1212,7 @@
 }
 
 .txRow:hover {
-  background: oklch(100% 0 0 / 0.04);
+  background: color-mix(in oklch, var(--color-wash) 4%, transparent);
 }
 
 .txType {
@@ -1322,7 +1322,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  background: oklch(100% 0 0 / 0.04);
+  background: color-mix(in oklch, var(--color-wash) 4%, transparent);
   border-radius: 12px;
   margin-bottom: 8px;
 }
@@ -1373,7 +1373,7 @@
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   padding: 1px 8px;
   border-radius: 99px;
   line-height: 1.6;
@@ -1391,7 +1391,7 @@
   height: 44px;
   border-radius: 10px;
   flex-shrink: 0;
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   animation: shimmer 1.2s ease-in-out infinite;
 }
 
@@ -1399,7 +1399,7 @@
   flex: 1;
   height: 14px;
   border-radius: 6px;
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   animation: shimmer 1.2s ease-in-out infinite 0.1s;
 }
 
@@ -1408,7 +1408,7 @@
   height: 14px;
   border-radius: 6px;
   flex-shrink: 0;
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   animation: shimmer 1.2s ease-in-out infinite 0.2s;
 }
 
@@ -1436,7 +1436,7 @@
 }
 
 .loadMoreBtn:hover {
-  background: oklch(100% 0 0 / 0.06);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
   color: var(--color-text);
   border-color: var(--color-primary);
 }
@@ -1461,14 +1461,14 @@
 
 .acctActionBtn:hover {
   color: var(--color-text);
-  background: rgba(255,255,255,0.1);
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
 }
 
 .tagSelect {
   padding: 6px 10px;
-  border: 1px solid var(--color-border, rgba(255,255,255,0.06));
+  border: 1px solid var(--color-border, color-mix(in oklch, var(--color-wash) 6%, transparent));
   border-radius: 8px;
-  background: var(--color-surface, rgba(255,255,255,0.04));
+  background: var(--color-surface, color-mix(in oklch, var(--color-wash) 4%, transparent));
   color: var(--color-text, #f1f5f9);
   font-size: 13px;
   cursor: pointer;

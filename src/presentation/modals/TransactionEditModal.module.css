@@ -40,9 +40,9 @@
 .tagInput {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--color-border, rgba(255,255,255,0.06));
+  border: 1px solid var(--color-border, color-mix(in oklch, var(--color-wash) 6%, transparent));
   border-radius: 8px;
-  background: var(--color-surface, rgba(255,255,255,0.04));
+  background: var(--color-surface, color-mix(in oklch, var(--color-wash) 4%, transparent));
   color: var(--color-text, #f1f5f9);
   font-size: 14px;
 }
