@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../../components';
 import { useAnimatedValue } from '../../hooks';
 import { useModalStore } from '../../stores/useModalStore';
@@ -33,6 +34,8 @@ function Stat({ label, value, kind }: { label: string; value: number; kind: 'tea
 }
 
 export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, selectedAccountId, isDesktop }: Props) {
+  const navigate = useNavigate();
+  const openReport = () => navigate(`/member/${member.id}/report`);
   const initial = member.shortName?.[0] ?? member.name[0] ?? '?';
   if (isDesktop) {
     return (
@@ -48,6 +51,9 @@ export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, 
           </button>
           <button className={styles.heroActionBtn} onClick={() => useModalStore.getState().open('add-account', { memberId: member.id })}>
             <span className={styles.heroActionIcon}>+</span> Account
+          </button>
+          <button className={styles.heroActionBtn} onClick={openReport}>
+            <span className={styles.heroActionIcon}>≡</span> Report
           </button>
         </div>
         <div className={styles.heroStats}>
@@ -71,6 +77,7 @@ export function ProfileHero({ member, totalBalance, totalIncome, totalExpenses, 
         <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'income', initialSource: selectedAccountId || undefined })}><span className={`${styles.pillIcon} ${styles.pillIncome}`}>{'+$'}</span><span className={styles.pillLabel}>Income</span></button>
         <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'expense', initialSource: selectedAccountId || undefined })}><span className={`${styles.pillIcon} ${styles.pillExpense}`}>{'-$'}</span><span className={styles.pillLabel}>Expense</span></button>
         <button className={styles.actionPill} onClick={() => useModalStore.getState().open('transaction-form', { initialTab: 'transfer', initialSource: selectedAccountId || undefined })}><span className={`${styles.pillIcon} ${styles.pillTransfer}`}>{'$'}</span><span className={styles.pillLabel}>Transfer</span></button>
+        <button className={styles.actionPill} onClick={openReport}><span className={`${styles.pillIcon} ${styles.pillTransfer}`}>≡</span><span className={styles.pillLabel}>Report</span></button>
       </div>
     </>
   );

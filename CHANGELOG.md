@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Placeholder for upcoming changes.
+- Member-wise whole report (`/member/:id/report`, via the new Report button on member profiles): cover summary + one table per account + loan ledgers grouped by counterparty + owned Other Ledgers, with period presets, account picker, PDF/CSV/Print export. Balances derive from full history so filtered views stay correct.
 
 ## [1.7.0] - 2026-10-02
 
