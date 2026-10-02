@@ -499,3 +499,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Live on dev. Next: delete `feature/global-search`? Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (release 1.7.0)
+
+### Changes
+- Version bump `1.6.0 → 1.7.0` (MINOR per VERSIONING §2: feat + Added) in one commit `dc858f2`: package.json + whatsNew 1.7.0 entry + CHANGELOG `[1.7.0] - 2026-10-02`
+- Merged `dev → master` no-ff (`6c1e014`), tagged `v1.7.0`, pushed `master --follow-tags`; `dev` fast-forwarded to master and pushed
+- Gates on release: build PASS, tsc PASS, unit 29/29 PASS, version string confirmed baked into bundle; lint has 1 pre-existing warning in untouched LedgerSection.tsx — disclosed, predates batch
+
+### Status
+- Released v1.7.0 on master. Next: delete `feature/global-search`? Other Ledgers V2 on "next update".
