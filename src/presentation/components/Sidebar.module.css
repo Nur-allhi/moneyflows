@@ -15,28 +15,26 @@
 }
 
 .brandSlot {
-  /* Fixed height in BOTH states so the nav below never moves. The two
-     faces (logo row / M-mark stack) share one grid cell and crossfade —
-     the container height never changes, so nothing jumps. */
+  /* Fixed height in BOTH states so the nav below never moves. Only one
+     face renders at a time (the other is display:none, so it can never
+     stretch the layout) and the incoming face fades in. */
   height: 104px;
   padding: 0 20px 28px;
   min-height: 0;
-  display: grid;
-}
-
-.face {
-  grid-area: 1 / 1;
-  align-self: start;
-  transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+  display: block;
 }
 
 .face:not(.faceHidden) {
-  transition: opacity 0.2s ease, visibility 0s;
+  animation: faceIn 0.2s ease;
 }
 
-.faceHidden {
-  opacity: 0;
-  visibility: hidden;
+@keyframes faceIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.face.faceHidden {
+  display: none;
 }
 
 .faceOpen {
@@ -323,10 +321,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
-  .face,
+  .face:not(.faceHidden),
   .label,
   .footerText,
   .toggleBtn svg {
     transition: none;
+    animation: none;
   }
 }

@@ -817,6 +817,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Playwright verified (2/2, spec deleted after): `elementFromPoint` at peek top = aside; screenshots confirm in-flow toggle + peek floating above header
 - Gates: typecheck PASS, eslint PASS, build PASS
 
+## Session 2026-10-02 (sidebar brand-face stacking bug, same branch)
+
+### Changes
+- User report: arrow + logo misplaced when folded. Playwright reproduced: M mark rendered at x≈79–115, OUTSIDE the 68px rail
+- Root cause (mine, not stale client this time): hidden face still sized the shared grid cell (fixed via display:none), then `.faceHidden{display:none}` lost to `.faceOpen/.faceShut{display:flex}` — equal specificity, later rule won, so BOTH faces rendered stacked and overflowing
+- Fix: `.face.faceHidden` (doubled specificity, deterministic win). Verified: mark/toggle centers exactly at rail center, logo hidden, element screenshot clean
+- Gates: Playwright 2/2 green (specs deleted after), build PASS
+
 ## Session 2026-10-02 (sidebar smooth fold, same branch)
 
 ### Changes
