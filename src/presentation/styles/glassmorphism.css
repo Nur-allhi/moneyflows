@@ -200,3 +200,12 @@
     padding: 20px;
   }
 }
+
+/* Money amounts — Inter with tabular figures (not mono). Pair with the
+   8px .currencyLabel pattern for the currency code (see LedgerTable). */
+.amount {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "zero";
+  letter-spacing: -0.01em;
+}

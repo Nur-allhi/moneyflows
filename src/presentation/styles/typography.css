@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@100..900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap');
+/* Webfonts are self-hosted via Fontsource imports in main.tsx (offline-first).
+   Families: Manrope (display) · Inter (body/UI/money) · Anek Bangla (Bengali) ·
+   JetBrains Mono (chrome only: numpad, dates, IDs — see DESIGN_IDENTITY.md). */
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
