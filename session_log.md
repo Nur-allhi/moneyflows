@@ -559,3 +559,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - 1.8.0 live on dev (unpushed). Next: user confirms `merge dev to master` → merge + tag v1.8.0 per VERSIONING.md §5.
+
+## Session 2026-10-02 (merge 1.8.0 → master)
+
+### Changes
+- User-approved: pushed `dev` (`31eac19..fc5da49`), pre-merge gates typecheck PASS / build PASS / unit 39/39 PASS (17 e2e suites fail under vitest import — pre-existing, run via playwright instead) / lint 1 pre-existing warning `LedgerSection.tsx:82`
+- Merged `dev → master` no-ff `57cd820` + tagged `v1.8.0` + pushed `master --follow-tags`; `dev` fast-forwarded to `master`, pushed pending
+
+### Skill(s) Used
+- gitnexus
+
+### Status
+- v1.8.0 live on master + dev. Next: Other Ledgers V2 on "next update".
