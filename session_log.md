@@ -571,3 +571,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.8.0 live on master + dev. Next: Other Ledgers V2 on "next update".
+
+## Session 2026-10-02 (theme + accent planning)
+
+### Changes
+- User approved A1+B1: `data-theme` token override + header sun/moon toggle; 6 curated OKLCH accents in Settings
+- Created branch `feature/theme-accent` off `dev`; committed `fa51dab`: `docs/plans/THEME_ACCENT_PLAN.md` (NEW) + Phase 16 T-132..T-137 in `docs/TICKETS.md`
+
+### Skill(s) Used
+- frontend-design, senior-frontend
+
+### Status
+- Plan committed on `feature/theme-accent` (unpushed). Next: build T-132 token foundation on user go-ahead.
