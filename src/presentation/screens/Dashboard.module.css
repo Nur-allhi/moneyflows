@@ -81,7 +81,7 @@
 .up { color: var(--color-teal); }
 .down { color: var(--color-coral); }
 
-.glowViolet { box-shadow: 0 0 28px oklch(62% 0.22 290 / 0.15); }
+.glowViolet { box-shadow: 0 0 28px color-mix(in oklch, var(--color-primary) 15%, transparent); }
 .glowGold { box-shadow: 0 0 28px oklch(75% 0.15 85 / 0.15); }
 .glowCoral { box-shadow: 0 0 28px oklch(62% 0.18 30 / 0.15); }
 
@@ -456,7 +456,7 @@
 .actBtn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
 .actPrimary {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   border-color: transparent;
   font-weight: 600;
 }
@@ -771,7 +771,7 @@
   }
 
   .txType[data-type="transfer"] {
-    background: oklch(62% 0.22 290 / 0.2);
+    background: color-mix(in oklch, var(--color-primary) 20%, transparent);
   }
 
   .txDay {

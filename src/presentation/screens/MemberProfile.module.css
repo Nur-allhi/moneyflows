@@ -973,7 +973,7 @@
 }
 
 .pillTransfer {
-  background: oklch(62% 0.22 290 / 0.2);
+  background: color-mix(in oklch, var(--color-primary) 20%, transparent);
   color: var(--color-primary);
 }
 
@@ -1243,7 +1243,7 @@
 }
 
 .txType[data-type="transfer"] {
-  background: oklch(62% 0.22 290 / 0.2);
+  background: color-mix(in oklch, var(--color-primary) 20%, transparent);
 }
 
 .txDay {

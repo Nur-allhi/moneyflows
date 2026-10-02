@@ -2,28 +2,31 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* NOTE: `@theme inline` inlines these values into utilities instead of emitting
+   `:root` vars — so aliasing tokens.css vars here keeps shadcn primitives
+   (calendar, popover) following the app theme + accent at runtime. */
 @theme inline {
   --font-sans: 'Outfit', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --color-background: oklch(14% 0.015 260);
-  --color-foreground: oklch(92% 0.008 260);
-  --color-card: oklch(22% 0.02 260 / 0.55);
-  --color-card-foreground: oklch(92% 0.008 260);
-  --color-popover: oklch(22% 0.02 260 / 0.95);
-  --color-popover-foreground: oklch(92% 0.008 260);
-  --color-primary: oklch(62% 0.22 290);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-text);
+  --color-primary: var(--color-primary);
   --color-primary-foreground: #fff;
-  --color-secondary: oklch(22% 0.02 260 / 0.55);
-  --color-secondary-foreground: oklch(92% 0.008 260);
-  --color-muted: oklch(100% 0 0 / 0.05);
-  --color-muted-foreground: oklch(60% 0.02 260);
-  --color-accent: oklch(62% 0.22 290 / 0.15);
-  --color-accent-foreground: oklch(92% 0.008 260);
+  --color-secondary: var(--color-surface);
+  --color-secondary-foreground: var(--color-text);
+  --color-muted: var(--color-surface-hover);
+  --color-muted-foreground: var(--color-text-secondary);
+  --color-accent: color-mix(in oklch, var(--color-primary) 15%, transparent);
+  --color-accent-foreground: var(--color-text);
   --color-destructive: oklch(58% 0.18 30);
-  --color-border: oklch(100% 0 0 / 0.10);
-  --color-input: oklch(100% 0 0 / 0.06);
-  --color-ring: oklch(62% 0.22 290);
+  --color-border: var(--color-border);
+  --color-input: var(--color-surface-hover);
+  --color-ring: var(--color-primary);
 
   --radius-xs: 0.375rem;
   --radius-sm: 0.5rem;
@@ -34,11 +37,11 @@
 
 * {
   border-color: var(--color-border);
-  outline-color: color-mix(in oklch, var(--color-ring) 50%, transparent);
+  outline-color: color-mix(in oklch, var(--color-primary) 50%, transparent);
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-sans);
 }

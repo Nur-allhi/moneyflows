@@ -142,7 +142,7 @@
 .itemActive {
   color: var(--color-primary);
   border-left-color: var(--color-primary);
-  background: oklch(62% 0.22 290 / 0.08);
+  background: color-mix(in oklch, var(--color-primary) 8%, transparent);
 }
 
 .icon {

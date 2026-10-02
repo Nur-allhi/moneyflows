@@ -58,7 +58,7 @@
 }
 
 .navActive {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: #fff;
   box-shadow: 0 0 20px var(--color-primary-glow);
   border-color: transparent;
@@ -135,7 +135,7 @@
   align-self: flex-start;
   padding: 10px 18px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: #fff;
   font-weight: 600;
   font-size: 13px;
@@ -168,7 +168,7 @@
 }
 
 .switchOn {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   border-color: transparent;
   box-shadow: 0 0 16px var(--color-primary-glow);
 }

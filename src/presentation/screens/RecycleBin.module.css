@@ -125,7 +125,7 @@
 }
 
 .tabBadgeActive {
-  background: oklch(62% 0.22 290 / 0.15);
+  background: color-mix(in oklch, var(--color-primary) 15%, transparent);
 }
 
 .actionsLabel {

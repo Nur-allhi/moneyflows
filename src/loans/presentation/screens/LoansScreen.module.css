@@ -38,7 +38,7 @@
   padding: 8px 16px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: #fff;
   font-family: var(--font-display);
   font-size: var(--text-md);
@@ -76,7 +76,7 @@
 .filterBtn:hover { color: var(--color-text); }
 
 .filterActive {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: #fff;
 }
 

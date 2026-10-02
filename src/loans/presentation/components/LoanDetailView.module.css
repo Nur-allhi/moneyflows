@@ -416,7 +416,7 @@
 .filterActive {
   border-color: var(--color-primary);
   color: var(--color-primary);
-  background: oklch(62% 0.22 290 / 0.1);
+  background: color-mix(in oklch, var(--color-primary) 10%, transparent);
 }
 
 .filterDropdown {
@@ -483,7 +483,7 @@
 
 .pillActive {
   border-color: var(--color-primary);
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: #fff;
 }
 
@@ -561,7 +561,7 @@
     display: inline-block;
     padding: 4px 14px;
     border-radius: 999px;
-    background: oklch(62% 0.22 290 / 0.15);
+    background: color-mix(in oklch, var(--color-primary) 15%, transparent);
     margin-bottom: 8px;
     font-size: var(--text-sm);
   }
@@ -676,7 +676,7 @@
 }
 
 .txType[data-type="transfer"] {
-  background: oklch(62% 0.22 290 / 0.2);
+  background: color-mix(in oklch, var(--color-primary) 20%, transparent);
 }
 
 .txDay {

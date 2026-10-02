@@ -68,14 +68,14 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: #fff;
   display: grid;
   place-items: center;
   margin-top: -22px;
   margin-left: 4px;
   margin-right: 4px;
-  box-shadow: 0 8px 24px oklch(62% 0.22 290 / 0.35), 0 0 20px var(--color-primary-glow);
+  box-shadow: 0 8px 24px color-mix(in oklch, var(--color-primary) 35%, transparent), 0 0 20px var(--color-primary-glow);
   border: 2px solid oklch(100% 0 0 / 0.15);
   flex-shrink: 0;
   cursor: pointer;
@@ -87,7 +87,7 @@
   width: 44px;
   height: 44px;
   margin-top: 0;
-  box-shadow: 0 2px 12px oklch(62% 0.22 290 / 0.25);
+  box-shadow: 0 2px 12px color-mix(in oklch, var(--color-primary) 25%, transparent);
 }
 
 .homePopped:active {
@@ -95,7 +95,7 @@
 }
 
 .homeActive {
-  box-shadow: 0 8px 28px oklch(62% 0.22 290 / 0.45), 0 0 24px var(--color-primary-glow);
+  box-shadow: 0 8px 28px color-mix(in oklch, var(--color-primary) 45%, transparent), 0 0 24px var(--color-primary-glow);
 }
 
 .homeIcon { display: grid; place-items: center; }

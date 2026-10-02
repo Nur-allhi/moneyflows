@@ -40,7 +40,7 @@
 }
 
 .glowViolet {
-  box-shadow: 0 0 24px oklch(62% 0.22 290 / 0.12);
+  box-shadow: 0 0 24px var(--color-primary-glow);
 }
 
 .glowGold {

@@ -25,7 +25,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, oklch(62% 0.22 290 / 0.18) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in oklch, var(--color-primary) 18%, transparent) 0%, transparent 70%);
   animation: splashAnim 0.75s ease-out forwards;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .ring {
-  border: 2.5px solid oklch(62% 0.22 290 / 0.3);
+  border: 2.5px solid color-mix(in oklch, var(--color-primary) 30%, transparent);
 }
 
 .ring2 {

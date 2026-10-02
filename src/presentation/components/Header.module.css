@@ -174,7 +174,7 @@
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: #fff;
   cursor: pointer;
   display: flex;

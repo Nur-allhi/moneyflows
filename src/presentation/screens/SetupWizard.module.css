@@ -3,7 +3,7 @@
   display: grid;
   place-items: center;
   padding: 24px 16px;
-  background: radial-gradient(1200px 600px at 80% -10%, oklch(62% 0.22 290 / 0.12), transparent), var(--color-bg);
+  background: radial-gradient(1200px 600px at 80% -10%, color-mix(in oklch, var(--color-primary) 12%, transparent), transparent), var(--color-bg);
 }
 .shell {
   width: 100%;
@@ -62,7 +62,7 @@
   font-family: var(--font-display);
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -157,7 +157,7 @@
   text-align: left;
 }
 .choicePrimary {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: white;
   border-color: transparent;
 }
@@ -169,7 +169,7 @@
   padding: 12px 14px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: white;
   font-weight: 600;
   cursor: pointer;

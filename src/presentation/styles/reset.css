@@ -45,17 +45,17 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: oklch(100% 0 0 / 0.12);
+  background: var(--color-scrollbar);
   border-radius: 9999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: oklch(100% 0 0 / 0.2);
+  background: var(--color-scrollbar-hover);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: oklch(100% 0 0 / 0.12) transparent;
+  scrollbar-color: var(--color-scrollbar) transparent;
 }
 
 a {

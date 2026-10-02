@@ -28,7 +28,7 @@
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid oklch(100% 0 0 / 0.10);
   border-radius: 20px;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px oklch(62% 0.22 290 / 0.06);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px color-mix(in oklch, var(--color-primary) 6%, transparent);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -132,7 +132,7 @@
 }
 
 .btnSave {
-  background: linear-gradient(135deg, var(--color-primary), oklch(55% 0.22 290));
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
   color: #fff;
 }
 

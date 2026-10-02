@@ -261,7 +261,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: oklch(62% 0.22 290 / 0.2);
+  background: color-mix(in oklch, var(--color-primary) 20%, transparent);
 }
 .txType[data-type="debit"] { background: oklch(62% 0.18 30 / 0.2); }
 .txType[data-type="credit"] { background: oklch(65% 0.15 170 / 0.2); }
