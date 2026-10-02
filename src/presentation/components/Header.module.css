@@ -25,6 +25,7 @@
   transform: translate(-50%, -50%);
   width: 100%;
   max-width: 400px;
+  z-index: 351;
 }
 
 .searchIcon {

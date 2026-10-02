@@ -20,4 +20,7 @@ export { RippleGlow } from './RippleGlow';
 export { FAB } from './FAB';
 export { SearchBar } from './SearchBar';
 export { MobileLedger } from './MobileLedger';
+export { GlobalSearchResults } from './GlobalSearch';
+export { useGlobalSearch } from './useGlobalSearch';
+export type { GlobalSearchItem, GlobalSearchSection } from './useGlobalSearch';
 
