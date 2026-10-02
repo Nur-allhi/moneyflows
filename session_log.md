@@ -801,6 +801,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - User-picked design (plain-language choice): fold + hover peek. Arrow button on the sidebar edge folds to a 68px icon rail; hovering the rail peeks the full 220px floating over content; choice persists via `AppSettings.sidebarCollapsed`; folded icons show name tooltips; footer keeps avatar, logo becomes M mark; content area reclaims the space (`mainWide`); mobile/bottom-nav untouched
 - Gates: typecheck PASS, eslint PASS, build PASS, unit 48/48 PASS; impact HIGH disclosed (structural — AppLayout shell; change additive, Sidebar props untouched)
 
+## Session 2026-10-02 (sidebar collapse debug via Playwright, same branch)
+
+### Changes
+- User report: sidebar "stuck" after clicking fold (content moved under it, bar stayed wide). Code review: store + classes + shipped CSS all correct (verified `width:68px` collapsed + `padding-left:100px` mainWide rules in fresh `dist` output)
+- Playwright proof on fresh server (`e2e/sidebar-fold.check`, deleted after): open=220, folded=68, hover-peek=220, unfold works, main padding 100px — 2/2 green; screenshot confirms icon rail + reclaimed content + readable amounts
+- Root cause: user's tab was on the stale :3000 dev server (served pre-collapse bundle; third such incident). Killed it, started a fresh `npm run dev` (:3000, HTTP 200)
+- No code changes needed; tree clean
+
 ## Session 2026-10-02 (sidebar nav icons, same branch)
 
 ### Changes
