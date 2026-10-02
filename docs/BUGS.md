@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-8: Dashboard "New Transaction" icon + label wrap to two lines
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-02 (during: app-wide button-animation rollout verification, page feedback on `/`)
+- **Location:** `src/presentation/screens/Dashboard.tsx:54` (`actBtn actPrimary`)
+- **Description:** The "New Transaction" button shows its plus icon and label stacked on two lines instead of one row. Expected: icon + label side by side with the 8px flex gap.
+- **Root Cause:** The rollout wrapped the svg + text in a single `.anim-target` span inside the row-flex `.actBtn` (`gap: 8px`) → flex gap lost, inline content wraps.
+- **Fix Approach:** split into two `.anim-target` spans sharing one replay key (same pattern as the MemberList/OtherLedgersIndex card fix).
+- **Resolved:** 2026-10-02 — split spans committed on `feature/ui-polish`; tree-wide audit confirms no other svg+text single-span wrappers; typecheck + eslint clean.
+
+---
+
 ## BUG-5: Account card text unreadable in light mode (+ missed on-primary whites)
 
 - **Status:** fixed

@@ -760,3 +760,8 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Fixed 2 real layout breaks from review: `MemberList` + `OtherLedgersIndex` space-between cards now use per-child spans sharing one replay key (single wrapper collapsed the balance alignment)
 - Skipped (user-approved): 6 oversized files already >300 LOC (`LoanDetailView`, `GroupLedgerScreen`, `GroupsListScreen`, `SettingsPage`, `SettingsModal`, `OtherLedgerDetail` — wire when split per T-092) + `ErrorBoundary` (class component)
 - Gates: typecheck PASS, eslint clean (1 pre-existing `LedgerSection` warning, untouched), build PASS, unit 48/48 PASS, `detect_changes` HIGH disclosed (44 files, additive-only, no logic changes)
+
+### BUG-8 fix (same session, page feedback on `/`)
+- Logged BUG-8 first per §3.11: Dashboard "New Transaction" icon + label wrapped to two lines — rollout's single `.anim-target` span collapsed the row-flex `gap: 8px`
+- Fix: two `.anim-target` spans sharing one replay key (icon + label); tree-wide audit found no other svg+text single-span wrappers
+- Gates: typecheck PASS, eslint PASS; `detect_changes` n/a (single button)
