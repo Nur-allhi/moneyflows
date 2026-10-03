@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.13.1',
+    items: [
+      'Filter cards in ledgers now stay open while you pick, and close with Escape or a tap outside.',
+      'Fixed transaction popup buttons sitting off-center in their circles.',
+    ],
+  },
+  {
     version: '1.13.0',
     items: [
       'Loan ledgers now look and work like account ledgers — same header, same buttons, same filter card.',

@@ -1037,3 +1037,12 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Uncommitted on dev (with drawer stay-open fix). Next: user verifies, then commit.
 
+
+## Session 2026-10-03 (commit two fixes on dev)
+
+### Changes
+- User-approved commit: fc5aa87 fix(ledger) drawer stay-open + 6020b21 fix(modal) footer icons (each with CHANGELOG Fixed entry); detect_changes LOW, pushed dev
+
+### Status
+- On dev. session_log note uncommitted (rides next commit). Next: user call.
+
