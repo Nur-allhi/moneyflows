@@ -51,17 +51,6 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const [drawerKey, replayDrawer] = useReplay();
   const [typeFKey, replayTypeF] = useReplay();
   const [typeFPicked, setTypeFPicked] = useState<string | null>(null);
-  const closeTimerRef = useRef<number | null>(null);
-  const clearCloseTimer = useCallback(() => {
-    if (closeTimerRef.current !== null) {
-      window.clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-  }, []);
-  const scheduleClose = useCallback(() => {
-    clearCloseTimer();
-    closeTimerRef.current = window.setTimeout(() => setShowFilters(false), 500);
-  }, [clearCloseTimer]);
 
   useEffect(() => {
     fetchTransactions({ accountId: stack.debtorId });
@@ -75,22 +64,22 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   }, []);
 
   useEffect(() => {
-    if (!showFilters) {
-      clearCloseTimer();
-      return;
-    }
+    if (!showFilters) return;
     const handler = (e: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
         setShowFilters(false);
       }
     };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowFilters(false);
+    };
     document.addEventListener('mousedown', handler);
-    scheduleClose();
+    document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('mousedown', handler);
-      clearCloseTimer();
+      document.removeEventListener('keydown', onKey);
     };
-  }, [showFilters, scheduleClose, clearCloseTimer]);
+  }, [showFilters]);
 
   const accountById = useMemo(() => Object.fromEntries(accounts.map((a) => [a.id, a])), [accounts]);
   const memberById = useMemo(() => Object.fromEntries(members.map((m) => [m.id, m])), [members]);
@@ -538,12 +527,6 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
               </button>
               <div
                 className={`${styles.filterDrawer} ${showFilters ? styles.filterDrawerOpen : ''}`}
-                onMouseEnter={clearCloseTimer}
-                onMouseLeave={scheduleClose}
-                onMouseMove={() => {
-                  clearCloseTimer();
-                  scheduleClose();
-                }}
               >
                 <div className={styles.filterDrawerInner}>
                   <div className={styles.drawerFiltersRow}>
@@ -560,8 +543,6 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
                             replayTypeF();
                             setTypeFPicked(f.key);
                             setTxFilter(f.key);
-                            clearCloseTimer();
-                            scheduleClose();
                           }}
                           title={f.label}
                           aria-label={f.label}
@@ -590,7 +571,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
                         <button
                           key={d}
                           className={`${styles.pill} ${dateMode === d ? styles.pillActive : ''}`}
-                          onClick={() => { setDateMode(d); clearCloseTimer(); scheduleClose(); }}
+                          onClick={() => setDateMode(d)}
                         >{d === 'none' ? 'All' : d === 'month' ? 'Month' : 'Range'}</button>
                       ))}
                     </div>

@@ -96,8 +96,19 @@
 .iconBtn:hover {
   width: 90px;
   border-radius: 999px;
-  gap: 6px;
   padding-left: 5px;
+}
+
+.iconBtn:hover :global(.anim-target),
+.ledgerBtn:hover :global(.anim-target) {
+  gap: 6px;
+}
+
+.iconBtn :global(.anim-target),
+.ledgerBtn :global(.anim-target) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .iconBtn:hover .btnLabel {
@@ -151,7 +162,6 @@
 .ledgerBtn:hover {
   width: 130px;
   border-radius: 999px;
-  gap: 6px;
   padding-left: 5px;
 }
 
@@ -205,6 +215,13 @@
 
   .mobSheetBtn:active {
     background: color-mix(in oklch, var(--color-wash) 6%, transparent);
+  }
+
+  .mobSheetBtn :global(.anim-target) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
 
   .mobSheetDanger {

@@ -70,30 +70,19 @@ export function LedgerSection(props: Props) {
   const [mClearKey, replayMClear] = useReplay();
   const [loadMoreMKey, replayLoadMoreM] = useReplay();
   const filterWrapRef = useRef<HTMLDivElement>(null);
-  const closeTimerRef = useRef<number | null>(null);
-  const clearCloseTimer = () => {
-    if (closeTimerRef.current !== null) {
-      window.clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-  };
-  const scheduleClose = () => {
-    clearCloseTimer();
-    closeTimerRef.current = window.setTimeout(() => setDrawerOpen(false), 500);
-  };
   useEffect(() => {
-    if (!drawerOpen) {
-      clearCloseTimer();
-      return;
-    }
+    if (!drawerOpen) return;
     const onDown = (e: MouseEvent) => {
       if (filterWrapRef.current && !filterWrapRef.current.contains(e.target as Node)) setDrawerOpen(false);
     };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDrawerOpen(false);
+    };
     document.addEventListener('mousedown', onDown);
-    scheduleClose();
+    document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('mousedown', onDown);
-      clearCloseTimer();
+      document.removeEventListener('keydown', onKey);
     };
   }, [drawerOpen]);
 
@@ -135,12 +124,6 @@ export function LedgerSection(props: Props) {
               </button>
               <div
                 className={`${styles.filterDrawer} ${drawerOpen ? styles.filterDrawerOpen : ''}`}
-                onMouseEnter={clearCloseTimer}
-                onMouseLeave={scheduleClose}
-                onMouseMove={() => {
-                  clearCloseTimer();
-                  scheduleClose();
-                }}
               >
                 <div className={styles.filterDrawerInner}>
                   <div className={styles.drawerFiltersRow}>
@@ -153,8 +136,6 @@ export function LedgerSection(props: Props) {
                             replayLedgerF();
                             setLedgerFPicked(f.key);
                             setLedgerFilter(f.key);
-                            clearCloseTimer();
-                            scheduleClose();
                           }}
                           title={f.label}
                           aria-label={f.label}
@@ -186,8 +167,6 @@ export function LedgerSection(props: Props) {
                           onClick={() => {
                             replayShowAll();
                             setSelectedAccountId(null);
-                            clearCloseTimer();
-                            scheduleClose();
                           }}
                         >
                           <span className="anim-target" key={showAllKey}>All account</span>
@@ -202,8 +181,6 @@ export function LedgerSection(props: Props) {
                               onClick={() => {
                                 replayOb();
                                 onOpeningBalance();
-                                clearCloseTimer();
-                                scheduleClose();
                               }}
                             >
                               <span className="anim-target" key={obKey}>{hasObTx ? 'Opening Balance' : 'Add Opening'}</span>

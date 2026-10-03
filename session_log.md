@@ -1001,3 +1001,48 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - On dev, merged content pushed. session_log note uncommitted (rides next commit). Next: user call.
 
+
+## Session 2026-10-02 (release v1.13.0)
+
+### Changes
+- User-approved: merge dev -> master + bump. MINOR (feat present) 1.12.0 -> 1.13.0: package.json + whatsNew 1.13.0 (1 bullet) + CHANGELOG [1.13.0] (self-corrected a mid-edit heading mix-up before committing — verified final headings)
+- Gates: build PASS, unit 48/48 PASS (17 e2e files fail under vitest — pre-existing), lint 1 pre-existing warning (LedgerSection:98 untouched)
+- Flow: bump 925317f on dev -> merge no-ff 6d8c7ae -> tag v1.13.0 -> pushed master --follow-tags; dev ff + pushed; on dev
+
+### Status
+- v1.13.0 live on master + dev. session_log note uncommitted (rides next commit). Next: user call.
+
+
+## Session 2026-10-03 (ledger drawer stay-open fix, on dev)
+
+### Changes
+- User-reported: filter card closed in ~500ms, no time to select (both Account + Loan ledgers shared the idle auto-close timer)
+- Fix per user pick (stay-open): removed close timer + hover handlers in LedgerSection.tsx + LoanDetailView.tsx; drawer now closes on outside-click, Escape (new), or More toggle; selections no longer fight a timer
+- Gates: tsc PASS, eslint --max-warnings 0 PASS on both files (old pre-existing LedgerSection:98 warning gone with the removed pattern), loans vitest 20/20 PASS; seeded Playwright on both ledgers: drawer visible after 2s idle, Escape closes (scratch spec removed)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev. Next: user verifies, then commit (and version bump only if user asks — fix alone is PATCH).
+
+
+## Session 2026-10-03 (tx modal footer icon fix, on dev)
+
+### Changes
+- Page feedback: TransactionDetailModal footer icons riding high in circles — same root cause as ledger buttons (global .anim-target inline span broke button flex centering; hover gap dead)
+- TransactionDetailModal.module.css: :global(.anim-target) inline-flex centering + hover gap moved onto it for iconBtn/ledgerBtn; dead button-level gap removed; same centering for mobile mobSheetBtn; impact LOW (0 affected)
+- Gates: tsc PASS, eslint --max-warnings 0 PASS; seeded Playwright: footer icons centered at rest, Edit hover expands to pill with proper gap (scratch spec removed)
+
+### Status
+- Uncommitted on dev (with drawer stay-open fix). Next: user verifies, then commit.
+
+
+## Session 2026-10-03 (commit two fixes on dev)
+
+### Changes
+- User-approved commit: fc5aa87 fix(ledger) drawer stay-open + 6020b21 fix(modal) footer icons (each with CHANGELOG Fixed entry); detect_changes LOW, pushed dev
+
+### Status
+- On dev. session_log note uncommitted (rides next commit). Next: user call.
+
