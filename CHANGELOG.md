@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-03
+
 ### Added
 - Ledger sort order: every ledger (Member, Group, Loan, Other, Tag) now shows newest transactions first with "Newest first / Oldest first" pills in the filter card (desktop + mobile); running balances unchanged.
 

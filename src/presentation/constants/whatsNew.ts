@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.14.0',
+    items: [
+      'Ledgers now show newest transactions first, with Newest / Oldest buttons in the filter card.',
+      'Ledger dates are wider and simpler — just the date, like 03-10-2026.',
+    ],
+  },
+  {
     version: '1.13.1',
     items: [
       'Filter cards in ledgers now stay open while you pick, and close with Escape or a tap outside.',
