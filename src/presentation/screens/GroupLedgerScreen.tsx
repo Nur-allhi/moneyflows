@@ -50,6 +50,7 @@ export function GroupLedgerScreen() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [ledgerQuery, setLedgerQuery] = useState('');
   const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -98,8 +99,8 @@ export function GroupLedgerScreen() {
   }, [sortedTxs, debouncedLedgerQuery, accountMapForSearch, locale]);
 
   const displayedTxs = useMemo(
-    () => searchFilteredAll.slice(-displayLimit),
-    [searchFilteredAll, displayLimit],
+    () => (sortOrder === 'desc' ? searchFilteredAll.slice(-displayLimit) : searchFilteredAll.slice(0, displayLimit)),
+    [searchFilteredAll, displayLimit, sortOrder],
   );
 
   const searchFilteredTxs = displayedTxs;
@@ -130,8 +131,8 @@ export function GroupLedgerScreen() {
       const allowed = map[typeFilter] ?? [];
       txs = txs.filter((tx) => allowed.includes(tx.type));
     }
-    return txs.sort((a, b) => b.date.localeCompare(a.date));
-  }, [displayedTxs, typeFilter]);
+    return txs.sort((a, b) => (sortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
+  }, [displayedTxs, typeFilter, sortOrder]);
 
   const isMobileGroupCredit = useCallback((tx: Transaction) => {
     return accountSet.has(tx.destAccount ?? '') && !accountSet.has(tx.sourceAccount ?? '');
@@ -209,14 +210,14 @@ export function GroupLedgerScreen() {
       };
     });
 
-    const result = allRows.reverse();
+    const result = sortOrder === 'desc' ? allRows.reverse() : allRows;
 
     if (typeFilter === 'all') return result;
     return result.filter((r) => {
       if (typeFilter === 'loan') return r.type === 'loan';
       return r.type === typeFilter;
     });
-  }, [searchFilteredTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay, displayedTxs]);
+  }, [searchFilteredTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay, displayedTxs, sortOrder]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     const tx = txs.find((t) => t.id === row.id);
@@ -342,6 +343,8 @@ export function GroupLedgerScreen() {
           loadingMore={loadingMore}
           sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
           empty={mobileFilteredTxs.length === 0 ? <div className={styles.empty}>No entries found</div> : undefined}
+          sortOrder={sortOrder}
+          onSortChange={setSortOrder}
         >
           {mobileFilteredTxs.map((tx) => {
             const isCredit = isMobileGroupCredit(tx);
@@ -410,6 +413,20 @@ export function GroupLedgerScreen() {
                 {t.label}
               </button>
             ))}
+          </div>
+          <div className={styles.filterBar} role="group" aria-label="Sort order">
+            <button
+              type="button"
+              className={`${styles.filterPill} ${sortOrder === 'desc' ? styles.filterPillActive : ''}`}
+              onClick={() => setSortOrder('desc')}
+              aria-pressed={sortOrder === 'desc'}
+            >Newest first</button>
+            <button
+              type="button"
+              className={`${styles.filterPill} ${sortOrder === 'asc' ? styles.filterPillActive : ''}`}
+              onClick={() => setSortOrder('asc')}
+              aria-pressed={sortOrder === 'asc'}
+            >Oldest first</button>
           </div>
 
           <LedgerTable

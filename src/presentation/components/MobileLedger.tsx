@@ -20,11 +20,14 @@ interface MobileLedgerProps {
   sentinel: ReactNode;
   children: ReactNode;
   empty?: ReactNode;
+  sortOrder?: 'asc' | 'desc';
+  onSortChange?: (dir: 'asc' | 'desc') => void;
 }
 
 export function MobileLedger({
   title, count, filterOptions, activeFilter, onFilterChange,
   searchQuery, onSearchChange, onDownloadPdf, loadingMore, sentinel, children, empty,
+  sortOrder, onSortChange,
 }: MobileLedgerProps) {
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -95,6 +98,23 @@ export function MobileLedger({
               ><span className="anim-target" key={`${f.key}-${pillPicked === f.key ? pillKey : 0}`}>{f.label}</span></button>
             ))}
           </div>
+          {onSortChange && (
+            <div className={styles.sortRow} role="group" aria-label="Sort order">
+              <span className={styles.sortLabel}>Sort</span>
+              <button
+                type="button"
+                className={`${styles.filterPill} ${sortOrder === 'desc' ? styles.filterPillActive : ''}`}
+                onClick={() => onSortChange('desc')}
+                aria-pressed={sortOrder === 'desc'}
+              >Newest first</button>
+              <button
+                type="button"
+                className={`${styles.filterPill} ${sortOrder === 'asc' ? styles.filterPillActive : ''}`}
+                onClick={() => onSortChange('asc')}
+                aria-pressed={sortOrder === 'asc'}
+              >Oldest first</button>
+            </div>
+          )}
         </div>
 
         <div className={`${styles.searchBar} ${searchOpen ? styles.searchBarOpen : ''}`}>

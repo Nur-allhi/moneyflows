@@ -36,6 +36,8 @@ interface Props {
   tagFilter: string;
   setTagFilter: (v: string) => void;
   ledgerTagOptions: string[];
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (v: 'asc' | 'desc') => void;
   showBalance: boolean;
   displayLimit: number;
   onReachEnd: () => void;
@@ -48,7 +50,7 @@ interface Props {
 }
 
 export function LedgerSection(props: Props) {
-  const { isDesktop, memberAccounts, selectedAccountId, setSelectedAccountId, filteredLedger, filteredTxs, searchFilteredAll, ledgerFilter, setLedgerFilter, ledgerQuery, setLedgerQuery, tagFilter, setTagFilter, ledgerTagOptions, showBalance, displayLimit, onReachEnd, onRowClick, onOpeningBalance, txCount, selectedAcct, transactions, downloadPdf } = props;
+  const { isDesktop, memberAccounts, selectedAccountId, setSelectedAccountId, filteredLedger, filteredTxs, searchFilteredAll, ledgerFilter, setLedgerFilter, ledgerQuery, setLedgerQuery, tagFilter, setTagFilter, ledgerTagOptions, sortOrder, setSortOrder, showBalance, displayLimit, onReachEnd, onRowClick, onOpeningBalance, txCount, selectedAcct, transactions, downloadPdf } = props;
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -190,6 +192,22 @@ export function LedgerSection(props: Props) {
                       </div>
                     )}
                   </div>
+                  <div className={styles.drawerFiltersRow} role="group" aria-label="Sort order">
+                    <div className={styles.ledgerFilterPills}>
+                      <button
+                        type="button"
+                        className={`${styles.filterPill} ${sortOrder === 'desc' ? styles.filterPillActive : ''}`}
+                        onClick={() => setSortOrder('desc')}
+                        aria-pressed={sortOrder === 'desc'}
+                      ><span className="anim-target">Newest first</span></button>
+                      <button
+                        type="button"
+                        className={`${styles.filterPill} ${sortOrder === 'asc' ? styles.filterPillActive : ''}`}
+                        onClick={() => setSortOrder('asc')}
+                        aria-pressed={sortOrder === 'asc'}
+                      ><span className="anim-target">Oldest first</span></button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -236,6 +254,10 @@ export function LedgerSection(props: Props) {
             {(['all', 'income', 'expense', 'loan'] as const).map((f) => (
               <button key={f} className={`${styles.filterPill} ${ledgerFilter === f ? styles.filterPillActive : ''} ${mPillPicked === f && mPillKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMPill(); setMPillPicked(f); setLedgerFilter(f); }}><span className="anim-target" key={`${f}-${mPillPicked === f ? mPillKey : 0}`}>{f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}</span></button>
             ))}
+          </div>
+          <div className={styles.filterPills} role="group" aria-label="Sort order">
+            <button type="button" className={`${styles.filterPill} ${sortOrder === 'desc' ? styles.filterPillActive : ''}`} onClick={() => setSortOrder('desc')} aria-pressed={sortOrder === 'desc'}><span className="anim-target">Newest first</span></button>
+            <button type="button" className={`${styles.filterPill} ${sortOrder === 'asc' ? styles.filterPillActive : ''}`} onClick={() => setSortOrder('asc')} aria-pressed={sortOrder === 'asc'}><span className="anim-target">Oldest first</span></button>
           </div>
         </div>
         <div className={`${styles.searchBar}`}>

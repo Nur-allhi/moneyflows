@@ -20,7 +20,7 @@
 
 .header {
   display: grid;
-  grid-template-columns: 55px 55px 1fr 55px 55px 55px;
+  grid-template-columns: 95px 55px 1fr 55px 55px 55px;
   gap: 8px;
   padding: 12px 14px;
   font-size: 10px;
@@ -32,16 +32,16 @@
 }
 
 .desktop .header {
-  grid-template-columns: 90px 90px 1fr 90px 90px 90px;
+  grid-template-columns: 130px 90px 1fr 90px 90px 90px;
   padding: 10px 20px;
 }
 
 .noBalance .header {
-  grid-template-columns: 55px 55px 1fr 150px 55px 55px;
+  grid-template-columns: 95px 55px 1fr 150px 55px 55px;
 }
 
 .desktop.noBalance .header {
-  grid-template-columns: 90px 90px 1fr 250px 90px 90px;
+  grid-template-columns: 130px 90px 1fr 250px 90px 90px;
 }
 
 .body {
@@ -70,7 +70,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 55px 55px 1fr 55px 55px 55px;
+  grid-template-columns: 95px 55px 1fr 55px 55px 55px;
   gap: 8px;
   padding: 10px 14px;
   font-size: 13px;
@@ -81,17 +81,17 @@
 }
 
 .desktop .row {
-  grid-template-columns: 90px 90px 1fr 90px 90px 90px;
+  grid-template-columns: 130px 90px 1fr 90px 90px 90px;
   padding: 10px 20px;
   font-size: 14px;
 }
 
 .noBalance .row {
-  grid-template-columns: 55px 55px 1fr 150px 55px 55px;
+  grid-template-columns: 95px 55px 1fr 150px 55px 55px;
 }
 
 .desktop.noBalance .row {
-  grid-template-columns: 90px 90px 1fr 250px 90px 90px;
+  grid-template-columns: 130px 90px 1fr 250px 90px 90px;
 }
 
 .row:hover {

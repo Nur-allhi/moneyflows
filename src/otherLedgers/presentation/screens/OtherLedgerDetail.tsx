@@ -29,6 +29,7 @@ export function OtherLedgerDetail() {
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const [filter, setFilter] = useState('all');
   const [ledgerQuery, setLedgerQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [showDeleteLedgerConfirm, setShowDeleteLedgerConfirm] = useState(false);
@@ -59,7 +60,10 @@ export function OtherLedgerDetail() {
     return entries.filter((e) => e.description.toLowerCase().includes(q) || e.date.includes(q) || String(e.debit).includes(q) || String(e.credit).includes(q));
   }, [entries, debouncedQuery]);
 
-  const displayed = useMemo(() => searchFiltered.slice(-displayLimit), [searchFiltered, displayLimit]);
+  const displayed = useMemo(
+    () => (sortOrder === 'desc' ? searchFiltered.slice(-displayLimit) : searchFiltered.slice(0, displayLimit)),
+    [searchFiltered, displayLimit, sortOrder],
+  );
 
   useEffect(() => {
     const el = sentinelRef.current;
@@ -86,16 +90,18 @@ export function OtherLedgerDetail() {
         currencyLabel: currency,
         type: isDebit ? 'expense' as const : 'income' as const,
       };
-    }).reverse();
+    });
+    // Balances are stored chronological; display follows sortOrder (newest first by default).
+    if (sortOrder === 'desc') rows.reverse();
     if (filter === 'all') return rows;
     return rows.filter((r) => (filter === 'debit' ? r.debit !== '—' : r.credit !== '—'));
-  }, [displayed, filter, locale, currency]);
+  }, [displayed, filter, locale, currency, sortOrder]);
 
   const mobileFiltered = useMemo(() => {
     let list = [...displayed];
     if (filter !== 'all') list = list.filter((e) => (filter === 'debit' ? e.debit > 0 : e.credit > 0));
-    return list.sort((a, b) => b.date.localeCompare(a.date));
-  }, [displayed, filter]);
+    return list.sort((a, b) => (sortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
+  }, [displayed, filter, sortOrder]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) setEditId(row.id);
@@ -157,6 +163,8 @@ export function OtherLedgerDetail() {
           onDownloadPdf={downloadPdf}
           sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
           empty={mobileFiltered.length === 0 ? <div className={styles.empty}>{ledgerQuery ? `No matches for "${ledgerQuery}"` : 'No entries yet — tap + to add first row.'}</div> : undefined}
+          sortOrder={sortOrder}
+          onSortChange={setSortOrder}
         >
           {mobileFiltered.map((e) => {
             const isDebit = e.debit > 0;
@@ -240,6 +248,20 @@ export function OtherLedgerDetail() {
                 {t.label}
               </button>
             ))}
+          </div>
+          <div className={styles.filterBar} role="group" aria-label="Sort order">
+            <button
+              type="button"
+              className={`${styles.filterPill} ${sortOrder === 'desc' ? styles.filterPillActive : ''}`}
+              onClick={() => setSortOrder('desc')}
+              aria-pressed={sortOrder === 'desc'}
+            >Newest first</button>
+            <button
+              type="button"
+              className={`${styles.filterPill} ${sortOrder === 'asc' ? styles.filterPillActive : ''}`}
+              onClick={() => setSortOrder('asc')}
+              aria-pressed={sortOrder === 'asc'}
+            >Oldest first</button>
           </div>
 
           <LedgerTable

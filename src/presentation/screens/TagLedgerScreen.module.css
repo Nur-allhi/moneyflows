@@ -76,6 +76,43 @@
   color: var(--color-text-secondary, #94a3b8);
 }
 
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  max-width: 560px;
+  flex-wrap: wrap;
+}
+
+.filterRow > :first-child {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.sortPills {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.sortPill {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sortPillActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
 .empty {
   color: var(--color-text-secondary, #94a3b8);
   font-size: 14px;
