@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Ledger filter card closed after ~500ms idle before anything could be selected (Account + Loan ledgers) — card now stays open until outside-click, Escape, or the More toggle.
+- Transaction detail modal footer icons sat high in their circles — icon wrapper now centers them, hover pill gap fixed (mobile buttons included).
+
 ## [1.13.0] - 2026-10-02
 
 ### Added
