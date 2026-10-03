@@ -8,6 +8,7 @@ import { useTagStore } from '../../stores/useTagStore';
 import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import { matchesTx } from '../../utils/search';
 import { formatAmountParts } from '../../utils/format';
+import { shortDate } from '../../constants/dates';
 import type { LedgerRow } from '../../components';
 
 export function useMemberData() {
@@ -16,6 +17,7 @@ export function useMemberData() {
   const [ledgerFilter, setLedgerFilter] = useState('all');
   const [ledgerQuery, setLedgerQuery] = useState('');
   const [tagFilter, setTagFilter] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const knownTags = useTagStore((s) => s.tags);
   const { members, fetchMembers } = useMemberStore();
   const { accounts, fetchAccounts } = useAccountStore();
@@ -65,7 +67,10 @@ export function useMemberData() {
     return r;
   }, [sortedTxs, debouncedLedgerQuery, tagFilter, accountMapForSearch]);
 
-  const filteredTxs = useMemo(() => searchFilteredAll.slice(0, displayLimit), [searchFilteredAll, displayLimit]);
+  const filteredTxs = useMemo(() => {
+    const ordered = sortOrder === 'desc' ? [...searchFilteredAll].reverse() : searchFilteredAll;
+    return ordered.slice(0, displayLimit);
+  }, [searchFilteredAll, displayLimit, sortOrder]);
   const ledgerTagOptions = useMemo(() => {
     const s = new Set<string>();
     sortedTxs.forEach((t) => { const tags = (t.metadata as { tags?: string[] })?.tags; if (tags) tags.forEach((x) => s.add(x)); });
@@ -91,10 +96,12 @@ export function useMemberData() {
       const mappedType: LedgerRow['type'] = tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : tx.type === 'transfer' ? 'transfer' : 'loan';
       const isCredit = isTxCredit(tx);
       const fmt = formatAmountParts(tx.amount, locale, currency);
-      rows.push({ id: tx.id, date: tx.date, description: tx.description, balance: String(balance), currencyLabel: currency, type: mappedType, credit: isCredit ? fmt.amount : '', debit: !isCredit ? fmt.amount : '' } as unknown as LedgerRow);
+      rows.push({ id: tx.id, date: shortDate(tx.date, locale), description: tx.description, balance: String(balance), currencyLabel: currency, type: mappedType, credit: isCredit ? fmt.amount : '', debit: !isCredit ? fmt.amount : '' } as unknown as LedgerRow);
     }
+    // Balances are computed walking oldest→newest; display order follows sortOrder.
+    if (sortOrder === 'desc') rows.reverse();
     return rows;
-  }, [sortedTxs, memberAccounts, searchFilteredAll, selectedAccountId, locale, currency]);
+  }, [sortedTxs, memberAccounts, searchFilteredAll, selectedAccountId, locale, currency, sortOrder]);
 
   const filteredLedger = useMemo(() => {
     let r = ledgerRows;
@@ -108,6 +115,7 @@ export function useMemberData() {
   return {
     memberId, member, memberAccounts, selectedAccountId, setSelectedAccountId, accountsOpen, setAccountsOpen, displayLimit, setDisplayLimit, isDesktop,
     ledgerFilter, setLedgerFilter, ledgerQuery, setLedgerQuery, tagFilter, setTagFilter, knownTags, ledgerTagOptions,
+    sortOrder, setSortOrder,
     totalBalance, totalIncome, totalExpenses, memberTxs, accountTxs, sortedTxs, filteredTxs, searchFilteredAll, ledgerRows, filteredLedger, selectedAcct, handleReachEnd,
     members, accounts, transactions, locale, currency, debouncedLedgerQuery,
   };

@@ -98,6 +98,22 @@
   border-color: var(--color-primary);
 }
 
+.sortRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 0 10px;
+  flex-wrap: wrap;
+}
+
+.sortLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+}
+
 .searchBar {
   max-height: 0;
   opacity: 0;

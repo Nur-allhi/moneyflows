@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-03
+
+### Added
+- Ledger sort order: every ledger (Member, Group, Loan, Other, Tag) now shows newest transactions first with "Newest first / Oldest first" pills in the filter card (desktop + mobile); running balances unchanged.
+
+### Changed
+- Ledger Date column is wider (mobile 55→95px, desktop 90→130px) and shows date-only in dd-mm-yyyy format (e.g. 03-10-2026) — no time, consistent across ledgers, reports and PDFs.
+
 ## [1.13.1] - 2026-10-03
 
 ### Fixed

@@ -40,6 +40,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [breakdownOpen, setBreakdownOpen] = useState(false);
   const [txFilter, setTxFilter] = useState<TxFilter>('all');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [month, setMonth] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -174,14 +175,14 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
     if (debouncedLedgerQuery.trim()) {
       result = result.filter((tx) => matchesTx(tx, debouncedLedgerQuery, searchCtx));
     }
-    return result.sort((a, b) => b.date.localeCompare(a.date));
-  }, [sortedTxs, txFilter, debouncedLedgerQuery, searchCtx]);
+    return result.sort((a, b) => (sortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
+  }, [sortedTxs, txFilter, debouncedLedgerQuery, searchCtx, sortOrder]);
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
     const cr = (t: typeof filteredTxs[0]) => LOAN_CREDIT_TYPES.has(t.type);
     const dr = (t: typeof filteredTxs[0]) => LOAN_DEBIT_TYPES.has(t.type);
     const balanceMap = computeRunningBalances(sortedTxs);
-    return filteredTxs.map((tx) => {
+    const mapped = filteredTxs.map((tx) => {
       const bal = balanceMap.get(tx.id) ?? 0;
       const srcAcct = tx.sourceAccount ? accountById[tx.sourceAccount] : undefined;
       const dstAcct = tx.destAccount ? accountById[tx.destAccount] : undefined;
@@ -201,8 +202,11 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         type: cr(tx) ? 'expense' as const : 'income' as const,
         typeLabel: tx.type === 'lend' || tx.type === 'loan_issue' ? 'Lent' : 'Repayment',
       };
-    }).reverse();
-  }, [filteredTxs, sortedTxs, locale, currency, accountById, memberById]);
+    });
+    // Balances walk oldest→newest; display follows sortOrder (newest first by default).
+    if (sortOrder === 'desc') mapped.reverse();
+    return mapped;
+  }, [filteredTxs, sortedTxs, locale, currency, accountById, memberById, sortOrder]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) {
@@ -213,6 +217,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
 
   const clearFilters = useCallback(() => {
     setTxFilter('all');
+    setSortOrder('desc');
     setDateMode('none');
     setMonth('');
     setStartDate('');
@@ -466,6 +471,8 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
           loadingMore={false}
           sentinel={null}
           empty={mobileFilteredTxs.length === 0 ? <p style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--color-text-secondary)', fontSize: 15 }}>No entries found</p> : undefined}
+          sortOrder={sortOrder}
+          onSortChange={setSortOrder}
         >
           {mobileFilteredTxs.map((tx) => {
             const isCredit = tx.type === 'repay' || tx.type === 'loan_repayment' || tx.type === 'loan_received';
@@ -562,6 +569,23 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
                           </span>
                         </button>
                       ))}
+                    </div>
+                  </div>
+                  <div className={styles.drawerDateRow}>
+                    <span className={styles.filterGroupLabel}>Sort</span>
+                    <div className={styles.filterPills}>
+                      <button
+                        type="button"
+                        className={`${styles.pill} ${sortOrder === 'desc' ? styles.pillActive : ''}`}
+                        onClick={() => setSortOrder('desc')}
+                        aria-pressed={sortOrder === 'desc'}
+                      >Newest first</button>
+                      <button
+                        type="button"
+                        className={`${styles.pill} ${sortOrder === 'asc' ? styles.pillActive : ''}`}
+                        onClick={() => setSortOrder('asc')}
+                        aria-pressed={sortOrder === 'asc'}
+                      >Oldest first</button>
                     </div>
                   </div>
                   <div className={styles.drawerDateRow}>

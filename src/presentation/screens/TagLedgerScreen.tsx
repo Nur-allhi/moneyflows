@@ -123,19 +123,21 @@ export function TagLedgerScreen() {
   const sorted = [...tagged].sort((a, b) => b.date.localeCompare(a.date));
 
   const [ledgerQuery, setLedgerQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
   const filteredSorted = useMemo(() => {
-    if (!debouncedLedgerQuery.trim()) return sorted;
+    const ordered = sortOrder === 'desc' ? sorted : [...sorted].reverse();
+    if (!debouncedLedgerQuery.trim()) return ordered;
     const memberMap = new Map(members.map((m) => [m.id, { name: m.name }]));
     const accountMap = new Map(accounts.map((a) => [a.id, { name: a.name }]));
-    return sorted.filter((tx) =>
+    return ordered.filter((tx) =>
       matchesTx(tx, debouncedLedgerQuery, {
         memberMap,
         accountMap,
         shortDateFn: (iso) => shortDate(iso, locale),
       }),
     );
-  }, [sorted, debouncedLedgerQuery, members, accounts, locale]);
+  }, [sorted, sortOrder, debouncedLedgerQuery, members, accounts, locale]);
 
   if (!tag) {
     return (
@@ -265,8 +267,22 @@ export function TagLedgerScreen() {
         <span>In +{formatAmount(totalIn, locale, currency)}</span>
         <span>Out −{formatAmount(totalOut, locale, currency)}</span>
       </div>
-      <div style={{ margin: '12px 0', maxWidth: 360 }}>
+      <div className={styles.filterRow}>
         <LedgerSearch value={ledgerQuery} onChange={setLedgerQuery} />
+        <div className={styles.sortPills} role="group" aria-label="Sort order">
+          <button
+            type="button"
+            className={`${styles.sortPill} ${sortOrder === 'desc' ? styles.sortPillActive : ''}`}
+            onClick={() => setSortOrder('desc')}
+            aria-pressed={sortOrder === 'desc'}
+          >Newest first</button>
+          <button
+            type="button"
+            className={`${styles.sortPill} ${sortOrder === 'asc' ? styles.sortPillActive : ''}`}
+            onClick={() => setSortOrder('asc')}
+            aria-pressed={sortOrder === 'asc'}
+          >Oldest first</button>
+        </div>
       </div>
       {filteredSorted.length === 0 ? (
         <p className={styles.empty}>
@@ -292,7 +308,7 @@ export function TagLedgerScreen() {
                 const credit = CREDIT_TYPES.has(tx.type);
                 return (
                   <tr key={tx.id}>
-                    <td>{tx.date.slice(0, 10)}</td>
+                    <td>{shortDate(tx.date, locale)}</td>
                     <td><Highlight text={memberName(tx.memberId)} query={ledgerQuery} /></td>
                     <td><Highlight text={credit ? accountLabel(tx.destAccount ?? tx.sourceAccount) : accountLabel(tx.sourceAccount ?? tx.destAccount)} query={ledgerQuery} /></td>
                     <td><Highlight text={tx.description} query={ledgerQuery} /></td>
