@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.14.1',
+    items: [
+      'Fixed member picker rows where the account count and balance looked tiny and stuck to the name.',
+    ],
+  },
+  {
     version: '1.14.0',
     items: [
       'Ledgers now show newest transactions first, with Newest / Oldest buttons in the filter card.',

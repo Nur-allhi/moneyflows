@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.1] - 2026-10-03
+
 ### Fixed
 - Transaction member/account picker rows ran the account count and balance stuck against the name in tiny text — rows now space out (animation wrapper is a flex row), count larger, balance semibold in primary text.
 
