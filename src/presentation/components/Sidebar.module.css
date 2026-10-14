@@ -308,6 +308,7 @@
 .collapsed .footer {
   justify-content: center;
   padding: 16px 0;
+  gap: 0;
 }
 
 .sidebar.peek {

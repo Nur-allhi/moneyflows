@@ -1285,3 +1285,32 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - User: number weight too light. Ledger debit/credit/balance inherited 400 -> set 600 (matches dashboard month/member/tx amounts). Tabular-nums kept
 - Playwright proof: computed weight 600 + tabular-nums on live row. Screenshot. tsc + eslint clean
 - Status: uncommitted on dev. Next: user verifies, then commit.
+
+## Session 2026-10-14 (release v1.16.0)
+
+### Changes
+- User-approved: commit + push + merge to master. MINOR 1.15.0 -> 1.16.0: 0286a41 feat(theme) type scale +2px, XL preset, token-driven text, light contrast (secondary 46->40, gold 55->49, opacity fades removed), ledger polish (130px numbers, centered titles/amounts, mid-aligned rows, bare-dash empties, 0.6em suffix, semibold numbers) + ff3767f bump (package.json + whatsNew 1.16.0 + CHANGELOG [1.16.0])
+- Fixed CHANGELOG misplacement: font/ledger entries had landed under [1.15.0]; moved to new [1.16.0] (Added x2 + Fixed x2)
+- Gates: build PASS, eslint clean, unit 48/48, detect_changes low risk/no affected flows; all features contrast-measured + screenshotted live on DemoDB
+- Flow: pushed dev -> merge no-ff 45412ac -> tag v1.16.0 -> pushed master --follow-tags; dev ff + pushed (one push timeout, retry ok); back on dev, clean
+
+### Status
+- v1.16.0 live on master + dev. Next: user call.
+
+### Change 2026-10-14 (recent-row: desc 3 lines, date+amount 1 line)
+- User: description may wrap 2-3 lines, date + amount stay single-line. Fix: txDesc line-clamp 2->3; txDate gained missing white-space:nowrap (+overflow hidden) so dates like 24-09-2026 can't split
+- Playwright proof: injected long desc wraps exactly 3 lines (clamp), date 1 line nowrap, amount 1 line nowrap. Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (recent-row date breathing room)
+- User: date touched the description (65px box vs 66px text = 1px overlap, worse at larger presets). Fix: txDate width->min-width:78px + margin-right:6px
+- Playwright proof: box 78, text 66, 12px inner breathing, 14px gap to desc (was 8 with overlap). Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Config 2026-10-14 (pin GitHub account for this repo)
+- User has 2 GitHub accounts; pinned this repo to Nur-allhi via local git config credential.https://github.com.username (GCM skips the account picker). Verified with passwordless ls-remote. No secrets stored - token stays in Credential Manager/keyring.
+
+### Change 2026-10-14 (collapsed sidebar footer avatar centering)
+- User: avatar sat slightly left when sidebar folded. Cause: .collapsed .footer centers content but the 10px flex gap to the zero-width footerText still applied, pushing the avatar 5px left. Fix: gap:0 in collapsed footer
+- Playwright proof: collapsed, avatar center 50 == footer center 50. Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.

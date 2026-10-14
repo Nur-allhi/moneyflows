@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.16.1',
+    items: [
+      'Recent transactions can show longer descriptions without crowding the date and amount.',
+    ],
+  },
+  {
     version: '1.16.0',
     items: [
       'Text can now be larger — Small, Medium and Large all grew, and a new XL size joins Settings → Appearance.',

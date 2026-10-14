@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [1.16.1] - 2026-10-14
+
+### Fixed
+- Recent-transaction rows: descriptions wrap up to three lines while date and amount stay single-line; the date column got breathing room so it no longer touches the description.
+- Collapsed sidebar footer avatar sits dead-center (removed the stray flex gap to the hidden label).
+
 ## [1.16.0] - 2026-10-14
 
 ### Added
