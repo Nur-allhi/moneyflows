@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [1.14.2] - 2026-10-14
+
 ### Fixed
 - Transaction picker rows collapsed after a tap (count/balance dropped under the name) — the flex-row rule never matched because the CSS module hashed the global `.anim-target` class; selectors now use `:global()`, and a higher-specificity rule keeps clicked rows intact.
 - Transaction member rows show the member name left with the account count right; account rows show the name with its type beneath on the left and the balance alone, single-line, on the right (long names wrap to two lines max).
