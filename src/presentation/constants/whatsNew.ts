@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.15.0',
+    items: [
+      'Recent Transactions starts at your chosen limit, with a Load more button for the rest.',
+      'You can now hide Metric Cards, Month Summary and Quick Actions from Settings → Dashboard.',
+      'Dashboard panels now fit their own content instead of stretching tall.',
+    ],
+  },
+  {
     version: '1.14.2',
     items: [
       'Transaction lists now show names on the left with counts and balances neatly on the right.',
