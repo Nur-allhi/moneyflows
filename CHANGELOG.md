@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+### Added
+- Dashboard Recent Transactions starts at your Settings → Dashboard limit (default raised 10 → 15) with a "Load more (N remaining)" button adding one page at a time, same pattern as ledger lists; the limit resets when the search query changes. This also wires up the previously unused `dashboardTxLimit` setting.
+
 ## [1.14.2] - 2026-10-14
 
 ### Fixed

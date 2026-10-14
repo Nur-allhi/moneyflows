@@ -1191,3 +1191,10 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.14.2 live on master + dev. Next: user call.
+
+### Change 2026-10-14 (dashboard recent txs: setting limit + Load more)
+- User asked: last 15 recent txs + Load more button. Confirmed approach: wire existing dashboardTxLimit setting (was ignored, hard slice 12) + Load more
+- useDashboardData: full sorted list, recentLimit state init/reset from dashboardTxLimit, visibleRecentTxs slice, recentRemaining, showMoreRecent (+1 page); config DEFAULT 10->15, removed dead DASHBOARD_TX_DISPLAY_LIMIT; RecentTxsPanel renders ledger-style Load more (N remaining); Dashboard.module.css loadMoreBtn
+- Playwright proof on DemoDB (DemoDB/moneyflows-20260925-211143.db loaded into test browser OPFS): 5 rows + Load more (320 remaining) -> click -> 10 rows + (315 remaining); search 'Medicine' -> 5 + (12 remaining), limit resets on query change. Screenshot taken
+- Note: :3000 dev server served a stale Dashboard transform mid-edit (ReferenceError); touching the file forced re-transform, verified fresh. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit (MINOR bump on merge: new Added entry).

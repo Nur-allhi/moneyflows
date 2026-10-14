@@ -18,7 +18,7 @@ export function Dashboard() {
   const { fetchAccounts } = useAccountStore();
   const settings = useSettingsStore((s) => s.settings);
   const d = useDashboardData();
-  const { locale, currency, totalAssetsIncludeLoans, loading, error, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, assetsChange, cashChange, banksChange, loansChange, thisMonthIncome, thisMonthExpenses, thisMonthNet, filteredAccountsByMember, memberById, internalMembers, filteredRecentTxs, activeLoanStacks } = d as any;
+  const { locale, currency, totalAssetsIncludeLoans, loading, error, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, assetsChange, cashChange, banksChange, loansChange, thisMonthIncome, thisMonthExpenses, thisMonthNet, filteredAccountsByMember, memberById, internalMembers, visibleRecentTxs, recentRemaining, showMoreRecent, activeLoanStacks } = d as any;
   const animTotalAssets = useAnimatedValue(totalAssets);
   const animCashInHand = useAnimatedValue(cashInHand);
   const animTotalInBanks = useAnimatedValue(totalInBanks);
@@ -56,7 +56,7 @@ export function Dashboard() {
       </div>
       <div className={styles.content} data-cols={visibleCount || 1}>
         {showWhere && <div className={styles.panel}><div className={styles.panelHeader}><h2>Where Your Money Is</h2></div><WhereMoneyIsPanel filteredAccountsByMember={filteredAccountsByMember} memberById={memberById} internalMembers={internalMembers} expandedMembers={expandedMembers} closingMembers={closingMembers} toggleMember={toggleMember} memberTotalBalance={memberTotalBalance} searchQuery={searchQuery} locale={locale} currency={currency} /></div>}
-        {showRecent && <div className={styles.panel}><div className={styles.panelHeader}><h2>Recent Transactions</h2></div><div className={styles.txList}><RecentTxsPanel filteredRecentTxs={filteredRecentTxs} searchQuery={searchQuery} locale={locale} currency={currency} /></div></div>}
+        {showRecent && <div className={styles.panel}><div className={styles.panelHeader}><h2>Recent Transactions</h2></div><div className={styles.txList}><RecentTxsPanel filteredRecentTxs={visibleRecentTxs} remaining={recentRemaining} onLoadMore={showMoreRecent} searchQuery={searchQuery} locale={locale} currency={currency} /></div></div>}
         {showLoans && <div className={styles.panel}><div className={styles.panelHeader}><h2>Active Loans</h2></div><div className={styles.loanList}><ActiveLoansPanel filteredActiveLoanStacks={filteredActiveLoanStacks} searchQuery={searchQuery} locale={locale} currency={currency} navigate={navigate} /></div></div>}
         {visibleCount === 0 && <div className={styles.panel}><div className="empty-state" style={{ padding: '40px 20px' }}><div className="empty-state-icon">⚙️</div><p className="empty-state-text">All sections hidden — enable them in Settings → Dashboard.</p></div></div>}
       </div>
