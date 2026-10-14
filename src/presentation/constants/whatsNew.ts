@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.16.0',
+    items: [
+      'Text can now be larger — Small, Medium and Large all grew, and a new XL size joins Settings → Appearance.',
+      'Ledgers are easier to read: roomier columns, centered titles and amounts, and clearer small labels.',
+      'Light mode text and numbers now stand out better against the light background.',
+    ],
+  },
+  {
     version: '1.15.0',
     items: [
       'Recent Transactions starts at your chosen limit, with a Load more button for the rest.',
