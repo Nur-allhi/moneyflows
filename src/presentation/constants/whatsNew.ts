@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.14.2',
+    items: [
+      'Transaction lists now show names on the left with counts and balances neatly on the right.',
+      'The account you pick now shows its current balance right in the form.',
+    ],
+  },
+  {
     version: '1.14.1',
     items: [
       'Fixed member picker rows where the account count and balance looked tiny and stuck to the name.',

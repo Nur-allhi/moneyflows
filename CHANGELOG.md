@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [1.14.2] - 2026-10-14
+
+### Fixed
+- Transaction picker rows collapsed after a tap (count/balance dropped under the name) — the flex-row rule never matched because the CSS module hashed the global `.anim-target` class; selectors now use `:global()`, and a higher-specificity rule keeps clicked rows intact.
+- Transaction member rows show the member name left with the account count right; account rows show the name with its type beneath on the left and the balance alone, single-line, on the right (long names wrap to two lines max).
+- The selected account button in the transaction form now shows the account's current balance next to its name.
+- Picker back button is a proper chevron icon instead of a text arrow.
+
 ## [1.14.1] - 2026-10-03
 
 ### Fixed

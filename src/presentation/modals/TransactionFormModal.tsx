@@ -223,6 +223,7 @@ export function TransactionFormModal({
       setPickerField={setPickerField}
       setPickerMember={setPickerMember}
       accountLabel={accountLabel}
+      accounts={accounts}
       description={description}
       setDescription={setDescription}
       clearError={clearError}

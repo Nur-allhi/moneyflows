@@ -1046,3 +1046,137 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - On dev. session_log note uncommitted (rides next commit). Next: user call.
 
+
+## Session 2026-10-03 (release v1.13.1)
+
+### Changes
+- User-approved: merge dev -> master + bump. PATCH (fixes only) 1.13.0 -> 1.13.1: package.json + whatsNew 1.13.1 (2 bullets) + CHANGELOG [1.13.1]
+- Gates: build PASS, unit 48/48 PASS (17 e2e files fail under vitest — pre-existing), lint clean on touched files
+- Flow: bump 8c47d3b on dev -> merge no-ff 1c40e5e -> tag v1.13.1 -> pushed master --follow-tags; dev ff + pushed; on dev
+
+### Status
+- v1.13.1 live on master + dev. session_log note uncommitted (rides next commit). Next: user call.
+
+
+## Session 2026-10-03 (ledger sort: newest-first + Asc/Desc pills, on dev)
+
+### Changes
+- User request: latest-on-top everywhere + two Asc/Desc buttons in the filter card. Scope confirmed: all ledgers, two pill buttons.
+- Member ledger was the only oldest-on-top view: useMemberData.ts now has sortOrder ('desc' default); filteredTxs + ledgerRows display newest-first, balances still walked oldest→newest so running balances stay correct; LedgerSection.tsx filter drawer (desktop) + filter tray (mobile) gained "Newest first / Oldest first" pills
+- Group/Loan/Other already newest-first: added same sortOrder state + pills (desktop filter bar/drawer, mobile via extended MobileLedger sortRow) — display flips, balance math untouched (Group/Loan/Other accumulate chronological, reverse only for display)
+- Tag ledger detail: sortOrder + "Newest/Oldest first" pills next to search (filterRow in TagLedgerScreen); also replaced an inline style with CSS module classes
+- MobileLedger.tsx/.module.css: optional sortOrder/onSortChange props rendering a Sort row inside the filter tray when provided (Group/Loan/Other use it)
+- Gates: typecheck PASS, eslint --max-warnings 0 PASS on all 8 touched source files, vite build PASS, vitest 30/30 PASS (loans/reports/other scope); detect_changes MEDIUM (ledger screens + MobileLedger, 2 affected processes as expected)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev. Next: user verifies order + pills on Member/Group/Loan/Other/Tag (desktop + mobile), then commit.
+
+
+## Session 2026-10-03 (ledger date column width, on dev)
+
+### Changes
+- User request: increase date column width in the ledger. Scope confirmed: generous +40px.
+- LedgerTable.module.css (shared by Member/Group/Loan/Other ledgers): date column 55px→95px mobile, 90px→130px desktop, across header/row + noBalance variants; other columns untouched
+- Gates: typecheck PASS, build PASS; impact LOW (LedgerTable, 3 direct callers)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev (with sort-order work). Next: user verifies, then commit.
+
+
+## Session 2026-10-03 (ledger date dd-mm-yyyy, on dev)
+
+### Changes
+- User request: ledger Date column date-only, format dd-mm-yyyy (no time).
+- Root cause: Member ledger passed raw tx.date (ISO with time) into LedgerTable; other ledgers used shortDate ("3 Oct 2026").
+- Fix: shortDate() in dates.ts now returns dd-mm-yyyy date-only (local parts, zero-padded; invalid input falls back to yyyy-mm-dd slice); useMemberData.ts ledgerRows now formats via shortDate (was raw ISO); TagLedgerScreen table cell switched from yyyy-mm-dd slice to shortDate — Member/Group/Loan/Other/Tag ledgers + member report tables/PDFs + ledger search matching all follow the same format consistently
+- Gates: typecheck PASS, eslint --max-warnings 0 PASS on touched files, build PASS; impact MEDIUM disclosed before edit (shortDate, 12 direct callers — display + PDFs + search, no logic change)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev (with sort-order + date-width work). Next: user verifies, then commit.
+
+
+## Session 2026-10-03 (release v1.14.0)
+
+### Changes
+- User-approved: merge dev -> master + bump. MINOR (feat present) 1.13.1 -> 1.14.0: `6412eb6` feat(ledger) newest-first sort + Asc/Desc pills + wider dd-mm-yyyy date column (CHANGELOG Added/Changed) + `9bf22d0` bump (package.json + whatsNew 1.14.0 + CHANGELOG [1.14.0] - 2026-10-03)
+- Gates on final state: typecheck PASS, build PASS (v1.14.0 verified baked in bundle), unit 39/39 PASS, eslint clean on touched files; detect_changes MEDIUM (ledger screens only, as expected)
+- Flow: merge no-ff `8e64d36` -> tag `v1.14.0` -> pushed master --follow-tags; dev ff to master + pushed; back on dev
+- Note: bump commit briefly dropped the [1.13.1] heading in CHANGELOG (self-corrected before committing — verified final headings)
+
+### Status
+- v1.14.0 live on master + dev. session_log note uncommitted (rides next commit). Next: user call.
+
+
+## Session 2026-10-03 (picker count/balance stuck + tiny, on dev)
+
+### Changes
+- Page feedback (/groups → TransactionFormModal → Select Member): member "N accounts" + account balance ran stuck against the name and looked tiny
+- Root cause: .pickerItem is flex, but its only flex child is the single inline .anim-target click-animation wrapper — the row gap never applied (pickers.tsx:48,103)
+- Fix (TransactionFormModal.module.css only, no markup/logic): .pickerItem > .anim-target is now a full-width flex row (gap 10px); count 11→12px; balance 12→13px semibold in primary text color (was 12px secondary) — also fixes the same stuck layout in account/counterparty/tag/lender/borrower pickers sharing the classes
+- Gates: build PASS (tsc + vite)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Uncommitted on dev. Next: user verifies picker rows, then commit.
+
+
+## Session 2026-10-03 (release v1.14.1)
+
+### Changes
+- User-approved: commit + push + merge to master + back to dev. PATCH (fix only) 1.14.0 -> 1.14.1: `cfe5a58` fix(picker) row spacing (CHANGELOG Fixed) + `711eb1c` bump (package.json + whatsNew 1.14.1 + CHANGELOG [1.14.1] - 2026-10-03)
+- Gates on final state: build PASS (tsc + vite)
+- Flow: pushed dev -> merge no-ff `2a73da8` -> tag `v1.14.1` -> pushed master --follow-tags; dev ff to master + pushed; back on dev
+
+### Status
+- v1.14.1 live on master + dev. session_log note uncommitted (rides next commit). Next: user call.
+
+
+## Session 2026-10-14
+
+### Changes
+- Tx picker rows: member step now stacks name (+shortName) left via .pickerMain, account count right; account/person step puts account name left and type+balance stacked right-aligned via .pickerSide (pickers.tsx + TransactionFormModal.module.css)
+- Font sizes matched for visibility: name 14px/600, meta 12px, count 13px/500, balance 14px/700 tabular
+- Gates: tsc clean, eslint --max-warnings 0 clean, vitest unit 9 files / 48 tests pass (17 e2e FAILs are pre-existing Playwright specs picked up by vitest runner)
+
+### Status
+- Uncommitted on dev. Next: user verifies picker rows, then commit.
+
+### Follow-up 2026-10-14 (picker row collapse after click)
+- User reported count/balance dropping under name in picker rows. Root cause: global .anim-pop .anim-target { display:inline-block } (click-anims.css) ties specificity with .pickerItem > .anim-target flex row and wins by load order once a row is clicked
+- Fix: added .pickerItem.anim-pop > .anim-target { display:flex } (higher specificity) in TransactionFormModal.module.css
+- Gates: tsc clean, eslint --max-warnings 0 clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Verified 2026-10-14 (Playwright, live :3000)
+- Real root cause found via browser evaluate: .pickerItem > .anim-target never matched — CSS Modules hashes .anim-target, but JSX uses literal global class. Inner span computed display:block, rows stacked. Fixed with :global(.anim-target) on both rules (+ kept .anim-pop override)
+- Playwright proof: member rows inner=flex, name x=611 / count right=925 (btn edge 939); account row name left, type+balance right-aligned at 925; clicked row (anim-pop) stays flex
+- Screenshot confirms names left, counts right. Gates: tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies on their screen, then commit.
+
+### Change 2026-10-14 (show balance on selected account trigger)
+- Form triggers showed only 'name — member' after selection. Added accounts prop to FormFields + renderAccountValue() helper: name left, formatted balance right, arrow last (source, destination, Paid To, Credit To)
+- CSS: .pickerTrigger > :global(.anim-target) flex row (+ anim-pop variant), new .pickerBalance 13px/600 tabular secondary
+- Playwright proof on live :3000: trigger reads 'Test Cash — Test User | 0 BDT | v' with value x=548, balance 917-952, arrow 968 (btn 533-993). Screenshot taken. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (account row: type under name, balance solo right)
+- Per feedback: moved account type meta from right column into left column under the name (account + counterparty rows); right column now holds balance alone, always 1 line (nowrap), vertically centered
+- Name may wrap to max 2 lines (-webkit-line-clamp: 2); row grows, balance stays put
+- Playwright proof: short name -> name 1 line + type below, balance 1 line right@925; injected long name -> name exactly 2 lines (42px), balance still 1 line (21px) right@925, row 86px. Screenshot taken. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit all picker work together.
+
+### Change 2026-10-14 (lucide chevron-left back button)
+- Replaced text ◀ with ChevronLeftIcon (lucide-react, size 16, repo convention per calendar.tsx) in picker header; added aria-label='Back to members'
+- Playwright proof: back button renders 16x16 svg, click returns to member list. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit all picker work together.

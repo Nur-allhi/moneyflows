@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ChevronLeftIcon } from 'lucide-react';
 import { formatAmount } from '../../utils/format';
 import type { Account } from '../../../core/domain/Account';
 import type { Member } from '../../../core/domain/Member';
@@ -34,7 +35,7 @@ export function SourceDestinationPickers(props: PickerProps) {
     <div className={styles.pickerOverlay} onClick={() => { setPickerField(null); setPickerMember(null); }}>
       <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.pickerHeader}>
-          <button className={`${styles.pickerBack} ${backKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack(); setPickerMember(null); }} style={{ visibility: !pickerMember ? 'hidden' : 'visible' }}><span className="anim-target" key={backKey}>{'\u25C0'}</span></button>
+          <button className={`${styles.pickerBack} ${backKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack(); setPickerMember(null); }} style={{ visibility: !pickerMember ? 'hidden' : 'visible' }} aria-label="Back to members"><span className="anim-target" key={backKey}><ChevronLeftIcon size={16} /></span></button>
           <span className={styles.pickerTitle}>{pickerMember ? 'Select Account' : 'Select Member'}</span>
           <button className={`${styles.pickerClose} ${closeKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClose(); setPickerField(null); setPickerMember(null); }}>
             <svg key={closeKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
@@ -46,8 +47,10 @@ export function SourceDestinationPickers(props: PickerProps) {
               {internalMembers.map((m) => (
                 <button key={m.id} className={`${styles.pickerItem} ${pickedId === m.id && listKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayList(); setPickedId(m.id); setPickerMember(m.id); }}>
                   <span className="anim-target" key={`${m.id}-${pickedId === m.id ? listKey : 0}`}>
-                  <span className={styles.pickerItemName}>{m.name}</span>
-                  {m.shortName && <span className={styles.pickerItemMeta}>{m.shortName}</span>}
+                  <span className={styles.pickerMain}>
+                    <span className={styles.pickerItemName}>{m.name}</span>
+                    {m.shortName && <span className={styles.pickerItemMeta}>{m.shortName}</span>}
+                  </span>
                   <span className={styles.pickerItemCount}>{accountsByMember[m.id]?.length ?? 0} accounts</span>
                   </span>
                 </button>
@@ -71,9 +74,13 @@ export function SourceDestinationPickers(props: PickerProps) {
                         }}
                       >
                         <span className="anim-target" key={`${a.id}-${pickedId === a.id ? listKey : 0}`}>
-                        <span className={styles.pickerItemName}>{a.name}</span>
-                        <span className={styles.pickerItemMeta}>Counterparty</span>
-                        <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+                        <span className={styles.pickerMain}>
+                          <span className={styles.pickerItemName}>{a.name}</span>
+                          <span className={styles.pickerItemMeta}>Counterparty</span>
+                        </span>
+                        <span className={styles.pickerSide}>
+                          <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+                        </span>
                         </span>
                       </button>
                     ))
@@ -101,9 +108,13 @@ export function SourceDestinationPickers(props: PickerProps) {
                     }}
                   >
                     <span className="anim-target" key={`${a.id}-${pickedId === a.id ? listKey : 0}`}>
-                    <span className={styles.pickerItemName}>{a.name}</span>
-                    <span className={styles.pickerItemMeta}>{a.type.replace('_', ' ')}</span>
-                    <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+                    <span className={styles.pickerMain}>
+                      <span className={styles.pickerItemName}>{a.name}</span>
+                      <span className={styles.pickerItemMeta}>{a.type.replace('_', ' ')}</span>
+                    </span>
+                    <span className={styles.pickerSide}>
+                      <span className={styles.pickerItemBalance}>{formatAmount(a.balance, locale, currency)}</span>
+                    </span>
                     </span>
                   </button>
                 ))

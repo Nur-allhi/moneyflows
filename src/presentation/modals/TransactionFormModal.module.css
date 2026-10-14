@@ -585,6 +585,32 @@
   white-space: nowrap;
 }
 
+/* Same global-class note as .pickerItem rows: .anim-target must stay
+   :global or the module compiler hashes it and the rule never matches. */
+.pickerTrigger > :global(.anim-target),
+.pickerTrigger.anim-pop > :global(.anim-target) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.pickerTrigger > :global(.anim-target) > .pickerValue {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.pickerBalance {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .pickerArrow {
   flex-shrink: 0;
   margin-left: 8px;
@@ -714,9 +740,10 @@
   outline-offset: -2px;
 }
 
-/* The click-animation wrapper is the only flex child of .pickerItem —
-   make it a row so name / meta / count / balance keep their spacing. */
-.pickerItem > .anim-target {
+/* NOTE: .anim-target is a global class (click-anims.css), so it must stay
+   :global here — a plain `.anim-target` selector would be hashed by the
+   CSS-module compiler and never match the DOM. */
+.pickerItem > :global(.anim-target) {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -724,8 +751,17 @@
   min-width: 0;
 }
 
+/* Click-replay adds .anim-pop to the row, whose global
+   `.anim-pop .anim-target { display: inline-block }` would collapse the
+   flex row (count/balance drop under the name). Higher specificity keeps
+   the row intact after a pick. */
+.pickerItem.anim-pop > :global(.anim-target) {
+  display: flex;
+}
+
 .pickerItemName {
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -733,15 +769,49 @@
   min-width: 0;
 }
 
+/* Left column: primary name (+ optional short name stacked below) */
+.pickerMain {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pickerMain .pickerItemName {
+  flex: none;
+  width: 100%;
+  /* Long names may wrap to a 2nd line; never more (balance stays 1 line). */
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Right column: balance only, always a single line, vertically centered
+   by the row's align-items: center. */
+.pickerSide {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  text-align: right;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
 .pickerItemMeta {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--color-text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .pickerItemCount {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--color-text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
@@ -750,8 +820,8 @@
 
 .pickerItemBalance {
   font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
