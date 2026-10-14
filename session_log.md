@@ -1209,3 +1209,12 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - AppSettings: showMetricCards/showMonthSummary/showQuickActions (default true); SettingsPage Dashboard Sections +3 switch rows; Dashboard.tsx conditional render (FAB/header untouched)
 - Playwright proof on DemoDB: all 6 switches render on; Month Summary off -> dashboard hides summary only, persists across navigation; toggled back on -> all sections return. Screenshot of Settings taken. tsc + eslint clean
 - Status: uncommitted on dev (with Load-more batch). Next: user verifies, then commit (MINOR on merge).
+
+### Committed 2026-10-14 (dashboard section toggles -> dev)
+- 42e96af feat(dashboard) on dev + pushed (ed055b7..42e96af). Gates: build PASS, eslint clean, unit 48/48, detect_changes low risk/no affected flows
+- Status: on dev, clean. Next: user call (merge to master => MINOR bump, two Added entries pending).
+
+### Change 2026-10-14 (dashboard panels auto height)
+- User feedback: panels stretched to tallest column (5 members but long empty height). Fix: align-items: start on .content grid so each panel hugs its content
+- Playwright proof on DemoDB: Where 275px / Recent 314px / Loans 788px - independent. Screenshot taken. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.

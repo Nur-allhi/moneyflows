@@ -132,6 +132,8 @@
   display: grid;
   grid-template-columns: 3fr 6fr 3fr;
   gap: 14px;
+  /* Panels size to their own content instead of stretching to the tallest column. */
+  align-items: start;
 }
 
 .content[data-cols="1"] { grid-template-columns: 1fr; }
