@@ -1180,3 +1180,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Replaced text ◀ with ChevronLeftIcon (lucide-react, size 16, repo convention per calendar.tsx) in picker header; added aria-label='Back to members'
 - Playwright proof: back button renders 16x16 svg, click returns to member list. tsc + eslint clean
 - Status: uncommitted on dev. Next: user verifies, then commit all picker work together.
+
+## Session 2026-10-14 (release v1.14.2)
+
+### Changes
+- User-approved: commit + push + merge to master. PATCH 1.14.1 -> 1.14.2: fix d013b8c picker two-column rows + balance on trigger + lucide chevron (CHANGELOG Fixed) + 634fdc4 bump (package.json + whatsNew 1.14.2 + CHANGELOG [1.14.2] - 2026-10-14)
+- Gates: build PASS, eslint --max-warnings 0 PASS, vitest unit 48/48 PASS (17 e2e files fail under vitest runner = pre-existing Playwright specs; affected flows verified manually in live browser with screenshots)
+- detect_changes: low risk, no affected processes
+- Flow: pushed dev -> merge no-ff 0ecd5b6 -> tag v1.14.2 -> pushed master --follow-tags; dev ff to master + pushed; back on dev, tree clean
+
+### Status
+- v1.14.2 live on master + dev. Next: user call.
