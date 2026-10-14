@@ -6,13 +6,13 @@
 
 .heading {
   margin: 0 0 16px;
-  font-size: 20px;
+  font-size: var(--text-3xl);
   font-weight: 700;
   color: var(--color-text, #f1f5f9);
 }
 
 .sub {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 400;
   color: var(--color-text-secondary, #94a3b8);
   margin-left: 8px;
@@ -59,12 +59,12 @@
 
 .tagName {
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--color-text, #f1f5f9);
 }
 
 .tagCount {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary, #94a3b8);
 }
 
@@ -72,7 +72,7 @@
   display: flex;
   gap: 18px;
   margin-bottom: 16px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   color: var(--color-text-secondary, #94a3b8);
 }
 
@@ -115,7 +115,7 @@
 
 .empty {
   color: var(--color-text-secondary, #94a3b8);
-  font-size: 14px;
+  font-size: var(--text-base);
   padding: 24px 0;
 }
 
@@ -128,13 +128,13 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13.5px;
+  font-size: var(--text-sm);
 }
 
 .table th {
   text-align: left;
   padding: 10px 14px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-secondary, #94a3b8);

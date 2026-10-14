@@ -166,7 +166,7 @@
     display: table;
     width: 100%;
     border-collapse: collapse;
-    font-size: 11px;
+    font-size: var(--text-2xs);
     color: var(--color-text);
   }
   .printTable th,

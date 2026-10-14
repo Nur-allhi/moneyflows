@@ -584,7 +584,7 @@
 }
 
 .filterLabel {
-  font-size: 10px;
+  font-size: var(--text-3xs);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -869,10 +869,10 @@
 }
 
 .txCurrency {
-  font-size: var(--text-3xs);
+  font-size: 0.6em;
   font-weight: 400;
-  opacity: 0.55;
-  margin-left: 2px;
+  color: var(--color-text-secondary);
+  margin-left: 4px;
 }
 
 .txArrow {
@@ -903,7 +903,7 @@
 .exportTitle {
   margin: 0 0 12px;
   font-weight: 600;
-  font-size: 15px;
+  font-size: var(--text-md);
   color: var(--color-text);
 }
 
@@ -925,12 +925,12 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   color: var(--color-text);
 }
 
 .radioLabel small {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary, #94a3b8);
 }
 

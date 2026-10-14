@@ -1229,3 +1229,59 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.15.0 live on master + dev. Next: user call.
+
+### Change 2026-10-14 (text size rework: bigger scale + XL + token conversion)
+- User: small/medium/large all look tiny; wants bigger + adjustable incl. descriptions/numbers. Confirmed: bigger presets + XL (no slider, no per-category)
+- tokens.css: base +2px all text-* tokens, small=base-1, large=base+2, NEW xl block=base+4; font-size-* rem tokens bumped likewise; fontSizes.ts +XL; index.html pre-paint allowlist + useTheme docstring
+- Converted fixed-px TEXT to tokens in Dashboard (metricValue 22->4xl, loanCurrency 7->3xs) + TransactionFormModal (names/balances/counts/descriptions/labels/titles; chrome inputs/buttons/icons/arrows left fixed per design comment)
+- Playwright proof: XL selectable in Appearance, data-font=xl, row desc+amount render 19px at XL, layout holds (screenshot); restored Medium after
+- Status: uncommitted on dev. tsc + eslint clean. Next: user verifies, then commit (MINOR on merge).
+
+### Change 2026-10-14 (ledger text follows text-size setting)
+- User: text-size barely affected ledgers (fixed px). Converted row/header/amount/balance text to tokens: LedgerTable (all cells), MobileLedger title/badge, MemberProfile heroName/filterLabel, TagLedger headings/cards/table, LoansScreen names/metas, LoanDetailView labels/titles, OtherLedgersIndex cards, MemberReport print table. Chrome (buttons/inputs/icons/selects/avatars) left fixed
+- Playwright proof on DemoDB member ledger: desktop row 14 / date 13 / type 11 at Medium; XL -> row 18 / date 17. Screenshot at XL, restored Medium after. tsc + eslint clean
+- Note: virtualized ledger rows keep fixed 54/56px heights - very long descriptions could clip at XL (pre-existing constraint, slightly more likely now)
+- Status: uncommitted on dev. Next: user verifies, then commit (MINOR on merge).
+
+### Change 2026-10-14 (light-mode contrast hardening)
+- User: light-mode text/numbers washed out. Measured real contrast ratios in browser (custom oklch converter): primary 15.2 ok; secondary 6.78 weak; opacity-faded BDT micro-labels 3.61 FAIL; gold numbers 4.66 marginal
+- Fix (light block only): text-secondary 46%->40%, gold 55%->49%; replaced opacity:0.55 micro-label fades with solid secondary color (Dashboard currencyLabel/txCurrency/loanCurrency, LedgerTable currencyLabel, MemberProfile statCurrency/txCurrency, LoanDetailView txCurrency)
+- After: micro 8.76, secondary 8.76, gold 5.96, teal 5.20 - all AA. Screenshot at light. Note: dev server served half-stale tokens.css mid-edit (HMR); touch forced re-transform. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit (MINOR on merge).
+
+### Change 2026-10-14 (ledger desktop column widths)
+- User: fixed space for Date/Type/Account/Debit/Credit/Balance, breathing room; description wraps 2-3 lines. Desktop grid 130/90/1fr/90/90/90 -> 140/84/1fr/110/110/110 (account 250->260). Mobile untouched (space-constrained)
+- Playwright proof on DemoDB member ledger: grid computes as set, all number cells fit, injected long desc wraps 2 lines with row growing to fit. Screenshot taken. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (ledger number columns 130px, titles centered)
+- User: 130px each for debit/credit/balance + titles centered over columns. Desktop grids -> 140/84/1fr/130/130/130 (account variant 260). Mobile unchanged
+- Playwright proof (same-table measurement after reload): all 6 title centers == column centers. Note: mid-edit HMR served half-stale CSS again; touch + reload verified fresh. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (ledger row centering + conditional BDT + suffix size)
+- Row align-items:start->center so date/type/numbers sit mid-row beside multi-line descriptions
+- Debit/credit/balance suffix renders only with an amount (empty arrives as '' -> now bare —, previously stray BDT). Both virtual + plain row paths
+- Suffix size: already 10px vs 13px amount (verified, no change needed)
+- Playwright proof: multi-line row all 6 cell centers == row center; no stray BDT cells; suffix 10 vs amount 13. Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (ledger number cells centered)
+- User: debit/credit/balance row text centered, not right-aligned. Changed text-align right->center on .debit/.credit/.balance (date/type/account already centered, description stays left)
+- Playwright proof: all 3 cells text-align:center with symmetric padding (124/123, 44/44, 59/59). Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (currency suffix proportional size)
+- User: BDT suffix should be visibly smaller than amount. Root cause: token mapping narrowed the gap (suffix 8->10px vs amount 13px). Fix: suffixes now 0.7em of their amount (LedgerTable/Dashboard/MemberProfile/LoanDetailView currency + tx micro labels; statCurrency already 0.5em)
+- Playwright proof: Medium 13/9.1px, XL 17/11.9px - ratio holds, scales with preset. Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (suffix smaller + spaced)
+- User: size gap still subtle. Suffix 0.7em->0.6em and margin 2px->4px across all currency/tx micro labels (ledger, dashboard, profile, loans)
+- Playwright proof: amount 13px, suffix 7.8px, 4px gap. Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (ledger numbers semibold)
+- User: number weight too light. Ledger debit/credit/balance inherited 400 -> set 600 (matches dashboard month/member/tx amounts). Tabular-nums kept
+- Playwright proof: computed weight 600 + tabular-nums on live row. Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.

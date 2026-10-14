@@ -13,12 +13,12 @@
 }
 
 .title {
-  font: 600 15px var(--font-display);
+  font: 600 var(--text-md) var(--font-display);
   color: var(--color-text);
 }
 
 .badge {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 500;
   color: var(--color-text-secondary);
   background: color-mix(in oklch, var(--color-wash) 6%, transparent);

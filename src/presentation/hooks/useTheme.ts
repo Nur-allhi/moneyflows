@@ -48,7 +48,7 @@ function bgSwatch(mode: 'light' | 'dark', bg: string): string {
 /**
  * Applies the appearance settings to `<html>`:
  * `data-theme="light|dark"` + `data-accent="<id>"` + `data-bg="<id>"` +
- * `data-font="small|medium|large"` + `color-scheme`. `data-bg` always holds
+ * `data-font="small|medium|large|xl"` + `color-scheme`. `data-bg` always holds
  * the CURRENT mode's id, so dark/light `[data-bg]` blocks never collide.
  * Call once in AppLayout. Pre-paint defaults come from index.html.
  */

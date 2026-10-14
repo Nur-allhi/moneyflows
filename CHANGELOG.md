@@ -15,8 +15,14 @@ Placeholder
 - Dashboard Recent Transactions starts at your Settings → Dashboard limit (default raised 10 → 15) with a "Load more (N remaining)" button adding one page at a time, same pattern as ledger lists; the limit resets when the search query changes. This also wires up the previously unused `dashboardTxLimit` setting.
 - Settings → Dashboard → Sections gains Metric Cards, Month Summary and Quick Actions toggles, so every dashboard section can be hidden individually.
 
+### Changed
+- Text size rework: Small/Medium/Large all render larger, and a new XL preset joins Settings → Appearance. Dashboard numbers and transaction-form descriptions, names, counts and balances now follow the text-size setting (buttons, inputs and icons stay fixed by design).
+- Ledger, tag, loan, member-profile and other-ledger row text (dates, descriptions, amounts, balances, headers) now follows the text-size setting too.
+
 ### Fixed
 - Dashboard panels no longer stretch to the tallest column — each panel fits its own content height.
+- Light-mode readability: secondary text darkened and gold hardened so small text, currency suffixes and colored numbers all clear AA contrast (micro `BDT` labels no longer fade via opacity).
+- Ledger tables: desktop Date/Type/Account/Debit/Credit/Balance columns have fixed breathing room (numbers 130px), titles sit centered over their columns, row cells are vertically centered, amounts are semibold, empty debit/credit cells show a bare dash with no stray currency suffix, and the `BDT` suffix stays proportionally smaller with spacing from the amount.
 
 ## [1.14.2] - 2026-10-14
 
