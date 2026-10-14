@@ -37,7 +37,7 @@
 
 .metricValue {
   font-family: var(--font-body);
-  font-size: 22px;
+  font-size: var(--text-4xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -45,7 +45,7 @@
 .metricValueWrap {
   display: grid;
   font-family: var(--font-body);
-  font-size: 22px;
+  font-size: var(--text-4xl);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -226,10 +226,10 @@
 
 .currencyLabel {
   font-family: var(--font-body);
-  font-size: var(--text-3xs);
+  font-size: 0.6em;
   font-weight: 400;
-  opacity: 0.55;
-  margin-left: 2px;
+  color: var(--color-text-secondary);
+  margin-left: 4px;
   letter-spacing: 0.04em;
 }
 
@@ -385,10 +385,10 @@
 }
 
 .loanCurrency {
-  font-size: 7px;
+  font-size: 0.6em;
   font-weight: 500;
-  margin-left: 3px;
-  opacity: 0.55;
+  margin-left: 4px;
+  color: var(--color-text-secondary);
 }
 
 .loanBarWrap {
@@ -552,10 +552,10 @@
 }
 
 .txCurrency {
-  font-size: var(--text-3xs);
+  font-size: 0.6em;
   font-weight: 400;
-  opacity: 0.55;
-  margin-left: 2px;
+  color: var(--color-text-secondary);
+  margin-left: 4px;
 }
 
 @media (max-width: 1000px) {

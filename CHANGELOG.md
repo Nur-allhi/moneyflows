@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [1.16.0] - 2026-10-14
+
+### Added
+- Text size setting gains an XL preset alongside bigger Small/Medium/Large — dashboard numbers and transaction-form descriptions, names, counts and balances follow it (buttons, inputs and icons stay fixed by design).
+- Ledger, tag, loan, member-profile and other-ledger row text (dates, descriptions, amounts, balances, headers) now follows the text-size setting too.
+
+### Fixed
+- Light-mode readability: secondary text darkened and gold hardened so small text, currency suffixes and colored numbers all clear AA contrast (micro `BDT` labels no longer fade via opacity).
+- Ledger tables: desktop Date/Type/Account/Debit/Credit/Balance columns have fixed breathing room (numbers 130px), titles sit centered over their columns, row cells are vertically centered, amounts are semibold, empty debit/credit cells show a bare dash with no stray currency suffix, and the `BDT` suffix stays proportionally smaller with spacing from the amount.
+
 ## [1.15.0] - 2026-10-14
 
 ### Added

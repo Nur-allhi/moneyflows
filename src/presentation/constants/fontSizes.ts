@@ -15,6 +15,7 @@ export const FONT_SIZES: FontSizeOption[] = [
   { id: 'small', label: 'Small' },
   { id: 'medium', label: 'Medium' },
   { id: 'large', label: 'Large' },
+  { id: 'xl', label: 'XL' },
 ];
 
 export const DEFAULT_FONT_SIZE_ID = 'medium';

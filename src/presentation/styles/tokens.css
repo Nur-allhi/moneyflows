@@ -61,26 +61,26 @@
   --font-body: 'Inter', 'Anek Bangla', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.8125rem;
-  --font-size-base: clamp(0.875rem, 0.85rem + 0.2vw, 1rem);
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
+  --font-size-xs: 0.8125rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: clamp(0.9375rem, 0.9rem + 0.2vw, 1.125rem);
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.375rem;
 
-  --text-3xs: clamp(7px, 0.3vw + 5px, 8px);
-  --text-2xs: clamp(8px, 0.5vw + 5px, 9px);
-  --text-xs: clamp(9px, 0.5vw + 6px, 10px);
-  --text-sm: clamp(10px, 0.5vw + 7px, 11px);
-  --text-base: clamp(10px, 0.8vw + 6px, 12px);
-  --text-md: clamp(11px, 0.8vw + 7px, 13px);
-  --text-lg: clamp(12px, 0.8vw + 8px, 14px);
-  --text-xl: clamp(12px, 1vw + 8px, 15px);
-  --text-2xl: clamp(13px, 1.2vw + 8px, 16px);
-  --text-3xl: clamp(14px, 1.5vw + 8px, 18px);
-  --text-4xl: clamp(15px, 1.8vw + 8px, 20px);
-  --text-5xl: clamp(16px, 2vw + 9px, 22px);
-  --text-6xl: clamp(18px, 2.2vw + 10px, 24px);
-  --text-7xl: clamp(20px, 2.5vw + 11px, 28px);
+  --text-3xs: clamp(9px, 0.3vw + 7px, 10px);
+  --text-2xs: clamp(10px, 0.5vw + 7px, 11px);
+  --text-xs: clamp(11px, 0.5vw + 8px, 12px);
+  --text-sm: clamp(12px, 0.5vw + 9px, 13px);
+  --text-base: clamp(12px, 0.8vw + 8px, 14px);
+  --text-md: clamp(13px, 0.8vw + 9px, 15px);
+  --text-lg: clamp(14px, 0.8vw + 10px, 16px);
+  --text-xl: clamp(14px, 1vw + 10px, 17px);
+  --text-2xl: clamp(15px, 1.2vw + 10px, 18px);
+  --text-3xl: clamp(16px, 1.5vw + 10px, 20px);
+  --text-4xl: clamp(17px, 1.8vw + 10px, 22px);
+  --text-5xl: clamp(18px, 2vw + 11px, 24px);
+  --text-6xl: clamp(20px, 2.2vw + 12px, 26px);
+  --text-7xl: clamp(22px, 2.5vw + 13px, 30px);
 
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;  --transition-slow: 0.4s ease;
@@ -150,7 +150,7 @@
   --color-surface-hover: oklch(25% 0.02 260 / 0.06);
   --color-border: oklch(25% 0.02 260 / 0.16);
   --color-text: oklch(25% 0.015 260);
-  --color-text-secondary: oklch(46% 0.02 260);
+  --color-text-secondary: oklch(40% 0.02 260);
   --color-scrollbar: oklch(25% 0.02 260 / 0.22);
   --color-scrollbar-hover: oklch(25% 0.02 260 / 0.35);
   --color-wash: oklch(30% 0.02 260);
@@ -160,8 +160,8 @@
   --color-teal: oklch(50% 0.12 170);
   --color-expense: oklch(52% 0.15 30);
   --color-coral: oklch(52% 0.15 30);
-  --color-cash: oklch(55% 0.13 85);
-  --color-warning: oklch(55% 0.13 85);
+  --color-cash: oklch(49% 0.13 85);
+  --color-warning: oklch(49% 0.13 85);
   --color-success: oklch(50% 0.12 150);
 
   --shadow-sm: 0 2px 8px rgba(30, 27, 75, 0.08);
@@ -170,53 +170,77 @@
 }
 
 /* Text size (fontSize setting) — scales the fluid type tokens. `medium` is
-   the default and uses the base values above. Activated via
-   data-font="small|large" by useTheme(). Fixed-px chrome (inputs, icons,
-   splash wordmark) intentionally does not scale. */
+   the default and uses the base values above. `small` runs ~1px under,
+   `large` ~2px over, `xl` ~4px over medium. Activated via
+   data-font="small|medium|large|xl" by useTheme(). Fixed-px chrome (inputs,
+   icons, splash wordmark) intentionally does not scale. */
 :root[data-font="small"] {
-  --text-3xs: clamp(6px, 0.3vw + 4px, 7px);
-  --text-2xs: clamp(7px, 0.5vw + 4px, 8px);
-  --text-xs: clamp(8px, 0.5vw + 5px, 9px);
-  --text-sm: clamp(9px, 0.5vw + 6px, 10px);
-  --text-base: clamp(9px, 0.8vw + 5px, 10px);
-  --text-md: clamp(10px, 0.8vw + 6px, 11px);
-  --text-lg: clamp(10px, 0.8vw + 7px, 12px);
-  --text-xl: clamp(10px, 1vw + 7px, 13px);
-  --text-2xl: clamp(11px, 1.2vw + 7px, 14px);
-  --text-3xl: clamp(12px, 1.5vw + 7px, 16px);
-  --text-4xl: clamp(13px, 1.8vw + 7px, 18px);
-  --text-5xl: clamp(14px, 2vw + 8px, 19px);
-  --text-6xl: clamp(16px, 2.2vw + 9px, 21px);
-  --text-7xl: clamp(18px, 2.5vw + 10px, 25px);
-
-  --font-size-xs: 0.65rem;
-  --font-size-sm: 0.7rem;
-  --font-size-base: clamp(0.75rem, 0.75rem + 0.2vw, 0.9rem);
-  --font-size-lg: 1rem;
-  --font-size-xl: 1.1rem;
-}
-
-:root[data-font="large"] {
   --text-3xs: clamp(8px, 0.3vw + 6px, 9px);
   --text-2xs: clamp(9px, 0.5vw + 6px, 10px);
   --text-xs: clamp(10px, 0.5vw + 7px, 11px);
   --text-sm: clamp(11px, 0.5vw + 8px, 12px);
-  --text-base: clamp(11px, 0.8vw + 7px, 14px);
-  --text-md: clamp(12px, 0.8vw + 8px, 15px);
-  --text-lg: clamp(14px, 0.8vw + 9px, 16px);
-  --text-xl: clamp(14px, 1vw + 9px, 17px);
-  --text-2xl: clamp(15px, 1.2vw + 9px, 18px);
-  --text-3xl: clamp(16px, 1.5vw + 9px, 20px);
-  --text-4xl: clamp(17px, 1.8vw + 9px, 23px);
-  --text-5xl: clamp(18px, 2vw + 10px, 25px);
-  --text-6xl: clamp(20px, 2.2vw + 11px, 27px);
-  --text-7xl: clamp(23px, 2.5vw + 12px, 32px);
+  --text-base: clamp(11px, 0.8vw + 7px, 13px);
+  --text-md: clamp(12px, 0.8vw + 8px, 14px);
+  --text-lg: clamp(13px, 0.8vw + 9px, 15px);
+  --text-xl: clamp(13px, 1vw + 9px, 16px);
+  --text-2xl: clamp(14px, 1.2vw + 9px, 17px);
+  --text-3xl: clamp(15px, 1.5vw + 9px, 19px);
+  --text-4xl: clamp(16px, 1.8vw + 9px, 21px);
+  --text-5xl: clamp(17px, 2vw + 10px, 23px);
+  --text-6xl: clamp(19px, 2.2vw + 11px, 25px);
+  --text-7xl: clamp(21px, 2.5vw + 12px, 29px);
 
-  --font-size-xs: 0.85rem;
-  --font-size-sm: 0.9rem;
-  --font-size-base: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
-  --font-size-lg: 1.25rem;
-  --font-size-xl: 1.4rem;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: clamp(0.875rem, 0.85rem + 0.2vw, 1rem);
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+}
+
+:root[data-font="large"] {
+  --text-3xs: clamp(11px, 0.3vw + 9px, 12px);
+  --text-2xs: clamp(12px, 0.5vw + 9px, 13px);
+  --text-xs: clamp(13px, 0.5vw + 10px, 14px);
+  --text-sm: clamp(14px, 0.5vw + 11px, 15px);
+  --text-base: clamp(14px, 0.8vw + 10px, 16px);
+  --text-md: clamp(15px, 0.8vw + 11px, 17px);
+  --text-lg: clamp(16px, 0.8vw + 12px, 18px);
+  --text-xl: clamp(16px, 1vw + 12px, 19px);
+  --text-2xl: clamp(17px, 1.2vw + 12px, 20px);
+  --text-3xl: clamp(18px, 1.5vw + 12px, 22px);
+  --text-4xl: clamp(19px, 1.8vw + 12px, 24px);
+  --text-5xl: clamp(20px, 2vw + 13px, 26px);
+  --text-6xl: clamp(22px, 2.2vw + 14px, 28px);
+  --text-7xl: clamp(24px, 2.5vw + 15px, 32px);
+
+  --font-size-xs: 0.9rem;
+  --font-size-sm: 0.95rem;
+  --font-size-base: clamp(1.0625rem, 1rem + 0.2vw, 1.25rem);
+  --font-size-lg: 1.375rem;
+  --font-size-xl: 1.5rem;
+}
+
+:root[data-font="xl"] {
+  --text-3xs: clamp(13px, 0.3vw + 11px, 14px);
+  --text-2xs: clamp(14px, 0.5vw + 11px, 15px);
+  --text-xs: clamp(15px, 0.5vw + 12px, 16px);
+  --text-sm: clamp(16px, 0.5vw + 13px, 17px);
+  --text-base: clamp(16px, 0.8vw + 12px, 18px);
+  --text-md: clamp(17px, 0.8vw + 13px, 19px);
+  --text-lg: clamp(18px, 0.8vw + 14px, 20px);
+  --text-xl: clamp(18px, 1vw + 14px, 21px);
+  --text-2xl: clamp(19px, 1.2vw + 14px, 22px);
+  --text-3xl: clamp(20px, 1.5vw + 14px, 24px);
+  --text-4xl: clamp(21px, 1.8vw + 14px, 26px);
+  --text-5xl: clamp(22px, 2vw + 15px, 28px);
+  --text-6xl: clamp(24px, 2.2vw + 16px, 30px);
+  --text-7xl: clamp(26px, 2.5vw + 17px, 34px);
+
+  --font-size-xs: 1rem;
+  --font-size-sm: 1.0625rem;
+  --font-size-base: clamp(1.125rem, 1.05rem + 0.2vw, 1.375rem);
+  --font-size-lg: 1.5rem;
+  --font-size-xl: 1.625rem;
 }
 
 @media (max-width: 768px) {

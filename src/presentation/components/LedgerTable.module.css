@@ -23,7 +23,7 @@
   grid-template-columns: 95px 55px 1fr 55px 55px 55px;
   gap: 8px;
   padding: 12px 14px;
-  font-size: 10px;
+  font-size: var(--text-3xs);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-secondary);
@@ -32,7 +32,7 @@
 }
 
 .desktop .header {
-  grid-template-columns: 130px 90px 1fr 90px 90px 90px;
+  grid-template-columns: 140px 84px 1fr 130px 130px 130px;
   padding: 10px 20px;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .desktop.noBalance .header {
-  grid-template-columns: 130px 90px 1fr 250px 90px 90px;
+  grid-template-columns: 140px 84px 1fr 260px 130px 130px;
 }
 
 .body {
@@ -73,17 +73,17 @@
   grid-template-columns: 95px 55px 1fr 55px 55px 55px;
   gap: 8px;
   padding: 10px 14px;
-  font-size: 13px;
-  align-items: start;
+  font-size: var(--text-sm);
+  align-items: center;
   border-bottom: 1px solid color-mix(in oklch, var(--color-wash) 4%, transparent);
   transition: background var(--transition-fast);
   cursor: pointer;
 }
 
 .desktop .row {
-  grid-template-columns: 130px 90px 1fr 90px 90px 90px;
+  grid-template-columns: 140px 84px 1fr 130px 130px 130px;
   padding: 10px 20px;
-  font-size: 14px;
+  font-size: var(--text-base);
 }
 
 .noBalance .row {
@@ -91,7 +91,7 @@
 }
 
 .desktop.noBalance .row {
-  grid-template-columns: 130px 90px 1fr 250px 90px 90px;
+  grid-template-columns: 140px 84px 1fr 260px 130px 130px;
 }
 
 .row:hover {
@@ -116,7 +116,7 @@
 
 .date {
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -124,7 +124,7 @@
 }
 
 .desktop .date {
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .desc {
@@ -135,7 +135,7 @@
 }
 
 .typeCell {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -159,10 +159,11 @@
 
 .debit {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-expense);
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -170,10 +171,11 @@
 
 .credit {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--color-income);
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -181,9 +183,10 @@
 
 .balance {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -191,15 +194,15 @@
 
 .currencyLabel {
   font-family: var(--font-body);
-  font-size: 8px;
+  font-size: 0.6em;
   font-weight: 400;
-  opacity: 0.55;
-  margin-left: 2px;
+  color: var(--color-text-secondary);
+  margin-left: 4px;
   letter-spacing: 0.04em;
 }
 
 .account {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -208,12 +211,12 @@
 }
 
 .desktop .account {
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .empty {
   padding: 40px 20px;
   text-align: center;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
