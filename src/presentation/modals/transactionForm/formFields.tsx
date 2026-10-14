@@ -2,6 +2,7 @@ import { DatePicker } from '../../../components/ui/date-picker';
 import { FormTextarea } from '../../components';
 import { useReplay } from '../../hooks/useReplay';
 import styles from '../TransactionFormModal.module.css';
+import type { Account } from '../../../core/domain/Account';
 
 interface Props {
   tab: string;
@@ -20,6 +21,7 @@ interface Props {
   setPickerField: (v: 'source' | 'destination' | null) => void;
   setPickerMember: (v: string | null) => void;
   accountLabel: (id: string) => string;
+  accounts: Account[];
   description: string;
   setDescription: (v: string) => void;
   clearError: (f: string) => void;
@@ -44,7 +46,7 @@ export function FormFields(props: Props & {
   setShowLenderPicker: (v: boolean) => void;
   txError: string | null;
 }) {
-  const { tab, loanAction, setLoanAction, displayAmount, onAmountChange, onAmountKeyDown, currency, errors, date, setDate, source, destination, setPickerField, setPickerMember, accountLabel, description, setDescription, clearError, tagName, setShowTagPicker, insufficientWarning, handleClose, formatAmount, locale, setShowBorrowerPicker, selectedBorrowerId, repayStackOptions, showLenderChoice, repayLenderOptions, selectedLenderId, setShowLenderPicker, txError } = props as Props & { insufficientWarning: { available: number; deficit: number } | null; handleClose: () => void; formatAmount: (n: number, l: string, c: string) => string; locale: string; setShowBorrowerPicker: (v: boolean) => void; selectedBorrowerId: string; repayStackOptions: { borrowerId: string; label: string }[]; showLenderChoice: boolean; repayLenderOptions: { lenderId: string; label: string }[]; selectedLenderId: string; setShowLenderPicker: (v: boolean) => void; txError: string | null };
+  const { tab, loanAction, setLoanAction, displayAmount, onAmountChange, onAmountKeyDown, currency, errors, date, setDate, source, destination, setPickerField, setPickerMember, accountLabel, accounts, description, setDescription, clearError, tagName, setShowTagPicker, insufficientWarning, handleClose, formatAmount, locale, setShowBorrowerPicker, selectedBorrowerId, repayStackOptions, showLenderChoice, repayLenderOptions, selectedLenderId, setShowLenderPicker, txError } = props as Props & { insufficientWarning: { available: number; deficit: number } | null; handleClose: () => void; formatAmount: (n: number, l: string, c: string) => string; locale: string; setShowBorrowerPicker: (v: boolean) => void; selectedBorrowerId: string; repayStackOptions: { borrowerId: string; label: string }[]; showLenderChoice: boolean; repayLenderOptions: { lenderId: string; label: string }[]; selectedLenderId: string; setShowLenderPicker: (v: boolean) => void; txError: string | null };
   const [lendKey, replayLend] = useReplay();
   const [repayKey, replayRepay] = useReplay();
   const [addTxKey, replayAddTx] = useReplay();
@@ -55,6 +57,16 @@ export function FormFields(props: Props & {
   const [sourceKey, replaySource] = useReplay();
   const [destKey, replayDest] = useReplay();
   const [tagKey, replayTag] = useReplay();
+  const renderAccountValue = (id: string) => {
+    const account = accounts.find((x) => x.id === id);
+    return (
+      <>
+        <span className={styles.pickerValue}>{accountLabel(id)}</span>
+        {account && <span className={styles.pickerBalance}>{formatAmount(account.balance, locale, currency)}</span>}
+        <span className={styles.pickerArrow}>{'\u25BE'}</span>
+      </>
+    );
+  };
   return (
     <>
       {tab === 'loan' && (
@@ -104,7 +116,7 @@ export function FormFields(props: Props & {
                   <div className={styles.fieldGroup}>
                     <span className={styles.fieldLabel}>Credit To</span>
                     <button type="button" className={`${styles.pickerTrigger} ${creditKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCredit(); setPickerField('destination'); setPickerMember(null); }}>
-                      <span className="anim-target" key={creditKey}>{destination ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></> : <span className={styles.pickerPlaceholder}>Select account</span>}</span>
+                      <span className="anim-target" key={creditKey}>{destination ? renderAccountValue(destination) : <span className={styles.pickerPlaceholder}>Select account</span>}</span>
                     </button>
                   </div>
                 </>
@@ -112,7 +124,7 @@ export function FormFields(props: Props & {
                 <div className={styles.fieldGroup}>
                   <span className={styles.fieldLabel}>Paid To</span>
                   <button type="button" className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''} ${paidToKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayPaidTo(); setPickerField('destination'); setPickerMember(null); }}>
-                    <span className="anim-target" key={paidToKey}>{destination ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></> : <span className={styles.pickerPlaceholder}>Select account</span>}</span>
+                    <span className="anim-target" key={paidToKey}>{destination ? renderAccountValue(destination) : <span className={styles.pickerPlaceholder}>Select account</span>}</span>
                   </button>
                   {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
                 </div>
@@ -127,7 +139,7 @@ export function FormFields(props: Props & {
               <div className={styles.fieldGroup}>
                 <span className={styles.fieldLabel}>{tab === 'loan' && loanAction === 'lend' ? 'Lender Account' : 'Source Account'}</span>
                 <button type="button" className={`${styles.pickerTrigger} ${errors.source ? styles.fieldError : ''} ${sourceKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySource(); setPickerField('source'); setPickerMember(null); }}>
-                  <span className="anim-target" key={sourceKey}>{source ? <><span className={styles.pickerValue}>{accountLabel(source)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></> : <span className={styles.pickerPlaceholder}>Select account</span>}</span>
+                  <span className="anim-target" key={sourceKey}>{source ? renderAccountValue(source) : <span className={styles.pickerPlaceholder}>Select account</span>}</span>
                 </button>
                 {errors.source && <span className={styles.errorText}>{errors.source}</span>}
               </div>
@@ -138,7 +150,7 @@ export function FormFields(props: Props & {
               <div className={styles.fieldGroup}>
                 <span className={styles.fieldLabel}>{tab === 'loan' && loanAction === 'lend' ? 'Borrower Account' : 'Destination Account'}</span>
                 <button type="button" className={`${styles.pickerTrigger} ${errors.destination ? styles.fieldError : ''} ${destKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayDest(); setPickerField('destination'); setPickerMember(null); }}>
-                  <span className="anim-target" key={destKey}>{destination ? <><span className={styles.pickerValue}>{accountLabel(destination)}</span><span className={styles.pickerArrow}>{'\u25BE'}</span></> : <span className={styles.pickerPlaceholder}>Select account</span>}</span>
+                  <span className="anim-target" key={destKey}>{destination ? renderAccountValue(destination) : <span className={styles.pickerPlaceholder}>Select account</span>}</span>
                 </button>
                 {errors.destination && <span className={styles.errorText}>{errors.destination}</span>}
               </div>
