@@ -1314,3 +1314,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - User: avatar sat slightly left when sidebar folded. Cause: .collapsed .footer centers content but the 10px flex gap to the zero-width footerText still applied, pushing the avatar 5px left. Fix: gap:0 in collapsed footer
 - Playwright proof: collapsed, avatar center 50 == footer center 50. Screenshot. tsc + eslint clean
 - Status: uncommitted on dev. Next: user verifies, then commit.
+
+## Session 2026-10-14 (release v1.16.1)
+
+### Changes
+- User-approved: commit + push + merge to master. PATCH 1.16.0 -> 1.16.1: da17e4d fix (recent desc 3-line clamp, date nowrap+breathing room, collapsed avatar centering) + bump (package.json + whatsNew 1.16.1 + CHANGELOG [1.16.1])
+- Gates: build PASS, eslint clean, unit 48/48, detect_changes low risk/no affected flows; verified live with measurements + screenshots
+- Flow: pushed dev -> merge no-ff -> tag v1.16.1 -> pushed master --follow-tags; dev ff + pushed; back on dev, clean
+
+### Status
+- v1.16.1 live on master + dev. Next: user call.
