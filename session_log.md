@@ -1285,3 +1285,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - User: number weight too light. Ledger debit/credit/balance inherited 400 -> set 600 (matches dashboard month/member/tx amounts). Tabular-nums kept
 - Playwright proof: computed weight 600 + tabular-nums on live row. Screenshot. tsc + eslint clean
 - Status: uncommitted on dev. Next: user verifies, then commit.
+
+## Session 2026-10-14 (release v1.16.0)
+
+### Changes
+- User-approved: commit + push + merge to master. MINOR 1.15.0 -> 1.16.0: 0286a41 feat(theme) type scale +2px, XL preset, token-driven text, light contrast (secondary 46->40, gold 55->49, opacity fades removed), ledger polish (130px numbers, centered titles/amounts, mid-aligned rows, bare-dash empties, 0.6em suffix, semibold numbers) + ff3767f bump (package.json + whatsNew 1.16.0 + CHANGELOG [1.16.0])
+- Fixed CHANGELOG misplacement: font/ledger entries had landed under [1.15.0]; moved to new [1.16.0] (Added x2 + Fixed x2)
+- Gates: build PASS, eslint clean, unit 48/48, detect_changes low risk/no affected flows; all features contrast-measured + screenshotted live on DemoDB
+- Flow: pushed dev -> merge no-ff 45412ac -> tag v1.16.0 -> pushed master --follow-tags; dev ff + pushed (one push timeout, retry ok); back on dev, clean
+
+### Status
+- v1.16.0 live on master + dev. Next: user call.
