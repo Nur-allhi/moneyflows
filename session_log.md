@@ -1296,3 +1296,21 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.16.0 live on master + dev. Next: user call.
+
+### Change 2026-10-14 (recent-row: desc 3 lines, date+amount 1 line)
+- User: description may wrap 2-3 lines, date + amount stay single-line. Fix: txDesc line-clamp 2->3; txDate gained missing white-space:nowrap (+overflow hidden) so dates like 24-09-2026 can't split
+- Playwright proof: injected long desc wraps exactly 3 lines (clamp), date 1 line nowrap, amount 1 line nowrap. Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Change 2026-10-14 (recent-row date breathing room)
+- User: date touched the description (65px box vs 66px text = 1px overlap, worse at larger presets). Fix: txDate width->min-width:78px + margin-right:6px
+- Playwright proof: box 78, text 66, 12px inner breathing, 14px gap to desc (was 8 with overlap). Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.
+
+### Config 2026-10-14 (pin GitHub account for this repo)
+- User has 2 GitHub accounts; pinned this repo to Nur-allhi via local git config credential.https://github.com.username (GCM skips the account picker). Verified with passwordless ls-remote. No secrets stored - token stays in Credential Manager/keyring.
+
+### Change 2026-10-14 (collapsed sidebar footer avatar centering)
+- User: avatar sat slightly left when sidebar folded. Cause: .collapsed .footer centers content but the 10px flex gap to the zero-width footerText still applied, pushing the avatar 5px left. Fix: gap:0 in collapsed footer
+- Playwright proof: collapsed, avatar center 50 == footer center 50. Screenshot. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.

@@ -502,8 +502,11 @@
 .txDate {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
-  width: 65px;
+  min-width: 78px;
+  margin-right: 6px;
   flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .txType {
@@ -529,7 +532,7 @@
   color: var(--color-text);
   min-width: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   line-height: 1.3;
