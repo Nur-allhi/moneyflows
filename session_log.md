@@ -1218,3 +1218,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - User feedback: panels stretched to tallest column (5 members but long empty height). Fix: align-items: start on .content grid so each panel hugs its content
 - Playwright proof on DemoDB: Where 275px / Recent 314px / Loans 788px - independent. Screenshot taken. tsc + eslint clean
 - Status: uncommitted on dev. Next: user verifies, then commit.
+
+## Session 2026-10-14 (release v1.15.0)
+
+### Changes
+- User-approved: commit + push + merge to master. MINOR 1.14.2 -> 1.15.0: ed055b7 feat Load more + 42e96af feat section toggles + 2ed79f0 fix panel auto-height (CHANGELOG Added x2 + Fixed) + b64b5bd bump (package.json + whatsNew 1.15.0 + CHANGELOG [1.15.0] - 2026-10-14)
+- Gates: build PASS, eslint --max-warnings 0 PASS, vitest unit 48/48 PASS (17 e2e files fail under vitest runner = pre-existing Playwright specs; flows verified live on DemoDB with screenshots)
+- detect_changes: low risk, no affected processes
+- Flow: pushed dev -> merge no-ff 6b34b48 -> tag v1.15.0 -> pushed master --follow-tags; dev ff to master + pushed; back on dev, tree clean
+
+### Status
+- v1.15.0 live on master + dev. Next: user call.
