@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useModalStore } from '../../stores/useModalStore';
+import { useReplay } from '../../hooks/useReplay';
 import { formatAmount, formatAmountParts } from '../../utils/format';
 import { shortDate, MONTHS } from '../../constants/dates';
 import { Highlight } from '../../utils/highlight';
@@ -37,7 +38,8 @@ export function WhereMoneyIsPanel({ filteredAccountsByMember, memberById, intern
     );
   })}</>;
 }
-export function RecentTxsPanel({ filteredRecentTxs, searchQuery, locale, currency }: any) {
+export function RecentTxsPanel({ filteredRecentTxs, remaining, onLoadMore, searchQuery, locale, currency }: any) {
+  const [loadMoreKey, replayLoadMore] = useReplay();
   if (filteredRecentTxs.length === 0) return <div className="empty-state" style={{ padding: '24px 20px' }}><div className="empty-state-icon">{'\u{1F4CB}'}</div><p className="empty-state-text">{searchQuery ? `No matches for "${searchQuery}"` : 'No transactions yet'}</p></div>;
   return <>{filteredRecentTxs.map((tx: any) => {
     const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
@@ -49,7 +51,9 @@ export function RecentTxsPanel({ filteredRecentTxs, searchQuery, locale, currenc
         <span className={styles.txAmount}><span className={`${styles.txArrow} ${tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? styles.txArrowIn : styles.txArrowOut}`}>{tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M2 6l4-4 4 4" /></svg> : <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M2 6l4 4 4-4" /></svg>}</span>{fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small></span>
       </div>
     );
-  })}</>;
+  })}
+  {remaining > 0 && <button type="button" className={`${styles.loadMoreBtn} ${loadMoreKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayLoadMore(); onLoadMore(); }}><span className="anim-target" key={loadMoreKey}>Load more ({remaining} remaining)</span></button>}
+  </>;
 }
 export function ActiveLoansPanel({ filteredActiveLoanStacks, searchQuery, locale, currency, navigate }: any) {
   if (filteredActiveLoanStacks.length === 0) return <div className="empty-state" style={{ padding: '24px 0' }}><div className="empty-state-icon">{'\u{1F4B3}'}</div><p className="empty-state-text">{searchQuery ? `No loans match "${searchQuery}"` : 'No active loans'}</p></div>;

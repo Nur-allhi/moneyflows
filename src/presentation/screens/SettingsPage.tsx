@@ -372,6 +372,39 @@ export function SettingsPage() {
                     <span className={styles.knob} />
                   </button>
                 </label>
+                <label className={styles.toggleRow}>
+                  <span>Metric Cards</span>
+                  <button
+                    role="switch"
+                    aria-checked={settings.showMetricCards ?? true}
+                    className={`${styles.switch} ${(settings.showMetricCards ?? true) ? styles.switchOn : ''}`}
+                    onClick={() => updateSettings({ showMetricCards: !(settings.showMetricCards ?? true) })}
+                  >
+                    <span className={styles.knob} />
+                  </button>
+                </label>
+                <label className={styles.toggleRow}>
+                  <span>Month Summary</span>
+                  <button
+                    role="switch"
+                    aria-checked={settings.showMonthSummary ?? true}
+                    className={`${styles.switch} ${(settings.showMonthSummary ?? true) ? styles.switchOn : ''}`}
+                    onClick={() => updateSettings({ showMonthSummary: !(settings.showMonthSummary ?? true) })}
+                  >
+                    <span className={styles.knob} />
+                  </button>
+                </label>
+                <label className={styles.toggleRow}>
+                  <span>Quick Actions</span>
+                  <button
+                    role="switch"
+                    aria-checked={settings.showQuickActions ?? true}
+                    className={`${styles.switch} ${(settings.showQuickActions ?? true) ? styles.switchOn : ''}`}
+                    onClick={() => updateSettings({ showQuickActions: !(settings.showQuickActions ?? true) })}
+                  >
+                    <span className={styles.knob} />
+                  </button>
+                </label>
               </SettingsDisclosure>
               <SettingsDisclosure title="Calculation" subtitle="What counts toward totals">
                 <label className={styles.toggleRow}>

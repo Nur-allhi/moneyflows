@@ -1180,3 +1180,41 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Replaced text ◀ with ChevronLeftIcon (lucide-react, size 16, repo convention per calendar.tsx) in picker header; added aria-label='Back to members'
 - Playwright proof: back button renders 16x16 svg, click returns to member list. tsc + eslint clean
 - Status: uncommitted on dev. Next: user verifies, then commit all picker work together.
+
+## Session 2026-10-14 (release v1.14.2)
+
+### Changes
+- User-approved: commit + push + merge to master. PATCH 1.14.1 -> 1.14.2: fix d013b8c picker two-column rows + balance on trigger + lucide chevron (CHANGELOG Fixed) + 634fdc4 bump (package.json + whatsNew 1.14.2 + CHANGELOG [1.14.2] - 2026-10-14)
+- Gates: build PASS, eslint --max-warnings 0 PASS, vitest unit 48/48 PASS (17 e2e files fail under vitest runner = pre-existing Playwright specs; affected flows verified manually in live browser with screenshots)
+- detect_changes: low risk, no affected processes
+- Flow: pushed dev -> merge no-ff 0ecd5b6 -> tag v1.14.2 -> pushed master --follow-tags; dev ff to master + pushed; back on dev, tree clean
+
+### Status
+- v1.14.2 live on master + dev. Next: user call.
+
+### Change 2026-10-14 (dashboard recent txs: setting limit + Load more)
+- User asked: last 15 recent txs + Load more button. Confirmed approach: wire existing dashboardTxLimit setting (was ignored, hard slice 12) + Load more
+- useDashboardData: full sorted list, recentLimit state init/reset from dashboardTxLimit, visibleRecentTxs slice, recentRemaining, showMoreRecent (+1 page); config DEFAULT 10->15, removed dead DASHBOARD_TX_DISPLAY_LIMIT; RecentTxsPanel renders ledger-style Load more (N remaining); Dashboard.module.css loadMoreBtn
+- Playwright proof on DemoDB (DemoDB/moneyflows-20260925-211143.db loaded into test browser OPFS): 5 rows + Load more (320 remaining) -> click -> 10 rows + (315 remaining); search 'Medicine' -> 5 + (12 remaining), limit resets on query change. Screenshot taken
+- Note: :3000 dev server served a stale Dashboard transform mid-edit (ReferenceError); touching the file forced re-transform, verified fresh. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit (MINOR bump on merge: new Added entry).
+
+### Committed 2026-10-14 (dashboard Load more -> dev)
+- ed055b7 feat(dashboard) on dev + pushed (973ff5f..ed055b7). Gates: build PASS, eslint clean, unit 48/48, detect_changes low risk/no affected flows
+- Note: git add warned src/presentation/screens/dashboard ignored, but all 7 files committed, tree clean, check-ignore confirms tracked (warning was a stray artifact pattern)
+- Status: on dev, clean. Next: user call (merge to master would be MINOR bump).
+
+### Change 2026-10-14 (dashboard section toggles: metrics/summary/actions)
+- User asked: hide MetricCards, MonthSummary, Quick Actions sections via Settings. Confirmed: three individual toggles, no master switch
+- AppSettings: showMetricCards/showMonthSummary/showQuickActions (default true); SettingsPage Dashboard Sections +3 switch rows; Dashboard.tsx conditional render (FAB/header untouched)
+- Playwright proof on DemoDB: all 6 switches render on; Month Summary off -> dashboard hides summary only, persists across navigation; toggled back on -> all sections return. Screenshot of Settings taken. tsc + eslint clean
+- Status: uncommitted on dev (with Load-more batch). Next: user verifies, then commit (MINOR on merge).
+
+### Committed 2026-10-14 (dashboard section toggles -> dev)
+- 42e96af feat(dashboard) on dev + pushed (ed055b7..42e96af). Gates: build PASS, eslint clean, unit 48/48, detect_changes low risk/no affected flows
+- Status: on dev, clean. Next: user call (merge to master => MINOR bump, two Added entries pending).
+
+### Change 2026-10-14 (dashboard panels auto height)
+- User feedback: panels stretched to tallest column (5 members but long empty height). Fix: align-items: start on .content grid so each panel hugs its content
+- Playwright proof on DemoDB: Where 275px / Recent 314px / Loans 788px - independent. Screenshot taken. tsc + eslint clean
+- Status: uncommitted on dev. Next: user verifies, then commit.

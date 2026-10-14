@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAccountStore } from '../../stores/useAccountStore';
 import { useTransactionStore } from '../../stores/useTransactionStore';
 import { useLoanStore } from '../../stores/useLoanStore';
@@ -7,14 +7,13 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useSearchStore } from '../../stores/useSearchStore';
 import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import { matchesTx, matchesAccount } from '../../utils/search';
-import { DASHBOARD_TX_DISPLAY_LIMIT } from '../../constants/config';
 
 const INCOME_TYPES = new Set(['income', 'loan_repayment', 'repay', 'loan_received']);
 const EXPENSE_TYPES = new Set(['expense', 'loan_issue', 'lend', 'loan_paidback']);
 
 export function useDashboardData() {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
-  const { locale, currency, totalAssetsIncludeLoans } = useSettingsStore((s) => s.settings);
+  const { locale, currency, totalAssetsIncludeLoans, dashboardTxLimit } = useSettingsStore((s) => s.settings);
   const { transactions, loading: txLoading, error: txError, fetchTransactions } = useTransactionStore();
   const { loanStacks, fetchLoanStacks } = useLoanStore();
   const { members, fetchMembers } = useMemberStore();
@@ -32,7 +31,7 @@ export function useDashboardData() {
   const cashInHand = useMemo(() => accounts.filter((a) => a.type === 'cash' || a.type === 'mobile_wallet').reduce((s, a) => s + a.balance, 0), [accounts]);
   const totalInBanks = useMemo(() => accounts.filter((a) => a.type === 'bank' || a.type === 'savings' || a.type === 'business').reduce((s, a) => s + a.balance, 0), [accounts]);
   const activeLoanStacks = useMemo(() => loanStacks.filter((ls) => ls.totalOutstanding > 0 && !ls.loans.every((l) => l.status === 'settled')), [loanStacks]);
-  const recentTxs = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, DASHBOARD_TX_DISPLAY_LIMIT), [transactions]);
+  const recentTxs = useMemo(() => [...transactions].sort((a, b) => b.date.localeCompare(a.date)), [transactions]);
   const now = new Date(); const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1); const lastMonthDate = new Date(monthStart); lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
   const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
@@ -76,7 +75,13 @@ export function useDashboardData() {
     return sortedAll.filter((tx) => matchesTx(tx, debouncedQuery, { accountMap: accountMapForSearch, memberMap: memberMapForSearch }));
   }, [recentTxs, transactions, debouncedQuery, accountMapForSearch, memberMapForSearch]);
 
+  const [recentLimit, setRecentLimit] = useState(dashboardTxLimit);
+  useEffect(() => { setRecentLimit(dashboardTxLimit); }, [dashboardTxLimit, debouncedQuery]);
+  const visibleRecentTxs = useMemo(() => filteredRecentTxs.slice(0, recentLimit), [filteredRecentTxs, recentLimit]);
+  const recentRemaining = filteredRecentTxs.length - visibleRecentTxs.length;
+  const showMoreRecent = () => setRecentLimit((l) => l + dashboardTxLimit);
+
   return {
-    accounts, members, transactions, loanStacks, locale, currency, totalAssetsIncludeLoans, loading, error, internalMembers, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, activeLoanStacks, recentTxs, thisMonth, lastMonth, thisMonthTxs, lastMonthTxs, thisMonthIncome, thisMonthExpenses, thisMonthNet, lastMonthNet, prevAssets, prevCash, prevBanks, prevLoans, assetsChange, cashChange, banksChange, loansChange, accountsByMember, filteredAccountsByMember, filteredRecentTxs, rawQuery, debouncedQuery, memberById,
+    accounts, members, transactions, loanStacks, locale, currency, totalAssetsIncludeLoans, loading, error, internalMembers, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, activeLoanStacks, recentTxs, visibleRecentTxs, recentRemaining, showMoreRecent, thisMonth, lastMonth, thisMonthTxs, lastMonthTxs, thisMonthIncome, thisMonthExpenses, thisMonthNet, lastMonthNet, prevAssets, prevCash, prevBanks, prevLoans, assetsChange, cashChange, banksChange, loansChange, accountsByMember, filteredAccountsByMember, filteredRecentTxs, rawQuery, debouncedQuery, memberById,
   };
 }
