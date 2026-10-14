@@ -17,6 +17,9 @@ export class AppSettings {
     public showWhereMoneyIs: boolean = true,
     public showRecentTransactions: boolean = true,
     public showActiveLoans: boolean = true,
+    public showMetricCards: boolean = true,
+    public showMonthSummary: boolean = true,
+    public showQuickActions: boolean = true,
     public totalAssetsIncludeLoans: boolean = false,
     public setupComplete: boolean = false,
     /** Appearance: resolved by useTheme() into data-theme on <html>. */

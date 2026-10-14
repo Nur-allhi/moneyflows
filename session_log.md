@@ -1198,3 +1198,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Playwright proof on DemoDB (DemoDB/moneyflows-20260925-211143.db loaded into test browser OPFS): 5 rows + Load more (320 remaining) -> click -> 10 rows + (315 remaining); search 'Medicine' -> 5 + (12 remaining), limit resets on query change. Screenshot taken
 - Note: :3000 dev server served a stale Dashboard transform mid-edit (ReferenceError); touching the file forced re-transform, verified fresh. tsc + eslint clean
 - Status: uncommitted on dev. Next: user verifies, then commit (MINOR bump on merge: new Added entry).
+
+### Committed 2026-10-14 (dashboard Load more -> dev)
+- ed055b7 feat(dashboard) on dev + pushed (973ff5f..ed055b7). Gates: build PASS, eslint clean, unit 48/48, detect_changes low risk/no affected flows
+- Note: git add warned src/presentation/screens/dashboard ignored, but all 7 files committed, tree clean, check-ignore confirms tracked (warning was a stray artifact pattern)
+- Status: on dev, clean. Next: user call (merge to master would be MINOR bump).
+
+### Change 2026-10-14 (dashboard section toggles: metrics/summary/actions)
+- User asked: hide MetricCards, MonthSummary, Quick Actions sections via Settings. Confirmed: three individual toggles, no master switch
+- AppSettings: showMetricCards/showMonthSummary/showQuickActions (default true); SettingsPage Dashboard Sections +3 switch rows; Dashboard.tsx conditional render (FAB/header untouched)
+- Playwright proof on DemoDB: all 6 switches render on; Month Summary off -> dashboard hides summary only, persists across navigation; toggled back on -> all sections return. Screenshot of Settings taken. tsc + eslint clean
+- Status: uncommitted on dev (with Load-more batch). Next: user verifies, then commit (MINOR on merge).

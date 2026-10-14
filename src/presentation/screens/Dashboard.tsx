@@ -27,6 +27,9 @@ export function Dashboard() {
   const showWhere = settings.showWhereMoneyIs ?? true;
   const showRecent = settings.showRecentTransactions ?? true;
   const showLoans = settings.showActiveLoans ?? true;
+  const showMetrics = settings.showMetricCards ?? true;
+  const showSummary = settings.showMonthSummary ?? true;
+  const showActions = settings.showQuickActions ?? true;
   const visibleCount = [showWhere, showRecent, showLoans].filter(Boolean).length;
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [closingMembers, setClosingMembers] = useState<Set<string>>(new Set());
@@ -48,12 +51,12 @@ export function Dashboard() {
   if (error) return <div className={styles.dashboard}><div className={`${styles.panel} ${styles.monthSummary}`}><div className="error-state"><div className="error-state-icon">{'\u26A0\uFE0F'}</div><p className="error-state-text">Could not load dashboard data</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchAccounts(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div></div></div>;
   return (
     <div className={styles.dashboard}>
-      <MetricCards assetsChange={assetsChange} cashChange={cashChange} banksChange={banksChange} loansChange={loansChange} locale={locale} currency={currency} animTotalAssets={animTotalAssets} animCashInHand={animCashInHand} animTotalInBanks={animTotalInBanks} animActiveLoans={animActiveLoans} totalAssetsIncludeLoans={totalAssetsIncludeLoans} animLoansAdded={animLoansAdded} />
-      <MonthSummary thisMonthIncome={thisMonthIncome} thisMonthExpenses={thisMonthExpenses} thisMonthNet={thisMonthNet} locale={locale} currency={currency} />
-      <div className={styles.actions}>
+      {showMetrics && <MetricCards assetsChange={assetsChange} cashChange={cashChange} banksChange={banksChange} loansChange={loansChange} locale={locale} currency={currency} animTotalAssets={animTotalAssets} animCashInHand={animCashInHand} animTotalInBanks={animTotalInBanks} animActiveLoans={animActiveLoans} totalAssetsIncludeLoans={totalAssetsIncludeLoans} animLoansAdded={animLoansAdded} />}
+      {showSummary && <MonthSummary thisMonthIncome={thisMonthIncome} thisMonthExpenses={thisMonthExpenses} thisMonthNet={thisMonthNet} locale={locale} currency={currency} />}
+      {showActions && <div className={styles.actions}>
         <button className={`${styles.actBtn} ${styles.actPrimary} ${newTxKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNewTx(); openWizard(); }}><span className="anim-target" key={`${newTxKey}-i`}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg></span><span className="anim-target" key={`${newTxKey}-t`}>New Transaction</span></button>
         <button className={`${styles.actBtn} ${quickLoanKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayQuickLoan(); useModalStore.getState().open('transaction-form', { initialTab: 'loan' }); }}><span className="anim-target" key={quickLoanKey}>Quick Loan</span></button>
-      </div>
+      </div>}
       <div className={styles.content} data-cols={visibleCount || 1}>
         {showWhere && <div className={styles.panel}><div className={styles.panelHeader}><h2>Where Your Money Is</h2></div><WhereMoneyIsPanel filteredAccountsByMember={filteredAccountsByMember} memberById={memberById} internalMembers={internalMembers} expandedMembers={expandedMembers} closingMembers={closingMembers} toggleMember={toggleMember} memberTotalBalance={memberTotalBalance} searchQuery={searchQuery} locale={locale} currency={currency} /></div>}
         {showRecent && <div className={styles.panel}><div className={styles.panelHeader}><h2>Recent Transactions</h2></div><div className={styles.txList}><RecentTxsPanel filteredRecentTxs={visibleRecentTxs} remaining={recentRemaining} onLoadMore={showMoreRecent} searchQuery={searchQuery} locale={locale} currency={currency} /></div></div>}
