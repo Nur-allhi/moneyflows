@@ -70,6 +70,16 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
     setError(null);
     setStage('syncing');
     try {
+      // Cached/silent session first; the popup appears only when the session
+      // is truly dead — acceptable on an explicit tap, never in background.
+      const token = await googleAuth.getValidToken().catch(() => null);
+      if (!token) {
+        const fresh = await googleAuth.refreshInteractive().catch(() => null);
+        if (!fresh) {
+          setError('Google session expired — tap Sign in with Google again.');
+          return;
+        }
+      }
       setStatus(await getDatabase().syncNow());
     } catch {
       setError('Sync failed — will retry automatically.');

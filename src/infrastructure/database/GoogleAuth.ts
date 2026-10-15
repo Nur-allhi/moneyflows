@@ -50,6 +50,12 @@ interface PersistedAuth {
   name?: string;
   /** Photo URL from the profile scope (never logged, shown in sidebar only). */
   photo?: string;
+  /**
+   * Access token (T-159): same-origin IndexedDB, cleared on sign-out, ~1h
+   * lifetime. Lets sessions survive reloads; silent refresh renews it while
+   * the Google session lives.
+   */
+  token?: string;
   expiresAtMs: number;
 }
 
@@ -218,17 +224,35 @@ export class GoogleAuth {
     this.name = profile?.name ?? null;
     this.photo = profile?.photo ?? null;
     this.clientId = clientId;
-    await idbSet({ clientId, email: this.email ?? '', name: this.name ?? '', photo: this.photo ?? '', expiresAtMs: this.expiresAtMs });
+    await idbSet({
+      clientId,
+      email: this.email ?? '',
+      name: this.name ?? '',
+      photo: this.photo ?? '',
+      token,
+      expiresAtMs: this.expiresAtMs,
+    });
     return token;
   }
 
   /**
-   * Usable token or null. Refreshes silently when expired; null when signed
-   * out, offline, or refresh needs UI (caller surfaces "Reconnect").
+   * Usable token or null (T-159). Order: live memory → persisted record →
+   * silent `prompt:'none'` renewal (no UI while the Google session lives).
+   * Never throws and never shows UI — background callers (flush, boot, polls)
+   * can call this freely; a dead session simply yields null ('reconnect').
    */
   async getValidToken(): Promise<string | null> {
     if (this.token && Date.now() < this.expiresAtMs - REFRESH_SKEW_MS) return this.token;
     const saved = await idbGet().catch(() => null);
+    if (saved?.token && Date.now() < saved.expiresAtMs - REFRESH_SKEW_MS) {
+      this.token = saved.token;
+      this.expiresAtMs = saved.expiresAtMs;
+      this.email = saved.email || null;
+      this.name = saved.name ?? null;
+      this.photo = saved.photo ?? null;
+      this.clientId = saved.clientId ?? this.clientId;
+      return this.token;
+    }
     const clientId = this.clientId ?? saved?.clientId;
     if (!clientId) return null;
     try {
@@ -251,6 +275,52 @@ export class GoogleAuth {
             resolve(resp.access_token);
           },
         });
+        // 'none' = renew silently; errors (never a popup) when interaction
+        // is genuinely required — caller then surfaces "Reconnect".
+        client.requestAccessToken({ prompt: 'none' });
+      });
+      this.token = token;
+      this.expiresAtMs = Date.now() + 3600_000;
+      this.clientId = clientId;
+      const email = this.email ?? saved?.email ?? '';
+      const name = this.name ?? saved?.name ?? '';
+      const photo = this.photo ?? saved?.photo ?? '';
+      await idbSet({ clientId, email, name, photo, token, expiresAtMs: this.expiresAtMs });
+      return token;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Explicit-tap refresh (T-159): shows the Google popup to re-authorize.
+   * Call only from direct user actions (Sync-now fallback) — never from
+   * background paths. Null when the user cancels or is offline.
+   */
+  async refreshInteractive(): Promise<string | null> {
+    const saved = await idbGet().catch(() => null);
+    const clientId = this.clientId ?? saved?.clientId;
+    if (!clientId) return null;
+    try {
+      await loadGis();
+    } catch {
+      return null;
+    }
+    const gis = getGis();
+    if (!gis) return null;
+    try {
+      const token = await new Promise<string>((resolve, reject) => {
+        const client = gis.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: SCOPES,
+          callback: (resp) => {
+            if (resp.error || !resp.access_token) {
+              reject(new Error(resp.error ?? 'interactive refresh cancelled'));
+              return;
+            }
+            resolve(resp.access_token);
+          },
+        });
         client.requestAccessToken({ prompt: '' });
       });
       this.token = token;
@@ -259,7 +329,7 @@ export class GoogleAuth {
       const email = this.email ?? saved?.email ?? '';
       const name = this.name ?? saved?.name ?? '';
       const photo = this.photo ?? saved?.photo ?? '';
-      await idbSet({ clientId, email, name, photo, expiresAtMs: this.expiresAtMs });
+      await idbSet({ clientId, email, name, photo, token, expiresAtMs: this.expiresAtMs });
       return token;
     } catch {
       return null;

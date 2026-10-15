@@ -14,6 +14,7 @@ interface CapturedClient {
 }
 
 const captured: CapturedClient[] = [];
+const requestedPrompts: string[] = [];
 let nextResponse: TokenResponse = { access_token: 'tok-1', expires_in: 3600 };
 let revoked: string[] = [];
 
@@ -24,7 +25,8 @@ function installGisMock() {
         initTokenClient: (cfg: CapturedClient) => {
           captured.push(cfg);
           return {
-            requestAccessToken: () => {
+            requestAccessToken: (opts?: { prompt: string }) => {
+              requestedPrompts.push(opts?.prompt ?? '');
               const resp = nextResponse;
               void Promise.resolve().then(() => cfg.callback(resp));
             },
@@ -43,6 +45,7 @@ function removeGisMock() {
 
 beforeEach(async () => {
   captured.length = 0;
+  requestedPrompts.length = 0;
   revoked = [];
   nextResponse = { access_token: 'tok-1', expires_in: 3600 };
   resetGisLoaderForTests();
@@ -101,6 +104,32 @@ describe('GoogleAuth (T-145)', () => {
     try {
       nextResponse = { access_token: 'tok-2', expires_in: 3600 };
       await expect(auth.getValidToken()).resolves.toBe('tok-2');
+      expect(requestedPrompts[requestedPrompts.length - 1]).toBe('none');
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('hydrates a persisted token across instances with zero GIS calls', async () => {
+    await new GoogleAuth().signIn('client-123');
+    captured.length = 0;
+    requestedPrompts.length = 0;
+    // Fresh instance = post-reload: memory empty, persisted record valid.
+    await expect(new GoogleAuth().getValidToken()).resolves.toBe('tok-1');
+    expect(captured).toHaveLength(0);
+    expect(requestedPrompts).toHaveLength(0);
+  });
+
+  it('refreshInteractive uses a visible prompt for explicit taps', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    const later = Date.now() + 2 * 3600_000;
+    vi.spyOn(Date, 'now').mockReturnValue(later);
+    try {
+      nextResponse = { access_token: 'tok-3', expires_in: 3600 };
+      await expect(auth.refreshInteractive()).resolves.toBe('tok-3');
+      expect(requestedPrompts[requestedPrompts.length - 1]).toBe('');
+      await expect(auth.getValidToken()).resolves.toBe('tok-3');
     } finally {
       vi.restoreAllMocks();
     }
@@ -130,5 +159,9 @@ describe('GoogleAuth (T-145)', () => {
     expect(revoked).toContain('tok-1');
     await expect(auth.getValidToken()).resolves.toBeNull();
     await expect(auth.getAccountEmail()).resolves.toBeNull();
+    // Fresh instance (post-wipe): nothing hydrates, no GIS call happens.
+    captured.length = 0;
+    await expect(new GoogleAuth().getValidToken()).resolves.toBeNull();
+    expect(captured).toHaveLength(0);
   });
 });

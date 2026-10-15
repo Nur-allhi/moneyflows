@@ -277,6 +277,19 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-156 | Responsive auto-sync (30s cooldown, every mutation syncs) | `senior-backend` | S | **Complete** (`CLOUD_SYNC_COOLDOWN_MS` 120s→30s; flush path unchanged — hash-skipped, fire-and-forget, hidden-tab force) |
 | T-157 | Header sync indicator beside bell | `senior-frontend` | M | **Complete** (`useCloudIndicator` cheap poll, desktop + mobile instances, guests see nothing, tap → Settings) |
 | T-158 | Sidebar user profile (photo/name/email, profile scope) | `senior-frontend` | M | **Complete** (profile scope, persisted name/photo, footer photo+name+email, Family footer for guests, build green) |
+| T-159 | Day-long sessions: persisted token + silent refresh, popup only on explicit taps | `senior-backend` | M | **Complete** (root cause: refresh used `prompt:''`; silent is `prompt:'none'`; token persisted+hydrated, interactive split, 10/10 tests) |
+
+### T-159 - Day-long sessions: persisted token + silent refresh, popup only on explicit taps
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/GoogleAuth.ts`, `__tests__/GoogleAuth.test.ts`, `src/presentation/components/settings/CloudSyncSection.tsx`, `docs/SECURITY.md`
+**Content:**
+1. Root cause: refresh used `prompt: ''` (default = popup). Silent mechanism is `prompt: 'none'` — succeeds without UI while the Google session lives, errors quietly otherwise.
+2. Persist `{token, expiresAtMs}` in the IDB auth record (same-origin, cleared on sign-out); hydrate memory on load.
+3. `getValidToken()`: memory-valid → return; IDB-valid → adopt + return; else silent `prompt:'none'` attempt → persist + return, or null. Never throws, never shows UI. Background callers unchanged.
+4. New `refreshInteractive()` (popup) for explicit taps only; Sync-now handler: cached/silent first, interactive fallback.
+5. Tests: hydration across instances with zero GIS calls, silent uses `prompt:'none'`, expiry-with-dead-session → null, sign-out clears token. Docs: SECURITY token note updated.
+**Acceptance:** active user sees zero popups for days across reloads; long-idle or wiped storage → single re-sign-in.
 
 ### T-154 - Sign-in progress UX (staged status + progress, no dead screen)
 **Skill:** `senior-frontend`
