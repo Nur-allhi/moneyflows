@@ -1324,3 +1324,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.16.1 live on master + dev. Next: user call.
+
+## Session 2026-10-15 (safety branch google_signin_backup)
+
+### Changes
+- User directive: keep `master` stable without Google backup; isolate sync work. Created `google_signin_backup` off `dev`, merged `feature/online-sync-drive` no-ff (`881b249`, Phase 19 T-145..T-153), typecheck green, pushed with `-u`
+- Back on `dev` (plan commit `73df24d` pushed); `master` untouched at v1.16.1
+- Topology: `master` (stable, no sync) ← `dev` (next changes) → periodic merge into `google_signin_backup` (sync workstream, merges on user call)
+
+### Status
+- On clean `dev`. Next: user's process-improvement round for sync, then next changes on `dev`.
