@@ -85,11 +85,17 @@ function AppLayout() {
   const [profileEmail, setProfileEmail] = useState<string | null>(null);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   useEffect(() => {
-    getDatabase().getCloudStatus().then((s) => {
-      setProfileName(s.signedIn ? s.profileName : null);
-      setProfileEmail(s.signedIn ? s.email : null);
-      setProfilePhoto(s.signedIn ? s.profilePhoto : null);
-    }).catch(() => {});
+    const refreshProfile = () => {
+      getDatabase().getCloudStatus().then((s) => {
+        setProfileName(s.signedIn ? s.profileName : null);
+        setProfileEmail(s.signedIn ? s.email : null);
+        setProfilePhoto(s.signedIn ? s.profilePhoto : null);
+      }).catch(() => {});
+    };
+    refreshProfile();
+    // Instant sidebar update after Settings sign-in/disconnect (no route change).
+    window.addEventListener('moneyflows:cloud-status', refreshProfile);
+    return () => window.removeEventListener('moneyflows:cloud-status', refreshProfile);
   }, [pathname]);
   useEffect(() => {
     getDatabase().getAccountGroupsWithMembers().then((groups) => {

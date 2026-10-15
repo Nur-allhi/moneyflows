@@ -39,6 +39,11 @@ test.describe('15 cloud sync (mocked Google + Drive)', () => {
       .poll(async () => uploads.length, { timeout: 10000 })
       .toBeGreaterThan(0);
     await expect(page.getByText(/last synced (?!never)/i).first()).toBeVisible({ timeout: 8000 });
+
+    // Header sync button deep-links to Backup with the Google section open.
+    await page.getByRole('button', { name: /^Cloud sync:/ }).first().click();
+    await expect(page.getByRole('heading', { name: 'Backup & Storage' })).toBeVisible({ timeout: 8000 });
+    await expect(page.getByRole('button', { name: 'Sync now', exact: true })).toBeVisible({ timeout: 8000 });
   });
 
   test('unreachable Google with stale sign-in boots local and warns', async ({ page }) => {

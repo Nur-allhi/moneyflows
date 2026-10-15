@@ -23,7 +23,7 @@ function formatSyncTime(at: number, locale: string): string {
 }
 
 /** Google Drive sync block for Settings → Backup & Storage (Phase 19, T-148). */
-export function CloudSyncSection() {
+export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean }) {
   const locale = useSettingsStore((s) => s.settings.locale);
   const [status, setStatus] = useState<CloudStatus | null>(null);
   const [busy, setBusy] = useState(false);
@@ -35,6 +35,8 @@ export function CloudSyncSection() {
   const refresh = useCallback(async () => {
     try {
       setStatus(await getDatabase().getCloudStatus());
+      // Nudge header indicator + sidebar footer to re-read status immediately.
+      window.dispatchEvent(new Event('moneyflows:cloud-status'));
     } catch { /* offline boot path — stays unknown */ }
   }, []);
 
@@ -91,7 +93,7 @@ export function CloudSyncSection() {
   const subtitle = !status ? 'Checking…' : signedIn ? status.email ?? 'Connected' : 'Not connected';
 
   return (
-    <SettingsDisclosure title="Google Drive Sync" subtitle={subtitle} defaultOpen={false}>
+    <SettingsDisclosure title="Google Drive Sync" subtitle={subtitle} defaultOpen={forceOpen}>
       {error && <div className={styles.errorMsg}>{error}</div>}
       {busy && stage && (
         <ProgressBar

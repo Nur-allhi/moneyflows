@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
@@ -59,6 +59,11 @@ export function Header({
   const [clearKey, replayClear] = useReplay();
   const [syncKey, replaySync] = useReplay();
   const syncState = useCloudIndicator();
+  /** Header sync button lands on Backup with the Google section open (T-157). */
+  const openSyncSettings = useCallback(() => {
+    replaySync();
+    navigate('/settings?tab=backup&open=google-drive-sync');
+  }, [replaySync, navigate]);
   const toggleTheme = () => {
     replayTheme();
     useSettingsStore
@@ -242,7 +247,7 @@ export function Header({
           {syncState && (
             <button
               className={`${styles.syncBtnMobile} ${syncKey > 0 ? styles.syncPop : ''}`}
-              onClick={() => { replaySync(); navigate('/settings'); }}
+              onClick={openSyncSettings}
               aria-label={`Cloud sync: ${syncState.title}`}
               title={syncState.title}
             >
@@ -259,7 +264,7 @@ export function Header({
         {syncState && (
           <button
             className={`${styles.syncBtn} ${syncKey > 0 ? styles.syncPop : ''}`}
-            onClick={() => { replaySync(); navigate('/settings'); }}
+            onClick={openSyncSettings}
             aria-label={`Cloud sync: ${syncState.title}`}
             title={syncState.title}
           >

@@ -42,11 +42,15 @@ export function useCloudIndicator(): { dot: SyncDot; title: string } | null {
     const onVisible = () => {
       if (document.visibilityState === 'visible') void refresh();
     };
+    // Instant update after Settings sign-in/sync (no route change there).
+    const onStatus = () => { void refresh(); };
     document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('moneyflows:cloud-status', onStatus);
     return () => {
       alive = false;
       clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('moneyflows:cloud-status', onStatus);
     };
   }, [pathname]);
 
