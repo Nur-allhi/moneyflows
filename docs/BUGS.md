@@ -41,14 +41,14 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ## BUG-11: Primary Member uses native select (design mismatch); effect is invisible
 
-- **Status:** open
+- **Status:** fixed
 - **Severity:** low
 - **Found:** 2026-10-16 (during: settings refresh, user report "dropdown not matching + function not working")
 - **Location:** `src/presentation/components/settings/sections/MoneyRegionFields.tsx:47` (native `<select>`)
 - **Description:** The Primary Member dropdown is a browser-native select while every other picker in the app uses the modal-picker pattern (DESIGN_IDENTITY §9 deprecates native selects) — popup styling/behavior doesn't match. Separately, setting it changes nothing visible: it only attributes new transactions' memberId (`transactionForm/useSubmit.ts:52`), so users can't tell it worked.
 - **Root Cause:** (design) native select never migrated when T-155 established the picker pattern; (perception) no helper copy and no visible confirmation of what Primary Member does.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:** —
+- **Fix Approach:** user-confirmed modal picker — NEW `MemberPicker` (trigger + overlay + list, own tokens-only CSS, reduced-motion guard) in `MoneyRegionFields`, plus "New transactions belong to this member." helper.
+- **Resolved:** 2026-10-16 — on `feature/setup-settings-refresh`; verified live (open → pick Namira → Save → id persisted + trigger label updates; reset to null after); CHANGELOG entry deferred to `dev` merge.
 
 ---
 

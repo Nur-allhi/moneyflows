@@ -1,4 +1,4 @@
-import { useMemberStore } from '../../../stores/useMemberStore';
+import { MemberPicker } from './MemberPicker';
 import type { Cx } from './cx';
 
 interface MoneyRegionFieldsProps {
@@ -21,9 +21,6 @@ export function MoneyRegionFields({
   primaryMemberId,
   onPrimaryMemberId,
 }: MoneyRegionFieldsProps) {
-  const members = useMemberStore((s) => s.members);
-  const internalMembers = members.filter((m) => !m.isExternal);
-
   return (
     <>
       <div className={cx.fieldGroup}>
@@ -47,16 +44,8 @@ export function MoneyRegionFields({
       </div>
       <div className={cx.fieldGroup}>
         <label className={cx.fieldLabel}>Primary Member</label>
-        <select
-          className={cx.selectField}
-          value={primaryMemberId}
-          onChange={(e) => onPrimaryMemberId(e.target.value)}
-        >
-          <option value="">-- Auto-detect --</option>
-          {internalMembers.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
-          ))}
-        </select>
+        <MemberPicker value={primaryMemberId} onChange={onPrimaryMemberId} />
+        <span className={cx.hint}>New transactions belong to this member.</span>
       </div>
     </>
   );

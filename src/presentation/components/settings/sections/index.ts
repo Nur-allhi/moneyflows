@@ -13,3 +13,4 @@ export { AppearanceCard } from './AppearanceCard';
 export { DashboardCard } from './DashboardCard';
 export { BackupCard } from './BackupCard';
 export { AboutCard } from './AboutCard';
+export { MemberPicker } from './MemberPicker';
