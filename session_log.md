@@ -1581,7 +1581,20 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - senior-backend (service/port), senior-frontend (recovery UI + e2e)
 
 ### Status
-- Committed on branch, unpushed. Next: push → user reloads normal Chrome → confirms wizard/sign-in → confirm merge to `dev`.
+- Committed on branch, unpushed. Next: push → user reloads normal Chrome → reports → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-12 storage-hang timeout, on feature/setup-settings-refresh)
+
+### Changes
+- User exhausted all 4 profile steps (single tab, hard refresh, SW unregistered, extensions off); other browsers + incognito fine → last suspect is origin storage APIs hanging with no error (the only boot path without any timeout)
+- Fix: 12s `withStorageTimeout` (exported for reuse) around adapter init + main read + snapshot recovery + recovery slot-list load; hung origin now fails fast with "site data may be damaged / use Start Fresh" into the engine-free wipe path instead of the 15s watchdog dead loop
+- Gates: typecheck PASS, scoped lint clean, unit 92/92 (11 files), `16-recovery` + `13-wizard` e2e green
+
+### Skill(s) Used
+- senior-backend
+
+### Status
+- Committed on branch, unpushed. Next: push → user hard-reloads normal Chrome (picks up fix) → Start Fresh if recovery shows → sign in → confirm merge to `dev`.
 
 ## Session 2026-10-16 (BUG-12 dead-end loop fix, on feature/setup-settings-refresh)
 
