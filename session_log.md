@@ -1552,3 +1552,19 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push; USER MUST RESTART `npm run dev` (picks up `.env.local` key) → header cloud button + Settings sign-in appear; then verify → confirm merge to `dev`.
+
+## Session 2026-10-16 (sign-out-erase for account switch, on feature/setup-settings-refresh)
+
+### Changes
+- User request: after Google sign-in, Backup & Storage should offer Sync Now + Sign out; sign-out clears local synced data so another account can sign in. (Sync Now already existed — user never saw it: still on ID-less :3000 build. Disconnect renamed to Sign out.)
+- User-confirmed: erase-device semantics + sync-first guard (Q2 unanswered → safe default: final sync, warned second-confirm on failure, never silent destroy)
+- `CloudSync.ts`: NEW `clearLastSyncMeta()` (memory + IDB fingerprint) so a wiped device never poses as previously-synced under T-152 rules
+- `CloudSyncSection.tsx`: `handleDisconnect` → `handleSignOut` — confirm → best-effort final `syncNow()` (failure → "Unsynced changes will be lost. Sign out anyway?" second confirm) → `googleAuth.signOut()` (revoke + auth IDB) → `resetStorage()` (DB + snapshots) → `clearLastSyncMeta()` → `setupComplete:false` → reload to wizard. Drive backup untouched. Note copy updated.
+- e2e `15-cloud-sync`: NEW sign-out test (mocked GIS/Drive: sign in → Sign out → setupComplete false → /setup Welcome → 0 members); fixed S-2 fallout (Backup heading → disclosure text). Debugging notes: closed trays stay in DOM (snapshot shows hidden content — not a bug); fresh boot holds 1–2 empty-DB snapshots (harmless ring, asserted around it); had to kill unknown :3000 squatter for CI fresh-ID server
+- Gates: typecheck PASS, scoped lint clean, e2e cloud-sync 4/4 green (incl. pre-existing 2)
+
+### Skill(s) Used
+- senior-backend (CloudSync meta), senior-frontend (section + e2e)
+
+### Status
+- Committed on branch, unpushed. Next: push → user restarts dev → verifies sign-in + sign-out flow → confirm merge to `dev` (CHANGELOG entries ride with merge).
