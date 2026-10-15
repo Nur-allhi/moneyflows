@@ -37,7 +37,8 @@ Google Identity Services (gsi/client script, no npm dep)
   → Settings → Backup    sign-in row, status (email, last sync), Sync now, disconnect
 ```
 
-- **Scope (minimal):** `https://www.googleapis.com/auth/drive.appdata` only.
+- **Scope (minimal):** `drive.appdata` + `openid email` (email scope only to display
+  the signed-in account; both documented in Settings empty-state).
 - **Files in Drive:** `moneyflows.db` + `moneyflows.db.sha256` inside `appDataFolder`
   (hidden from the user's Drive UI, per-user automatic — the Google account *is*
   the database container; zero provisioning).
