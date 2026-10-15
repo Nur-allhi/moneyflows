@@ -1622,3 +1622,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push → user hard-reloads (Ctrl+Shift+R) normal Chrome → Start Fresh → wizard → sign in → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-12 resolved by reboot, on feature/setup-settings-refresh)
+
+### Changes
+- User confirmed: hosted stable ALSO fails in the same single Chrome profile (works in other profiles) → exonerated dev server, all recent code, and origin site data (different origin + released code). Suspects narrowed to profile-global (extensions/proxy/SecureDNS/GPU/WASM)
+- User rebooted the computer: hosted + dev apps both load normally → BUG-12 closed as OS/machine-level (stale loopback sockets / zombie vite+Chrome processes from repeated :3000 kills / hung profile network service). No data lost. Lesson logged: after 2–3 kill/restart cycles, reboot before blaming the app
+- Cleaned BUG-12 duplicate Status/Resolved fields from the triage appends (single fields per template)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, pushed. Next: user verifies data + sign-in live → confirm merge to `dev` (CHANGELOG Added/Fixed ride with merge, no version bump per VERSIONING).
