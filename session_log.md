@@ -1491,3 +1491,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed, unpushed. Next: push + reply (pull + rebuild reminder for stale-dist suspicion).
+
+## Session 2026-10-16 (setup wizard + settings refresh S-1, on feature/setup-settings-refresh)
+
+### Changes
+- User request: setup wizard + Settings layout improvement — organized/stacked first-run, categorized card-based Settings, all collapsed by default. Confirmed: 3-step stacked wizard + unify Page+Modal. Branch `feature/setup-settings-refresh` off dev, pushed with -u
+- S-1 (no visual change): NEW `components/settings/sections/` kit — `useBackupState` hook (snapshots/health/folder/restore/import logic unified), `MoneyRegionFields`, `LimitsFields`, `RestorePoints`, `FolderBackup`, `EngineHealth`, `ImportExportRow`, `AboutApp` (owns install-prompt + whats-new state), `cx` CSS-module passthrough (keeps Modal vs Page visuals pixel-identical), barrel `index.ts`
+- `SettingsModal.tsx` 463→~160 LOC rewired to kit (same titles/subtitles/badges/defaultOpen); `SettingsPage.tsx` General/Backup/About bodies rewired (Dashboard/Activity/Diagnostics untouched for S-2)
+- Noted: header gear navigates to /settings — `settings` modal registry entry has no open() callers (unreachable UI, still compiles); S-3 call pending
+- Gates: typecheck PASS, eslint --max-warnings 0 PASS (touched), build PASS, Playwright live :3000 General/Backup/About tabs verified identical, detect_changes touched exactly the 2 hosts (backup/restore flows, as intended); stale GitNexus index (231 behind) noted, manual blast radius LOW
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- S-1 complete on branch, unpushed. Next: S-2 5-card collapsed IA on SettingsPage.
