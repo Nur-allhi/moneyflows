@@ -104,6 +104,16 @@ npm run build     # type-check + production build
 npm run preview   # preview the production build
 ```
 
+### Google Drive sync (optional)
+
+```bash
+# .env.local (gitignored) — one app-owned OAuth client; users just tap Sign in
+GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
+```
+
+Without it the app runs fully local and Settings shows sync as not set up.
+See `docs/plans/ONLINE_SYNC_PLAN.md` §4 for the one-time Console setup.
+
 ### Quality gates
 
 ```bash

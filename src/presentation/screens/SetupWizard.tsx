@@ -7,6 +7,8 @@ import type { AccountType } from '../../core/domain/Account';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
+import { googleAuth } from '../../infrastructure/database/GoogleAuth';
+import { GOOGLE_CLIENT_ID, isGoogleSyncConfigured } from '../constants/googleClient';
 import { useReplay } from '../hooks/useReplay';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { ACCOUNT_TYPE_LABEL, ACCOUNT_TYPE_OPTIONS } from '../constants/labels';
@@ -25,6 +27,10 @@ export function SetupWizard() {
   const [accountDraft, setAccountDraft] = useState<{ memberIdx: number; name: string; type: AccountType; balance: string }>({ memberIdx: 0, name: '', type: 'bank', balance: '0' });
   const [accountsAdded, setAccountsAdded] = useState<{ name: string; type: AccountType; memberName: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [signInKey, replaySignIn] = useReplay();
+  const [guestKey, replayGuest] = useReplay();
   const [skipKey, replaySkip] = useReplay();
   const [startKey, replayStart] = useReplay();
   const [addMemberKey, replayAddMember] = useReplay();
@@ -46,6 +52,30 @@ export function SetupWizard() {
 
   const handleAddMemberRow = () => setMemberNames((prev) => [...prev, '']);
   const handleMemberChange = (idx: number, v: string) => setMemberNames((prev) => prev.map((n, i) => (i === idx ? v : n)));
+
+  /**
+   * Entry gate (T-153): sign in → shared reconcile. A downloaded cloud backup
+   * skips the wizard (data already present); anything else continues normally.
+   */
+  const handleSignIn = async () => {
+    setAuthBusy(true);
+    setAuthError(null);
+    try {
+      await googleAuth.signIn(GOOGLE_CLIENT_ID);
+      const result = await getDatabase().reconcileAfterSignIn();
+      if (result === 'downloaded') {
+        await fetchMembers();
+        await fetchAccounts();
+        finish();
+        return;
+      }
+      setStep(1);
+    } catch {
+      setAuthError('Sign-in failed — check your connection, or continue as guest.');
+    } finally {
+      setAuthBusy(false);
+    }
+  };
 
   const handleContinueMembers = async () => {
     setError(null);
@@ -122,7 +152,15 @@ export function SetupWizard() {
                 <span className={styles.illusCard}>📒 Ledger</span>
                 <span className={styles.illusCard}>🔒 Safe</span>
               </div>
-              <button className={`${styles.primary} ${startKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayStart(); setStep(1); }}><span className="anim-target" key={startKey}>Get Started</span></button>
+              {isGoogleSyncConfigured() ? (
+                <>
+                  <button className={`${styles.primary} ${signInKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySignIn(); void handleSignIn(); }} disabled={authBusy}><span className="anim-target" key={signInKey}>{authBusy ? 'Opening Google…' : 'Sign in with Google'}</span></button>
+                  <button className={`${styles.ghost} ${guestKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayGuest(); setStep(1); }} disabled={authBusy}><span className="anim-target" key={guestKey}>Continue as guest</span></button>
+                  {authError && <div className={styles.error}>{authError}</div>}
+                </>
+              ) : (
+                <button className={`${styles.primary} ${startKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayStart(); setStep(1); }}><span className="anim-target" key={startKey}>Get Started</span></button>
+              )}
             </div>
           )}
 

@@ -1324,3 +1324,64 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.16.1 live on master + dev. Next: user call.
+
+## Session 2026-10-15 (Phase 19 online sync — plan + T-145/T-146)
+
+### Changes
+- User-approved Path 1 (Google login + Drive appDataFolder). Wrote `docs/plans/ONLINE_SYNC_PLAN.md` (arch, 4 merge-blocking guards, console setup, release) + raised Phase 19 tickets T-145..T-151 in `docs/TICKETS.md`; committed `73df24d` on dev
+- Created branch `feature/online-sync-drive` off dev, pushed with `-u`
+- T-145 (`bc4f61e`): `GoogleAuth.ts` — memoized GIS loader (no npm dep), memory-only token, IDB email+expiry, silent refresh w/ 60s skew, signOut revokes; 7/7 vitest green
+- T-146 (`42ca7a5`): `CloudSync.ts` — upsert `moneyflows.db` + `.sha256` sidecar, metadata-only `remoteHash()`, hash-verified `download()`; never throws; 9/9 vitest green
+- Gates on both: typecheck PASS, scoped eslint `--max-warnings 0` clean (full-repo lint still has pre-existing `LedgerSection.tsx:82` warning)
+
+### Skill(s) Used
+- senior-frontend (T-145), senior-backend (T-146)
+
+### Status
+- T-145/T-146 complete on branch (unpushed). Next: T-147 wiring (`impact` on `flush` first) → T-148/149/150 UI → T-151 verification → user-confirmed merge to dev.
+
+## Session 2026-10-15 (Phase 19 complete T-147..T-151)
+
+### Changes
+- T-147 (`6c8200b`): `_maybeCloudSync` fire-and-forget in `flush()` (hidden-tab force), `_cloudBootPull` under 8s timeout, pure `decideSyncAction` (6/6 matrix tests), `getCloudStatus()`; `impact(flush)` = CRITICAL as expected (central durability point) — change strictly additive, signed-out path is cooldown + IDB-miss
+- T-148 (`df1a486`): `CloudSyncSection` in Settings → Backup (Connect/status/Sync now/Disconnect + console setup copy), `CloudStatus` + `syncNow()` on `IDatabaseService` port, `cloudClientId` in AppSettings (live status, no dual-write)
+- T-149 (`9e66c68`): `checkRemoteUpdate`/`applyRemoteUpdate` + `CloudUpdatePrompt` in AppLayout (visible-tab cooldown poll, refocus check, snooze, reload-on-apply)
+- T-150 (`7848d22`): `resolveConflict(mine/theirs)` + conflict dialog (required choice, remote kept as restore point either way); repaired two edit slips (dropped newline, clobbered method header) caught by read-back
+- T-151 (`df42280` + `dd40c49`): e2e `15-cloud-sync` 2/2 green (mocked GIS/Drive: connect→upload + offline-boot→warn), SECURITY/TAD/CHANGELOG docs, no version bump (release-time per plan)
+- Gates: typecheck PASS, full `lint --max-warnings 0` PASS, build PASS, unit 70/70 (18 e2e-under-vitest import failures are pre-existing), `detect_changes` LOW on final diff
+
+### Skill(s) Used
+- senior-backend (T-146/147), senior-frontend (T-145/148/149/150), code-reviewer (T-151)
+
+### Status
+- Phase 19 complete on `feature/online-sync-drive`, pushed. Next: user reviews → confirm merge to `dev`; live test needs user's OAuth Client ID (plan §4); version bump at release (MINOR per §2).
+
+## Session 2026-10-15 (Sign in with Google — no more Client ID paste)
+
+### Changes
+- User feedback: per-user Client ID paste is inconvenient → switched to one app-owned OAuth client baked in at build time (`GOOGLE_CLIENT_ID` real-env/`.env.local` → `__GOOGLE_CLIENT_ID__` → `constants/googleClient.ts`, mirrors `__APP_VERSION__` pattern; `.env*` already gitignored)
+- `CloudSyncSection` simplified: explainer + **Sign in with Google** button (unconfigured builds show "not set up", stay fully local); dropped `cloudClientId` from AppSettings (branch-only field, never released)
+- `playwright.config` webServer passes a dummy ID (GIS fully stubbed in e2e); plan §2/§4 + README updated (publisher one-time setup, zero user setup)
+- Debugging saga: e2e kept failing on a stale vite server squatting :3000 (pre-change code + `reuseExistingServer` kept reusing it); `netstat -p TCP` missed the IPv6 listener — `netstat -ano` found PID 10672, killed it; verified env flow with a temp config probe (removed after); `CI=1` forces a fresh server
+- Gates: typecheck PASS, scoped lint clean, build PASS, e2e `15-cloud-sync` 2/2 green
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- On `feature/online-sync-drive`, unpushed. Next: commit + push; user creates ONE OAuth client (plan §4) into `.env.local`, runs `npm run dev`, taps Sign in with Google for the live test.
+
+## Session 2026-10-15 (T-152/T-153 deterministic sync + wizard gate)
+
+### Changes
+- User directive: choice only for genuine both-sides data; entry gate Sign in vs Guest (Option A confirmed). Raised T-152/T-153, both built on branch
+- T-152: `reconcileAfterSignIn()` shared by wizard/Settings/boot (`downloaded`/`uploaded`/`idle`/`choice`/`signed-out`), `_isLocalEmpty()` row counts, `effectiveHasLocal` (empty+never-synced auto-pulls; emptied-after-sync stays conflict), `_importVerifiedRemote` extracted and reused in 3 pull sites; db tests 28/28
+- T-153: wizard step 0 gate (Sign in with Google → downloaded skips to dashboard, else step 1; guest unchanged; unconfigured builds keep Get Started; "Welcome" copy kept for e2e), Settings sign-in reconciles (downloaded → reload), conflict buttons reworded to Override cloud / Download cloud data
+- Process fix for me: no more trailing-newline edit anchors (caused 3 same-line corruptions, all caught by read-back); pre-check :3000 with `netstat -ano` before e2e (another stale vite squatter killed)
+- Gates: typecheck PASS, scoped lint clean, build PASS, unit 73/73, e2e 13-wizard + 15-cloud-sync 4/4 green
+
+### Skill(s) Used
+- senior-backend (T-152), senior-frontend (T-153)
+
+### Status
+- Unpushed on branch. Next: commit + push; reply to user's live-test conflict (their wipe case now auto-downloads — retest by clearing site data + sign in).

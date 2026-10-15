@@ -13,6 +13,7 @@ import { logger } from '../../core/logging';
 import type { LogEntry } from '../../core/logging';
 import { ProgressBar } from '../components/ProgressBar';
 import { SettingsDisclosure } from '../components/settings/SettingsDisclosure';
+import { CloudSyncSection } from '../components/settings/CloudSyncSection';
 import disclosureStyles from '../components/settings/SettingsDisclosure.module.css';
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
@@ -578,6 +579,7 @@ export function SettingsPage() {
                   </>
                 )}
               </SettingsDisclosure>
+              <CloudSyncSection />
               <SettingsDisclosure
                 title="Engine Health"
                 subtitle={storageHealth ? (storageHealth.backend === 'opfs' ? 'OPFS fast local file' : 'Browser storage') : 'Checking…'}

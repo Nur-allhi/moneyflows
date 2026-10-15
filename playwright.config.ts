@@ -21,6 +21,8 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
+    // GIS is fully stubbed in e2e — any ID works; real builds use GOOGLE_CLIENT_ID.
+    env: { GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'e2e-test-client-id.apps.googleusercontent.com' },
   },
   projects: [
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
