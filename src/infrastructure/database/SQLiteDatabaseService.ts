@@ -55,6 +55,28 @@ function now(): string {
 /** Engine download budget — a dead dev server must fail fast, not trip the 15s boot watchdog. */
 const WASM_FETCH_TIMEOUT_MS = 10_000;
 
+/** Local-storage budget (BUG-12): origin storage in a damaged profile can hang
+ * forever (no error, just pending) — fail fast so the recovery screen, whose
+ * Start Fresh wipe needs no engine, can actually clear it. */
+const STORAGE_INIT_TIMEOUT_MS = 12_000;
+
+export function withStorageTimeout<T>(work: Promise<T>): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              'Local storage is not responding — site data for this origin may be damaged. Use Start Fresh below to clear it.',
+            ),
+          ),
+        STORAGE_INIT_TIMEOUT_MS,
+      ),
+    ),
+  ]);
+}
+
 /**
  * Fetches the sql.js engine file with a timeout and hands sql.js a blob URL.
  * Without this, a dead/unreachable server leaves the fetch pending forever and
@@ -167,17 +189,21 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const wasmUrl = await fetchWasmUrl('/sql-wasm.wasm');
     this.SQL = await initSqlJs({ locateFile: (file) => (file.endsWith('.wasm') ? wasmUrl : file) });
     progress?.(0.15, 'Starting engine…');
-    const { adapter } = await createStorageAdapter({
-      mainKey: STORAGE_KEY,
-      snapshotPrefix: SNAPSHOT_PREFIX,
-      maxSnapshots: MAX_SNAPSHOTS,
-    });
+    const { adapter } = await withStorageTimeout(
+      createStorageAdapter({
+        mainKey: STORAGE_KEY,
+        snapshotPrefix: SNAPSHOT_PREFIX,
+        maxSnapshots: MAX_SNAPSHOTS,
+      }),
+    );
     this.storage = adapter;
 
-    const saved = await this.storage.readMain().catch((e) => {
-      if (e instanceof StorageCorruptError) return null;
-      throw e;
-    });
+    const saved = await withStorageTimeout(
+      this.storage.readMain().catch((e) => {
+        if (e instanceof StorageCorruptError) return null;
+        throw e;
+      }),
+    );
     progress?.(0.4, 'Loading your data…');
     let loaded = false;
     if (saved) {
@@ -188,7 +214,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
       } catch {
         this.db = null;
       }
-      if (!loaded) await this._recoverFromSnapshots();
+      if (!loaded) await withStorageTimeout(this._recoverFromSnapshots());
     }
     if (!this.db) {
       this.db = new this.SQL.Database();

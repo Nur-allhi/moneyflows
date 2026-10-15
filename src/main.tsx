@@ -7,6 +7,7 @@ import { WhatsNewModal } from './presentation/components/WhatsNewModal';
 import { whatsNewFor } from './presentation/constants/whatsNew';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
+import { withStorageTimeout } from './infrastructure/database/SQLiteDatabaseService';
 import { wipePersistedStorage } from './infrastructure/database/storage';
 import { STORAGE_KEY, SNAPSHOT_PREFIX, MAX_SNAPSHOTS } from './presentation/constants/config';
 import { APP_VERSION } from './presentation/constants/appVersion';
@@ -121,7 +122,7 @@ function Root() {
     let alive = true;
     (async () => {
       try {
-        const snaps = await getDatabase().getSnapshots();
+        const snaps = await withStorageTimeout(getDatabase().getSnapshots());
         if (alive) setSnapList(snaps.map((s) => ({ time: s.time })));
       } catch {
         if (alive) setSnapList([]);
