@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
+import { isGoogleSyncConfigured } from '../constants/googleClient';
 import { CLOUD_SYNC_COOLDOWN_MS } from '../constants/config';
 
 export type SyncDot = 'synced' | 'never' | 'warn';
@@ -8,7 +9,8 @@ export type SyncDot = 'synced' | 'never' | 'warn';
 /**
  * Header sync indicator state (T-157): cheap status poll (IDB read — no
  * export/hash), refreshed on mount, route change, cooldown tick, and tab
- * refocus. Null when signed out (guests see nothing).
+ * refocus. Signed-out guests get the idle entry point (when this build has
+ * a client ID); null only when sync is unconfigured in this build.
  */
 export function useCloudIndicator(): { dot: SyncDot; title: string } | null {
   const [dot, setDot] = useState<SyncDot | null>(null);
@@ -22,7 +24,15 @@ export function useCloudIndicator(): { dot: SyncDot; title: string } | null {
         const s = await getDatabase().getCloudStatus();
         if (!alive) return;
         if (!s.signedIn) {
-          setDot(null);
+          // Guest entry point: idle cloud button → Settings Backup deep link,
+          // where Sign in with Google lives. Hidden when this build has no
+          // client ID (app stays fully local, no dead button).
+          if (!isGoogleSyncConfigured()) {
+            setDot(null);
+            return;
+          }
+          setDot('never');
+          setTitle('Sign in to back up to Google Drive');
           return;
         }
         if (s.conflictPending || s.lastError) {
