@@ -1413,3 +1413,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed `9469978`, unpushed. Next: push + reply.
+
+## Session 2026-10-15 (T-159 session persistence)
+
+### Changes
+- User report: Sync-now re-opened the Google popup. Root cause: (1) token memory-only, wiped on every reload (sign-in itself reloads on download); (2) refresh used `prompt:''` = popup — the silent mechanism is `prompt:'none'`
+- T-159 (`db8a84c`): token persisted in IDB + hydrated across reloads; `getValidToken()` = memory → persisted → silent `none` (never UI, never throws); new `refreshInteractive()` for explicit taps only; Sync-now cache-first with interactive fallback
+- Result spec: active users stay signed in for days across reloads; long-idle (dead Google session) or wiped storage → single re-sign-in
+- Gates: typecheck PASS, scoped lint clean, 10/10 auth tests (hydration with zero GIS calls, prompt assertions, sign-out clears)
+
+### Status
+- Committed, unpushed. Next: push + reply; user retests Sync-now (no popup expected within the hour).
