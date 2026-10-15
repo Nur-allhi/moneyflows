@@ -11,6 +11,7 @@ import { googleAuth } from '../../infrastructure/database/GoogleAuth';
 import { GOOGLE_CLIENT_ID, isGoogleSyncConfigured } from '../constants/googleClient';
 import { useReplay } from '../hooks/useReplay';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { ProgressBar } from '../components/ProgressBar';
 import { ACCOUNT_TYPE_LABEL, ACCOUNT_TYPE_OPTIONS } from '../constants/labels';
 import { ledgerGradient } from '../constants/gradients';
 import styles from './SetupWizard.module.css';
@@ -29,6 +30,8 @@ export function SetupWizard() {
   const [error, setError] = useState<string | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  /** Staged sign-in progress (T-154) so slow networks never look dead. */
+  const [authStage, setAuthStage] = useState<'google' | 'syncing' | null>(null);
   const [signInKey, replaySignIn] = useReplay();
   const [guestKey, replayGuest] = useReplay();
   const [skipKey, replaySkip] = useReplay();
@@ -60,8 +63,10 @@ export function SetupWizard() {
   const handleSignIn = async () => {
     setAuthBusy(true);
     setAuthError(null);
+    setAuthStage('google');
     try {
       await googleAuth.signIn(GOOGLE_CLIENT_ID);
+      setAuthStage('syncing');
       const result = await getDatabase().reconcileAfterSignIn();
       if (result === 'downloaded') {
         await fetchMembers();
@@ -74,6 +79,7 @@ export function SetupWizard() {
       setAuthError('Sign-in failed — check your connection, or continue as guest.');
     } finally {
       setAuthBusy(false);
+      setAuthStage(null);
     }
   };
 
@@ -156,6 +162,13 @@ export function SetupWizard() {
                 <>
                   <button className={`${styles.primary} ${signInKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySignIn(); void handleSignIn(); }} disabled={authBusy}><span className="anim-target" key={signInKey}>{authBusy ? 'Opening Google…' : 'Sign in with Google'}</span></button>
                   <button className={`${styles.ghost} ${guestKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayGuest(); setStep(1); }} disabled={authBusy}><span className="anim-target" key={guestKey}>Continue as guest</span></button>
+                  {authBusy && authStage && (
+                    <ProgressBar
+                      percent={authStage === 'google' ? 35 : 75}
+                      label={authStage === 'google' ? 'Opening Google…' : 'Syncing your data…'}
+                      sublabel="Stay on this screen — finishing up."
+                    />
+                  )}
                   {authError && <div className={styles.error}>{authError}</div>}
                 </>
               ) : (

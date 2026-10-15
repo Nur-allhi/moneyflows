@@ -5,6 +5,7 @@ import { googleAuth } from '../../../infrastructure/database/GoogleAuth';
 import { GOOGLE_CLIENT_ID, isGoogleSyncConfigured } from '../../constants/googleClient';
 import type { CloudStatus } from '../../../core/ports/IDatabaseService';
 import { SettingsDisclosure } from './SettingsDisclosure';
+import { ProgressBar } from '../ProgressBar';
 import styles from './CloudSyncSection.module.css';
 
 const ERROR_COPY: Record<string, string> = {
@@ -26,6 +27,8 @@ export function CloudSyncSection() {
   const locale = useSettingsStore((s) => s.settings.locale);
   const [status, setStatus] = useState<CloudStatus | null>(null);
   const [busy, setBusy] = useState(false);
+  /** Staged progress so a slow sign-in never looks dead: google popup → sync. */
+  const [stage, setStage] = useState<'google' | 'syncing' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const configured = isGoogleSyncConfigured();
 
@@ -40,8 +43,10 @@ export function CloudSyncSection() {
   const handleSignIn = useCallback(async () => {
     setBusy(true);
     setError(null);
+    setStage('google');
     try {
       await googleAuth.signIn(GOOGLE_CLIENT_ID);
+      setStage('syncing');
       const result = await getDatabase().reconcileAfterSignIn();
       if (result === 'downloaded') {
         window.location.reload();
@@ -54,18 +59,21 @@ export function CloudSyncSection() {
         : 'Sign-in failed — check your connection and try again.');
     } finally {
       setBusy(false);
+      setStage(null);
     }
   }, [refresh]);
 
   const handleSyncNow = useCallback(async () => {
     setBusy(true);
     setError(null);
+    setStage('syncing');
     try {
       setStatus(await getDatabase().syncNow());
     } catch {
       setError('Sync failed — will retry automatically.');
     } finally {
       setBusy(false);
+      setStage(null);
     }
   }, []);
 
@@ -85,6 +93,13 @@ export function CloudSyncSection() {
   return (
     <SettingsDisclosure title="Google Drive Sync" subtitle={subtitle} defaultOpen={false}>
       {error && <div className={styles.errorMsg}>{error}</div>}
+      {busy && stage && (
+        <ProgressBar
+          percent={stage === 'google' ? 35 : 75}
+          label={stage === 'google' ? 'Contacting Google…' : 'Syncing your data…'}
+          sublabel="Stay on this screen — finishing up."
+        />
+      )}
       {!configured ? (
         <div className={styles.emptyState}>
           Online sync is not set up in this build yet — the publisher adds a Google Client ID at build time.

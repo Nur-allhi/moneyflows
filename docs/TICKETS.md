@@ -272,7 +272,7 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 
 | Ticket | Title | Skill | Effort | Status |
 |--------|-------|-------|--------|--------|
-| T-154 | Sign-in progress UX (staged status + progress, no dead screen) | `senior-frontend` | S | Open |
+| T-154 | Sign-in progress UX (staged status + progress, no dead screen) | `senior-frontend` | S | **Complete** (google→syncing stages + ProgressBar in Settings + wizard, buttons disabled, stay-on-screen copy) |
 | T-155 | Setup dropdowns → modal picker pattern (account type + member) | `senior-frontend` | M | Open |
 | T-156 | Responsive auto-sync (30s cooldown, every mutation syncs) | `senior-backend` | S | Open |
 | T-157 | Header sync indicator beside bell | `senior-frontend` | M | Open |
