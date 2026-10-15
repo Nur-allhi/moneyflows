@@ -1436,3 +1436,10 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed, unpushed. Next: push + reply with retest steps (user's broken remote should self-heal on next Sync-now).
+
+## Session 2026-10-15 (e2e mock glob gotcha)
+
+### Changes
+- T-160 e2e initially failed with real-app-correct code: probe proved Playwright glob `**/drive/v3/files**` does NOT match file-id URLs carrying `?alt=media` (content fetches escaped to real Google → 401), while regex and `**/drive/v3/files/*` match everything
+- Fix (`f6ad10c`): stateful Drive mocks (created files persist, sidecar hash readable back) + regex route matcher — write-verify now proven end-to-end in e2e, 2/2 green
+- Lesson: when app logic looks right but e2e disagrees, isolate mock-vs-app with a minimal probe before touching product code
