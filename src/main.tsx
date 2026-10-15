@@ -32,6 +32,10 @@ function Root() {
   const [whatsNew, setWhatsNew] = useState<{ version: string; items: string[] } | null>(null);
   const [restoreKey, replayRestore] = useReplay();
   const [freshKey, replayFresh] = useReplay();
+  /** Recovery slot list (BUG-12): newest-first times for exact-slot restore. */
+  const [snapList, setSnapList] = useState<{ time: string }[] | null>(null);
+  const [slotBusy, setSlotBusy] = useState<number | null>(null);
+  const [slotError, setSlotError] = useState<string | null>(null);
 
   const handleFinish = useCallback(() => setShowApp(true), []);
 
@@ -60,11 +64,14 @@ function Root() {
   React.useEffect(() => {
     let cancelled = false;
     // Splash watchdog: never hang forever if a boot step stalls (BUG-7).
+    // Names the stalled stage (BUG-12) so the next diagnosis starts somewhere.
+    let lastStage = 'Starting…';
     const watchdog = window.setTimeout(() => {
-      if (!cancelled) setDbError('Startup timed out. Your data may need recovery.');
+      if (!cancelled) setDbError(`Startup timed out during: ${lastStage}. Your data may need recovery.`);
     }, 15000);
     initDatabase((fraction, label) => {
       if (!cancelled) {
+        lastStage = label;
         setBootPercent(Math.round(fraction * 100));
         setBootStatus(label);
       }
@@ -105,6 +112,22 @@ function Root() {
     };
   }, []);
 
+  // Load the snapshot slot list once the recovery screen shows. The instance
+  // is registered before boot runs, so this works even when init failed.
+  React.useEffect(() => {
+    if (!dbError) return;
+    let alive = true;
+    (async () => {
+      try {
+        const snaps = await getDatabase().getSnapshots();
+        if (alive) setSnapList(snaps.map((s) => ({ time: s.time })));
+      } catch {
+        if (alive) setSnapList([]);
+      }
+    })();
+    return () => { alive = false; };
+  }, [dbError]);
+
   if (dbError) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#111', color: '#ccc', fontFamily: 'system-ui, sans-serif', padding: 24, textAlign: 'center', gap: 12 }}>
@@ -112,8 +135,9 @@ function Root() {
         <h1 style={{ fontSize: 18, fontWeight: 600, color: '#fff', margin: 0 }}>Database Error</h1>
         <p style={{ fontSize: 14, lineHeight: 1.5, maxWidth: 400 }}>{dbError}</p>
         <p style={{ fontSize: 13, color: '#888', lineHeight: 1.5, maxWidth: 420 }}>
-          You can try restoring your latest auto-backup first. If that fails,
-          &ldquo;Start Fresh&rdquo; resets the app; your previous file stays in storage for manual recovery.
+          You can try restoring your latest auto-backup first. If that loads
+          empty or old data, pick an older backup below — the newest entry is
+          not always the best one.
         </p>
         <button
           onClick={async () => {
@@ -131,6 +155,46 @@ function Root() {
         >
           <span className="anim-target" key={restoreKey}>Restore Latest Backup</span>
         </button>
+        {snapList !== null && snapList.length > 0 && (
+          <>
+            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.5, maxWidth: 420, margin: '8px 0 0' }}>
+              Or pick a specific backup:
+            </p>            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 420, width: '100%', maxHeight: 220, overflowY: 'auto' }}>
+              {snapList.map((s, i) => (
+                <button
+                  key={i}
+                  disabled={slotBusy !== null}
+                  onClick={async () => {
+                    setSlotBusy(i);
+                    setSlotError(null);
+                    try {
+                      await getDatabase().restoreSnapshotExact(i);
+                      window.location.reload();
+                    } catch (e) {
+                      setSlotError(e instanceof Error ? e.message : `Backup ${i + 1} failed`);
+                      setSlotBusy(null);
+                    }
+                  }}
+                  style={{ padding: '10px 16px', border: '1px solid #444', borderRadius: 8, background: '#1c1c1c', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}
+                >
+                  {slotBusy === i ? 'Restoring…' : `${i === 0 ? 'Latest auto-backup' : `Auto-backup ${i + 1}`} — ${new Date(s.time).toLocaleString()}`}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {snapList !== null && snapList.length === 0 && (
+          <p style={{ fontSize: 13, color: '#888', lineHeight: 1.5, maxWidth: 420 }}>
+            No older backups could be listed.
+          </p>
+        )}
+        {slotError && (
+          <p style={{ fontSize: 13, color: '#ff6b6b', lineHeight: 1.5, maxWidth: 420 }}>{slotError}</p>
+        )}
+        <p style={{ fontSize: 13, color: '#888', lineHeight: 1.5, maxWidth: 420 }}>
+          &ldquo;Start Fresh&rdquo; resets the app to empty. Only use this when
+          your data is safely backed up elsewhere.
+        </p>
         <button
           onClick={() => { replayFresh(); void getDatabase().resetStorage().then(() => window.location.reload()); }}
           className={freshKey > 0 ? 'anim-pop' : ''}

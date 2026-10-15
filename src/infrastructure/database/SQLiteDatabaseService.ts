@@ -126,6 +126,14 @@ export class SQLiteDatabaseService implements IDatabaseService {
   private cloudConflict = false;
   /** Single pending deferred-retry timer (T-163); cleared on the next attempt. */
   private cloudRetryTimer: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * True while resetStorage() flushes the empty schema — an empty DB must
+   * never enter the snapshot ring (BUG-12: it would become slot 0 and any
+   * later "Restore Latest Backup" would land on an empty database).
+   * Checked synchronously before the first await in _maybeSnapshot, so the
+   * fire-and-forget flush call cannot race it.
+   */
+  private suppressSnapshot = false;
 
   getSqlJsDb(): SqlJsDb | null { return this.db; }
 
@@ -345,6 +353,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   private async _maybeSnapshot(data: Uint8Array): Promise<void> {
+    if (this.suppressSnapshot) return;
     const t = Date.now();
     if (t - this.lastSnapshotTime < SNAPSHOT_COOLDOWN_MS) return;
     this.lastSnapshotTime = t;
@@ -811,8 +820,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   /** Loads the requested snapshot (falling back to older ones). Caller decides on UI refresh. */
-  async restoreSnapshot(index: number): Promise<void> {
-    for (let i = index; i >= 0; i--) {
+  async restoreSnapshot(index: number): Promise<void> {    for (let i = index; i >= 0; i--) {
       try {
         const snap = await this.storage!.readSnapshot(i);
         if (!snap) continue;
@@ -849,6 +857,27 @@ export class SQLiteDatabaseService implements IDatabaseService {
     await this.storage.clearAll();
     this.db = new this.SQL!.Database();
     this.db.run(SCHEMA);
+    this.dirty = true;
+    this.suppressSnapshot = true;
+    try {
+      await this.flush();
+    } finally {
+      this.suppressSnapshot = false;
+    }
+  }
+
+  /**
+   * Restores exactly the requested slot — no fallback. Throws when the slot
+   * is missing or fails verification, so recovery UI can report per-slot.
+   */
+  async restoreSnapshotExact(index: number): Promise<void> {
+    const snap = await this.storage!.readSnapshot(index);
+    if (!snap) throw new Error(`No backup found in slot ${index + 1}`);
+    const hash = await digestHex(snap.data);
+    if (hash !== snap.hash) throw new Error(`Backup ${index + 1} failed verification`);
+    if (!this.SQL) throw new Error('Database engine not ready');
+    this.db = new this.SQL.Database(snap.data);
+    await this._migrate();
     this.dirty = true;
     await this.flush();
   }
