@@ -7,6 +7,8 @@ import { WhatsNewModal } from './presentation/components/WhatsNewModal';
 import { whatsNewFor } from './presentation/constants/whatsNew';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
+import { wipePersistedStorage } from './infrastructure/database/storage';
+import { STORAGE_KEY, SNAPSHOT_PREFIX, MAX_SNAPSHOTS } from './presentation/constants/config';
 import { APP_VERSION } from './presentation/constants/appVersion';
 import { useReplay } from './presentation/hooks/useReplay';
 import { logger } from './core/logging';
@@ -196,7 +198,26 @@ function Root() {
           your data is safely backed up elsewhere.
         </p>
         <button
-          onClick={() => { replayFresh(); void getDatabase().resetStorage().then(() => window.location.reload()); }}
+          onClick={() => {
+            replayFresh();
+            void (async () => {
+              // Engine-free wipe (BUG-12): works even when boot died before the
+              // engine/storage initialized, where resetStorage() silently no-ops.
+              // Reload re-inits everything; a signed-in device re-pulls Drive.
+              try {
+                await wipePersistedStorage({
+                  mainKey: STORAGE_KEY,
+                  snapshotPrefix: SNAPSHOT_PREFIX,
+                  maxSnapshots: MAX_SNAPSHOTS,
+                });
+              } catch (e) {
+                setDbError(e instanceof Error ? e.message : 'Wipe failed');
+                return;
+              }
+              useSettingsStore.getState().updateSettings({ setupComplete: false });
+              window.location.reload();
+            })();
+          }}
           className={freshKey > 0 ? 'anim-pop' : ''}
           style={{ padding: '10px 24px', border: 'none', borderRadius: 8, background: '#6c5ce7', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >

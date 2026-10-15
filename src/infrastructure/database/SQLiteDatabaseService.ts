@@ -52,6 +52,31 @@ function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
 }
 
+/** Engine download budget — a dead dev server must fail fast, not trip the 15s boot watchdog. */
+const WASM_FETCH_TIMEOUT_MS = 10_000;
+
+/**
+ * Fetches the sql.js engine file with a timeout and hands sql.js a blob URL.
+ * Without this, a dead/unreachable server leaves the fetch pending forever and
+ * boot dies at "Starting…" with only the watchdog message (BUG-12).
+ */
+async function fetchWasmUrl(url: string): Promise<string> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), WASM_FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`Engine file unreachable (HTTP ${res.status}) — is the dev server running?`);
+    return URL.createObjectURL(await res.blob());
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') {
+      throw new Error('Engine download timed out — is the dev server running?');
+    }
+    throw e instanceof Error ? e : new Error(String(e));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function rowToMember(r: Record<string, unknown>): Member {
   return new Member(r.id as string, r.name as string, r.short_name as string, r.email as string,
     r.phone as string, r.avatar_url as string, (r.is_external as number) === 1,
@@ -139,7 +164,8 @@ export class SQLiteDatabaseService implements IDatabaseService {
 
   async init(progress?: BootProgress): Promise<void> {
     progress?.(0.05, 'Starting…');
-    this.SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' });
+    const wasmUrl = await fetchWasmUrl('/sql-wasm.wasm');
+    this.SQL = await initSqlJs({ locateFile: (file) => (file.endsWith('.wasm') ? wasmUrl : file) });
     progress?.(0.15, 'Starting engine…');
     const { adapter } = await createStorageAdapter({
       mainKey: STORAGE_KEY,
