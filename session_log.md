@@ -1324,3 +1324,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - v1.16.1 live on master + dev. Next: user call.
+
+## Session 2026-10-15 (Phase 19 online sync — plan + T-145/T-146)
+
+### Changes
+- User-approved Path 1 (Google login + Drive appDataFolder). Wrote `docs/plans/ONLINE_SYNC_PLAN.md` (arch, 4 merge-blocking guards, console setup, release) + raised Phase 19 tickets T-145..T-151 in `docs/TICKETS.md`; committed `73df24d` on dev
+- Created branch `feature/online-sync-drive` off dev, pushed with `-u`
+- T-145 (`bc4f61e`): `GoogleAuth.ts` — memoized GIS loader (no npm dep), memory-only token, IDB email+expiry, silent refresh w/ 60s skew, signOut revokes; 7/7 vitest green
+- T-146 (`42ca7a5`): `CloudSync.ts` — upsert `moneyflows.db` + `.sha256` sidecar, metadata-only `remoteHash()`, hash-verified `download()`; never throws; 9/9 vitest green
+- Gates on both: typecheck PASS, scoped eslint `--max-warnings 0` clean (full-repo lint still has pre-existing `LedgerSection.tsx:82` warning)
+
+### Skill(s) Used
+- senior-frontend (T-145), senior-backend (T-146)
+
+### Status
+- T-145/T-146 complete on branch (unpushed). Next: T-147 wiring (`impact` on `flush` first) → T-148/149/150 UI → T-151 verification → user-confirmed merge to dev.
