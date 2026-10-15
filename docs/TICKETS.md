@@ -159,13 +159,15 @@ Mobile-save → desktop-boot sees it. The 4 guards in plan §3 block merge if vi
 
 | Ticket | Title | Skill | Effort | Status |
 |--------|-------|-------|--------|--------|
-| T-145 | `GoogleAuth.ts` — GIS loader, token client, cache/refresh, sign-in/out | `senior-frontend` | M | Open |
-| T-146 | `CloudSync.ts` — appDataFolder upload/download/hash/conflict-copy I/O | `senior-backend` | M | Open |
-| T-147 | Wire `_maybeCloudSync` into `flush()` + `pagehide` + boot-pull rule | `senior-backend` | M | Open |
-| T-148 | Settings → Backup: sign-in row, status, Sync now, disconnect | `senior-frontend` | M | Open |
-| T-149 | Open-tab remote check + "New data available" prompt | `senior-frontend` | S | Open |
-| T-150 | Conflict-copy UX (snapshot slot + keep-mine/keep-remote choice) | `senior-frontend` | M | Open |
-| T-151 | Verification: gates, E2E, offline/corrupt-remote tests, docs | `code-reviewer` | M | Open |
+| T-145 | `GoogleAuth.ts` — GIS loader, token client, cache/refresh, sign-in/out | `senior-frontend` | M | **Complete** (memory-only token, IDB email+expiry, silent refresh w/ 60s skew, 7/7 tests) |
+| T-146 | `CloudSync.ts` — appDataFolder upload/download/hash/conflict-copy I/O | `senior-backend` | M | **Complete** (upsert DB+sidecar, metadata-only hash, verified download, 9/9 tests, never throws) |
+| T-147 | Wire `_maybeCloudSync` into `flush()` + `pagehide` + boot-pull rule | `senior-backend` | M | **Complete** (fire-and-forget sink, hidden-tab force, 8s boot-pull, `decideSyncAction` matrix 6/6, `getCloudStatus()`, build green) |
+| T-148 | Settings → Backup: sign-in row, status, Sync now, disconnect | `senior-frontend` | M | **Complete** (`CloudSyncSection` + `CloudStatus` on port + `syncNow()`; follow-up: app-owned Client ID baked in at build time — pure Sign in with Google, no paste) |
+| T-149 | Open-tab remote check + "New data available" prompt | `senior-frontend` | S | **Complete** (`checkRemoteUpdate`/`applyRemoteUpdate` on port, `CloudUpdatePrompt` in AppLayout, visible-tab poll + refocus check) |
+| T-150 | Conflict-copy UX (snapshot slot + keep-mine/keep-remote choice) | `senior-frontend` | M | **Complete** (`resolveConflict` on port+service, conflict dialog in `CloudUpdatePrompt`, remote stashed as restore point either way) |
+| T-151 | Verification: gates, E2E, offline/corrupt-remote tests, docs | `code-reviewer` | M | **Complete** (typecheck+lint+build green, unit 70/70, e2e `15-cloud-sync` 2/2 mocked, SECURITY/TAD/CHANGELOG updated, no bump per plan) |
+| T-152 | `reconcileAfterSignIn` + empty-detect + auto-pull (deterministic sync) | `senior-backend` | M | **Complete** (shared reconcile, `_isLocalEmpty`, `effectiveHasLocal`, `_importVerifiedRemote` refactor, 28/28 db tests) |
+| T-153 | Wizard entry gate (Sign in vs Guest) + conflict dialog reword | `senior-frontend` | M | **Complete** (step-0 gate, downloaded→dashboard, Settings reconcile+reload, Override/Download copy, e2e 13+15 green) |
 
 ### T-145 - GoogleAuth.ts — GIS loader, token client, cache/refresh, sign-in/out
 **Skill:** `senior-frontend`
@@ -243,8 +245,205 @@ Mobile-save → desktop-boot sees it. The 4 guards in plan §3 block merge if vi
 3. Docs: `SECURITY.md` (token storage, minimal scope, revocation), `TAD.md §2.2` (cloud sink), `CHANGELOG.md [Unreleased]` Added entry; paste `VERSIONING.md §4` checklist (bump happens at release, not here).
 **Acceptance:** all gates green, E2E pass, docs updated, phase ready for user-confirmed merge to `dev`.
 
-## Following Phase
+### T-152 - reconcileAfterSignIn + empty-detect + auto-pull (deterministic sync)
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts`, `src/core/ports/IDatabaseService.ts` (`CloudReconcile` type), `src/infrastructure/database/__tests__/` decision tests
+**Content:**
+1. `_isLocalEmpty()`: zero rows across members/accounts/transactions (COUNT(*), reconcile-time only — never on the hot path).
+2. `reconcileAfterSignIn(): Promise<'downloaded'|'uploaded'|'idle'|'choice'|'signed-out'>` — single shared entry used by wizard gate, Settings sign-in, and boot: token null → `signed-out`; empty local + remote → verified download+import → `downloaded`; local data + no remote → upload → `uploaded`; same hash → `idle` (adopt meta); both differ → stash + flag → `choice`.
+3. `_maybeCloudSync`: treat local as fresh (`hasLocal:false`) when empty AND never synced — fresh-device auto-pull, no dialog. Previously-synced-but-emptied stays `conflict` (deliberate-wipe ambiguity).
+4. Unit-test the new branches via `decideSyncAction` matrix + reconcile decision coverage where sql.js-free; gates green.
+**Acceptance:** wipe-then-sign-in downloads silently; guest-with-data signs in and uploads silently; genuine both-sides case still flags `choice`; no auto-overwrite anywhere.
 
+### T-153 - Wizard entry gate (Sign in vs Guest) + conflict dialog reword
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/screens/SetupWizard.tsx`, `src/presentation/components/settings/CloudSyncSection.tsx` (call reconcile post-sign-in), `src/presentation/components/CloudUpdatePrompt.tsx` (button copy), `e2e/flows/13-wizard.spec.ts` (keep green)**Content:**
+1. Wizard step 0 (configured builds only): **Sign in with Google** + **Continue as guest** replace Get Started. Sign-in → `reconcileAfterSignIn()` → `downloaded` skips to dashboard (data present), else continue to step 1. Guest → step 1 unchanged. Keep "Welcome" copy so `13-wizard` stays green; unconfigured builds keep the current step 0.
+2. Settings sign-in calls the same reconcile: `downloaded` → reload (restore-flow pattern); `choice` → status message (dialog follows via existing poll).
+3. Conflict dialog buttons reworded to user language: **Override cloud** (keep mine) / **Download cloud data** (use theirs).
+4. `DESIGN_IDENTITY.md §17` checklist for touched UI; typecheck + scoped lint + build + e2e `13-wizard` + `15-cloud-sync` green.
+**Acceptance:** fresh user picks a path in one tap; no dialog except genuine both-sides case; wizard e2e untouched-green.
+
+## Phase 20 — Sync UX Polish (user-approved improvements) — In Progress
+
+Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passes `DESIGN_IDENTITY.md §17`.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-154 | Sign-in progress UX (staged status + progress, no dead screen) | `senior-frontend` | S | **Complete** (google→syncing stages + ProgressBar in Settings + wizard, buttons disabled, stay-on-screen copy) |
+| T-155 | Setup dropdowns → modal picker pattern (account type + member) | `senior-frontend` | M | **Complete** (trigger + overlay pickers per §9, token-only CSS, zero native selects left, e2e 13 green) |
+| T-156 | Responsive auto-sync (30s cooldown, every mutation syncs) | `senior-backend` | S | **Complete** (`CLOUD_SYNC_COOLDOWN_MS` 120s→30s; flush path unchanged — hash-skipped, fire-and-forget, hidden-tab force) |
+| T-157 | Header sync indicator beside bell | `senior-frontend` | M | **Complete** (`useCloudIndicator` cheap poll, desktop + mobile instances, guests see nothing, tap → Settings) |
+| T-158 | Sidebar user profile (photo/name/email, profile scope) | `senior-frontend` | M | **Complete** (profile scope, persisted name/photo, footer photo+name+email, Family footer for guests, build green) |
+| T-159 | Day-long sessions: persisted token + silent refresh, popup only on explicit taps | `senior-backend` | M | **Complete** (root cause: refresh used `prompt:''`; silent is `prompt:'none'`; token persisted+hydrated, interactive split, 10/10 tests) |
+| T-160 | Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics | `senior-backend` | M | **Complete** (newest-first reads, upsert dedupes, stale-sidecar/orphan/adopt heal, remote-corrupt taxonomy + replace-cloud escape, diagnostics row, 38/38 db tests) |
+| T-161 | Splash boot progress + skip redundant cloud check | `senior-frontend` | M | **Complete** (BootProgress threading, staged splash bar, 60s boot-pull skip, e2e green) |
+| T-162 | Upload write-verify + retry (no torn pairs) | `senior-backend` | S | **Complete** (sidecar read-back + one retry, stateful e2e mocks proving verify round trip) |
+| T-163 | Deferred cloud retry when cooldown skips a flush | `senior-backend` | S | **Complete** (single one-shot timer at window expiry, re-flushes through guarded path, pure helper 4/4 tests) |
+| T-164 | Wizard/Settings sign-in button follows sync stage | `senior-frontend` | S | **Complete** (busy copy advances google→syncing in step with the bar, both flows) |
+| T-165 | ProgressBar freeze fix (updates after first paint) | `senior-frontend` | S | **Complete** (visibility ref; every percent applies once visible; 0.6s glide already in CSS) |
+| T-166 | Animated water-flow fill on all progress bars | `senior-frontend` | S | **Complete** (diagonal flow overlay on gradient, leading shimmer kept, reduced-motion guard, GPU-cheap) |
+| T-167 | Sync progress completes (100% beat, no abrupt vanish) | `senior-frontend` | S | **Complete** (done stage 100% + Synced ✓ held 1.2s on success; failures still clear to error text) |
+| T-168 | Splash bar shows only on slow boots (600ms gate) | `senior-frontend` | S | **Complete** (bar gated on boot exceeding 600ms; throttled probe shows stages; fast boots clean) |
+
+### T-168 - Splash bar shows only on slow boots (600ms gate)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/SplashScreen.tsx`
+**Content:**
+1. Finding (probed): the bar always rendered — but local boots finish in ~200ms, so it flashed past perception; the user never saw it. A loader that flashes on fast boots is a distraction, not information.
+2. Gate the narration on boot actually taking time: show the progress block only while `!ready` after 600ms. Slow boots (throttled probe: bar + stage text verified) narrate every stage; fast boots stay clean.
+3. Typing animation, fade flow, and watchdog untouched. Full gates green.
+**Acceptance:** fast boot = no bar flash; 8x-throttled boot = bar with stage labels visible.
+
+### T-167 - Sync progress completes (100% beat, no abrupt vanish)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/settings/CloudSyncSection.tsx`
+**Content:**
+1. Root cause: stages topped out at 75% (`google` 35 / `syncing` 75) and the bar unmounted the moment work finished — stuck-then-vanished.
+2. Add a `done` stage (100%, `Synced ✓`): on Sync-now success hold it ~1.2s before releasing buttons; same after sign-in reconcile (non-reload path). Failure path keeps current behavior (clear + error line).
+3. Full gates green.
+**Acceptance:** every successful sync visibly sweeps to full before the bar leaves; failures still surface text immediately.
+
+### T-160 - Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/CloudSync.ts`, `__tests__/CloudSync.test.ts`, `src/infrastructure/database/SQLiteDatabaseService.ts`, `src/core/ports/IDatabaseService.ts`, `src/presentation/components/settings/CloudSyncSection.tsx`, `e2e/flows/15-cloud-sync.spec.ts`
+**Content:**
+1. Root cause of live "download failed" loop: sidecar readable but DB bytes mismatch — classic interrupted upload (tab closed/suspended between the DB and sidecar writes). Retries can never succeed.
+2. `CloudSync`: `listFiles()` newest-first (`orderBy=modifiedTime desc`); all reads use newest; `upsert` deletes older same-name dupes after success. New primitives: `downloadBytes()`, `writeHash()`, `deleteFile()` — all never-throw.
+3. Service `_healRemoteAttempt()`: stale sidecar (remote bytes == local hash) → rewrite sidecar → synced; orphan sidecar (no DB file) → clean + treat remote as empty; valid-DB bytes + empty local → adopt + heal sidecar (`recovered`); foreign bytes + local data → `remote-corrupt` (touch nothing).
+4. Taxonomy in status: `not-found`/`unreadable`/`remote-corrupt` with distinct UI copy; `remoteInfo()` diagnostics row (file count, modified time); `overwriteRemote()` explicit user escape hatch for corrupt (warned button).
+5. Tests: newest-wins, dedupe deletes, stale-sidecar heal, orphan cleanup, adopt-valid, corrupt-preserved, taxonomy mapping; e2e dupe-file fixture green; full gates.
+**Acceptance:** interrupted-upload remotes self-heal on next sync; genuine corruption is named, never silently overwritten, and escapable by explicit user choice.
+
+### T-159 - Day-long sessions: persisted token + silent refresh, popup only on explicit taps
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/GoogleAuth.ts`, `__tests__/GoogleAuth.test.ts`, `src/presentation/components/settings/CloudSyncSection.tsx`, `docs/SECURITY.md`
+**Content:**
+1. Root cause: refresh used `prompt: ''` (default = popup). Silent mechanism is `prompt: 'none'` — succeeds without UI while the Google session lives, errors quietly otherwise.
+2. Persist `{token, expiresAtMs}` in the IDB auth record (same-origin, cleared on sign-out); hydrate memory on load.
+3. `getValidToken()`: memory-valid → return; IDB-valid → adopt + return; else silent `prompt:'none'` attempt → persist + return, or null. Never throws, never shows UI. Background callers unchanged.
+4. New `refreshInteractive()` (popup) for explicit taps only; Sync-now handler: cached/silent first, interactive fallback.
+5. Tests: hydration across instances with zero GIS calls, silent uses `prompt:'none'`, expiry-with-dead-session → null, sign-out clears token. Docs: SECURITY token note updated.
+**Acceptance:** active user sees zero popups for days across reloads; long-idle or wiped storage → single re-sign-in.
+
+### T-154 - Sign-in progress UX (staged status + progress, no dead screen)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/settings/CloudSyncSection.tsx`, `src/presentation/screens/SetupWizard.tsx`
+**Content:**
+1. Staged busy copy in both sign-in flows: `Opening Google…` (popup) → `Syncing your data…` (reconcile/upload running) → done/error. Never leave a static label while background work runs.
+2. Show the existing `ProgressBar` (indeterminate) under the button while busy; disable Connect/Sign-in + Sync-now buttons to prevent double taps; keep the user on screen (no navigation until resolve).
+3. Errors keep the staged copy pattern: popup-cancelled vs network vs expired-session each get their plain-language line (reuse `ERROR_COPY`).
+**Acceptance:** throttled-network sign-in visibly progresses through both stages; no dead screen; double-tap safe.
+
+### T-155 - Setup dropdowns → modal picker pattern (account type + member)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/screens/SetupWizard.tsx`, `src/presentation/screens/SetupWizard.module.css`
+**Content:**
+1. Per `DESIGN_IDENTITY.md §9` (native select deprecated), replace both native `<select>` in the wizard money step (account type, member) with trigger buttons opening `pickerOverlay`/`pickerModal` option lists mirroring `transactionForm/extraPickers.tsx` (header + close + option rows + active = primary gradient).
+2. New CSS uses tokens only (`--space-*`, `--color-*`, `--radius-*`); no hex, no literal spacing, no `style={{}}`.
+3. Member list derives from step-1 names (live, not stale); account type rows reuse `ACCOUNT_TYPE_OPTIONS` + remaining `ACCOUNT_TYPES` fallback (preserve current option set exactly).
+4. `DESIGN_IDENTITY.md §17` checklist; e2e `13-wizard` stays green.
+**Acceptance:** wizard dropdowns visually match app pickers; same options, same values saved; no native select remains in the wizard.
+
+### T-156 - Responsive auto-sync (30s cooldown, every mutation syncs)
+**Skill:** `senior-backend`
+**Effort:** S
+**File(s):** `src/presentation/constants/config.ts` (`CLOUD_SYNC_COOLDOWN_MS`), `docs/plans/ONLINE_SYNC_PLAN.md` (cooldown note), unit assertion
+**Content:**
+1. Lower `CLOUD_SYNC_COOLDOWN_MS` `120_000 → 30_000`: every mutation already funnels through `flush()` → `_maybeCloudSync` (hash-skipped when unchanged, fire-and-forget, hidden-tab force) — the only change is responsiveness. No new network shape, no battery concern (unchanged data = zero bytes).
+2. Keep Sync-now as force-bypass; keep snapshot/folder cooldowns untouched.
+3. Assert the constant + idle-skip behavior in the existing CloudSync/service tests if cheap; full gates green.
+**Acceptance:** save → background upload starts within ~30s (or instantly on tab-hide); unchanged flushes upload nothing; quota/battery unchanged.
+
+### T-157 - Header sync indicator beside bell
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/components/Header.tsx`, `Header.module.css`, new `useCloudIndicator` hook or reuse `getCloudStatus()` poll
+**Content:**
+1. New status button directly beside `notifBtn`: states from `getCloudStatus()` — synced (green dot + check), never-synced (subtle gray), error/conflict (warning) — with `title` text; hidden entirely for guests (no sign-in = no change for them).
+2. Poll on mount + route change (cheap IDB read; no export/hash in the poll path), plus refresh after mutations? Minimum: mount + 30s interval aligned with sync cooldown + visibility refocus.
+3. Tap → navigate `/settings` (gear precedent); `aria-label` set; `DESIGN_IDENTITY.md §17` checklist.
+**Acceptance:** signed-in users always see live sync state in the header; guests see zero change; tap lands in Settings.
+
+### T-158 - Sidebar user profile (photo/name/email, profile scope)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/GoogleAuth.ts` (profile scope + name/photo), `src/core/ports/IDatabaseService.ts` (`CloudStatus` extension), `src/App.tsx` (footer props), `src/presentation/components/Sidebar.tsx` (avatar img), `docs/SECURITY.md` (scope note)
+**Content:**
+1. Add `profile` to GIS scopes (name + picture need it; `drive.appdata` already requires verification for public rollout, so no new verification class). Persist `{name, photo}` alongside email in the IDB auth record (never the token); expose via `getCloudStatus()`.
+2. Sidebar footer when signed in: Google photo avatar + display name + email (fallback: initial-letter avatar + email when photo/name absent). Signed out: current Family footer unchanged.
+3. `App.tsx` feeds footer props from a mount + route-change status refresh (same cheap pattern as T-157); update `SECURITY.md` scope line.
+**Acceptance:** sign-in → sidebar shows photo/name/email; sign-out → Family footer back; no photo URL ever logged.
+
+### T-161 - Splash boot progress + skip redundant cloud check
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/getDatabase.ts`, `SQLiteDatabaseService.init()`, `src/main.tsx`, `src/presentation/components/SplashScreen.tsx`, `src/presentation/constants/config.ts`
+**Content:**
+1. Thread an optional progress callback through `initDatabase(progress)` → `db.init(progress)`: engine 15% → local data 40% → ready-local 65% → cloud check 75% → done 90%, with plain-language labels. Main-thread cost zero (calls only).
+2. Skip `_cloudBootPull` network entirely when persisted meta is fresh (`Date.now() - meta.at < CLOUD_BOOT_SKIP_MS = 60s`) — covers reload-right-after-sync, the exact reported wait. Memory-only timestamps don't survive reload, so the persisted meta is the source.
+3. SplashScreen shows `ProgressBar` + stage label under the version while booting; typing animation untouched; watchdog untouched.
+**Acceptance:** post-sync reload boots with visible stages and usually skips cloud entirely; cold boot narrates engine → data → cloud.
+
+### T-162 - Upload write-verify + retry (no torn pairs)
+**Skill:** `senior-backend`
+**Effort:** S
+**File(s):** `src/infrastructure/database/CloudSync.ts` (`sync()`), `__tests__/CloudSync.test.ts`, `e2e/flows/15-cloud-sync.spec.ts` (stateful mocks)
+**Content:**
+1. After both upserts, read back the sidecar and compare: mismatch → re-run the pair once → still bad returns false (status surfaces, background retries, heal remains backstop). One extra metadata GET per successful sync; unchanged-data flushes still upload nothing.
+2. Update e2e Drive mocks to be stateful (created files persist in list results) since verify now reads back.
+3. Unit tests: verify-pass uploads once; torn write triggers exactly one re-upload then reports false; never throws.
+**Acceptance:** killing the tab mid-upload can no longer leave a permanently torn pair unnoticed — the next sync either completes or reports.
+
+### T-163 - Deferred cloud retry when cooldown skips a flush
+**Skill:** `senior-backend`
+**Effort:** S
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts`, `src/infrastructure/database/CloudSync.ts` (pure helper), `__tests__/CloudSync.test.ts`
+**Content:**
+1. Root cause: a flush skipped by `CLOUD_SYNC_COOLDOWN_MS` schedules nothing — a lone quick second save waits indefinitely for the next mutation/tab-hide.
+2. On cooldown-skip, schedule one one-shot retry at cooldown expiry (single pending timer; cleared on the next real attempt). Retry calls `flush()` so it re-exports fresh bytes and flows through the normal guarded path.
+3. Pure `cloudRetryDelayMs(nowMs, lastSyncMs, cooldownMs, timerPending)` helper with unit tests (pending→null, fresh skip→full window, mid-window→remainder).
+4. Full gates green.
+**Acceptance:** save twice within 30s → second save uploads at cooldown expiry with zero further interaction; single timer only; sign-out/disconnect unaffected (token-gated path returns silently).
+
+### T-164 - Wizard/Settings sign-in button follows sync stage
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/screens/SetupWizard.tsx`, `src/presentation/components/settings/CloudSyncSection.tsx`
+**Content:**
+1. Busy button copy advances with the stage instead of freezing on the first label: wizard `Opening Google…` → `Completing sign-in…`; Settings `Connecting…` → `Syncing…`. The staged ProgressBar below already advances — button and bar must agree.
+2. No navigation until resolve (already true); buttons stay disabled while busy (already true).
+**Acceptance:** throttled sign-in shows the button text change in step with the bar.
+
+### T-165 - ProgressBar freeze fix (updates after first paint)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/ProgressBar.tsx`
+**Content:**
+1. Root cause: the IntersectionObserver disconnects after its first trigger, so later `percent` changes never reach state — the splash bar froze at 5% while boot continued (reported as "never completes before the app loads").
+2. Track visibility in a ref: once visible, apply every `percent` change directly (rAF); observer only gates the initial paint. Existing 0.6s width transition makes updates glide.
+3. Full gates green (shared component — import-modal progress benefits too).
+**Acceptance:** splash bar visibly sweeps 5→100 across boot stages instead of freezing.
+
+### T-166 - Animated water-flow fill on all progress bars
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/ProgressBar.module.css`
+**Content:**
+1. Fill gets a moving diagonal-stripe overlay (water-flow feel) via `repeating-linear-gradient` + `background-position` animation, composited over the existing gradient; keep the leading-edge shimmer.
+2. Token-only values; `prefers-reduced-motion: reduce` disables the motion (Header precedent); GPU-cheap (background-position only).
+3. `DESIGN_IDENTITY.md §17` motion rules check.
+**Acceptance:** every app progress bar shows continuous flow while busy; still with zero motion when reduced-motion is set.
+
+## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 
 ## Ticket Template (use for all new work)

@@ -1,10 +1,15 @@
 import { useEffect, useLayoutEffect, useState, useRef } from 'react';
 import styles from './SplashScreen.module.css';
 import { APP_VERSION } from '../constants/appVersion';
+import { ProgressBar } from './ProgressBar';
 
 interface SplashScreenProps {
   ready: boolean;
   onFinish: () => void;
+  /** Boot progress 0..100 (T-161). */
+  percent?: number;
+  /** Plain-language boot stage (T-161). */
+  status?: string;
 }
 
 const TEXT = 'MoneyFlows';
@@ -12,10 +17,15 @@ const CHAR_INTERVAL = 40;
 const POST_TYPING_DELAY = 300;
 const FADE_DURATION = 500;
 
-export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
+export function SplashScreen({ ready, onFinish, percent = 0, status = '' }: SplashScreenProps) {
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const [fading, setFading] = useState(false);
+  /**
+   * Boot narration appears only when boot actually takes time (T-168): fast
+   * boots never flash a loader, slow boots narrate every stage.
+   */
+  const [showProgress, setShowProgress] = useState(false);
   const idx = useRef(0);
 
   useLayoutEffect(() => {
@@ -32,6 +42,12 @@ export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
     }, CHAR_INTERVAL);
     return () => clearTimeout(td);
   }, []);
+
+  useEffect(() => {
+    if (ready) return;
+    const id = setTimeout(() => setShowProgress(true), 600);
+    return () => clearTimeout(id);
+  }, [ready]);
 
   useEffect(() => {
     if (!done || !ready) return;
@@ -61,6 +77,11 @@ export function SplashScreen({ ready, onFinish }: SplashScreenProps) {
         {!done && <span className={styles.cursor} />}
       </div>
       <span className={styles.version}>v{APP_VERSION}</span>
+      {!ready && showProgress && (
+        <div className={styles.bootProgress}>
+          <ProgressBar percent={percent} sublabel={status} />
+        </div>
+      )}
     </div>
   );
 }

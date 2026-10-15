@@ -26,6 +26,9 @@ function Root() {
   const [ready, setReady] = useState(false);
   const [showApp, setShowApp] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
+  /** Boot progress for the splash (T-161): fraction 0..1 + stage label. */
+  const [bootPercent, setBootPercent] = useState(5);
+  const [bootStatus, setBootStatus] = useState('Starting…');
   const [whatsNew, setWhatsNew] = useState<{ version: string; items: string[] } | null>(null);
   const [restoreKey, replayRestore] = useReplay();
   const [freshKey, replayFresh] = useReplay();
@@ -60,11 +63,21 @@ function Root() {
     const watchdog = window.setTimeout(() => {
       if (!cancelled) setDbError('Startup timed out. Your data may need recovery.');
     }, 15000);
-    initDatabase()
+    initDatabase((fraction, label) => {
+      if (!cancelled) {
+        setBootPercent(Math.round(fraction * 100));
+        setBootStatus(label);
+      }
+    })
       .then(async () => {
+        if (!cancelled) {
+          setBootPercent(95);
+          setBootStatus('Finalizing…');
+        }
         await getDatabase().recalculateBalances();
         if (!cancelled) {
           setDbError(null); // clears a watchdog message if init finished late
+          setBootPercent(100);
           setReady(true);
         }
       })
@@ -145,7 +158,7 @@ function Root() {
     );
   }
 
-  return <SplashScreen ready={ready} onFinish={handleFinish} />;
+  return <SplashScreen ready={ready} onFinish={handleFinish} percent={bootPercent} status={bootStatus} />;
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
@@ -13,6 +13,7 @@ import { logger } from '../../core/logging';
 import type { LogEntry } from '../../core/logging';
 import { ProgressBar } from '../components/ProgressBar';
 import { SettingsDisclosure } from '../components/settings/SettingsDisclosure';
+import { CloudSyncSection } from '../components/settings/CloudSyncSection';
 import disclosureStyles from '../components/settings/SettingsDisclosure.module.css';
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
@@ -40,6 +41,15 @@ export function SettingsPage() {
   const { members, fetchMembers } = useMemberStore();
 
   const [activeTab, setActiveTab] = useState<Tab>('general');
+  const [searchParams] = useSearchParams();
+  // Deep link (T-157 follow-up): /settings?tab=backup&open=google-drive-sync
+  // lands on Backup with the Google section already open (header sync button).
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'general' || tab === 'dashboard' || tab === 'activity' || tab === 'backup' || tab === 'about') {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const [currency, setCurrency] = useState(settings.currency);
   const [locale, setLocale] = useState(settings.locale);
@@ -578,6 +588,7 @@ export function SettingsPage() {
                   </>
                 )}
               </SettingsDisclosure>
+              <CloudSyncSection forceOpen={searchParams.get('open') === 'google-drive-sync'} />
               <SettingsDisclosure
                 title="Engine Health"
                 subtitle={storageHealth ? (storageHealth.backend === 'opfs' ? 'OPFS fast local file' : 'Browser storage') : 'Checking…'}

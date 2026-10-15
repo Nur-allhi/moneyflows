@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
+import { useCloudIndicator } from '../hooks/useCloudIndicator';
 import { useReplay } from '../hooks/useReplay';
 import { useSearchStore } from '../stores/useSearchStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -56,6 +57,13 @@ export function Header({
   const [themeKey, replayTheme] = useReplay();
   const [bellKey, replayBell] = useReplay();
   const [clearKey, replayClear] = useReplay();
+  const [syncKey, replaySync] = useReplay();
+  const syncState = useCloudIndicator();
+  /** Header sync button lands on Backup with the Google section open (T-157). */
+  const openSyncSettings = useCallback(() => {
+    replaySync();
+    navigate('/settings?tab=backup&open=google-drive-sync');
+  }, [replaySync, navigate]);
   const toggleTheme = () => {
     replayTheme();
     useSettingsStore
@@ -236,10 +244,36 @@ export function Header({
             )}
             </span>
           </button>
+          {syncState && (
+            <button
+              className={`${styles.syncBtnMobile} ${syncKey > 0 ? styles.syncPop : ''}`}
+              onClick={openSyncSettings}
+              aria-label={`Cloud sync: ${syncState.title}`}
+              title={syncState.title}
+            >
+              <svg key={`m-${syncKey}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
+                <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+              </svg>
+              <span className={`${styles.syncDot} ${syncState.dot === 'warn' ? styles.syncDotWarn : syncState.dot === 'never' ? styles.syncDotIdle : ''}`} />
+            </button>
+          )}
         </div>
         <button className={`${styles.notifBtn} ${bellKey > 0 ? styles.bellRing : ''}`} onClick={replayBell} aria-label="Notifications">
           {'\uD83D\uDD14'}
         </button>
+        {syncState && (
+          <button
+            className={`${styles.syncBtn} ${syncKey > 0 ? styles.syncPop : ''}`}
+            onClick={openSyncSettings}
+            aria-label={`Cloud sync: ${syncState.title}`}
+            title={syncState.title}
+          >
+            <svg key={syncKey} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+            </svg>
+            <span className={`${styles.syncDot} ${syncState.dot === 'warn' ? styles.syncDotWarn : syncState.dot === 'never' ? styles.syncDotIdle : ''}`} />
+          </button>
+        )}
       </div>
     </header>
   );
