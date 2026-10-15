@@ -164,7 +164,7 @@ Mobile-save → desktop-boot sees it. The 4 guards in plan §3 block merge if vi
 | T-147 | Wire `_maybeCloudSync` into `flush()` + `pagehide` + boot-pull rule | `senior-backend` | M | **Complete** (fire-and-forget sink, hidden-tab force, 8s boot-pull, `decideSyncAction` matrix 6/6, `getCloudStatus()`, build green) |
 | T-148 | Settings → Backup: sign-in row, status, Sync now, disconnect | `senior-frontend` | M | **Complete** (`CloudSyncSection` + `CloudStatus` on port + `syncNow()`, token-only CSS, build green) |
 | T-149 | Open-tab remote check + "New data available" prompt | `senior-frontend` | S | **Complete** (`checkRemoteUpdate`/`applyRemoteUpdate` on port, `CloudUpdatePrompt` in AppLayout, visible-tab poll + refocus check) |
-| T-150 | Conflict-copy UX (snapshot slot + keep-mine/keep-remote choice) | `senior-frontend` | M | Open |
+| T-150 | Conflict-copy UX (snapshot slot + keep-mine/keep-remote choice) | `senior-frontend` | M | **Complete** (`resolveConflict` on port+service, conflict dialog in `CloudUpdatePrompt`, remote stashed as restore point either way) |
 | T-151 | Verification: gates, E2E, offline/corrupt-remote tests, docs | `code-reviewer` | M | Open |
 
 ### T-145 - GoogleAuth.ts — GIS loader, token client, cache/refresh, sign-in/out

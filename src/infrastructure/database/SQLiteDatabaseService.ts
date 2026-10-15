@@ -527,6 +527,23 @@ export class SQLiteDatabaseService implements IDatabaseService {
     return 'up-to-date';
   }
 
+  /** Resolves a both-sides-moved conflict after user choice (T-150). */
+  async resolveConflict(choice: 'mine' | 'theirs'): Promise<boolean> {
+    if (!this.cloudConflict) return true;
+    if (choice === 'theirs') return this.applyRemoteUpdate();
+    const token = await googleAuth.getValidToken().catch(() => null);
+    if (!token || !this.db) return false;
+    const data = this.db.export();
+    const localHash = await digestHex(data);
+    const ok = await cloudSync.sync(token, data, localHash);
+    if (!ok) return false;
+    await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+    this.cloudLastSyncAt = Date.now();
+    this.cloudLastError = null;
+    this.cloudConflict = false;
+    return true;
+  }
+
   /** Imports the newer remote after user confirmation (T-149 prompt). */
   async applyRemoteUpdate(): Promise<boolean> {
     const token = await googleAuth.getValidToken().catch(() => null);

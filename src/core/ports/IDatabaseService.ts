@@ -122,6 +122,8 @@ export interface IDatabaseService {
   checkRemoteUpdate(): Promise<'up-to-date' | 'available' | 'conflict' | null>;
   /** Downloads + imports the newer remote. True on success. */
   applyRemoteUpdate(): Promise<boolean>;
+  /** Resolves a both-sides-moved conflict. 'mine' uploads local, 'theirs' loads remote. */
+  resolveConflict(choice: 'mine' | 'theirs'): Promise<boolean>;
 
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;
