@@ -4,7 +4,7 @@ import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
-import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
+import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus } from '../../core/ports/IDatabaseService';
 import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS, CLOUD_SYNC_COOLDOWN_MS, CLOUD_BOOT_TIMEOUT_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
 import { googleAuth } from './GoogleAuth';
@@ -49,15 +49,6 @@ const SCHEMA = [
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
-}
-
-/** Cloud sync state (Phase 19). lastError: 'reconnect' | 'upload-failed' | 'download-failed' | 'conflict' | null. */
-export interface CloudStatus {
-  signedIn: boolean;
-  email: string | null;
-  lastSyncAt: number;
-  lastError: string | null;
-  conflictPending: boolean;
 }
 
 function rowToMember(r: Record<string, unknown>): Member {
@@ -494,6 +485,20 @@ export class SQLiteDatabaseService implements IDatabaseService {
       lastError: this.cloudLastError,
       conflictPending: this.cloudConflict,
     };
+  }
+
+  /**
+   * Manual sync bypassing the cooldown (Settings "Sync now", T-148).
+   * Flushes first so the upload carries the latest data. Never throws —
+   * the returned status carries any failure.
+   */
+  async syncNow(): Promise<CloudStatus> {
+    if (!this.db) return this.getCloudStatus();
+    try {
+      await this.flush();
+      await this._maybeCloudSync(this.db.export(), true);
+    } catch { /* status carries the error */ }
+    return this.getCloudStatus();
   }
 
   async getSnapshots(): Promise<SnapshotInfo[]> {

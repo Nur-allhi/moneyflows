@@ -48,6 +48,15 @@ export interface StorageHealth {
   lastFlushFailed: boolean;
 }
 
+/** Cloud sync state (Phase 19). lastError: 'reconnect' | 'upload-failed' | 'download-failed' | 'conflict' | null. */
+export interface CloudStatus {
+  signedIn: boolean;
+  email: string | null;
+  lastSyncAt: number;
+  lastError: string | null;
+  conflictPending: boolean;
+}
+
 export interface IDatabaseService {
   init(): Promise<void>;
   getSqlJsDb(): unknown;
@@ -107,6 +116,8 @@ export interface IDatabaseService {
   restoreNewestSnapshot(): Promise<boolean>;
   resetStorage(): Promise<void>;
   getStorageHealth(): StorageHealth;
+  getCloudStatus(): Promise<CloudStatus>;
+  syncNow(): Promise<CloudStatus>;
 
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;

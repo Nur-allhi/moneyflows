@@ -1,0 +1,108 @@
+.errorMsg {
+  color: var(--color-danger);
+  font-size: var(--text-base);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+}
+
+.warnMsg {
+  color: var(--color-warning);
+  font-size: var(--text-base);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+}
+
+.emptyState {
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+}
+
+.steps {
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.note {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.inputField {
+  flex: 1;
+  min-width: 200px;
+  background: color-mix(in oklch, var(--color-wash) 4%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+
+.inputField:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.actionBtn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklch, var(--color-primary) 16%, transparent);
+  border: 1px solid var(--color-primary);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: box-shadow var(--transition-fast);
+}
+
+.actionBtn:hover:not(:disabled) {
+  box-shadow: 0 0 16px var(--color-primary-glow);
+}
+
+.actionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+  flex-shrink: 0;
+}
+
+.statusWarnDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  flex-shrink: 0;
+}
+
+.statusText {
+  font-size: var(--text-base);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
