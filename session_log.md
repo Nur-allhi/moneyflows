@@ -1520,3 +1520,21 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - S-2 complete on branch, unpushed. Next: S-3 thin SettingsModal to wrapper.
+
+## Session 2026-10-16 (user feedback batch: 5 settings/wizard items, on feature/setup-settings-refresh)
+
+### Changes
+- User reported 5 items; investigated each live before touching code (per §3.10/§3.11); confirmed plan via question tool (modal picker, auto-skip Try-it, execute all)
+- (1) Primary member: dropdown DID save (attribution in useSubmit.ts:52, invisible effect) but native select mismatched app pickers → logged BUG-11, built NEW `MemberPicker` modal picker (own tokens CSS, reduced-motion guard) + "New transactions belong to this member." helper; verified pick→Save→persist→label; env reset to null after
+- (2) Locale: answered (Intl number/date formatting; bn-BD = Bengali digits) + added helper "Formats numbers & dates — bn-BD renders Bengali digits."
+- (3) Numpad Max Digits confirmed 100% dead (written, read nowhere) → removed everywhere (AppSettings, config consts, LimitsFields, PreferencesCard, e2e seeds). Dashboard limit verified WORKING live (limit=2 → 2 rows + Load more 323; restored 5 after) → added helper "Dashboard Recent Transactions only — ledgers show everything." (likely missed Save tap or ledger expectation)
+- (4) Drive "going behind" → logged BUG-10, root cause measured (closed nested tray 29px not 0: `.trayOpen .trayInner` descendant selector leaked open padding into nested tray) → scoped to `>`; verified 29px→0px; marked fixed (CHANGELOG at merge)
+- (5) Wizard Try-it: agreed irrelevant after real data — found Try-it UNREACHABLE (member-save on Continue means step 3 always has data) → removed step 4 + handleLoadSample + dead keys/CSS, 5→4 dots, How-it-works always "Finish → Dashboard". NOTE: sample-data entry point is gone; say the word to put it on step 0
+- S-3 also done: SettingsModal 463→~70 LOC (5 shared cards, Done footer; +switch/log/import utilities in its CSS). Modal still has no open() callers (header gear routes to /settings) — noted, kept compiling
+- Gates: typecheck PASS, full `npm run lint` 0, build PASS, unit 92/92, scratch e2e 99-wizard-finish 2/2 green (deleted after) + 13-wizard 2/2, detect_changes vs dev MEDIUM (settings/wizard/docs scope, 1 intended process)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Full batch complete on branch. Next: push + user verifies live → confirm merge to `dev` (CHANGELOG Added/Fixed entries ride with merge).
