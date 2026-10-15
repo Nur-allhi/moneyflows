@@ -117,25 +117,57 @@ export function effectiveHasLocal(isEmpty: boolean, lastSyncHash?: string): bool
   return !(isEmpty && lastSyncHash === undefined);
 }
 
-interface DriveFileEntry {
+/**
+ * Heal decision (T-160, pure): what to do when a verified download failed but
+ * remote files exist. `bytes*` describe the newest remote DB bytes (unverified).
+ */
+export type HealDecision = 'already-consistent' | 'rewrite-sidecar' | 'adopt' | 'cleanup-orphan' | 'corrupt';
+
+export function decideHeal(args: {
+  remoteDbPresent: boolean;
+  bytesReadable: boolean;
+  bytesMatchSidecar: boolean;
+  bytesMatchLocal: boolean;
+  bytesValidDb: boolean;
+  localEmpty: boolean;
+}): HealDecision {
+  const { remoteDbPresent, bytesReadable, bytesMatchSidecar, bytesMatchLocal, bytesValidDb, localEmpty } = args;
+  if (!remoteDbPresent) return 'cleanup-orphan';
+  if (!bytesReadable) return 'corrupt';
+  if (bytesMatchSidecar) return 'already-consistent';
+  if (bytesMatchLocal) return 'rewrite-sidecar';
+  if (localEmpty && bytesValidDb) return 'adopt';
+  return 'corrupt';
+}
+
+export interface DriveFileRef {
   id: string;
+  modifiedTime?: string;
 }
 
 function authHeaders(token: string): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
-async function findFileId(token: string, name: string): Promise<string | null> {
+/** All matches newest-first (T-160). Throws on failure — callers convert. */
+async function findFiles(token: string, name: string): Promise<DriveFileRef[]> {
   const q = encodeURIComponent(`'${APPDATA}' in parents and name='${name}' and trashed=false`);
-  const res = await fetch(`${DRIVE_FILES}?q=${q}&spaces=${APPDATA}&fields=files(id)`, {
-    headers: authHeaders(token),
-  });
+  const res = await fetch(
+    `${DRIVE_FILES}?q=${q}&spaces=${APPDATA}&orderBy=modifiedTime%20desc&fields=files(id,modifiedTime)`,
+    { headers: authHeaders(token) },
+  );
   if (!res.ok) throw new Error(`drive list ${res.status}`);
-  const body = (await res.json()) as { files?: DriveFileEntry[] };
-  return body.files?.[0]?.id ?? null;
+  const body = (await res.json()) as { files?: DriveFileRef[] };
+  return body.files ?? [];
 }
 
-async function uploadNew(token: string, name: string, mime: string, bytes: Uint8Array): Promise<void> {
+async function deleteFileBestEffort(token: string, id: string): Promise<void> {
+  try {
+    await fetch(`${DRIVE_FILES}/${id}`, { method: 'DELETE', headers: authHeaders(token) });
+  } catch { /* dedupe is hygiene, never fatal */ }
+}
+
+async function uploadNew(token: string, name: string, mime: string, bytes: Uint8Array): Promise<string> {
   const form = new FormData();
   form.append('metadata', new Blob([JSON.stringify({ name, parents: [APPDATA] })], { type: 'application/json' }));
   form.append('media', new Blob([bytes as unknown as BlobPart], { type: mime }));
@@ -145,6 +177,9 @@ async function uploadNew(token: string, name: string, mime: string, bytes: Uint8
     body: form,
   });
   if (!res.ok) throw new Error(`drive upload ${res.status}`);
+  const body = (await res.json()) as { id?: string };
+  if (!body.id) throw new Error('drive upload missing id');
+  return body.id;
 }
 
 async function updateFile(token: string, id: string, mime: string, bytes: Uint8Array): Promise<void> {
@@ -156,10 +191,14 @@ async function updateFile(token: string, id: string, mime: string, bytes: Uint8A
   if (!res.ok) throw new Error(`drive update ${res.status}`);
 }
 
+/** Updates newest (or creates), then deletes older same-name dupes (T-160). */
 async function upsert(token: string, name: string, mime: string, bytes: Uint8Array): Promise<void> {
-  const id = await findFileId(token, name);
-  if (id) await updateFile(token, id, mime, bytes);
+  const files = await findFiles(token, name);
+  if (files[0]) await updateFile(token, files[0].id, mime, bytes);
   else await uploadNew(token, name, mime, bytes);
+  for (const dup of files.slice(1)) {
+    await deleteFileBestEffort(token, dup.id);
+  }
 }
 
 const textEncoder = (s: string): Uint8Array => new TextEncoder().encode(s);
@@ -176,12 +215,47 @@ export class CloudSync {
     }
   }
 
+  /** Newest-first file listing (T-160 diagnostics + heal). Empty on any failure. */
+  async listFiles(token: string, name: string): Promise<DriveFileRef[]> {
+    try {
+      return await findFiles(token, name);
+    } catch {
+      return [];
+    }
+  }
+
+  /** Raw bytes of a file id — caller verifies (T-160 heal). Null on any failure. */
+  async downloadBytes(token: string, id: string): Promise<Uint8Array | null> {
+    try {
+      const res = await fetch(`${DRIVE_FILES}/${id}?alt=media`, { headers: authHeaders(token) });
+      if (!res.ok) return null;
+      return new Uint8Array(await res.arrayBuffer());
+    } catch {
+      return null;
+    }
+  }
+
+  /** Rewrites only the hash sidecar (stale-sidecar heal). False on any failure. */
+  async writeHash(token: string, hash: string): Promise<boolean> {
+    try {
+      await upsert(token, CLOUD_HASH_FILE, 'text/plain', textEncoder(hash));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Best-effort delete (orphan cleanup). Never throws. */
+  async deleteFile(token: string, id: string): Promise<void> {
+    await deleteFileBestEffort(token, id);
+  }
+
   /** Metadata-only remote hash (bytes, not the full DB). Null when absent/offline. */
   async remoteHash(token: string): Promise<string | null> {
+    const files = await this.listFiles(token, CLOUD_HASH_FILE);
+    if (!files[0]) return null;
     try {
-      const id = await findFileId(token, CLOUD_HASH_FILE);
-      if (!id) return null;
-      const res = await fetch(`${DRIVE_FILES}/${id}?alt=media`, { headers: authHeaders(token) });
+      const res = await fetch(`${DRIVE_FILES}/${files[0].id}?alt=media`, { headers: authHeaders(token) });
       if (!res.ok) return null;
       const text = (await res.text()).trim();
       return text || null;
@@ -193,11 +267,10 @@ export class CloudSync {
   /** Verified download: bytes whose digest matches the remote sidecar. */
   async download(token: string): Promise<CloudDownload | null> {
     try {
-      const [id, hash] = await Promise.all([findFileId(token, CLOUD_DB_FILE), this.remoteHash(token)]);
-      if (!id || !hash) return null;
-      const res = await fetch(`${DRIVE_FILES}/${id}?alt=media`, { headers: authHeaders(token) });
-      if (!res.ok) return null;
-      const data = new Uint8Array(await res.arrayBuffer());
+      const [files, hash] = await Promise.all([this.listFiles(token, CLOUD_DB_FILE), this.remoteHash(token)]);
+      if (!files[0] || !hash) return null;
+      const data = await this.downloadBytes(token, files[0].id);
+      if (!data) return null;
       if ((await digestHex(data)) !== hash) return null;
       return { data, hash };
     } catch {

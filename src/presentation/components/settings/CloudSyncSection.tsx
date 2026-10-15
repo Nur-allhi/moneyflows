@@ -12,6 +12,7 @@ const ERROR_COPY: Record<string, string> = {
   reconnect: 'Google session expired — tap Sign in with Google again.',
   'upload-failed': 'Last upload failed (offline?) — will retry automatically.',
   'download-failed': 'Last download failed — will retry automatically.',
+  'remote-corrupt': 'Your cloud backup looks damaged — this device was left untouched. You can replace the cloud copy with this device below.',
   conflict: 'This device and another device both changed data — a choice screen will follow.',
 };
 
@@ -26,6 +27,7 @@ function formatSyncTime(at: number, locale: string): string {
 export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean }) {
   const locale = useSettingsStore((s) => s.settings.locale);
   const [status, setStatus] = useState<CloudStatus | null>(null);
+  const [remote, setRemote] = useState<{ dbFiles: number; hashPresent: boolean; modifiedTime: string | null } | null>(null);
   const [busy, setBusy] = useState(false);
   /** Staged progress so a slow sign-in never looks dead: google popup → sync. */
   const [stage, setStage] = useState<'google' | 'syncing' | null>(null);
@@ -35,6 +37,7 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
   const refresh = useCallback(async () => {
     try {
       setStatus(await getDatabase().getCloudStatus());
+      setRemote(await getDatabase().remoteInfo().catch(() => null));
       // Nudge header indicator + sidebar footer to re-read status immediately.
       window.dispatchEvent(new Event('moneyflows:cloud-status'));
     } catch { /* offline boot path — stays unknown */ }
@@ -93,9 +96,28 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
     setBusy(true);
     try {
       await googleAuth.signOut();
+      setRemote(null);
       await refresh();
     } finally {
       setBusy(false);
+    }
+  }, [refresh]);
+
+  /** Warned escape hatch for a corrupt remote (T-160): explicit choice only. */
+  const handleReplaceCloud = useCallback(async () => {
+    if (!window.confirm('Replace your cloud backup with this device’s data? The current cloud copy will be overwritten.')) return;
+    setBusy(true);
+    setError(null);
+    setStage('syncing');
+    try {
+      const ok = await getDatabase().overwriteRemote();
+      if (!ok) setError('Replace failed — check your connection and try again.');
+      await refresh();
+    } catch {
+      setError('Replace failed — check your connection and try again.');
+    } finally {
+      setBusy(false);
+      setStage(null);
     }
   }, [refresh]);
 
@@ -143,10 +165,22 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
           {status.lastError && (
             <div className={styles.warnMsg}>{ERROR_COPY[status.lastError] ?? 'Sync needs attention — will retry automatically.'}</div>
           )}
+          {remote && (
+            <div className={styles.note}>
+              {remote.dbFiles === 0
+                ? 'Drive: no backup file yet.'
+                : `Drive: ${remote.dbFiles} backup file${remote.dbFiles > 1 ? 's' : ''}${remote.hashPresent ? '' : ' (hash missing)'}${remote.modifiedTime ? ` · updated ${formatSyncTime(Date.parse(remote.modifiedTime), locale)}` : ''}`}
+            </div>
+          )}
           <div className={styles.row}>
             <button className={styles.actionBtn} onClick={handleSyncNow} disabled={busy}>
               {busy ? 'Syncing…' : 'Sync now'}
             </button>
+            {status.lastError === 'remote-corrupt' && (
+              <button className={styles.actionBtn} onClick={handleReplaceCloud} disabled={busy}>
+                Replace cloud backup
+              </button>
+            )}
             <button className={styles.actionBtn} onClick={handleDisconnect} disabled={busy}>
               Disconnect
             </button>

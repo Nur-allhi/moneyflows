@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { CloudSync, CLOUD_DB_FILE, CLOUD_HASH_FILE, decideSyncAction, effectiveHasLocal } from '../CloudSync';
+import { CloudSync, CLOUD_DB_FILE, CLOUD_HASH_FILE, decideSyncAction, effectiveHasLocal, decideHeal } from '../CloudSync';
 import { digestHex } from '../storage/sha256';
 
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -170,3 +170,73 @@ describe('effectiveHasLocal (T-152 fresh-device rule)', () => {
     expect(effectiveHasLocal(false, 'old')).toBe(true);
   });
 });
+
+describe('newest-wins + dedupe (T-160)', () => {
+  it('upsert updates the newest file and deletes older dupes', async () => {
+    queue.push(
+      async () => jsonBody({ files: [{ id: 'new-id', modifiedTime: 't2' }, { id: 'old-id', modifiedTime: 't1' }] }),
+      async () => new Response('', { status: 200 }), // PATCH newest
+      async () => new Response('', { status: 200 }), // DELETE older
+      async () => jsonBody({ files: [] }), // sidecar find
+      async () => jsonBody({ id: 'hash-id' }), // sidecar create
+    );
+    await expect(new CloudSync().sync('tok', enc('db'), 'h')).resolves.toBe(true);
+    const patched = calls.find((c) => c.init?.method === 'PATCH');
+    expect(patched?.url).toContain('/new-id?uploadType=media');
+    const deleted = calls.find((c) => c.init?.method === 'DELETE');
+    expect(deleted?.url).toContain('/old-id');
+  });
+
+  it('download reads the newest DB file', async () => {
+    const data = enc('newest-bytes');
+    const hash = await digestHex(data);
+    queue.push(
+      async () => jsonBody({ files: [{ id: 'new-id' }, { id: 'old-id' }] }), // db list
+      async () => jsonBody({ files: [{ id: 'hash-id' }] }), // sidecar list
+      async () => new Response(hash, { status: 200 }), // sidecar content
+      async () => new Response(data as unknown as BodyInit, { status: 200 }), // db bytes
+    );
+    const dl = await new CloudSync().download('tok');
+    expect(dl?.hash).toBe(hash);
+    const mediaCalls = calls.filter((c) => c.url.includes('alt=media'));
+    expect(mediaCalls.some((c) => c.url.includes('/new-id?alt=media'))).toBe(true);
+    expect(mediaCalls.some((c) => c.url.includes('/old-id?alt=media'))).toBe(false);
+  });
+
+  it('list requests newest-first ordering', async () => {
+    queue.push(async () => jsonBody({ files: [] }));
+    await new CloudSync().listFiles('tok', CLOUD_DB_FILE);
+    expect(calls[0]?.url).toContain('orderBy=modifiedTime%20desc');
+  });
+});
+
+describe('decideHeal (T-160)', () => {
+  it('no remote DB file → cleanup-orphan (remote counts as empty)', () => {
+    expect(decideHeal({ remoteDbPresent: false, bytesReadable: false, bytesMatchSidecar: false, bytesMatchLocal: false, bytesValidDb: false, localEmpty: true })).toBe('cleanup-orphan');
+  });
+
+  it('listed but unreadable bytes → corrupt (touch nothing)', () => {
+    expect(decideHeal({ remoteDbPresent: true, bytesReadable: false, bytesMatchSidecar: false, bytesMatchLocal: false, bytesValidDb: false, localEmpty: true })).toBe('corrupt');
+  });
+
+  it('bytes matching the sidecar → already-consistent', () => {
+    expect(decideHeal({ remoteDbPresent: true, bytesReadable: true, bytesMatchSidecar: true, bytesMatchLocal: false, bytesValidDb: true, localEmpty: false })).toBe('already-consistent');
+  });
+
+  it('bytes matching local → rewrite-sidecar (stale sidecar from interrupted upload)', () => {
+    expect(decideHeal({ remoteDbPresent: true, bytesReadable: true, bytesMatchSidecar: false, bytesMatchLocal: true, bytesValidDb: true, localEmpty: false })).toBe('rewrite-sidecar');
+  });
+
+  it('foreign-but-valid bytes + empty local → adopt', () => {
+    expect(decideHeal({ remoteDbPresent: true, bytesReadable: true, bytesMatchSidecar: false, bytesMatchLocal: false, bytesValidDb: true, localEmpty: true })).toBe('adopt');
+  });
+
+  it('foreign bytes + local data → corrupt (never auto-overwrite)', () => {
+    expect(decideHeal({ remoteDbPresent: true, bytesReadable: true, bytesMatchSidecar: false, bytesMatchLocal: false, bytesValidDb: true, localEmpty: false })).toBe('corrupt');
+  });
+
+  it('foreign invalid bytes + empty local → corrupt (no garbage adoption)', () => {
+    expect(decideHeal({ remoteDbPresent: true, bytesReadable: true, bytesMatchSidecar: false, bytesMatchLocal: false, bytesValidDb: false, localEmpty: true })).toBe('corrupt');
+  });
+});
+

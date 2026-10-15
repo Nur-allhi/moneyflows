@@ -278,6 +278,19 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-157 | Header sync indicator beside bell | `senior-frontend` | M | **Complete** (`useCloudIndicator` cheap poll, desktop + mobile instances, guests see nothing, tap → Settings) |
 | T-158 | Sidebar user profile (photo/name/email, profile scope) | `senior-frontend` | M | **Complete** (profile scope, persisted name/photo, footer photo+name+email, Family footer for guests, build green) |
 | T-159 | Day-long sessions: persisted token + silent refresh, popup only on explicit taps | `senior-backend` | M | **Complete** (root cause: refresh used `prompt:''`; silent is `prompt:'none'`; token persisted+hydrated, interactive split, 10/10 tests) |
+| T-160 | Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics | `senior-backend` | M | **Complete** (newest-first reads, upsert dedupes, stale-sidecar/orphan/adopt heal, remote-corrupt taxonomy + replace-cloud escape, diagnostics row, 38/38 db tests) |
+
+### T-160 - Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/CloudSync.ts`, `__tests__/CloudSync.test.ts`, `src/infrastructure/database/SQLiteDatabaseService.ts`, `src/core/ports/IDatabaseService.ts`, `src/presentation/components/settings/CloudSyncSection.tsx`, `e2e/flows/15-cloud-sync.spec.ts`
+**Content:**
+1. Root cause of live "download failed" loop: sidecar readable but DB bytes mismatch — classic interrupted upload (tab closed/suspended between the DB and sidecar writes). Retries can never succeed.
+2. `CloudSync`: `listFiles()` newest-first (`orderBy=modifiedTime desc`); all reads use newest; `upsert` deletes older same-name dupes after success. New primitives: `downloadBytes()`, `writeHash()`, `deleteFile()` — all never-throw.
+3. Service `_healRemoteAttempt()`: stale sidecar (remote bytes == local hash) → rewrite sidecar → synced; orphan sidecar (no DB file) → clean + treat remote as empty; valid-DB bytes + empty local → adopt + heal sidecar (`recovered`); foreign bytes + local data → `remote-corrupt` (touch nothing).
+4. Taxonomy in status: `not-found`/`unreadable`/`remote-corrupt` with distinct UI copy; `remoteInfo()` diagnostics row (file count, modified time); `overwriteRemote()` explicit user escape hatch for corrupt (warned button).
+5. Tests: newest-wins, dedupe deletes, stale-sidecar heal, orphan cleanup, adopt-valid, corrupt-preserved, taxonomy mapping; e2e dupe-file fixture green; full gates.
+**Acceptance:** interrupted-upload remotes self-heal on next sync; genuine corruption is named, never silently overwritten, and escapable by explicit user choice.
 
 ### T-159 - Day-long sessions: persisted token + silent refresh, popup only on explicit taps
 **Skill:** `senior-backend`

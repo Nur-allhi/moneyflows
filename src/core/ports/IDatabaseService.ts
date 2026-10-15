@@ -48,7 +48,7 @@ export interface StorageHealth {
   lastFlushFailed: boolean;
 }
 
-/** Cloud sync state (Phase 19). lastError: 'reconnect' | 'upload-failed' | 'download-failed' | 'conflict' | null. */
+/** Cloud sync state (Phase 19). lastError: 'reconnect' | 'upload-failed' | 'download-failed' | 'remote-corrupt' | 'conflict' | null. */
 export interface CloudStatus {
   signedIn: boolean;
   email: string | null;
@@ -137,6 +137,10 @@ export interface IDatabaseService {
    * both-differ flags choice. Null-safe: 'signed-out' when no token.
    */
   reconcileAfterSignIn(): Promise<CloudReconcile>;
+  /** Remote diagnostics for Settings (T-160): file count + newest modified time. Null when signed out/offline. */
+  remoteInfo(): Promise<{ dbFiles: number; hashPresent: boolean; modifiedTime: string | null } | null>;
+  /** Explicit user escape hatch for a corrupt remote: replaces cloud with this device. Warned button only. */
+  overwriteRemote(): Promise<boolean>;
 
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;
