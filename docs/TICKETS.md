@@ -259,13 +259,75 @@ Mobile-save → desktop-boot sees it. The 4 guards in plan §3 block merge if vi
 ### T-153 - Wizard entry gate (Sign in vs Guest) + conflict dialog reword
 **Skill:** `senior-frontend`
 **Effort:** M
-**File(s):** `src/presentation/screens/SetupWizard.tsx`, `src/presentation/components/settings/CloudSyncSection.tsx` (call reconcile post-sign-in), `src/presentation/components/CloudUpdatePrompt.tsx` (button copy), `e2e/flows/13-wizard.spec.ts` (keep green)
-**Content:**
+**File(s):** `src/presentation/screens/SetupWizard.tsx`, `src/presentation/components/settings/CloudSyncSection.tsx` (call reconcile post-sign-in), `src/presentation/components/CloudUpdatePrompt.tsx` (button copy), `e2e/flows/13-wizard.spec.ts` (keep green)**Content:**
 1. Wizard step 0 (configured builds only): **Sign in with Google** + **Continue as guest** replace Get Started. Sign-in → `reconcileAfterSignIn()` → `downloaded` skips to dashboard (data present), else continue to step 1. Guest → step 1 unchanged. Keep "Welcome" copy so `13-wizard` stays green; unconfigured builds keep the current step 0.
 2. Settings sign-in calls the same reconcile: `downloaded` → reload (restore-flow pattern); `choice` → status message (dialog follows via existing poll).
 3. Conflict dialog buttons reworded to user language: **Override cloud** (keep mine) / **Download cloud data** (use theirs).
 4. `DESIGN_IDENTITY.md §17` checklist for touched UI; typecheck + scoped lint + build + e2e `13-wizard` + `15-cloud-sync` green.
 **Acceptance:** fresh user picks a path in one tap; no dialog except genuine both-sides case; wizard e2e untouched-green.
+
+## Phase 20 — Sync UX Polish (user-approved improvements) — In Progress
+
+Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passes `DESIGN_IDENTITY.md §17`.
+
+| Ticket | Title | Skill | Effort | Status |
+|--------|-------|-------|--------|--------|
+| T-154 | Sign-in progress UX (staged status + progress, no dead screen) | `senior-frontend` | S | Open |
+| T-155 | Setup dropdowns → modal picker pattern (account type + member) | `senior-frontend` | M | Open |
+| T-156 | Responsive auto-sync (30s cooldown, every mutation syncs) | `senior-backend` | S | Open |
+| T-157 | Header sync indicator beside bell | `senior-frontend` | M | Open |
+| T-158 | Sidebar user profile (photo/name/email, profile scope) | `senior-frontend` | M | Open |
+
+### T-154 - Sign-in progress UX (staged status + progress, no dead screen)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/settings/CloudSyncSection.tsx`, `src/presentation/screens/SetupWizard.tsx`
+**Content:**
+1. Staged busy copy in both sign-in flows: `Opening Google…` (popup) → `Syncing your data…` (reconcile/upload running) → done/error. Never leave a static label while background work runs.
+2. Show the existing `ProgressBar` (indeterminate) under the button while busy; disable Connect/Sign-in + Sync-now buttons to prevent double taps; keep the user on screen (no navigation until resolve).
+3. Errors keep the staged copy pattern: popup-cancelled vs network vs expired-session each get their plain-language line (reuse `ERROR_COPY`).
+**Acceptance:** throttled-network sign-in visibly progresses through both stages; no dead screen; double-tap safe.
+
+### T-155 - Setup dropdowns → modal picker pattern (account type + member)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/screens/SetupWizard.tsx`, `src/presentation/screens/SetupWizard.module.css`
+**Content:**
+1. Per `DESIGN_IDENTITY.md §9` (native select deprecated), replace both native `<select>` in the wizard money step (account type, member) with trigger buttons opening `pickerOverlay`/`pickerModal` option lists mirroring `transactionForm/extraPickers.tsx` (header + close + option rows + active = primary gradient).
+2. New CSS uses tokens only (`--space-*`, `--color-*`, `--radius-*`); no hex, no literal spacing, no `style={{}}`.
+3. Member list derives from step-1 names (live, not stale); account type rows reuse `ACCOUNT_TYPE_OPTIONS` + remaining `ACCOUNT_TYPES` fallback (preserve current option set exactly).
+4. `DESIGN_IDENTITY.md §17` checklist; e2e `13-wizard` stays green.
+**Acceptance:** wizard dropdowns visually match app pickers; same options, same values saved; no native select remains in the wizard.
+
+### T-156 - Responsive auto-sync (30s cooldown, every mutation syncs)
+**Skill:** `senior-backend`
+**Effort:** S
+**File(s):** `src/presentation/constants/config.ts` (`CLOUD_SYNC_COOLDOWN_MS`), `docs/plans/ONLINE_SYNC_PLAN.md` (cooldown note), unit assertion
+**Content:**
+1. Lower `CLOUD_SYNC_COOLDOWN_MS` `120_000 → 30_000`: every mutation already funnels through `flush()` → `_maybeCloudSync` (hash-skipped when unchanged, fire-and-forget, hidden-tab force) — the only change is responsiveness. No new network shape, no battery concern (unchanged data = zero bytes).
+2. Keep Sync-now as force-bypass; keep snapshot/folder cooldowns untouched.
+3. Assert the constant + idle-skip behavior in the existing CloudSync/service tests if cheap; full gates green.
+**Acceptance:** save → background upload starts within ~30s (or instantly on tab-hide); unchanged flushes upload nothing; quota/battery unchanged.
+
+### T-157 - Header sync indicator beside bell
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/components/Header.tsx`, `Header.module.css`, new `useCloudIndicator` hook or reuse `getCloudStatus()` poll
+**Content:**
+1. New status button directly beside `notifBtn`: states from `getCloudStatus()` — synced (green dot + check), never-synced (subtle gray), error/conflict (warning) — with `title` text; hidden entirely for guests (no sign-in = no change for them).
+2. Poll on mount + route change (cheap IDB read; no export/hash in the poll path), plus refresh after mutations? Minimum: mount + 30s interval aligned with sync cooldown + visibility refocus.
+3. Tap → navigate `/settings` (gear precedent); `aria-label` set; `DESIGN_IDENTITY.md §17` checklist.
+**Acceptance:** signed-in users always see live sync state in the header; guests see zero change; tap lands in Settings.
+
+### T-158 - Sidebar user profile (photo/name/email, profile scope)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/GoogleAuth.ts` (profile scope + name/photo), `src/core/ports/IDatabaseService.ts` (`CloudStatus` extension), `src/App.tsx` (footer props), `src/presentation/components/Sidebar.tsx` (avatar img), `docs/SECURITY.md` (scope note)
+**Content:**
+1. Add `profile` to GIS scopes (name + picture need it; `drive.appdata` already requires verification for public rollout, so no new verification class). Persist `{name, photo}` alongside email in the IDB auth record (never the token); expose via `getCloudStatus()`.
+2. Sidebar footer when signed in: Google photo avatar + display name + email (fallback: initial-letter avatar + email when photo/name absent). Signed out: current Family footer unchanged.
+3. `App.tsx` feeds footer props from a mount + route-change status refresh (same cheap pattern as T-157); update `SECURITY.md` scope line.
+**Acceptance:** sign-in → sidebar shows photo/name/email; sign-out → Family footer back; no photo URL ever logged.
 
 ## Following Phase
 
