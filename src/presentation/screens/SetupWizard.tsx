@@ -166,7 +166,7 @@ export function SetupWizard() {
               </div>
               {isGoogleSyncConfigured() ? (
                 <>
-                  <button className={`${styles.primary} ${signInKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySignIn(); void handleSignIn(); }} disabled={authBusy}><span className="anim-target" key={signInKey}>{authBusy ? 'Opening Google…' : 'Sign in with Google'}</span></button>
+                  <button className={`${styles.primary} ${signInKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySignIn(); void handleSignIn(); }} disabled={authBusy}><span className="anim-target" key={signInKey}>{authBusy ? (authStage === 'syncing' ? 'Completing sign-in…' : 'Opening Google…') : 'Sign in with Google'}</span></button>
                   <button className={`${styles.ghost} ${guestKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayGuest(); setStep(1); }} disabled={authBusy}><span className="anim-target" key={guestKey}>Continue as guest</span></button>
                   {authBusy && authStage && (
                     <ProgressBar

@@ -282,6 +282,9 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-161 | Splash boot progress + skip redundant cloud check | `senior-frontend` | M | **Complete** (BootProgress threading, staged splash bar, 60s boot-pull skip, e2e green) |
 | T-162 | Upload write-verify + retry (no torn pairs) | `senior-backend` | S | **Complete** (sidecar read-back + one retry, stateful e2e mocks proving verify round trip) |
 | T-163 | Deferred cloud retry when cooldown skips a flush | `senior-backend` | S | **Complete** (single one-shot timer at window expiry, re-flushes through guarded path, pure helper 4/4 tests) |
+| T-164 | Wizard/Settings sign-in button follows sync stage | `senior-frontend` | S | **Complete** (busy copy advances google→syncing in step with the bar, both flows) |
+| T-165 | ProgressBar freeze fix (updates after first paint) | `senior-frontend` | S | **Complete** (visibility ref; every percent applies once visible; 0.6s glide already in CSS) |
+| T-166 | Animated water-flow fill on all progress bars | `senior-frontend` | S | **Complete** (diagonal flow overlay on gradient, leading shimmer kept, reduced-motion guard, GPU-cheap) |
 
 ### T-160 - Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics
 **Skill:** `senior-backend`
@@ -388,6 +391,35 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 3. Pure `cloudRetryDelayMs(nowMs, lastSyncMs, cooldownMs, timerPending)` helper with unit tests (pending→null, fresh skip→full window, mid-window→remainder).
 4. Full gates green.
 **Acceptance:** save twice within 30s → second save uploads at cooldown expiry with zero further interaction; single timer only; sign-out/disconnect unaffected (token-gated path returns silently).
+
+### T-164 - Wizard/Settings sign-in button follows sync stage
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/screens/SetupWizard.tsx`, `src/presentation/components/settings/CloudSyncSection.tsx`
+**Content:**
+1. Busy button copy advances with the stage instead of freezing on the first label: wizard `Opening Google…` → `Completing sign-in…`; Settings `Connecting…` → `Syncing…`. The staged ProgressBar below already advances — button and bar must agree.
+2. No navigation until resolve (already true); buttons stay disabled while busy (already true).
+**Acceptance:** throttled sign-in shows the button text change in step with the bar.
+
+### T-165 - ProgressBar freeze fix (updates after first paint)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/ProgressBar.tsx`
+**Content:**
+1. Root cause: the IntersectionObserver disconnects after its first trigger, so later `percent` changes never reach state — the splash bar froze at 5% while boot continued (reported as "never completes before the app loads").
+2. Track visibility in a ref: once visible, apply every `percent` change directly (rAF); observer only gates the initial paint. Existing 0.6s width transition makes updates glide.
+3. Full gates green (shared component — import-modal progress benefits too).
+**Acceptance:** splash bar visibly sweeps 5→100 across boot stages instead of freezing.
+
+### T-166 - Animated water-flow fill on all progress bars
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/ProgressBar.module.css`
+**Content:**
+1. Fill gets a moving diagonal-stripe overlay (water-flow feel) via `repeating-linear-gradient` + `background-position` animation, composited over the existing gradient; keep the leading-edge shimmer.
+2. Token-only values; `prefers-reduced-motion: reduce` disables the motion (Header precedent); GPU-cheap (background-position only).
+3. `DESIGN_IDENTITY.md §17` motion rules check.
+**Acceptance:** every app progress bar shows continuous flow while busy; still with zero motion when reduced-motion is set.
 
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.

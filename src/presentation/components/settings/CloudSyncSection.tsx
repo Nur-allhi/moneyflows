@@ -149,7 +149,7 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
           </div>
           <div className={styles.row}>
             <button className={styles.actionBtn} onClick={handleSignIn} disabled={busy}>
-              {busy ? 'Opening Google…' : 'Sign in with Google'}
+              {busy ? (stage === 'syncing' ? 'Syncing…' : 'Connecting…') : 'Sign in with Google'}
             </button>
           </div>
           <div className={styles.note}>Test-mode sign-ins expire after 7 days — just sign in again.</div>
