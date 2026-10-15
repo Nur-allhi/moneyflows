@@ -1609,3 +1609,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push → user reloads normal Chrome → reports → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-12 dead-button fix, on feature/setup-settings-refresh)
+
+### Changes
+- User: device empty, expects wizard, recovery buttons appear dead. Cause: recovery actions had no busy feedback and hung silently on poisoned storage (wipe awaited hung stores forever; restore loop uncapped) — clicks looked dead
+- Fix: per-store 8s timeouts in `wipePersistedStorage` returning a `WipeReport`; all restore paths capped via `withStorageTimeout`; Restoring…/Wiping… busy states with mutual disabling; wipe failure renders manual-clear guidance (F12 → Application → Storage → Clear site data → reload)
+- Gates: typecheck PASS, scoped lint clean, unit green, `16-recovery` e2e green, build PASS
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, unpushed. Next: push → user hard-reloads (Ctrl+Shift+R) normal Chrome → Start Fresh → wizard → sign in → confirm merge to `dev`.
