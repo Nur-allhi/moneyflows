@@ -1455,3 +1455,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed, unpushed. Next: push + reply (incl. whole-DB-vs-delta explainer).
+
+## Session 2026-10-16 (T-164..T-166 progress UX)
+
+### Changes
+- User reports: (1) wizard button stuck on Opening Google; (2) splash bar never completes before app loads; (3) bars should feel alive (water flow)
+- T-164: busy button copy advances google→syncing in both sign-in flows, agreeing with the staged bar
+- T-165 (`1beaffb` part): root cause of frozen bar — observer disconnected after first paint so later percents never applied; visibility ref keeps every update flowing (0.6s glide already in CSS)
+- T-166: diagonal stripe flow over the gradient + leading shimmer kept + `prefers-reduced-motion` guard; GPU-cheap background-position only
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed, unpushed. Next: push + reply.
