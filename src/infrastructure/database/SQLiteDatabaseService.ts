@@ -496,10 +496,13 @@ export class SQLiteDatabaseService implements IDatabaseService {
 
   /** Cloud sync state for Settings + health UI (T-148). */
   async getCloudStatus(): Promise<CloudStatus> {
-    const email = await googleAuth.getAccountEmail().catch(() => null);
+    const profile = await googleAuth.getProfile().catch(() => null);
+    const email = profile?.email ?? null;
     return {
       signedIn: email !== null,
       email,
+      profileName: profile?.name ?? null,
+      profilePhoto: profile?.photo ?? null,
       lastSyncAt: this.cloudLastSyncAt,
       lastError: this.cloudLastError,
       conflictPending: this.cloudConflict,

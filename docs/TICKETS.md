@@ -276,7 +276,7 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-155 | Setup dropdowns → modal picker pattern (account type + member) | `senior-frontend` | M | **Complete** (trigger + overlay pickers per §9, token-only CSS, zero native selects left, e2e 13 green) |
 | T-156 | Responsive auto-sync (30s cooldown, every mutation syncs) | `senior-backend` | S | **Complete** (`CLOUD_SYNC_COOLDOWN_MS` 120s→30s; flush path unchanged — hash-skipped, fire-and-forget, hidden-tab force) |
 | T-157 | Header sync indicator beside bell | `senior-frontend` | M | **Complete** (`useCloudIndicator` cheap poll, desktop + mobile instances, guests see nothing, tap → Settings) |
-| T-158 | Sidebar user profile (photo/name/email, profile scope) | `senior-frontend` | M | Open |
+| T-158 | Sidebar user profile (photo/name/email, profile scope) | `senior-frontend` | M | **Complete** (profile scope, persisted name/photo, footer photo+name+email, Family footer for guests, build green) |
 
 ### T-154 - Sign-in progress UX (staged status + progress, no dead screen)
 **Skill:** `senior-frontend`

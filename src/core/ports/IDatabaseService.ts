@@ -52,6 +52,10 @@ export interface StorageHealth {
 export interface CloudStatus {
   signedIn: boolean;
   email: string | null;
+  /** Display name from the profile scope (T-158); null when absent/signed out. */
+  profileName: string | null;
+  /** Photo URL from the profile scope (T-158); sidebar only, never logged. */
+  profilePhoto: string | null;
   lastSyncAt: number;
   lastError: string | null;
   conflictPending: boolean;

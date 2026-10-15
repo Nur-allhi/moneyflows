@@ -11,7 +11,7 @@
 
 const GIS_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 export const DRIVE_APPDATA_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
-const SCOPES = `${DRIVE_APPDATA_SCOPE} openid email`;
+const SCOPES = `${DRIVE_APPDATA_SCOPE} openid email profile`;
 /** Refresh proactively this far before expiry — no per-flush auth roundtrip. */
 const REFRESH_SKEW_MS = 60_000;
 const USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
@@ -46,7 +46,17 @@ interface GisNamespace {
 interface PersistedAuth {
   clientId: string;
   email: string;
+  /** Display name from the profile scope (may be absent on old records). */
+  name?: string;
+  /** Photo URL from the profile scope (never logged, shown in sidebar only). */
+  photo?: string;
   expiresAtMs: number;
+}
+
+export interface GoogleProfile {
+  email: string;
+  name: string | null;
+  photo: string | null;
 }
 
 function getGis(): GisNamespace | null {
@@ -154,15 +164,28 @@ export class GoogleAuth {
   private token: string | null = null;
   private expiresAtMs = 0;
   private email: string | null = null;
+  private name: string | null = null;
+  private photo: string | null = null;
   private clientId: string | null = null;
 
   /** Last signed-in email (from persisted state); null when never signed in. */
   async getAccountEmail(): Promise<string | null> {
-    if (this.email) return this.email;
+    const profile = await this.getProfile().catch(() => null);
+    return profile?.email ?? null;
+  }
+
+  /** Display profile (memory first, persisted fallback). Null when signed out. */
+  async getProfile(): Promise<GoogleProfile | null> {
+    if (this.email) {
+      return { email: this.email, name: this.name, photo: this.photo };
+    }
     const saved = await idbGet().catch(() => null);
-    this.email = saved?.email ?? null;
-    this.clientId = saved?.clientId ?? this.clientId;
-    return this.email;
+    if (!saved?.email) return null;
+    this.email = saved.email;
+    this.name = saved.name ?? null;
+    this.photo = saved.photo ?? null;
+    this.clientId = saved.clientId ?? this.clientId;
+    return { email: this.email, name: this.name, photo: this.photo };
   }
 
   /** Interactive sign-in. Resolves the access token; rejects when GIS fails. */
@@ -188,12 +211,14 @@ export class GoogleAuth {
         reject(e instanceof Error ? e : new Error(String(e)));
       }
     });
-    const email = await this.fetchEmail(token).catch(() => '');
+    const profile = await this.fetchProfile(token).catch(() => null);
     this.token = token;
     this.expiresAtMs = Date.now() + 3600_000;
-    this.email = email || null;
+    this.email = profile?.email || null;
+    this.name = profile?.name ?? null;
+    this.photo = profile?.photo ?? null;
     this.clientId = clientId;
-    await idbSet({ clientId, email: this.email ?? '', expiresAtMs: this.expiresAtMs });
+    await idbSet({ clientId, email: this.email ?? '', name: this.name ?? '', photo: this.photo ?? '', expiresAtMs: this.expiresAtMs });
     return token;
   }
 
@@ -232,7 +257,9 @@ export class GoogleAuth {
       this.expiresAtMs = Date.now() + 3600_000;
       this.clientId = clientId;
       const email = this.email ?? saved?.email ?? '';
-      await idbSet({ clientId, email, expiresAtMs: this.expiresAtMs });
+      const name = this.name ?? saved?.name ?? '';
+      const photo = this.photo ?? saved?.photo ?? '';
+      await idbSet({ clientId, email, name, photo, expiresAtMs: this.expiresAtMs });
       return token;
     } catch {
       return null;
@@ -248,16 +275,18 @@ export class GoogleAuth {
     this.token = null;
     this.expiresAtMs = 0;
     this.email = null;
+    this.name = null;
+    this.photo = null;
     this.clientId = null;
     await idbClear();
   }
 
-  private async fetchEmail(token: string): Promise<string> {
+  private async fetchProfile(token: string): Promise<{ email: string; name: string | null; photo: string | null }> {
     const res = await fetch(USERINFO_URL, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`userinfo ${res.status}`);
-    const body = (await res.json()) as { email?: string };
+    const body = (await res.json()) as { email?: string; name?: string; picture?: string };
     if (!body.email) throw new Error('userinfo missing email');
-    return body.email;
+    return { email: body.email, name: body.name ?? null, photo: body.picture ?? null };
   }
 }
 

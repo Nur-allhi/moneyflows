@@ -49,7 +49,7 @@ beforeEach(async () => {
   installGisMock();
   vi.stubGlobal('fetch', vi.fn(async () => ({
     ok: true,
-    json: async () => ({ email: 'user@gmail.com' }),
+    json: async () => ({ email: 'user@gmail.com', name: 'Test User', picture: 'https://pic/x.jpg' }),
   })));
   // Clear the shared in-memory auth fallback between tests.
   await new GoogleAuth().signOut();
@@ -73,6 +73,16 @@ describe('GoogleAuth (T-145)', () => {
     await expect(auth.getAccountEmail()).resolves.toBe('user@gmail.com');
     expect(captured[0]).toMatchObject({ client_id: 'client-123' });
     expect(String(captured[0]?.scope)).toContain('drive.appdata');
+  });
+
+  it('signIn persists the profile (name + photo) for the sidebar', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    await expect(auth.getProfile()).resolves.toEqual({
+      email: 'user@gmail.com',
+      name: 'Test User',
+      photo: 'https://pic/x.jpg',
+    });
   });
 
   it('getValidToken serves the cached token without a new GIS call', async () => {

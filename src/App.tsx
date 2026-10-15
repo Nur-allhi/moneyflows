@@ -80,6 +80,17 @@ function AppLayout() {
   useEffect(() => { fetchLedgers(); }, [fetchLedgers]);
 
   const [groupNameMap, setGroupNameMap] = useState<Record<string, string>>({});
+  /** Signed-in Google profile for the sidebar footer (T-158); null = guest. */
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [profileEmail, setProfileEmail] = useState<string | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  useEffect(() => {
+    getDatabase().getCloudStatus().then((s) => {
+      setProfileName(s.signedIn ? s.profileName : null);
+      setProfileEmail(s.signedIn ? s.email : null);
+      setProfilePhoto(s.signedIn ? s.profilePhoto : null);
+    }).catch(() => {});
+  }, [pathname]);
   useEffect(() => {
     getDatabase().getAccountGroupsWithMembers().then((groups) => {
       const map: Record<string, string> = {};
@@ -134,7 +145,13 @@ function AppLayout() {
   return (
     <div className={styles.layout}>
       <RippleGlow />
-      <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
+      <Sidebar
+        className={styles.sidebar}
+        items={sidebarItems}
+        footerLabel={profileName ?? profileEmail ?? 'Family'}
+        footerRole={profileName ? (profileEmail ?? '') : `${members.length} members`}
+        footerPhoto={profilePhoto}
+      />
       <div className={`${styles.main} ${sidebarWide ? styles.mainWide : ''}`} id="app-main">
         <Header title={title} breadcrumb={breadcrumb} className="app-header" searchActive={searchOpen} onSearchToggle={toggleSearch} />
         {searchOpen && (
