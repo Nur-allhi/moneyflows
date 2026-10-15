@@ -1474,3 +1474,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - User report: Sync-now bar stuck at 75% then vanished. Root cause: stages topped out at 75% with no 100% state — unmount on finish looked like a cut
 - T-167 (`ee9c90c`): `done` stage (100%, Synced ✓) held 1.2s on success in both sign-in and Sync-now via shared `StageBar`; failures keep clear-to-error behavior
 - Gates: typecheck PASS, scoped lint clean
+
+## Session 2026-10-16 (T-168 splash visibility)
+
+### Changes
+- User report: splash bar never shows after sign-in. Probed it live: the bar always rendered — but local boots finish in ~200ms ("Finalizing…" already at 100ms), flashing past perception
+- T-168 (`1b837b3`): narration appears only while boot exceeds 600ms — fast boots stay clean, slow boots (8x-throttle probe: bar + stage text verified) narrate every stage. Typing/fade/watchdog untouched
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed, unpushed. Next: push + reply (pull + rebuild reminder for stale-dist suspicion).
