@@ -1339,3 +1339,19 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - T-145/T-146 complete on branch (unpushed). Next: T-147 wiring (`impact` on `flush` first) → T-148/149/150 UI → T-151 verification → user-confirmed merge to dev.
+
+## Session 2026-10-15 (Phase 19 complete T-147..T-151)
+
+### Changes
+- T-147 (`6c8200b`): `_maybeCloudSync` fire-and-forget in `flush()` (hidden-tab force), `_cloudBootPull` under 8s timeout, pure `decideSyncAction` (6/6 matrix tests), `getCloudStatus()`; `impact(flush)` = CRITICAL as expected (central durability point) — change strictly additive, signed-out path is cooldown + IDB-miss
+- T-148 (`df1a486`): `CloudSyncSection` in Settings → Backup (Connect/status/Sync now/Disconnect + console setup copy), `CloudStatus` + `syncNow()` on `IDatabaseService` port, `cloudClientId` in AppSettings (live status, no dual-write)
+- T-149 (`9e66c68`): `checkRemoteUpdate`/`applyRemoteUpdate` + `CloudUpdatePrompt` in AppLayout (visible-tab cooldown poll, refocus check, snooze, reload-on-apply)
+- T-150 (`7848d22`): `resolveConflict(mine/theirs)` + conflict dialog (required choice, remote kept as restore point either way); repaired two edit slips (dropped newline, clobbered method header) caught by read-back
+- T-151 (`df42280` + `dd40c49`): e2e `15-cloud-sync` 2/2 green (mocked GIS/Drive: connect→upload + offline-boot→warn), SECURITY/TAD/CHANGELOG docs, no version bump (release-time per plan)
+- Gates: typecheck PASS, full `lint --max-warnings 0` PASS, build PASS, unit 70/70 (18 e2e-under-vitest import failures are pre-existing), `detect_changes` LOW on final diff
+
+### Skill(s) Used
+- senior-backend (T-146/147), senior-frontend (T-145/148/149/150), code-reviewer (T-151)
+
+### Status
+- Phase 19 complete on `feature/online-sync-drive`, pushed. Next: user reviews → confirm merge to `dev`; live test needs user's OAuth Client ID (plan §4); version bump at release (MINOR per §2).
