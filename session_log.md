@@ -1506,3 +1506,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - S-1 complete on branch, unpushed. Next: S-2 5-card collapsed IA on SettingsPage.
+
+## Session 2026-10-16 (setup wizard + settings refresh S-2, on feature/setup-settings-refresh)
+
+### Changes
+- S-2: SettingsPage 5 tabs → 5 collapsed cards in a centered 760px stack (Preferences / Appearance / Dashboard / Backup & Storage / About), all `defaultOpen={false}` with live badges (currency, theme·accent, n-of-6 on, snapshot count, version)
+- NEW cards: `PreferencesCard` (draft + inline Save, `saveMode` prop for S-3 modal reuse), `AppearanceCard`, `DashboardCard` (7 instant switches from store), `BackupCard` (restore + folder + Drive sync + engine + import/export + import overlay moved in), `AboutCard` (AboutApp + activity + diagnostics + log actions moved in)
+- SettingsPage.tsx → ~60 LOC composition; dead tab CSS removed (.layout/.subNav/.navItem/.content/.card/.cardHead/.separator + mobile block); `?tab=backup&open=google-drive-sync` deep link preserved via remount key + scroll-into-view
+- Gates: typecheck PASS, eslint --max-warnings 0 PASS, build PASS; Playwright live :3000 — 0 expanded by default, tap expands, deep link opens Backup + Drive section, screenshot confirms stacked cards
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- S-2 complete on branch, unpushed. Next: S-3 thin SettingsModal to wrapper.

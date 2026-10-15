@@ -8,3 +8,8 @@ export { FolderBackup } from './FolderBackup';
 export { EngineHealth } from './EngineHealth';
 export { ImportExportRow } from './ImportExportRow';
 export { AboutApp } from './AboutApp';
+export { PreferencesCard } from './PreferencesCard';
+export { AppearanceCard } from './AppearanceCard';
+export { DashboardCard } from './DashboardCard';
+export { BackupCard } from './BackupCard';
+export { AboutCard } from './AboutCard';
