@@ -118,6 +118,10 @@ export interface IDatabaseService {
   getStorageHealth(): StorageHealth;
   getCloudStatus(): Promise<CloudStatus>;
   syncNow(): Promise<CloudStatus>;
+  /** Open-tab poll: 'available' when remote moved and local is clean. Null when signed out/offline. */
+  checkRemoteUpdate(): Promise<'up-to-date' | 'available' | 'conflict' | null>;
+  /** Downloads + imports the newer remote. True on success. */
+  applyRemoteUpdate(): Promise<boolean>;
 
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;

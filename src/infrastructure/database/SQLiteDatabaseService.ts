@@ -501,6 +501,54 @@ export class SQLiteDatabaseService implements IDatabaseService {
     return this.getCloudStatus();
   }
 
+  /**
+   * Open-tab remote check (T-149): hash-only cost when clean, full download
+   * only via applyRemoteUpdate(). Conflict stashes + flags like boot-pull.
+   */
+  async checkRemoteUpdate(): Promise<'up-to-date' | 'available' | 'conflict' | null> {
+    if (this.cloudConflict) return 'conflict';
+    const token = await googleAuth.getValidToken().catch(() => null);
+    if (!token || !this.db) return null;
+    const meta = await getLastSyncMeta().catch(() => null);
+    const localHash = await digestHex(this.db.export());
+    if (meta && localHash === meta.hash) {
+      const remoteHash = await cloudSync.remoteHash(token);
+      return remoteHash && remoteHash !== meta.hash ? 'available' : 'up-to-date';
+    }
+    const remoteHash = await cloudSync.remoteHash(token);
+    const action = decideSyncAction({ hasLocal: true, localHash, remoteHash, lastSyncHash: meta?.hash });
+    if (action === 'conflict') {
+      const dl = await cloudSync.download(token);
+      if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
+      this.cloudConflict = true;
+      this.cloudLastError = 'conflict';
+      return 'conflict';
+    }
+    return 'up-to-date';
+  }
+
+  /** Imports the newer remote after user confirmation (T-149 prompt). */
+  async applyRemoteUpdate(): Promise<boolean> {
+    const token = await googleAuth.getValidToken().catch(() => null);
+    if (!token) return false;
+    const dl = await cloudSync.download(token);
+    if (!dl) return false;
+    try {
+      if (!this.SQL) return false;
+      this.db = new this.SQL.Database(dl.data);
+      await this._migrate();
+    } catch {
+      return false;
+    }
+    await setLastSyncMeta({ hash: dl.hash, at: Date.now() }).catch(() => {});
+    this.cloudLastSyncAt = Date.now();
+    this.cloudLastError = null;
+    this.cloudConflict = false;
+    this.dirty = true;
+    await this.flush().catch(() => {});
+    return true;
+  }
+
   async getSnapshots(): Promise<SnapshotInfo[]> {
     const result: SnapshotInfo[] = [];
     for (let i = 0; i < MAX_SNAPSHOTS; i++) {
