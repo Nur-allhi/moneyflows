@@ -40,22 +40,6 @@
   flex-wrap: wrap;
 }
 
-.inputField {
-  flex: 1;
-  min-width: 200px;
-  background: color-mix(in oklch, var(--color-wash) 4%, transparent);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-base);
-  color: var(--color-text);
-}
-
-.inputField:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
-}
-
 .actionBtn {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-sm);

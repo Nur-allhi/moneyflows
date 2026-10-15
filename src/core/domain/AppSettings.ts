@@ -33,7 +33,5 @@ export class AppSettings {
     public fontSize: string = 'medium',
     /** Desktop sidebar folded to icons-only (hover peeks). Persisted. */
     public sidebarCollapsed: boolean = false,
-    /** Google OAuth client ID (public identifier, not a secret) for Drive sync. */
-    public cloudClientId: string = '',
   ) {}
 }

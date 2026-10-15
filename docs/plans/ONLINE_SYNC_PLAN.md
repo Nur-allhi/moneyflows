@@ -39,6 +39,12 @@ Google Identity Services (gsi/client script, no npm dep)
 
 - **Scope (minimal):** `drive.appdata` + `openid email` (email scope only to display
   the signed-in account; both documented in Settings empty-state).
+- **Client ID (app-owned, baked in):** one Google OAuth client owned by the publisher,
+  injected at build time from `GOOGLE_CLIENT_ID` (real env or gitignored `.env.local`)
+  via `__GOOGLE_CLIENT_ID__` → `constants/googleClient.ts`. Users never paste anything —
+  they tap **Sign in with Google**. The ID is public by design; per-user isolation comes
+  from the per-account token + `appDataFolder`, not from the ID. Empty ID = sync section
+  shows "not set up", app stays fully local.
 - **Files in Drive:** `moneyflows.db` + `moneyflows.db.sha256` inside `appDataFolder`
   (hidden from the user's Drive UI, per-user automatic — the Google account *is*
   the database container; zero provisioning).
@@ -53,14 +59,21 @@ Google Identity Services (gsi/client script, no npm dep)
 3. Hash-verify every download before opening.
 4. Mismatch + dirty = conflict copy into snapshots + user choice, never auto-overwrite.
 
-## 4. Manual setup (user action, one time — documented in Settings empty-state)
+## 4. Setup (publisher one time — users just tap Sign in)
 
-1. Google Cloud Console → new project → OAuth consent screen (External, test mode
-   for personal use) → OAuth client ID (Web) with the app origin as authorized
-   JavaScript origin.
-2. Paste client ID into Settings → Backup → "Connect Google Drive".
-3. No verification needed for personal/test-mode use; publishing to others later
-   requires the `drive.appdata` scope verification.
+Publisher (once per build environment):
+
+1. Google Cloud Console → new project → enable Google Drive API.
+2. OAuth consent screen (External, Test mode for personal use; verification later
+   for public rollout) → add test users while in test mode.
+3. Credentials → OAuth client ID (Web) → authorized origins: dev
+   `http://localhost:3000` + the production origin.
+4. Put the ID in `.env.local` as `GOOGLE_CLIENT_ID=…apps.googleusercontent.com`
+   (gitignored) or as a real env var at build time — no code change, no commit.
+
+User flow (zero setup): Settings → Backup → Google Drive Sync → **Sign in with
+Google** → Sync now (or automatic). Test-mode grants expire after 7 days →
+re-tap Sign in; publishing + verification removes that.
 
 ## 5. Ticket breakdown (Phase 19 — full specs in `docs/TICKETS.md`)
 

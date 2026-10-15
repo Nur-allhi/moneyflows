@@ -31,8 +31,7 @@ test.describe('15 cloud sync (mocked Google + Drive)', () => {
     await page.goto('/settings');
     await page.getByText('Backup & Storage').click();
     await page.getByText('Google Drive Sync').click();
-    await page.getByPlaceholder(/Google Client ID/i).fill('e2e-client-id.apps.googleusercontent.com');
-    await page.getByRole('button', { name: 'Connect', exact: true }).click();
+    await page.getByRole('button', { name: 'Sign in with Google', exact: true }).click();
     await expect(page.getByText('e2e@test.dev').first()).toBeVisible({ timeout: 8000 });
 
     await page.getByRole('button', { name: 'Sync now', exact: true }).click();

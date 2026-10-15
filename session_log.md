@@ -1355,3 +1355,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Phase 19 complete on `feature/online-sync-drive`, pushed. Next: user reviews → confirm merge to `dev`; live test needs user's OAuth Client ID (plan §4); version bump at release (MINOR per §2).
+
+## Session 2026-10-15 (Sign in with Google — no more Client ID paste)
+
+### Changes
+- User feedback: per-user Client ID paste is inconvenient → switched to one app-owned OAuth client baked in at build time (`GOOGLE_CLIENT_ID` real-env/`.env.local` → `__GOOGLE_CLIENT_ID__` → `constants/googleClient.ts`, mirrors `__APP_VERSION__` pattern; `.env*` already gitignored)
+- `CloudSyncSection` simplified: explainer + **Sign in with Google** button (unconfigured builds show "not set up", stay fully local); dropped `cloudClientId` from AppSettings (branch-only field, never released)
+- `playwright.config` webServer passes a dummy ID (GIS fully stubbed in e2e); plan §2/§4 + README updated (publisher one-time setup, zero user setup)
+- Debugging saga: e2e kept failing on a stale vite server squatting :3000 (pre-change code + `reuseExistingServer` kept reusing it); `netstat -p TCP` missed the IPv6 listener — `netstat -ano` found PID 10672, killed it; verified env flow with a temp config probe (removed after); `CI=1` forces a fresh server
+- Gates: typecheck PASS, scoped lint clean, build PASS, e2e `15-cloud-sync` 2/2 green
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- On `feature/online-sync-drive`, unpushed. Next: commit + push; user creates ONE OAuth client (plan §4) into `.env.local`, runs `npm run dev`, taps Sign in with Google for the live test.
