@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { CloudSync, CLOUD_DB_FILE, CLOUD_HASH_FILE, decideSyncAction, effectiveHasLocal, decideHeal } from '../CloudSync';
+import { CloudSync, CLOUD_DB_FILE, CLOUD_HASH_FILE, decideSyncAction, effectiveHasLocal, decideHeal, cloudRetryDelayMs } from '../CloudSync';
 import { digestHex } from '../storage/sha256';
 
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -286,6 +286,25 @@ describe('decideHeal (T-160)', () => {
 
   it('foreign invalid bytes + empty local → corrupt (no garbage adoption)', () => {
     expect(decideHeal({ remoteDbPresent: true, bytesReadable: true, bytesMatchSidecar: false, bytesMatchLocal: false, bytesValidDb: false, localEmpty: true })).toBe('corrupt');
+  });
+});
+
+describe('cloudRetryDelayMs (T-163)', () => {
+  it('returns null when a retry is already pending (single timer)', () => {
+    expect(cloudRetryDelayMs(1000, 0, 30_000, true)).toBeNull();
+  });
+
+  it('returns the full window on a fresh skip', () => {
+    expect(cloudRetryDelayMs(1000, 1000, 30_000, false)).toBe(30_000);
+  });
+
+  it('returns the remainder mid-window', () => {
+    expect(cloudRetryDelayMs(11_000, 1000, 30_000, false)).toBe(20_000);
+  });
+
+  it('returns null when the window already elapsed', () => {
+    expect(cloudRetryDelayMs(31_000, 1000, 30_000, false)).toBeNull();
+    expect(cloudRetryDelayMs(31_000, 1000, 30_000, true)).toBeNull();
   });
 });
 

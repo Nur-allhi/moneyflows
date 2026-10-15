@@ -118,6 +118,22 @@ export function effectiveHasLocal(isEmpty: boolean, lastSyncHash?: string): bool
 }
 
 /**
+ * Deferred-retry delay (T-163): when a flush is skipped by the sync cooldown,
+ * how long until one background retry. Null when a retry is already pending
+ * (single timer only) or the window already elapsed.
+ */
+export function cloudRetryDelayMs(
+  nowMs: number,
+  lastSyncMs: number,
+  cooldownMs: number,
+  timerPending: boolean,
+): number | null {
+  if (timerPending) return null;
+  const wait = cooldownMs - (nowMs - lastSyncMs);
+  return wait > 0 ? wait : null;
+}
+
+/**
  * Heal decision (T-160, pure): what to do when a verified download failed but
  * remote files exist. `bytes*` describe the newest remote DB bytes (unverified).
  */

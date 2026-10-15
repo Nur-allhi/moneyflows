@@ -8,7 +8,7 @@ import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, G
 import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS, CLOUD_SYNC_COOLDOWN_MS, CLOUD_BOOT_TIMEOUT_MS, CLOUD_BOOT_SKIP_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
 import { googleAuth } from './GoogleAuth';
-import { cloudSync, decideSyncAction, decideHeal, effectiveHasLocal, getLastSyncMeta, setLastSyncMeta, CLOUD_DB_FILE, CLOUD_HASH_FILE } from './CloudSync';
+import { cloudSync, decideSyncAction, decideHeal, effectiveHasLocal, cloudRetryDelayMs, getLastSyncMeta, setLastSyncMeta, CLOUD_DB_FILE, CLOUD_HASH_FILE } from './CloudSync';
 import type { CloudDownload } from './CloudSync';
 import { createStorageAdapter, withStorageLock } from './storage';
 import type { IPersistenceAdapter, SnapshotRecord } from './storage/types';
@@ -124,6 +124,8 @@ export class SQLiteDatabaseService implements IDatabaseService {
   private cloudLastSyncAt = 0;
   private cloudLastError: string | null = null;
   private cloudConflict = false;
+  /** Single pending deferred-retry timer (T-163); cleared on the next attempt. */
+  private cloudRetryTimer: ReturnType<typeof setTimeout> | null = null;
 
   getSqlJsDb(): SqlJsDb | null { return this.db; }
 
@@ -494,13 +496,39 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   /**
+   * Deferred retry (T-163): a flush skipped by the cooldown schedules one
+   * background retry at window expiry, so a lone quick second save still
+   * uploads with zero further interaction. The retry re-flushes, flowing
+   * through the normal guarded path with fresh bytes.
+   */
+  private _scheduleCloudRetry(nowMs: number): void {
+    const wait = cloudRetryDelayMs(nowMs, this.lastCloudSyncTime, CLOUD_SYNC_COOLDOWN_MS, this.cloudRetryTimer !== null);
+    if (wait === null) return;
+    this.cloudRetryTimer = setTimeout(() => {
+      this.cloudRetryTimer = null;
+      void this.flush().catch(() => {});
+    }, wait);
+  }
+
+  private _clearCloudRetry(): void {
+    if (this.cloudRetryTimer) {
+      clearTimeout(this.cloudRetryTimer);
+      this.cloudRetryTimer = null;
+    }
+  }
+
+  /**
    * Cloud sync sink (Phase 19, Guards 1–4): fire-and-forget, never throws into
    * flush(). Direction comes from decideSyncAction — local is never overwritten
    * and a both-sides-moved state stashes the remote + flags conflict (T-150 UI).
    */
   private async _maybeCloudSync(data: Uint8Array, force = false): Promise<void> {
     const nowMs = Date.now();
-    if (!force && nowMs - this.lastCloudSyncTime < CLOUD_SYNC_COOLDOWN_MS) return;
+    if (!force && nowMs - this.lastCloudSyncTime < CLOUD_SYNC_COOLDOWN_MS) {
+      this._scheduleCloudRetry(nowMs);
+      return;
+    }
+    this._clearCloudRetry();
     this.lastCloudSyncTime = nowMs;
     if (this.cloudConflict) return;
     const token = await googleAuth.getValidToken().catch(() => null);

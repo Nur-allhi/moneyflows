@@ -281,6 +281,7 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-160 | Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics | `senior-backend` | M | **Complete** (newest-first reads, upsert dedupes, stale-sidecar/orphan/adopt heal, remote-corrupt taxonomy + replace-cloud escape, diagnostics row, 38/38 db tests) |
 | T-161 | Splash boot progress + skip redundant cloud check | `senior-frontend` | M | **Complete** (BootProgress threading, staged splash bar, 60s boot-pull skip, e2e green) |
 | T-162 | Upload write-verify + retry (no torn pairs) | `senior-backend` | S | **Complete** (sidecar read-back + one retry, stateful e2e mocks proving verify round trip) |
+| T-163 | Deferred cloud retry when cooldown skips a flush | `senior-backend` | S | **Complete** (single one-shot timer at window expiry, re-flushes through guarded path, pure helper 4/4 tests) |
 
 ### T-160 - Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics
 **Skill:** `senior-backend`
@@ -376,6 +377,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 2. Update e2e Drive mocks to be stateful (created files persist in list results) since verify now reads back.
 3. Unit tests: verify-pass uploads once; torn write triggers exactly one re-upload then reports false; never throws.
 **Acceptance:** killing the tab mid-upload can no longer leave a permanently torn pair unnoticed — the next sync either completes or reports.
+
+### T-163 - Deferred cloud retry when cooldown skips a flush
+**Skill:** `senior-backend`
+**Effort:** S
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts`, `src/infrastructure/database/CloudSync.ts` (pure helper), `__tests__/CloudSync.test.ts`
+**Content:**
+1. Root cause: a flush skipped by `CLOUD_SYNC_COOLDOWN_MS` schedules nothing — a lone quick second save waits indefinitely for the next mutation/tab-hide.
+2. On cooldown-skip, schedule one one-shot retry at cooldown expiry (single pending timer; cleared on the next real attempt). Retry calls `flush()` so it re-exports fresh bytes and flows through the normal guarded path.
+3. Pure `cloudRetryDelayMs(nowMs, lastSyncMs, cooldownMs, timerPending)` helper with unit tests (pending→null, fresh skip→full window, mid-window→remainder).
+4. Full gates green.
+**Acceptance:** save twice within 30s → second save uploads at cooldown expiry with zero further interaction; single timer only; sign-out/disconnect unaffected (token-gated path returns silently).
 
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
