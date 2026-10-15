@@ -1538,3 +1538,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Full batch complete on branch. Next: push + user verifies live → confirm merge to `dev` (CHANGELOG Added/Fixed entries ride with merge).
+
+## Session 2026-10-16 (guest Google sign-in entry, on feature/setup-settings-refresh)
+
+### Changes
+- User report: skipped wizard → dashboard → Settings has no Google sign-in. Diagnosed two layers: (1) running :3000 predates `.env.local` key — served ID-less build ("not set up", no button) though the key exists on disk; (2) even configured, sign-in is buried (collapsed Backup card → nested disclosure) and guests see zero sync affordance (header button hid when signed out, wizard skipped)
+- User-confirmed: header button for guests. `useCloudIndicator.ts` now returns idle guest state (`never` dot + "Sign in to back up to Google Drive") when signed out AND build configured; null only when unconfigured (no dead button). No Header markup change — existing buttons + Backup deep link render as-is
+- Verification saga: scratch e2e failed first on reused ID-less :3000 (proving the env diagnosis); killed :3000 squatter (PID 6520), `CI=1` fresh server with dummy ID → scratch 98-guest-sync green (button visible → deep link → Drive section), spec deleted after
+- Gates: typecheck PASS, eslint clean
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, unpushed. Next: push; USER MUST RESTART `npm run dev` (picks up `.env.local` key) → header cloud button + Settings sign-in appear; then verify → confirm merge to `dev`.
