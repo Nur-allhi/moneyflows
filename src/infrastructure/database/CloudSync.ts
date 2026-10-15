@@ -109,6 +109,27 @@ export function resetCloudMetaForTests(): void {
 }
 
 /**
+ * Sign-out wipe: forgets the last-sync fingerprint (memory + IDB) so a fresh
+ * device never mistakes itself for a previously-synced one (T-152 rule).
+ */
+export async function clearLastSyncMeta(): Promise<void> {
+  metaMemory.delete(META_KEY);
+  const db = await openMetaDb();
+  if (!db) return;
+  await new Promise<void>((resolve) => {
+    try {
+      const tx = db.transaction(META_STORE, 'readwrite');
+      tx.objectStore(META_STORE).delete(META_KEY);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    } catch {
+      db.close();
+      resolve();
+    }
+  });
+}
+
+/**
  * Fresh-device rule (T-152): an empty local DB that never synced counts as
  * "no local side" — so it auto-pulls instead of conflicting. An emptied
  * previously-synced device stays a real local side (deliberate-wipe ambiguity).
