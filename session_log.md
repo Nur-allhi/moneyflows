@@ -1443,3 +1443,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - T-160 e2e initially failed with real-app-correct code: probe proved Playwright glob `**/drive/v3/files**` does NOT match file-id URLs carrying `?alt=media` (content fetches escaped to real Google → 401), while regex and `**/drive/v3/files/*` match everything
 - Fix (`f6ad10c`): stateful Drive mocks (created files persist, sidecar hash readable back) + regex route matcher — write-verify now proven end-to-end in e2e, 2/2 green
 - Lesson: when app logic looks right but e2e disagrees, isolate mock-vs-app with a minimal probe before touching product code
+
+## Session 2026-10-15 (T-161/T-162/T-163 boot, verify, retry)
+
+### Changes
+- User reports: (1) post-download reload sits on a blind splash for seconds; (2) auto-sync must never damage data mid-sync; (3) when does auto-sync run after a save?
+- T-161: `BootProgress` threading (`initDatabase` → `init`) with staged splash bar + labels; boot cloud check skipped when persisted meta is fresh (<60s) — covers reload-right-after-sync
+- T-162: upload write-verify (sidecar read-back, exactly one re-upload on tear) — torn pairs get completed or reported, never silently persisted
+- T-163 (`1ca31e7`): deferred retry — a cooldown-skipped flush schedules one one-shot retry at window expiry via re-flush; pure `cloudRetryDelayMs` helper 4/4 tests
+- Gates: typecheck PASS, scoped lint clean, 44/44 db tests, build PASS
+
+### Status
+- Committed, unpushed. Next: push + reply (incl. whole-DB-vs-delta explainer).
