@@ -1424,3 +1424,15 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed, unpushed. Next: push + reply; user retests Sync-now (no popup expected within the hour).
+
+## Session 2026-10-15 (T-160 download resilience)
+
+### Changes
+- User report: cleared storage → sign in → "Last download failed" loop with cloud data present. Diagnosis: message comes only from the pull branch, i.e. sidecar reads fine but DB bytes mismatch — classic interrupted upload (tab closed/suspended between DB and sidecar writes); plain retries can never succeed
+- T-160 (`c80dbc0`): newest-wins reads (`orderBy=modifiedTime desc`), upsert deletes older dupes, `_healRemoteAttempt` (stale sidecar→rewrite, orphan→cleanup, valid bytes + empty device→adopt, else `remote-corrupt` preserving everything), `remoteInfo()` diagnostics row, `overwriteRemote()` warned escape hatch + Replace-cloud-backup button
+- Cloud/data still never auto-overwritten: corrupt path touches nothing; empty device never uploads
+- Gates: typecheck PASS, scoped lint clean, 38/38 db tests (incl. 7-case heal matrix), e2e cloud-sync/backup 4/4, build PASS
+- Process note: one more trailing-newline anchor slip caught by read-back (ports file) — rule holds: full-line anchors + verify after every edit
+
+### Status
+- Committed, unpushed. Next: push + reply with retest steps (user's broken remote should self-heal on next Sync-now).
