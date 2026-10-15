@@ -1,8 +1,6 @@
 import {
   DESCRIPTION_MAX_LENGTH_MIN,
   DESCRIPTION_MAX_LENGTH_MAX,
-  NUMPAD_MAX_DIGITS_MIN,
-  NUMPAD_MAX_DIGITS_MAX,
   DASHBOARD_TX_LIMIT_MIN,
   DASHBOARD_TX_LIMIT_MAX,
 } from '../../../constants/config';
@@ -12,19 +10,15 @@ interface LimitsFieldsProps {
   cx: Cx;
   descriptionMaxLength: number;
   onDescriptionMaxLength: (v: number) => void;
-  numpadMaxDigits: number;
-  onNumpadMaxDigits: (v: number) => void;
   dashboardTxLimit: number;
   onDashboardTxLimit: (v: number) => void;
 }
 
-/** Description / numpad / dashboard-count limit fields — controlled. */
+/** Description-length + dashboard-count fields — controlled. */
 export function LimitsFields({
   cx,
   descriptionMaxLength,
   onDescriptionMaxLength,
-  numpadMaxDigits,
-  onNumpadMaxDigits,
   dashboardTxLimit,
   onDashboardTxLimit,
 }: LimitsFieldsProps) {
@@ -42,17 +36,6 @@ export function LimitsFields({
         />
       </div>
       <div className={cx.fieldGroup}>
-        <label className={cx.fieldLabel}>Numpad Max Digits</label>
-        <input
-          className={cx.inputField}
-          type="number"
-          min={NUMPAD_MAX_DIGITS_MIN}
-          max={NUMPAD_MAX_DIGITS_MAX}
-          value={numpadMaxDigits}
-          onChange={(e) => onNumpadMaxDigits(Number(e.target.value))}
-        />
-      </div>
-      <div className={cx.fieldGroup}>
         <label className={cx.fieldLabel}>Dashboard Transaction Limit</label>
         <input
           className={cx.inputField}
@@ -62,6 +45,7 @@ export function LimitsFields({
           value={dashboardTxLimit}
           onChange={(e) => onDashboardTxLimit(Number(e.target.value))}
         />
+        <span className={cx.hint}>Dashboard Recent Transactions only — ledgers show everything.</span>
       </div>
     </>
   );

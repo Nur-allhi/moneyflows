@@ -37,6 +37,12 @@
   color: var(--color-text-secondary);
 }
 
+.hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
 .inputField,
 .selectField {
   padding: 12px 14px;

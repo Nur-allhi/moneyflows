@@ -18,7 +18,6 @@ export function PreferencesCard({ cx, saveMode = 'inline' }: PreferencesCardProp
   const [locale, setLocale] = useState(settings.locale);
   const [primaryMemberId, setPrimaryMemberId] = useState(settings.primaryMemberId ?? '');
   const [descriptionMaxLength, setDescriptionMaxLength] = useState(settings.descriptionMaxLength);
-  const [numpadMaxDigits, setNumpadMaxDigits] = useState(settings.numpadMaxDigits);
   const [dashboardTxLimit, setDashboardTxLimit] = useState(settings.dashboardTxLimit);
   const [saved, setSaved] = useState(false);
 
@@ -27,7 +26,6 @@ export function PreferencesCard({ cx, saveMode = 'inline' }: PreferencesCardProp
     setLocale(settings.locale);
     setPrimaryMemberId(settings.primaryMemberId ?? '');
     setDescriptionMaxLength(settings.descriptionMaxLength);
-    setNumpadMaxDigits(settings.numpadMaxDigits);
     setDashboardTxLimit(settings.dashboardTxLimit);
   }, [settings]);
 
@@ -37,7 +35,6 @@ export function PreferencesCard({ cx, saveMode = 'inline' }: PreferencesCardProp
       locale,
       primaryMemberId: primaryMemberId || null,
       descriptionMaxLength,
-      numpadMaxDigits,
       dashboardTxLimit,
     });
     setSaved(true);
@@ -64,8 +61,6 @@ export function PreferencesCard({ cx, saveMode = 'inline' }: PreferencesCardProp
         cx={cx}
         descriptionMaxLength={descriptionMaxLength}
         onDescriptionMaxLength={setDescriptionMaxLength}
-        numpadMaxDigits={numpadMaxDigits}
-        onNumpadMaxDigits={setNumpadMaxDigits}
         dashboardTxLimit={dashboardTxLimit}
         onDashboardTxLimit={setDashboardTxLimit}
       />

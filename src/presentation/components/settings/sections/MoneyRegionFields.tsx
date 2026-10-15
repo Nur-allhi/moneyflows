@@ -43,6 +43,7 @@ export function MoneyRegionFields({
           onChange={(e) => onLocale(e.target.value)}
           placeholder="e.g. en-IN, en-US, bn-BD"
         />
+        <span className={cx.hint}>Formats numbers & dates — bn-BD renders Bengali digits.</span>
       </div>
       <div className={cx.fieldGroup}>
         <label className={cx.fieldLabel}>Primary Member</label>
