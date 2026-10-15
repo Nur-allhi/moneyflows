@@ -32,6 +32,12 @@ export function SetupWizard() {
   const [authError, setAuthError] = useState<string | null>(null);
   /** Staged sign-in progress (T-154) so slow networks never look dead. */
   const [authStage, setAuthStage] = useState<'google' | 'syncing' | null>(null);
+  /** Modal pickers for the money step (T-155, DESIGN_IDENTITY §9). */
+  const [showTypePicker, setShowTypePicker] = useState(false);
+  const [showMemberPicker, setShowMemberPicker] = useState(false);
+  const [typeKey, replayType] = useReplay();
+  const [memberKey, replayMember] = useReplay();
+  const [pickKey, replayPick] = useReplay();
   const [signInKey, replaySignIn] = useReplay();
   const [guestKey, replayGuest] = useReplay();
   const [skipKey, replaySkip] = useReplay();
@@ -203,13 +209,14 @@ export function SetupWizard() {
               <h2 className={styles.h2}>Where’s your money?</h2>
               <p className={styles.sub}>Add where your money lives. This is your starting point — every future move will be a transaction.</p>
               <div className={styles.grid2}>
-                <select className={styles.input} value={accountDraft.type} onChange={(e) => setAccountDraft((p) => ({ ...p, type: e.target.value as AccountType }))}>
-                  {ACCOUNT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  {ACCOUNT_TYPES.map((t) => !ACCOUNT_TYPE_OPTIONS.find((o) => o.value === t) ? <option key={t} value={t}>{ACCOUNT_TYPE_LABEL[t]}</option> : null)}
-                </select>
-                <select className={styles.input} value={accountDraft.memberIdx} onChange={(e) => setAccountDraft((p) => ({ ...p, memberIdx: Number(e.target.value) }))}>
-                  {memberNames.map((n, i) => n.trim() && <option key={i} value={i}>{n.trim()}</option>)}
-                </select>
+                <button type="button" className={`${styles.pickerTrigger} ${typeKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayType(); setShowTypePicker(true); }}>
+                  <span className={styles.pickerValue} key={typeKey}>{ACCOUNT_TYPE_LABEL[accountDraft.type] ?? accountDraft.type}</span>
+                  <span className={styles.pickerArrow}>▾</span>
+                </button>
+                <button type="button" className={`${styles.pickerTrigger} ${memberKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMember(); setShowMemberPicker(true); }}>
+                  <span className={styles.pickerValue} key={memberKey}>{memberNames[accountDraft.memberIdx]?.trim() || 'Select member'}</span>
+                  <span className={styles.pickerArrow}>▾</span>
+                </button>
               </div>
               <input className={styles.input} placeholder="Account name (e.g. bKash)" value={accountDraft.name} onChange={(e) => setAccountDraft((p) => ({ ...p, name: e.target.value }))} />
               <input className={styles.input} placeholder="Starting balance (optional)" inputMode="numeric" value={accountDraft.balance} onChange={(e) => setAccountDraft((p) => ({ ...p, balance: e.target.value.replace(/[^0-9]/g, '') }))} />
@@ -226,6 +233,48 @@ export function SetupWizard() {
                 <button className={`${styles.secondary} ${back2Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack2(); setStep(1); }}><span className="anim-target" key={back2Key}>Back</span></button>
                 <button className={`${styles.primary} ${cont2Key > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCont2(); setStep(3); }}><span className="anim-target" key={cont2Key}>Continue → See how it works</span></button>
               </div>
+              {showTypePicker && (
+                <div className={styles.pickerOverlay} onClick={() => setShowTypePicker(false)}>
+                  <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.pickerHeader}>
+                      <span className={styles.pickerTitle}>Account type</span>
+                      <button className={styles.pickerClose} onClick={() => setShowTypePicker(false)} aria-label="Close">✕</button>
+                    </div>
+                    <div className={styles.pickerList}>
+                      {ACCOUNT_TYPE_OPTIONS.map((o) => (
+                        <button key={o.value} className={`${styles.pickerItem} ${accountDraft.type === o.value ? styles.pickerItemActive : ''}`} onClick={() => { replayPick(); setAccountDraft((p) => ({ ...p, type: o.value as AccountType })); setShowTypePicker(false); }}>
+                          <span className={styles.pickerItemName} key={`${o.value}-${pickKey}`}>{o.label}</span>
+                        </button>
+                      ))}
+                      {ACCOUNT_TYPES.filter((t) => !ACCOUNT_TYPE_OPTIONS.find((o) => o.value === t)).map((t) => (
+                        <button key={t} className={`${styles.pickerItem} ${accountDraft.type === t ? styles.pickerItemActive : ''}`} onClick={() => { replayPick(); setAccountDraft((p) => ({ ...p, type: t })); setShowTypePicker(false); }}>
+                          <span className={styles.pickerItemName} key={`${t}-${pickKey}`}>{ACCOUNT_TYPE_LABEL[t]}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {showMemberPicker && (
+                <div className={styles.pickerOverlay} onClick={() => setShowMemberPicker(false)}>
+                  <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.pickerHeader}>
+                      <span className={styles.pickerTitle}>Owner</span>
+                      <button className={styles.pickerClose} onClick={() => setShowMemberPicker(false)} aria-label="Close">✕</button>
+                    </div>
+                    <div className={styles.pickerList}>
+                      {memberNames.map((n, i) => n.trim() && (
+                        <button key={i} className={`${styles.pickerItem} ${accountDraft.memberIdx === i ? styles.pickerItemActive : ''}`} onClick={() => { replayPick(); setAccountDraft((p) => ({ ...p, memberIdx: i })); setShowMemberPicker(false); }}>
+                          <span className={styles.pickerItemName} key={`${i}-${pickKey}`}>{n.trim()}</span>
+                        </button>
+                      ))}
+                      {!memberNames.some((n) => n.trim()) && (
+                        <div className={styles.pickerEmpty}>No members yet — add one on the previous step</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
