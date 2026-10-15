@@ -4,8 +4,8 @@ import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
-import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile } from '../../core/ports/IDatabaseService';
-import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS, CLOUD_SYNC_COOLDOWN_MS, CLOUD_BOOT_TIMEOUT_MS } from '../../presentation/constants/config';
+import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile, BootProgress } from '../../core/ports/IDatabaseService';
+import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS, CLOUD_SYNC_COOLDOWN_MS, CLOUD_BOOT_TIMEOUT_MS, CLOUD_BOOT_SKIP_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
 import { googleAuth } from './GoogleAuth';
 import { cloudSync, decideSyncAction, decideHeal, effectiveHasLocal, getLastSyncMeta, setLastSyncMeta, CLOUD_DB_FILE, CLOUD_HASH_FILE } from './CloudSync';
@@ -127,8 +127,10 @@ export class SQLiteDatabaseService implements IDatabaseService {
 
   getSqlJsDb(): SqlJsDb | null { return this.db; }
 
-  async init(): Promise<void> {
+  async init(progress?: BootProgress): Promise<void> {
+    progress?.(0.05, 'Starting…');
     this.SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' });
+    progress?.(0.15, 'Starting engine…');
     const { adapter } = await createStorageAdapter({
       mainKey: STORAGE_KEY,
       snapshotPrefix: SNAPSHOT_PREFIX,
@@ -140,6 +142,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
       if (e instanceof StorageCorruptError) return null;
       throw e;
     });
+    progress?.(0.4, 'Loading your data…');
     let loaded = false;
     if (saved) {
       try {
@@ -162,9 +165,12 @@ export class SQLiteDatabaseService implements IDatabaseService {
     } else {
       this.markDirty();
     }
+    progress?.(0.65, 'Preparing…');
     // Cloud boot-pull runs after local boot with a hard timeout — network must
     // never delay first paint or trip the splash watchdog. Failures are silent.
+    progress?.(0.75, 'Checking cloud backup…');
     await this._cloudBootPull(loaded).catch(() => {});
+    progress?.(0.9, 'Almost ready…');
     this._registerLifecycleFlush();
   }
 
@@ -552,6 +558,10 @@ export class SQLiteDatabaseService implements IDatabaseService {
    */
   private async _cloudBootPull(hadLocal: boolean): Promise<void> {
     const work = (async () => {
+      // Just synced (e.g. reload right after Sync-now): skip the network
+      // entirely — persisted meta survives reloads, memory does not (T-161).
+      const meta = await getLastSyncMeta().catch(() => null);
+      if (meta && Date.now() - meta.at < CLOUD_BOOT_SKIP_MS) return;
       const token = await googleAuth.getValidToken().catch(() => null);
       if (!token || !this.db || !this.SQL) return;
       const remoteHash = await cloudSync.remoteHash(token);
@@ -563,7 +573,6 @@ export class SQLiteDatabaseService implements IDatabaseService {
         return;
       }
       const localHash = await digestHex(this.db.export());
-      const meta = await getLastSyncMeta().catch(() => null);
       const action = decideSyncAction({ hasLocal: true, localHash, remoteHash, lastSyncHash: meta?.hash });
       if (action === 'pull') {
         const dl = await cloudSync.download(token);

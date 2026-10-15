@@ -63,6 +63,15 @@
   letter-spacing: 0.08em;
 }
 
+/* Boot progress (T-161): narrow bar + stage label above the version. */
+.bootProgress {
+  position: absolute;
+  bottom: var(--space-16);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(240px, 70vw);
+}
+
 @keyframes blink {
   50% { opacity: 0; }
 }

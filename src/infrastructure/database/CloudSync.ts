@@ -204,12 +204,20 @@ async function upsert(token: string, name: string, mime: string, bytes: Uint8Arr
 const textEncoder = (s: string): Uint8Array => new TextEncoder().encode(s);
 
 export class CloudSync {
-  /** Uploads DB + hash sidecar. True on success; false on any failure. */
+  /**
+   * Uploads DB + hash sidecar (T-162): after both writes, reads the sidecar
+   * back and compares — a torn pair (interrupted upload) triggers exactly one
+   * full re-upload instead of silently persisting. False on any residual
+   * failure (status surfaces, background retries, heal remains backstop).
+   */
   async sync(token: string, data: Uint8Array, hash: string): Promise<boolean> {
     try {
       await upsert(token, CLOUD_DB_FILE, 'application/x-sqlite3', data);
       await upsert(token, CLOUD_HASH_FILE, 'text/plain', textEncoder(hash));
-      return true;
+      if ((await this.remoteHash(token)) === hash) return true;
+      await upsert(token, CLOUD_DB_FILE, 'application/x-sqlite3', data);
+      await upsert(token, CLOUD_HASH_FILE, 'text/plain', textEncoder(hash));
+      return (await this.remoteHash(token)) === hash;
     } catch {
       return false;
     }

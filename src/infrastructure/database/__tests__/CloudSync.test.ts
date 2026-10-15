@@ -44,14 +44,59 @@ describe('CloudSync (T-146)', () => {
       async () => jsonBody({ id: 'db-id' }), // create DB
       async () => listEmpty(), // find sidecar
       async () => jsonBody({ id: 'hash-id' }), // create sidecar
+      async () => listOne('hash-id'), // verify: sidecar list
+      async () => new Response(hash, { status: 200 }), // verify: sidecar content
     );
     await expect(new CloudSync().sync('tok', data, hash)).resolves.toBe(true);
     const urls = calls.map((c) => c.url);
     expect(urls.some((u) => u.includes('uploadType=multipart'))).toBe(true);
+    // Exactly one create round — no retry on a clean write.
+    expect(calls.filter((c) => c.url.includes('uploadType=multipart'))).toHaveLength(2);
     // Authorization header present on every call.
     for (const c of calls) {
       expect((c.init?.headers as Record<string, string>).Authorization).toBe('Bearer tok');
     }
+  });
+
+  it('sync retries once on a torn write, then succeeds', async () => {
+    const data = enc('v2-bytes');
+    const hash = await digestHex(data);
+    queue.push(
+      async () => listEmpty(), // find DB
+      async () => jsonBody({ id: 'db-id' }), // create DB
+      async () => listEmpty(), // find sidecar
+      async () => jsonBody({ id: 'hash-id' }), // create sidecar
+      async () => listOne('hash-id'), // verify list
+      async () => new Response('stale-hash', { status: 200 }), // verify: mismatch!
+      async () => listOne('db-id'), // retry: find DB
+      async () => new Response('', { status: 200 }), // retry: PATCH DB
+      async () => listOne('hash-id'), // retry: find sidecar
+      async () => new Response('', { status: 200 }), // retry: PATCH sidecar
+      async () => listOne('hash-id'), // re-verify list
+      async () => new Response(hash, { status: 200 }), // re-verify: match
+    );
+    await expect(new CloudSync().sync('tok', data, hash)).resolves.toBe(true);
+    expect(calls.filter((c) => c.url.includes('uploadType=multipart'))).toHaveLength(2);
+    expect(calls.filter((c) => c.init?.method === 'PATCH')).toHaveLength(2);
+  });
+
+  it('sync reports false when the pair stays torn after retry', async () => {
+    const data = enc('v3-bytes');
+    queue.push(
+      async () => listEmpty(),
+      async () => jsonBody({ id: 'db-id' }),
+      async () => listEmpty(),
+      async () => jsonBody({ id: 'hash-id' }),
+      async () => listOne('hash-id'),
+      async () => new Response('stale-1', { status: 200 }),
+      async () => listOne('db-id'),
+      async () => new Response('', { status: 200 }),
+      async () => listOne('hash-id'),
+      async () => new Response('', { status: 200 }),
+      async () => listOne('hash-id'),
+      async () => new Response('stale-2', { status: 200 }),
+    );
+    await expect(new CloudSync().sync('tok', data, 'whatever')).resolves.toBe(false);
   });
 
   it('sync updates existing files instead of creating', async () => {
@@ -61,6 +106,8 @@ describe('CloudSync (T-146)', () => {
       async () => new Response('', { status: 200 }), // PATCH db
       async () => listOne('hash-id'),
       async () => new Response('', { status: 200 }), // PATCH sidecar
+      async () => listOne('hash-id'), // verify list
+      async () => new Response('h', { status: 200 }), // verify content matches
     );
     await expect(new CloudSync().sync('tok', data, 'h')).resolves.toBe(true);
     expect(calls.some((c) => c.url.includes('/db-id?uploadType=media') && c.init?.method === 'PATCH')).toBe(true);
@@ -177,8 +224,10 @@ describe('newest-wins + dedupe (T-160)', () => {
       async () => jsonBody({ files: [{ id: 'new-id', modifiedTime: 't2' }, { id: 'old-id', modifiedTime: 't1' }] }),
       async () => new Response('', { status: 200 }), // PATCH newest
       async () => new Response('', { status: 200 }), // DELETE older
-      async () => jsonBody({ files: [] }), // sidecar find
+      async () => listEmpty(), // sidecar find
       async () => jsonBody({ id: 'hash-id' }), // sidecar create
+      async () => listOne('hash-id'), // verify list
+      async () => new Response('h', { status: 200 }), // verify content matches
     );
     await expect(new CloudSync().sync('tok', enc('db'), 'h')).resolves.toBe(true);
     const patched = calls.find((c) => c.init?.method === 'PATCH');

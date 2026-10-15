@@ -279,6 +279,8 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-158 | Sidebar user profile (photo/name/email, profile scope) | `senior-frontend` | M | **Complete** (profile scope, persisted name/photo, footer photo+name+email, Family footer for guests, build green) |
 | T-159 | Day-long sessions: persisted token + silent refresh, popup only on explicit taps | `senior-backend` | M | **Complete** (root cause: refresh used `prompt:''`; silent is `prompt:'none'`; token persisted+hydrated, interactive split, 10/10 tests) |
 | T-160 | Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics | `senior-backend` | M | **Complete** (newest-first reads, upsert dedupes, stale-sidecar/orphan/adopt heal, remote-corrupt taxonomy + replace-cloud escape, diagnostics row, 38/38 db tests) |
+| T-161 | Splash boot progress + skip redundant cloud check | `senior-frontend` | M | **Complete** (BootProgress threading, staged splash bar, 60s boot-pull skip, e2e green) |
+| T-162 | Upload write-verify + retry (no torn pairs) | `senior-backend` | S | **Complete** (sidecar read-back + one retry, stateful e2e mocks proving verify round trip) |
 
 ### T-160 - Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics
 **Skill:** `senior-backend`
@@ -355,8 +357,27 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 3. `App.tsx` feeds footer props from a mount + route-change status refresh (same cheap pattern as T-157); update `SECURITY.md` scope line.
 **Acceptance:** sign-in → sidebar shows photo/name/email; sign-out → Family footer back; no photo URL ever logged.
 
-## Following Phase
+### T-161 - Splash boot progress + skip redundant cloud check
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/getDatabase.ts`, `SQLiteDatabaseService.init()`, `src/main.tsx`, `src/presentation/components/SplashScreen.tsx`, `src/presentation/constants/config.ts`
+**Content:**
+1. Thread an optional progress callback through `initDatabase(progress)` → `db.init(progress)`: engine 15% → local data 40% → ready-local 65% → cloud check 75% → done 90%, with plain-language labels. Main-thread cost zero (calls only).
+2. Skip `_cloudBootPull` network entirely when persisted meta is fresh (`Date.now() - meta.at < CLOUD_BOOT_SKIP_MS = 60s`) — covers reload-right-after-sync, the exact reported wait. Memory-only timestamps don't survive reload, so the persisted meta is the source.
+3. SplashScreen shows `ProgressBar` + stage label under the version while booting; typing animation untouched; watchdog untouched.
+**Acceptance:** post-sync reload boots with visible stages and usually skips cloud entirely; cold boot narrates engine → data → cloud.
 
+### T-162 - Upload write-verify + retry (no torn pairs)
+**Skill:** `senior-backend`
+**Effort:** S
+**File(s):** `src/infrastructure/database/CloudSync.ts` (`sync()`), `__tests__/CloudSync.test.ts`, `e2e/flows/15-cloud-sync.spec.ts` (stateful mocks)
+**Content:**
+1. After both upserts, read back the sidecar and compare: mismatch → re-run the pair once → still bad returns false (status surfaces, background retries, heal remains backstop). One extra metadata GET per successful sync; unchanged-data flushes still upload nothing.
+2. Update e2e Drive mocks to be stateful (created files persist in list results) since verify now reads back.
+3. Unit tests: verify-pass uploads once; torn write triggers exactly one re-upload then reports false; never throws.
+**Acceptance:** killing the tab mid-upload can no longer leave a permanently torn pair unnoticed — the next sync either completes or reports.
+
+## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 
 ## Ticket Template (use for all new work)

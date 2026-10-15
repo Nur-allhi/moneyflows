@@ -64,6 +64,9 @@ export interface CloudStatus {
 /** reconcileAfterSignIn outcome: silent paths need no UI, 'choice' opens the dialog. */
 export type CloudReconcile = 'downloaded' | 'uploaded' | 'idle' | 'choice' | 'signed-out';
 
+/** Boot progress callback (T-161): fraction 0..1 with a plain-language stage label. */
+export type BootProgress = (fraction: number, label: string) => void;
+
 export interface IDatabaseService {
   init(): Promise<void>;
   getSqlJsDb(): unknown;
