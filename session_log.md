@@ -1403,3 +1403,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Phase 20 complete on `google_signin_backup`, pushed. Next: user live-tests (consent now also shows `profile` scope); `master` still clean v1.16.1.
+
+## Session 2026-10-15 (header deep link follow-up)
+
+### Changes
+- User request: header sync button now navigates `/settings?tab=backup&open=google-drive-sync` — Backup tab with Google section already open, Sync now one tap away
+- Real bug found by e2e: after Settings sign-in (no route change) the header/sidebar kept stale state up to 30s → added `moneyflows:cloud-status` window event fired from section refresh, consumed by `useCloudIndicator` + App footer effect
+- Gates: typecheck + scoped lint clean, e2e `15-cloud-sync` 3/3 (incl. new deep-link round trip)
+
+### Status
+- Committed `9469978`, unpushed. Next: push + reply.
