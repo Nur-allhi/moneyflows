@@ -1467,3 +1467,10 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed, unpushed. Next: push + reply.
+
+## Session 2026-10-16 (T-167 completion beat)
+
+### Changes
+- User report: Sync-now bar stuck at 75% then vanished. Root cause: stages topped out at 75% with no 100% state — unmount on finish looked like a cut
+- T-167 (`ee9c90c`): `done` stage (100%, Synced ✓) held 1.2s on success in both sign-in and Sync-now via shared `StageBar`; failures keep clear-to-error behavior
+- Gates: typecheck PASS, scoped lint clean
