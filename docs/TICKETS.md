@@ -160,7 +160,7 @@ Mobile-save → desktop-boot sees it. The 4 guards in plan §3 block merge if vi
 | Ticket | Title | Skill | Effort | Status |
 |--------|-------|-------|--------|--------|
 | T-145 | `GoogleAuth.ts` — GIS loader, token client, cache/refresh, sign-in/out | `senior-frontend` | M | **Complete** (memory-only token, IDB email+expiry, silent refresh w/ 60s skew, 7/7 tests) |
-| T-146 | `CloudSync.ts` — appDataFolder upload/download/hash/conflict-copy I/O | `senior-backend` | M | Open |
+| T-146 | `CloudSync.ts` — appDataFolder upload/download/hash/conflict-copy I/O | `senior-backend` | M | **Complete** (upsert DB+sidecar, metadata-only hash, verified download, 9/9 tests, never throws) |
 | T-147 | Wire `_maybeCloudSync` into `flush()` + `pagehide` + boot-pull rule | `senior-backend` | M | Open |
 | T-148 | Settings → Backup: sign-in row, status, Sync now, disconnect | `senior-frontend` | M | Open |
 | T-149 | Open-tab remote check + "New data available" prompt | `senior-frontend` | S | Open |
