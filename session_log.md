@@ -1582,3 +1582,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push → user reloads normal Chrome → confirms wizard/sign-in → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-12 dead-end loop fix, on feature/setup-settings-refresh)
+
+### Changes
+- User pasted the new recovery screen: stall at `Starting…` = sql.js engine file never loaded (dead/restarting server — only :3000 listener is my detached server, no port conflict), and Start Fresh silently no-ops without engine/storage/SQL → reload loop. Both confirmed by reading init vs handler preconditions
+- Fix: NEW `wipePersistedStorage()` in storage/index (OPFS main+snapshots dir, LS main+ring+flag, cloud-sync IDB; auth/settings kept so signed-in boot re-pulls Drive) wired to Start Fresh + `setupComplete:false` + reload — works with zero engine; engine download via blob URL with 10s timeout and actionable error ("is the dev server running?") instead of 15s mystery hang
+- Gates: typecheck PASS, scoped lint clean, unit 92/92, `16-recovery` e2e still green, clean-profile boot → wizard 0 errors (exercises new wasm path)
+- BUG-12 updated (stays open until user confirms). Server: single :3000 (mine, detached, has key) — user must use it, not start a second one
+
+### Skill(s) Used
+- senior-backend (storage/service), senior-frontend (recovery handler)
+
+### Status
+- Committed on branch, unpushed. Next: push → user reloads normal Chrome → reports → confirm merge to `dev`.
