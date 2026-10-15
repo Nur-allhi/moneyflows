@@ -57,6 +57,9 @@ export interface CloudStatus {
   conflictPending: boolean;
 }
 
+/** reconcileAfterSignIn outcome: silent paths need no UI, 'choice' opens the dialog. */
+export type CloudReconcile = 'downloaded' | 'uploaded' | 'idle' | 'choice' | 'signed-out';
+
 export interface IDatabaseService {
   init(): Promise<void>;
   getSqlJsDb(): unknown;
@@ -124,6 +127,12 @@ export interface IDatabaseService {
   applyRemoteUpdate(): Promise<boolean>;
   /** Resolves a both-sides-moved conflict. 'mine' uploads local, 'theirs' loads remote. */
   resolveConflict(choice: 'mine' | 'theirs'): Promise<boolean>;
+  /**
+   * Post-sign-in reconcile (Phase 19, T-152): deterministic — empty local +
+   * remote downloads, local data + empty remote uploads, same hash idles,
+   * both-differ flags choice. Null-safe: 'signed-out' when no token.
+   */
+  reconcileAfterSignIn(): Promise<CloudReconcile>;
 
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;

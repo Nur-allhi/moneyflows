@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { CloudSync, CLOUD_DB_FILE, CLOUD_HASH_FILE, decideSyncAction } from '../CloudSync';
+import { CloudSync, CLOUD_DB_FILE, CLOUD_HASH_FILE, decideSyncAction, effectiveHasLocal } from '../CloudSync';
 import { digestHex } from '../storage/sha256';
 
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -150,5 +150,23 @@ describe('decideSyncAction (T-147, Guards 2 + 4)', () => {
 
   it('never synced + no remote → upload (first backup)', () => {
     expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: null })).toBe('upload');
+  });
+});
+
+describe('effectiveHasLocal (T-152 fresh-device rule)', () => {
+  it('empty + never synced counts as no local side → auto-pull, never conflict', () => {
+    expect(effectiveHasLocal(true)).toBe(false);
+    expect(decideSyncAction({ hasLocal: effectiveHasLocal(true), localHash: 'e', remoteHash: 'r' })).toBe('pull');
+    expect(decideSyncAction({ hasLocal: effectiveHasLocal(true), localHash: 'e', remoteHash: null })).toBe('idle');
+  });
+
+  it('emptied after syncing stays a real local side → conflict, not silent pull', () => {
+    expect(effectiveHasLocal(true, 'old')).toBe(true);
+    expect(decideSyncAction({ hasLocal: effectiveHasLocal(true, 'old'), localHash: 'e', remoteHash: 'r', lastSyncHash: 'old' })).toBe('conflict');
+  });
+
+  it('non-empty local is always a real local side', () => {
+    expect(effectiveHasLocal(false)).toBe(true);
+    expect(effectiveHasLocal(false, 'old')).toBe(true);
   });
 });

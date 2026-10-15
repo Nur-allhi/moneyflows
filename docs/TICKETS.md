@@ -166,6 +166,8 @@ Mobile-save → desktop-boot sees it. The 4 guards in plan §3 block merge if vi
 | T-149 | Open-tab remote check + "New data available" prompt | `senior-frontend` | S | **Complete** (`checkRemoteUpdate`/`applyRemoteUpdate` on port, `CloudUpdatePrompt` in AppLayout, visible-tab poll + refocus check) |
 | T-150 | Conflict-copy UX (snapshot slot + keep-mine/keep-remote choice) | `senior-frontend` | M | **Complete** (`resolveConflict` on port+service, conflict dialog in `CloudUpdatePrompt`, remote stashed as restore point either way) |
 | T-151 | Verification: gates, E2E, offline/corrupt-remote tests, docs | `code-reviewer` | M | **Complete** (typecheck+lint+build green, unit 70/70, e2e `15-cloud-sync` 2/2 mocked, SECURITY/TAD/CHANGELOG updated, no bump per plan) |
+| T-152 | `reconcileAfterSignIn` + empty-detect + auto-pull (deterministic sync) | `senior-backend` | M | **Complete** (shared reconcile, `_isLocalEmpty`, `effectiveHasLocal`, `_importVerifiedRemote` refactor, 28/28 db tests) |
+| T-153 | Wizard entry gate (Sign in vs Guest) + conflict dialog reword | `senior-frontend` | M | **Complete** (step-0 gate, downloaded→dashboard, Settings reconcile+reload, Override/Download copy, e2e 13+15 green) |
 
 ### T-145 - GoogleAuth.ts — GIS loader, token client, cache/refresh, sign-in/out
 **Skill:** `senior-frontend`
@@ -242,6 +244,28 @@ Mobile-save → desktop-boot sees it. The 4 guards in plan §3 block merge if vi
 2. E2E with mocked Google/Drive endpoints (no real OAuth in CI): sign-in → save → "uploaded" assertion; offline boot with stale token → app boots local, health row warns.
 3. Docs: `SECURITY.md` (token storage, minimal scope, revocation), `TAD.md §2.2` (cloud sink), `CHANGELOG.md [Unreleased]` Added entry; paste `VERSIONING.md §4` checklist (bump happens at release, not here).
 **Acceptance:** all gates green, E2E pass, docs updated, phase ready for user-confirmed merge to `dev`.
+
+### T-152 - reconcileAfterSignIn + empty-detect + auto-pull (deterministic sync)
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts`, `src/core/ports/IDatabaseService.ts` (`CloudReconcile` type), `src/infrastructure/database/__tests__/` decision tests
+**Content:**
+1. `_isLocalEmpty()`: zero rows across members/accounts/transactions (COUNT(*), reconcile-time only — never on the hot path).
+2. `reconcileAfterSignIn(): Promise<'downloaded'|'uploaded'|'idle'|'choice'|'signed-out'>` — single shared entry used by wizard gate, Settings sign-in, and boot: token null → `signed-out`; empty local + remote → verified download+import → `downloaded`; local data + no remote → upload → `uploaded`; same hash → `idle` (adopt meta); both differ → stash + flag → `choice`.
+3. `_maybeCloudSync`: treat local as fresh (`hasLocal:false`) when empty AND never synced — fresh-device auto-pull, no dialog. Previously-synced-but-emptied stays `conflict` (deliberate-wipe ambiguity).
+4. Unit-test the new branches via `decideSyncAction` matrix + reconcile decision coverage where sql.js-free; gates green.
+**Acceptance:** wipe-then-sign-in downloads silently; guest-with-data signs in and uploads silently; genuine both-sides case still flags `choice`; no auto-overwrite anywhere.
+
+### T-153 - Wizard entry gate (Sign in vs Guest) + conflict dialog reword
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/screens/SetupWizard.tsx`, `src/presentation/components/settings/CloudSyncSection.tsx` (call reconcile post-sign-in), `src/presentation/components/CloudUpdatePrompt.tsx` (button copy), `e2e/flows/13-wizard.spec.ts` (keep green)
+**Content:**
+1. Wizard step 0 (configured builds only): **Sign in with Google** + **Continue as guest** replace Get Started. Sign-in → `reconcileAfterSignIn()` → `downloaded` skips to dashboard (data present), else continue to step 1. Guest → step 1 unchanged. Keep "Welcome" copy so `13-wizard` stays green; unconfigured builds keep the current step 0.
+2. Settings sign-in calls the same reconcile: `downloaded` → reload (restore-flow pattern); `choice` → status message (dialog follows via existing poll).
+3. Conflict dialog buttons reworded to user language: **Override cloud** (keep mine) / **Download cloud data** (use theirs).
+4. `DESIGN_IDENTITY.md §17` checklist for touched UI; typecheck + scoped lint + build + e2e `13-wizard` + `15-cloud-sync` green.
+**Acceptance:** fresh user picks a path in one tap; no dialog except genuine both-sides case; wizard e2e untouched-green.
 
 ## Following Phase
 

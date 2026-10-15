@@ -42,6 +42,11 @@ export function CloudSyncSection() {
     setError(null);
     try {
       await googleAuth.signIn(GOOGLE_CLIENT_ID);
+      const result = await getDatabase().reconcileAfterSignIn();
+      if (result === 'downloaded') {
+        window.location.reload();
+        return;
+      }
       await refresh();
     } catch (e) {
       setError(e instanceof Error && /cancel|dismiss|popup|closed/i.test(e.message)

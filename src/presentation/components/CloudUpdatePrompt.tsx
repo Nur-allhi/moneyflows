@@ -103,8 +103,8 @@ export function CloudUpdatePrompt() {
         isOpen={conflict}
         onClose={() => { /* choice required — both options are safe */ }}
         title="Sync conflict"
-        cancelLabel="Use other device"
-        saveLabel={applying ? 'Saving…' : 'Keep mine'}
+        cancelLabel="Download cloud data"
+        saveLabel={applying ? 'Saving…' : 'Override cloud'}
         onCancel={() => { void handleResolve('theirs'); }}
         onSave={() => { void handleResolve('mine'); }}
       >

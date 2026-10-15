@@ -1370,3 +1370,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - On `feature/online-sync-drive`, unpushed. Next: commit + push; user creates ONE OAuth client (plan §4) into `.env.local`, runs `npm run dev`, taps Sign in with Google for the live test.
+
+## Session 2026-10-15 (T-152/T-153 deterministic sync + wizard gate)
+
+### Changes
+- User directive: choice only for genuine both-sides data; entry gate Sign in vs Guest (Option A confirmed). Raised T-152/T-153, both built on branch
+- T-152: `reconcileAfterSignIn()` shared by wizard/Settings/boot (`downloaded`/`uploaded`/`idle`/`choice`/`signed-out`), `_isLocalEmpty()` row counts, `effectiveHasLocal` (empty+never-synced auto-pulls; emptied-after-sync stays conflict), `_importVerifiedRemote` extracted and reused in 3 pull sites; db tests 28/28
+- T-153: wizard step 0 gate (Sign in with Google → downloaded skips to dashboard, else step 1; guest unchanged; unconfigured builds keep Get Started; "Welcome" copy kept for e2e), Settings sign-in reconciles (downloaded → reload), conflict buttons reworded to Override cloud / Download cloud data
+- Process fix for me: no more trailing-newline edit anchors (caused 3 same-line corruptions, all caught by read-back); pre-check :3000 with `netstat -ano` before e2e (another stale vite squatter killed)
+- Gates: typecheck PASS, scoped lint clean, build PASS, unit 73/73, e2e 13-wizard + 15-cloud-sync 4/4 green
+
+### Skill(s) Used
+- senior-backend (T-152), senior-frontend (T-153)
+
+### Status
+- Unpushed on branch. Next: commit + push; reply to user's live-test conflict (their wipe case now auto-downloads — retest by clearing site data + sign in).

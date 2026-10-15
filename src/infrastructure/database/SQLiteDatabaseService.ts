@@ -4,11 +4,12 @@ import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
-import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus } from '../../core/ports/IDatabaseService';
+import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile } from '../../core/ports/IDatabaseService';
 import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS, CLOUD_SYNC_COOLDOWN_MS, CLOUD_BOOT_TIMEOUT_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
 import { googleAuth } from './GoogleAuth';
-import { cloudSync, decideSyncAction, getLastSyncMeta, setLastSyncMeta } from './CloudSync';
+import { cloudSync, decideSyncAction, effectiveHasLocal, getLastSyncMeta, setLastSyncMeta } from './CloudSync';
+import type { CloudDownload } from './CloudSync';
 import { createStorageAdapter, withStorageLock } from './storage';
 import type { IPersistenceAdapter, SnapshotRecord } from './storage/types';
 import { StorageCorruptError, StorageWriteError } from './storage/types';
@@ -372,6 +373,43 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   /**
+   * True when no user rows exist anywhere (T-152). Reconcile-time only —
+   * never on the hot path. Soft-deleted rows still count as data.
+   */
+  private _isLocalEmpty(): boolean {
+    if (!this.db) return true;
+    for (const table of ['members', 'accounts', 'transactions']) {
+      try {
+        const row = this.queryOne<{ n: number }>(`SELECT COUNT(*) AS n FROM ${table}`);
+        if ((row?.n ?? 0) > 0) return false;
+      } catch {
+        return false; // unknown schema state — never treat as empty
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Swaps in verified remote bytes (migrate + persist locally). False when
+   * the download is corrupt — local data is never touched then.
+   */
+  private async _importVerifiedRemote(dl: CloudDownload): Promise<boolean> {
+    if (!this.SQL) return false;
+    try {
+      this.db = new this.SQL.Database(dl.data);
+      await this._migrate();
+    } catch {
+      return false;
+    }
+    await setLastSyncMeta({ hash: dl.hash, at: Date.now() }).catch(() => {});
+    this.cloudLastSyncAt = Date.now();
+    this.cloudLastError = null;
+    this.dirty = true;
+    await this.flush().catch(() => {});
+    return true;
+  }
+
+  /**
    * Cloud sync sink (Phase 19, Guards 1–4): fire-and-forget, never throws into
    * flush(). Direction comes from decideSyncAction — local is never overwritten
    * and a both-sides-moved state stashes the remote + flags conflict (T-150 UI).
@@ -391,7 +429,9 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const meta = await getLastSyncMeta().catch(() => null);
     if (meta && localHash === meta.hash) return; // already synced — no network
     const remoteHash = await cloudSync.remoteHash(token);
-    const action = decideSyncAction({ hasLocal: true, localHash, remoteHash, lastSyncHash: meta?.hash });
+    // Fresh device (empty + never synced) counts as no local side → auto-pull.
+    const hasLocal = effectiveHasLocal(this._isLocalEmpty(), meta?.hash);
+    const action = decideSyncAction({ hasLocal, localHash, remoteHash, lastSyncHash: meta?.hash });
     if (action === 'idle') return;
     if (action === 'upload') {
       const ok = await cloudSync.sync(token, data, localHash);
@@ -410,10 +450,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
         this.cloudLastError = 'download-failed';
         return;
       }
-      await this.importFromBytes(dl.data);
-      await setLastSyncMeta({ hash: dl.hash, at: Date.now() }).catch(() => {});
-      this.cloudLastSyncAt = Date.now();
-      this.cloudLastError = null;
+      await this._importVerifiedRemote(dl);
       return;
     }
     const dl = await cloudSync.download(token);
@@ -436,16 +473,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
         if (!remoteHash) return;
         const dl = await cloudSync.download(token);
         if (!dl) return;
-        try {
-          this.db = new this.SQL.Database(dl.data);
-          await this._migrate();
-        } catch {
-          return; // never boot a corrupt remote — keep the fresh empty DB
-        }
-        await setLastSyncMeta({ hash: dl.hash, at: Date.now() }).catch(() => {});
-        this.cloudLastSyncAt = Date.now();
-        this.dirty = true;
-        await this.flush().catch(() => {});
+        await this._importVerifiedRemote(dl);
         return;
       }
       const localHash = await digestHex(this.db.export());
@@ -454,16 +482,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
       if (action === 'pull') {
         const dl = await cloudSync.download(token);
         if (!dl) return;
-        try {
-          this.db = new this.SQL.Database(dl.data);
-          await this._migrate();
-        } catch {
-          return;
-        }
-        await setLastSyncMeta({ hash: dl.hash, at: Date.now() }).catch(() => {});
-        this.cloudLastSyncAt = Date.now();
-        this.dirty = true;
-        await this.flush().catch(() => {});
+        await this._importVerifiedRemote(dl);
       } else if (action === 'conflict') {
         const dl = await cloudSync.download(token);
         if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
@@ -499,6 +518,51 @@ export class SQLiteDatabaseService implements IDatabaseService {
       await this._maybeCloudSync(this.db.export(), true);
     } catch { /* status carries the error */ }
     return this.getCloudStatus();
+  }
+
+  /**
+   * Post-sign-in reconcile (T-152): one deterministic entry for the wizard
+   * gate, Settings sign-in, and guest→Google. Silent paths need no UI —
+   * only 'choice' opens the dialog. Never throws; failures report 'idle'
+   * and the background flush retries later.
+   */
+  async reconcileAfterSignIn(): Promise<CloudReconcile> {
+    const token = await googleAuth.getValidToken().catch(() => null);
+    if (!token || !this.db || !this.SQL) return 'signed-out';
+    const meta = await getLastSyncMeta().catch(() => null);
+    const remoteHash = await cloudSync.remoteHash(token);
+    const empty = this._isLocalEmpty();
+    if (!remoteHash) {
+      if (empty) return 'idle';
+      const data = this.db.export();
+      const localHash = await digestHex(data);
+      const ok = await cloudSync.sync(token, data, localHash);
+      if (!ok) return 'idle';
+      await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+      this.cloudLastSyncAt = Date.now();
+      this.cloudLastError = null;
+      return 'uploaded';
+    }
+    if (empty) {
+      const dl = await cloudSync.download(token);
+      if (!dl) return 'idle';
+      return (await this._importVerifiedRemote(dl)) ? 'downloaded' : 'idle';
+    }
+    const localHash = await digestHex(this.db.export());
+    if (localHash === remoteHash) {
+      if (!meta) await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+      return 'idle';
+    }
+    if (meta && localHash === meta.hash) {
+      const dl = await cloudSync.download(token);
+      if (!dl) return 'idle';
+      return (await this._importVerifiedRemote(dl)) ? 'downloaded' : 'idle';
+    }
+    const dl = await cloudSync.download(token);
+    if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
+    this.cloudConflict = true;
+    this.cloudLastError = 'conflict';
+    return 'choice';
   }
 
   /**

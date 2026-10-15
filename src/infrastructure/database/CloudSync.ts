@@ -108,6 +108,15 @@ export function resetCloudMetaForTests(): void {
   metaMemory.delete(META_KEY);
 }
 
+/**
+ * Fresh-device rule (T-152): an empty local DB that never synced counts as
+ * "no local side" — so it auto-pulls instead of conflicting. An emptied
+ * previously-synced device stays a real local side (deliberate-wipe ambiguity).
+ */
+export function effectiveHasLocal(isEmpty: boolean, lastSyncHash?: string): boolean {
+  return !(isEmpty && lastSyncHash === undefined);
+}
+
 interface DriveFileEntry {
   id: string;
 }
