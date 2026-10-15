@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Placeholder
+### Added
+- Google Drive sync (opt-in, Settings → Backup & Storage): sign in with Google to auto-back up the database to your own Drive and pick it up on other devices. Includes boot import on fresh devices, "New data available" prompt for open tabs, and a keep-mine/use-other-device choice (remote kept as a restore point) when both sides changed.
 
 ## [1.16.1] - 2026-10-14
 
