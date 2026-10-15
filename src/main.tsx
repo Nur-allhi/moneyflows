@@ -39,6 +39,9 @@ function Root() {
   const [snapList, setSnapList] = useState<{ time: string }[] | null>(null);
   const [slotBusy, setSlotBusy] = useState<number | null>(null);
   const [slotError, setSlotError] = useState<string | null>(null);
+  /** Recovery action feedback (BUG-12): silent buttons looked dead on hung storage. */
+  const [actionBusy, setActionBusy] = useState<'restore' | 'fresh' | null>(null);
+  const [wipeFailed, setWipeFailed] = useState<string[] | null>(null);
 
   const handleFinish = useCallback(() => setShowApp(true), []);
 
@@ -143,20 +146,24 @@ function Root() {
           not always the best one.
         </p>
         <button
+          disabled={actionBusy !== null}
           onClick={async () => {
             replayRestore();
+            setActionBusy('restore');
             try {
-              const ok = await getDatabase().restoreNewestSnapshot();
+              const ok = await withStorageTimeout(getDatabase().restoreNewestSnapshot());
               if (ok) window.location.reload();
               else setDbError('No valid auto-backup was found to restore.');
             } catch (e) {
               setDbError(e instanceof Error ? e.message : 'Restore failed');
+            } finally {
+              setActionBusy(null);
             }
           }}
           className={restoreKey > 0 ? 'anim-pop' : ''}
           style={{ marginTop: 8, padding: '10px 24px', border: 'none', borderRadius: 8, background: '#22c55e', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
-          <span className="anim-target" key={restoreKey}>Restore Latest Backup</span>
+          <span className="anim-target" key={restoreKey}>{actionBusy === 'restore' ? 'Restoring…' : 'Restore Latest Backup'}</span>
         </button>
         {snapList !== null && snapList.length > 0 && (
           <>
@@ -166,12 +173,12 @@ function Root() {
               {snapList.map((s, i) => (
                 <button
                   key={i}
-                  disabled={slotBusy !== null}
+                  disabled={slotBusy !== null || actionBusy !== null}
                   onClick={async () => {
                     setSlotBusy(i);
                     setSlotError(null);
                     try {
-                      await getDatabase().restoreSnapshotExact(i);
+                      await withStorageTimeout(getDatabase().restoreSnapshotExact(i));
                       window.location.reload();
                     } catch (e) {
                       setSlotError(e instanceof Error ? e.message : `Backup ${i + 1} failed`);
@@ -199,20 +206,30 @@ function Root() {
           your data is safely backed up elsewhere.
         </p>
         <button
+          disabled={actionBusy !== null}
           onClick={() => {
             replayFresh();
+            setWipeFailed(null);
+            setActionBusy('fresh');
             void (async () => {
               // Engine-free wipe (BUG-12): works even when boot died before the
               // engine/storage initialized, where resetStorage() silently no-ops.
               // Reload re-inits everything; a signed-in device re-pulls Drive.
               try {
-                await wipePersistedStorage({
+                const report = await wipePersistedStorage({
                   mainKey: STORAGE_KEY,
                   snapshotPrefix: SNAPSHOT_PREFIX,
                   maxSnapshots: MAX_SNAPSHOTS,
                 });
+                const failed = (Object.keys(report) as (keyof typeof report)[]).filter((k) => !report[k]);
+                if (failed.length > 0) {
+                  setWipeFailed(failed);
+                  setActionBusy(null);
+                  return;
+                }
               } catch (e) {
                 setDbError(e instanceof Error ? e.message : 'Wipe failed');
+                setActionBusy(null);
                 return;
               }
               useSettingsStore.getState().updateSettings({ setupComplete: false });
@@ -222,8 +239,14 @@ function Root() {
           className={freshKey > 0 ? 'anim-pop' : ''}
           style={{ padding: '10px 24px', border: 'none', borderRadius: 8, background: '#6c5ce7', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
-          <span className="anim-target" key={freshKey}>Start Fresh</span>
+          <span className="anim-target" key={freshKey}>{actionBusy === 'fresh' ? 'Wiping…' : 'Start Fresh'}</span>
         </button>
+        {wipeFailed && (
+          <p style={{ fontSize: 13, color: '#ffb020', lineHeight: 1.5, maxWidth: 420 }}>
+            Automatic wipe timed out on: {wipeFailed.join(', ')}. Clear it by hand —
+            F12 → Application → Storage → Clear site data → reload the page.
+          </p>
+        )}
       </div>
     );
   }
