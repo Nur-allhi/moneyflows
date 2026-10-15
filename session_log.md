@@ -1385,3 +1385,21 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Unpushed on branch. Next: commit + push; reply to user's live-test conflict (their wipe case now auto-downloads — retest by clearing site data + sign in).
+
+## Session 2026-10-15 (Phase 20 sync UX polish T-154..T-158)
+
+### Changes
+- Built on `google_signin_backup` (keeps `dev`/`master` clean per safety topology). All 5 user-requested improvements, sequential commits:
+- T-154 (`5f6e4b6`): staged sign-in progress — Opening Google… → Syncing your data… with ProgressBar in Settings + wizard gate, actions disabled, stay-on-screen copy
+- T-155 (`9e9b7cb`): wizard money-step native selects → modal picker pattern per DESIGN_IDENTITY §9 (trigger + overlay + active gradient, token-only CSS, zero selects left)
+- T-156 (`058b854`): `CLOUD_SYNC_COOLDOWN_MS` 120s→30s — every mutation already auto-syncs via flush (hash-skipped, hidden-tab force); no Sync-now needed
+- T-157 (`d0a84da`): `useCloudIndicator` + header cloud button beside bell (desktop + mobile instances, guests see nothing, tap → Settings)
+- T-158 (`ad38e12`): `profile` scope for name/photo (persisted, never logged) → sidebar footer shows photo + name + email; guests keep Family footer
+- Gates: typecheck PASS, lint `--max-warnings 0` PASS, build PASS, unit 74/74, e2e wizard/backup/cloud-sync 5/5
+- Self-correction: trailing-newline edit slips recurred (4th instance) — rule now enforced: anchors end on full code lines + read-back every edit
+
+### Skill(s) Used
+- senior-frontend (T-154/155/157/158), senior-backend (T-156)
+
+### Status
+- Phase 20 complete on `google_signin_backup`, pushed. Next: user live-tests (consent now also shows `profile` scope); `master` still clean v1.16.1.
