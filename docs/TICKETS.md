@@ -286,6 +286,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-165 | ProgressBar freeze fix (updates after first paint) | `senior-frontend` | S | **Complete** (visibility ref; every percent applies once visible; 0.6s glide already in CSS) |
 | T-166 | Animated water-flow fill on all progress bars | `senior-frontend` | S | **Complete** (diagonal flow overlay on gradient, leading shimmer kept, reduced-motion guard, GPU-cheap) |
 | T-167 | Sync progress completes (100% beat, no abrupt vanish) | `senior-frontend` | S | **Complete** (done stage 100% + Synced ✓ held 1.2s on success; failures still clear to error text) |
+| T-168 | Splash bar shows only on slow boots (600ms gate) | `senior-frontend` | S | **Complete** (bar gated on boot exceeding 600ms; throttled probe shows stages; fast boots clean) |
+
+### T-168 - Splash bar shows only on slow boots (600ms gate)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/SplashScreen.tsx`
+**Content:**
+1. Finding (probed): the bar always rendered — but local boots finish in ~200ms, so it flashed past perception; the user never saw it. A loader that flashes on fast boots is a distraction, not information.
+2. Gate the narration on boot actually taking time: show the progress block only while `!ready` after 600ms. Slow boots (throttled probe: bar + stage text verified) narrate every stage; fast boots stay clean.
+3. Typing animation, fade flow, and watchdog untouched. Full gates green.
+**Acceptance:** fast boot = no bar flash; 8x-throttled boot = bar with stage labels visible.
 
 ### T-167 - Sync progress completes (100% beat, no abrupt vanish)
 **Skill:** `senior-frontend`

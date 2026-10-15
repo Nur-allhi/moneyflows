@@ -21,6 +21,11 @@ export function SplashScreen({ ready, onFinish, percent = 0, status = '' }: Spla
   const [displayed, setDisplayed] = useState('');
   const [done, setDone] = useState(false);
   const [fading, setFading] = useState(false);
+  /**
+   * Boot narration appears only when boot actually takes time (T-168): fast
+   * boots never flash a loader, slow boots narrate every stage.
+   */
+  const [showProgress, setShowProgress] = useState(false);
   const idx = useRef(0);
 
   useLayoutEffect(() => {
@@ -37,6 +42,12 @@ export function SplashScreen({ ready, onFinish, percent = 0, status = '' }: Spla
     }, CHAR_INTERVAL);
     return () => clearTimeout(td);
   }, []);
+
+  useEffect(() => {
+    if (ready) return;
+    const id = setTimeout(() => setShowProgress(true), 600);
+    return () => clearTimeout(id);
+  }, [ready]);
 
   useEffect(() => {
     if (!done || !ready) return;
@@ -66,7 +77,7 @@ export function SplashScreen({ ready, onFinish, percent = 0, status = '' }: Spla
         {!done && <span className={styles.cursor} />}
       </div>
       <span className={styles.version}>v{APP_VERSION}</span>
-      {!ready && (
+      {!ready && showProgress && (
         <div className={styles.bootProgress}>
           <ProgressBar percent={percent} sublabel={status} />
         </div>
