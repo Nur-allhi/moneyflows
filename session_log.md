@@ -1568,3 +1568,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push → user restarts dev → verifies sign-in + sign-out flow → confirm merge to `dev` (CHANGELOG entries ride with merge).
+
+## Session 2026-10-16 (BUG-12 recovery fix after sign-out-erase, on feature/setup-settings-refresh)
+
+### Changes
+- User report: Database Error after my sign-out-erase; restore led to empty wizard. Diagnosed: (1) `resetStorage()` flushed the empty schema THROUGH the snapshot ring → slot 0 became an empty snapshot → later Restore Latest landed on empty DB (the wipe itself worked, e2e-green); (2) recovery screen offered only newest slot; (3) repeated :3000 kills caused hangs/slow loads on top
+- Fix: `suppressSnapshot` flag (checked synchronously, race-free with fire-and-forget flush) so reset flushes never enter the ring; NEW `restoreSnapshotExact()` on port + service (no fallback, per-slot errors); recovery screen lists all slots with times + exact restore buttons, truthful Start Fresh copy ("resets to empty"), watchdog message names stalled stage, "No older backups" empty state
+- Gates: typecheck PASS, scoped lint clean, unit 92/92, NEW e2e `16-recovery` green (forced wasm failure → error UI + actions, no crash), fresh-profile boot → 4-step wizard, 0 errors
+- BUG-12 stays OPEN until user confirms data back. Restarted their dev server detached (was down; mine has `.env.local` key via vite). Told user: expect wizard (wiped as requested) → sign in / re-setup; older slots only predate the wipe
+
+### Skill(s) Used
+- senior-backend (service/port), senior-frontend (recovery UI + e2e)
+
+### Status
+- Committed on branch, unpushed. Next: push → user reloads normal Chrome → confirms wizard/sign-in → confirm merge to `dev`.
