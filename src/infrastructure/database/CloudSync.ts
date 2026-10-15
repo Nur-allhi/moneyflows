@@ -19,6 +19,95 @@ export interface CloudDownload {
   hash: string;
 }
 
+/**
+ * Pure sync-direction decision (Guards 2 + 4). `lastSyncHash` is the DB hash at
+ * the last successful upload (undefined = never synced).
+ * - local unchanged since sync → pull only when remote moved, else idle.
+ * - local changed → upload, unless remote also moved → conflict (never auto-win).
+ * - fresh device → pull when remote exists, else idle (empty schema never seeds).
+ */
+export type CloudAction = 'idle' | 'upload' | 'pull' | 'conflict';
+
+export function decideSyncAction(args: {
+  hasLocal: boolean;
+  localHash: string;
+  remoteHash: string | null;
+  lastSyncHash?: string;
+}): CloudAction {
+  const { hasLocal, localHash, remoteHash, lastSyncHash } = args;
+  if (!hasLocal) return remoteHash ? 'pull' : 'idle';
+  const localChanged = lastSyncHash === undefined ? true : localHash !== lastSyncHash;
+  const remoteChanged = remoteHash !== null && remoteHash !== lastSyncHash;
+  if (!localChanged) return remoteChanged ? 'pull' : 'idle';
+  if (!remoteChanged) return 'upload';
+  return 'conflict';
+}
+
+interface CloudMeta {
+  hash: string;
+  at: number;
+}
+
+const META_DB = 'moneyflows_cloud_sync';
+const META_STORE = 'meta';
+const META_KEY = 'sync_meta';
+const metaMemory = new Map<string, CloudMeta>();
+
+function openMetaDb(): Promise<IDBDatabase | null> {
+  if (typeof indexedDB === 'undefined') return Promise.resolve(null);
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open(META_DB, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(META_STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/** Hash of the DB at the last successful upload (undefined = never synced). */
+export async function getLastSyncMeta(): Promise<CloudMeta | null> {
+  const mem = metaMemory.get(META_KEY);
+  if (mem) return mem;
+  const db = await openMetaDb();
+  if (!db) return null;
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(META_STORE, 'readonly');
+      const req = tx.objectStore(META_STORE).get(META_KEY);
+      req.onsuccess = () => { db.close(); resolve((req.result as CloudMeta | undefined) ?? null); };
+      req.onerror = () => { db.close(); resolve(null); };
+    } catch {
+      db.close();
+      resolve(null);
+    }
+  });
+}
+
+export async function setLastSyncMeta(meta: CloudMeta): Promise<void> {
+  metaMemory.set(META_KEY, meta);
+  const db = await openMetaDb();
+  if (!db) return;
+  await new Promise<void>((resolve) => {
+    try {
+      const tx = db.transaction(META_STORE, 'readwrite');
+      tx.objectStore(META_STORE).put(meta, META_KEY);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    } catch {
+      db.close();
+      resolve();
+    }
+  });
+}
+
+/** Test hook — clears the in-memory meta (IDB persists across reloads by design). */
+export function resetCloudMetaForTests(): void {
+  metaMemory.delete(META_KEY);
+}
+
 interface DriveFileEntry {
   id: string;
 }

@@ -5,8 +5,10 @@ import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
 import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth } from '../../core/ports/IDatabaseService';
-import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS } from '../../presentation/constants/config';
+import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS, CLOUD_SYNC_COOLDOWN_MS, CLOUD_BOOT_TIMEOUT_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
+import { googleAuth } from './GoogleAuth';
+import { cloudSync, decideSyncAction, getLastSyncMeta, setLastSyncMeta } from './CloudSync';
 import { createStorageAdapter, withStorageLock } from './storage';
 import type { IPersistenceAdapter, SnapshotRecord } from './storage/types';
 import { StorageCorruptError, StorageWriteError } from './storage/types';
@@ -47,6 +49,15 @@ const SCHEMA = [
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
+}
+
+/** Cloud sync state (Phase 19). lastError: 'reconnect' | 'upload-failed' | 'download-failed' | 'conflict' | null. */
+export interface CloudStatus {
+  signedIn: boolean;
+  email: string | null;
+  lastSyncAt: number;
+  lastError: string | null;
+  conflictPending: boolean;
 }
 
 function rowToMember(r: Record<string, unknown>): Member {
@@ -117,6 +128,10 @@ export class SQLiteDatabaseService implements IDatabaseService {
   private lifecycleRegistered = false;
   private lastSnapshotTime = 0;
   private lastFolderSyncTime = 0;
+  private lastCloudSyncTime = 0;
+  private cloudLastSyncAt = 0;
+  private cloudLastError: string | null = null;
+  private cloudConflict = false;
 
   getSqlJsDb(): SqlJsDb | null { return this.db; }
 
@@ -155,6 +170,9 @@ export class SQLiteDatabaseService implements IDatabaseService {
     } else {
       this.markDirty();
     }
+    // Cloud boot-pull runs after local boot with a hard timeout — network must
+    // never delay first paint or trip the splash watchdog. Failures are silent.
+    await this._cloudBootPull(loaded).catch(() => {});
     this._registerLifecycleFlush();
   }
 
@@ -310,6 +328,10 @@ export class SQLiteDatabaseService implements IDatabaseService {
       this.lastFlushAt = Date.now();
       void this._maybeSnapshot(data).catch(() => {});
       void this._maybeFolderSync(data).catch(() => {});
+      // Hidden tab (switch/close, incl. mobile) bypasses the cloud cooldown so a
+      // save-then-leave syncs within seconds instead of waiting it out.
+      const unloading = typeof document !== 'undefined' && document.visibilityState === 'hidden';
+      void this._maybeCloudSync(data, unloading).catch(() => {});
     } catch (e) {
       this.lastFlushFailed = true;
       throw e instanceof StorageWriteError ? e : new StorageWriteError(e instanceof Error ? e.message : String(e));
@@ -326,7 +348,12 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const t = Date.now();
     if (t - this.lastSnapshotTime < SNAPSHOT_COOLDOWN_MS) return;
     this.lastSnapshotTime = t;
-    const record: SnapshotRecord = { data, hash: await digestHex(data), time: new Date().toISOString() };
+    await this._writeSnapshotSlot(data, await digestHex(data));
+  }
+
+  /** Rotates the ring and writes slot 0 (shared by snapshots + conflict copies). */
+  private async _writeSnapshotSlot(data: Uint8Array, hash: string): Promise<void> {
+    const record: SnapshotRecord = { data, hash, time: new Date().toISOString() };
     for (let i = MAX_SNAPSHOTS - 2; i >= 0; i--) {
       try {
         const slot = await this.storage!.readSnapshot(i);
@@ -351,6 +378,122 @@ export class SQLiteDatabaseService implements IDatabaseService {
     if (await folderSync.hasPermission()) {
       await folderSync.sync(data);
     }
+  }
+
+  /**
+   * Cloud sync sink (Phase 19, Guards 1–4): fire-and-forget, never throws into
+   * flush(). Direction comes from decideSyncAction — local is never overwritten
+   * and a both-sides-moved state stashes the remote + flags conflict (T-150 UI).
+   */
+  private async _maybeCloudSync(data: Uint8Array, force = false): Promise<void> {
+    const nowMs = Date.now();
+    if (!force && nowMs - this.lastCloudSyncTime < CLOUD_SYNC_COOLDOWN_MS) return;
+    this.lastCloudSyncTime = nowMs;
+    if (this.cloudConflict) return;
+    const token = await googleAuth.getValidToken().catch(() => null);
+    if (!token) {
+      const email = await googleAuth.getAccountEmail().catch(() => null);
+      this.cloudLastError = email ? 'reconnect' : null;
+      return;
+    }
+    const localHash = await digestHex(data);
+    const meta = await getLastSyncMeta().catch(() => null);
+    if (meta && localHash === meta.hash) return; // already synced — no network
+    const remoteHash = await cloudSync.remoteHash(token);
+    const action = decideSyncAction({ hasLocal: true, localHash, remoteHash, lastSyncHash: meta?.hash });
+    if (action === 'idle') return;
+    if (action === 'upload') {
+      const ok = await cloudSync.sync(token, data, localHash);
+      if (ok) {
+        await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+        this.cloudLastSyncAt = Date.now();
+        this.cloudLastError = null;
+      } else {
+        this.cloudLastError = 'upload-failed';
+      }
+      return;
+    }
+    if (action === 'pull') {
+      const dl = await cloudSync.download(token);
+      if (!dl) {
+        this.cloudLastError = 'download-failed';
+        return;
+      }
+      await this.importFromBytes(dl.data);
+      await setLastSyncMeta({ hash: dl.hash, at: Date.now() }).catch(() => {});
+      this.cloudLastSyncAt = Date.now();
+      this.cloudLastError = null;
+      return;
+    }
+    const dl = await cloudSync.download(token);
+    if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
+    this.cloudConflict = true;
+    this.cloudLastError = 'conflict';
+  }
+
+  /**
+   * Boot-pull after local boot (Guard 2): fresh device imports a verified
+   * remote; clean-but-stale local pulls a newer remote; changed local never
+   * gets overwritten (conflict path stashes + flags instead).
+   */
+  private async _cloudBootPull(hadLocal: boolean): Promise<void> {
+    const work = (async () => {
+      const token = await googleAuth.getValidToken().catch(() => null);
+      if (!token || !this.db || !this.SQL) return;
+      const remoteHash = await cloudSync.remoteHash(token);
+      if (!hadLocal) {
+        if (!remoteHash) return;
+        const dl = await cloudSync.download(token);
+        if (!dl) return;
+        try {
+          this.db = new this.SQL.Database(dl.data);
+          await this._migrate();
+        } catch {
+          return; // never boot a corrupt remote — keep the fresh empty DB
+        }
+        await setLastSyncMeta({ hash: dl.hash, at: Date.now() }).catch(() => {});
+        this.cloudLastSyncAt = Date.now();
+        this.dirty = true;
+        await this.flush().catch(() => {});
+        return;
+      }
+      const localHash = await digestHex(this.db.export());
+      const meta = await getLastSyncMeta().catch(() => null);
+      const action = decideSyncAction({ hasLocal: true, localHash, remoteHash, lastSyncHash: meta?.hash });
+      if (action === 'pull') {
+        const dl = await cloudSync.download(token);
+        if (!dl) return;
+        try {
+          this.db = new this.SQL.Database(dl.data);
+          await this._migrate();
+        } catch {
+          return;
+        }
+        await setLastSyncMeta({ hash: dl.hash, at: Date.now() }).catch(() => {});
+        this.cloudLastSyncAt = Date.now();
+        this.dirty = true;
+        await this.flush().catch(() => {});
+      } else if (action === 'conflict') {
+        const dl = await cloudSync.download(token);
+        if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
+        this.cloudConflict = true;
+        this.cloudLastError = 'conflict';
+      }
+      // idle/upload: nothing to do — the next flush uploads when due.
+    })();
+    await Promise.race([work, new Promise((resolve) => setTimeout(resolve, CLOUD_BOOT_TIMEOUT_MS))]);
+  }
+
+  /** Cloud sync state for Settings + health UI (T-148). */
+  async getCloudStatus(): Promise<CloudStatus> {
+    const email = await googleAuth.getAccountEmail().catch(() => null);
+    return {
+      signedIn: email !== null,
+      email,
+      lastSyncAt: this.cloudLastSyncAt,
+      lastError: this.cloudLastError,
+      conflictPending: this.cloudConflict,
+    };
   }
 
   async getSnapshots(): Promise<SnapshotInfo[]> {

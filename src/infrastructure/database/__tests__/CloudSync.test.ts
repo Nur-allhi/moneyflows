@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { CloudSync, CLOUD_DB_FILE, CLOUD_HASH_FILE } from '../CloudSync';
+import { CloudSync, CLOUD_DB_FILE, CLOUD_HASH_FILE, decideSyncAction } from '../CloudSync';
 import { digestHex } from '../storage/sha256';
 
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -120,5 +120,35 @@ describe('CloudSync (T-146)', () => {
   it('uses the expected remote filenames', () => {
     expect(CLOUD_DB_FILE).toBe('moneyflows.db');
     expect(CLOUD_HASH_FILE).toBe('moneyflows.db.sha256');
+  });
+});
+
+describe('decideSyncAction (T-147, Guards 2 + 4)', () => {
+  it('fresh device pulls when remote exists, idles otherwise (empty never seeds)', () => {
+    expect(decideSyncAction({ hasLocal: false, localHash: 'e', remoteHash: 'r' })).toBe('pull');
+    expect(decideSyncAction({ hasLocal: false, localHash: 'e', remoteHash: null })).toBe('idle');
+  });
+
+  it('clean local pulls a newer remote, idles when in sync', () => {
+    expect(decideSyncAction({ hasLocal: true, localHash: 'a', remoteHash: 'b', lastSyncHash: 'a' })).toBe('pull');
+    expect(decideSyncAction({ hasLocal: true, localHash: 'a', remoteHash: 'a', lastSyncHash: 'a' })).toBe('idle');
+    expect(decideSyncAction({ hasLocal: true, localHash: 'a', remoteHash: null, lastSyncHash: 'a' })).toBe('idle');
+  });
+
+  it('changed local uploads when remote is untouched', () => {
+    expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: 'a', lastSyncHash: 'a' })).toBe('upload');
+    expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: null, lastSyncHash: 'a' })).toBe('upload');
+  });
+
+  it('both sides moved → conflict, never auto-win', () => {
+    expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: 'c', lastSyncHash: 'a' })).toBe('conflict');
+  });
+
+  it('never synced + remote exists + local changed → conflict', () => {
+    expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: 'r' })).toBe('conflict');
+  });
+
+  it('never synced + no remote → upload (first backup)', () => {
+    expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: null })).toBe('upload');
   });
 });
