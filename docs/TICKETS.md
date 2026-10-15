@@ -285,6 +285,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-164 | Wizard/Settings sign-in button follows sync stage | `senior-frontend` | S | **Complete** (busy copy advances google→syncing in step with the bar, both flows) |
 | T-165 | ProgressBar freeze fix (updates after first paint) | `senior-frontend` | S | **Complete** (visibility ref; every percent applies once visible; 0.6s glide already in CSS) |
 | T-166 | Animated water-flow fill on all progress bars | `senior-frontend` | S | **Complete** (diagonal flow overlay on gradient, leading shimmer kept, reduced-motion guard, GPU-cheap) |
+| T-167 | Sync progress completes (100% beat, no abrupt vanish) | `senior-frontend` | S | **Complete** (done stage 100% + Synced ✓ held 1.2s on success; failures still clear to error text) |
+
+### T-167 - Sync progress completes (100% beat, no abrupt vanish)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/settings/CloudSyncSection.tsx`
+**Content:**
+1. Root cause: stages topped out at 75% (`google` 35 / `syncing` 75) and the bar unmounted the moment work finished — stuck-then-vanished.
+2. Add a `done` stage (100%, `Synced ✓`): on Sync-now success hold it ~1.2s before releasing buttons; same after sign-in reconcile (non-reload path). Failure path keeps current behavior (clear + error line).
+3. Full gates green.
+**Acceptance:** every successful sync visibly sweeps to full before the bar leaves; failures still surface text immediately.
 
 ### T-160 - Cloud download resilience: newest-wins, dedupe, heal, taxonomy + diagnostics
 **Skill:** `senior-backend`

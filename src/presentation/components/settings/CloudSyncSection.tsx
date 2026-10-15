@@ -16,6 +16,21 @@ const ERROR_COPY: Record<string, string> = {
   conflict: 'This device and another device both changed data — a choice screen will follow.',
 };
 
+/** Hold the completed bar briefly so success registers (T-167). */
+const DONE_HOLD_MS = 1200;
+
+function StageBar({ stage }: { stage: 'google' | 'syncing' | 'done' }) {
+  const percent = stage === 'google' ? 35 : stage === 'syncing' ? 75 : 100;
+  const label = stage === 'google' ? 'Contacting Google…' : stage === 'syncing' ? 'Syncing your data…' : 'Synced ✓';
+  return (
+    <ProgressBar
+      percent={percent}
+      label={label}
+      sublabel={stage === 'done' ? undefined : 'Stay on this screen — finishing up.'}
+    />
+  );
+}
+
 function formatSyncTime(at: number, locale: string): string {
   if (!at) return 'never';
   return new Date(at).toLocaleString(locale, {
@@ -30,7 +45,7 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
   const [remote, setRemote] = useState<{ dbFiles: number; hashPresent: boolean; modifiedTime: string | null } | null>(null);
   const [busy, setBusy] = useState(false);
   /** Staged progress so a slow sign-in never looks dead: google popup → sync. */
-  const [stage, setStage] = useState<'google' | 'syncing' | null>(null);
+  const [stage, setStage] = useState<'google' | 'syncing' | 'done' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const configured = isGoogleSyncConfigured();
 
@@ -57,7 +72,9 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
         window.location.reload();
         return;
       }
+      setStage('done');
       await refresh();
+      await new Promise((resolve) => setTimeout(resolve, DONE_HOLD_MS));
     } catch (e) {
       setError(e instanceof Error && /cancel|dismiss|popup|closed/i.test(e.message)
         ? 'Sign-in was cancelled — try again.'
@@ -84,6 +101,8 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
         }
       }
       setStatus(await getDatabase().syncNow());
+      setStage('done');
+      await new Promise((resolve) => setTimeout(resolve, DONE_HOLD_MS));
     } catch {
       setError('Sync failed — will retry automatically.');
     } finally {
@@ -127,13 +146,7 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
   return (
     <SettingsDisclosure title="Google Drive Sync" subtitle={subtitle} defaultOpen={forceOpen}>
       {error && <div className={styles.errorMsg}>{error}</div>}
-      {busy && stage && (
-        <ProgressBar
-          percent={stage === 'google' ? 35 : 75}
-          label={stage === 'google' ? 'Contacting Google…' : 'Syncing your data…'}
-          sublabel="Stay on this screen — finishing up."
-        />
-      )}
+      {busy && stage && <StageBar stage={stage} />}
       {!configured ? (
         <div className={styles.emptyState}>
           Online sync is not set up in this build yet — the publisher adds a Google Client ID at build time.
