@@ -1674,3 +1674,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push → user verifies Sync now completes-or-errors-cleanly → confirm merge to `dev`.
+
+## Session 2026-10-16 (console hygiene meta fix, on feature/setup-settings-refresh)
+
+### Changes
+- User: cleared local storage, sync works; asked about console lines. All benign dev-mode noise: React DevTools hint, install-banner suppression (intentional, own Install UI), router v7 future-flag warnings (dev-only, production-silent), and attached effect stacks (not errors). Notably: zero GSI popup errors now
+- Fix: added standard `mobile-web-app-capable` alongside the Apple tag (silences Chrome deprecation, iOS still needs theirs)
+- Gates: build PASS
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, unpushed. Next: push → confirm merge to `dev`.
