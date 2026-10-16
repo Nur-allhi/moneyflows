@@ -1828,3 +1828,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on `dev`, unpushed. Next: push + reply (OAuth logo upload itself stays a console action).
+
+## Session 2026-10-17 (release v1.17.2 patch)
+
+### Changes
+- User-approved: ship pending dev work (PWA icon set) to production. Gates green on dev tip (typecheck, full lint 0, 104/104, build)
+- Bump `1.17.1 → 1.17.2` PATCH on `dev` (`7df2daa`: package.json + whatsNew + CHANGELOG `[1.17.2] - 2026-10-17`); merged `dev → master` no-ff (`0d28b59`); tag `v1.17.2` live on remote; pushed master + tags + dev
+- Back on clean `dev` (only untracked `Logo_mockups/` source sheet remains)
+
+### Status
+- `master` at v1.17.2. Next: user confirms production deploy (icons + legal contact live), then verification submit after 24h window.
