@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.2] - 2026-10-17
+
+### Changed
+- Full app icon set: detailed 192/512 icons, apple-touch icon, browser favicons and horizontal logo, all wired into the manifest.
+
 ## [1.17.1] - 2026-10-17
 
 ### Fixed
