@@ -1661,3 +1661,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push → user reloads dev (picks up fix), taps Sync now → chooser appears → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-15 popup spam + stuck sync bar, on feature/setup-settings-refresh)
+
+### Changes
+- User report: Sync-now progress never finishes + console shows 6× `GSI_LOGGER: Failed to open popup … prompt=none … blocked?`. Logged BUG-15 first. Diagnosis: GIS opens a REAL popup even for silent `prompt:'none'` — background retries (boot/flush/polls) outside gestures get blocker-killed, spamming doomed popups after the hourly token dies; Drive fetches had zero timeouts so a hanging network stuck the bar at 75% forever
+- Fix: per-session silent-renewal backoff (`silentRenewalDead`, cleared by explicit sign-in/refresh/sign-out — explicit taps always attempt); 30s `fetchWithTimeout` (abort + race guarantee) on all 6 Drive calls + profile fetch
+- Gates: typecheck PASS, scoped lint clean, unit 94/94 (backoff + timeout tests), e2e cloud-sync 4/4 green
+
+### Skill(s) Used
+- senior-backend
+
+### Status
+- Committed on branch, unpushed. Next: push → user verifies Sync now completes-or-errors-cleanly → confirm merge to `dev`.
