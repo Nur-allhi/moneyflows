@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import styles from './LegalDoc.module.css';
 
-/** Contact for privacy/verification questions. TODO(user): replace with a real monitored inbox before Google verification. */
-export const SUPPORT_EMAIL = 'support@example.com';
+/** Contact for privacy/verification questions. */
+export const SUPPORT_EMAIL = 'nureallhi1@gmail.com';
 
 const LAST_UPDATED = '16 October 2026';
 
