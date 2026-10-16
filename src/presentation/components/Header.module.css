@@ -269,10 +269,11 @@
   animation: iconPop 0.25s ease;
 }
 
-/* Spinning sync ring (T-173): honest indeterminate motion, never a fake %. */
-.syncSpinner {
-  animation: syncSpin 1s linear infinite;
+/* Orbiting sync arc (T-173/T-174): honest indeterminate motion, never a fake %. */
+.syncOrbit {
+  transform-box: fill-box;
   transform-origin: center;
+  animation: syncSpin 1s linear infinite;
 }
 
 .syncDoneWrap {
@@ -285,7 +286,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .syncSpinner {
+  .syncOrbit {
     animation: none;
   }
 }

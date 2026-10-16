@@ -292,6 +292,18 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-171 | No-change boot writes nothing (conditional recalc) | `senior-backend` | M | **Complete** (pure compute+diff, update-only-stale + flush-only-if-changed, 104/104 tests) |
 | T-172 | Header sync button triggers Sync-now on tap | `senior-frontend` | S | **Complete** (tap = immediate syncNow, guests keep deep link, start/end lifecycle events, re-entrancy guard) |
 | T-173 | Circular sync animation on header button (all syncs) | `senior-frontend` | M | **Complete** (ring spin on any sync incl. background auto-sync, full-ring check flash on clean end, dot refresh, reduced-motion guard) |
+| T-174 | Persistent synced tick + outer ring on header button | `senior-frontend` | S | **Complete** (centered tick badge when synced, tap flashes tick even idle, cloud-centered with orbiting outer arc) |
+
+### T-174 - Persistent synced tick + outer ring on header button
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/Header.tsx`, `Header.module.css`
+**Content:**
+1. Idle-synced state shows a persistent tick: cloud icon with a centered green check badge (nothing-left-to-sync at a glance); never-synced keeps the gray dot, warn keeps the amber dot.
+2. Tap with nothing to sync flashes the completion tick (tap handler flashes on clean status even when no network sync ran).
+3. Spinner redrawn: cloud stays centered, the rotating arc moves to the OUTER ring (r=10) around it; done flash unchanged (full outer ring + check).
+4. Full gates green.
+**Acceptance:** synced idle always shows the tick; tap-when-idle flashes it; spinning ring visibly orbits outside the cloud.
 
 ### T-171 - No-change boot writes nothing (conditional recalc)
 **Skill:** `senior-backend`

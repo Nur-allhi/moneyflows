@@ -33,10 +33,9 @@ function formatDate(): string {
 }
 
 /**
- * Sync button glyph states (T-173): idle cloud + status dot, spinning ring
- * while any real sync runs (tap or background auto-sync), full ring + check
- * flash on clean completion. Honest states only — the ring spins, it never
- * fakes a percentage.
+ * Sync button glyph states (T-173/T-174): idle cloud (centered tick badge when
+ * fully synced, status dot otherwise), outer orbiting arc while any real sync
+ * runs, full outer ring + check flash on clean completion. Honest states only.
  */
 function SyncGlyph({ animKey, dot, spinning, justDone }: {
   animKey: string | number;
@@ -46,9 +45,9 @@ function SyncGlyph({ animKey, dot, spinning, justDone }: {
 }) {
   if (spinning) {
     return (
-      <svg key={`spin-${animKey}`} className={styles.syncSpinner} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="18" height="18" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" strokeOpacity="0.25" />
-        <circle cx="12" cy="12" r="9" strokeDasharray="42 100" pathLength={100} transform="rotate(-90 12 12)" />
+      <svg key={`spin-${animKey}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
+        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" strokeOpacity="0.55" />
+        <circle className={styles.syncOrbit} cx="12" cy="12" r="10" strokeWidth="2.2" strokeDasharray="30 100" pathLength={100} transform="rotate(-90 12 12)" />
       </svg>
     );
   }
@@ -66,8 +65,16 @@ function SyncGlyph({ animKey, dot, spinning, justDone }: {
     <>
       <svg key={animKey} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
         <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+        {dot === 'synced' && (
+          <g>
+            <circle cx="12" cy="14.5" r="5" fill="var(--color-success)" stroke="none" />
+            <path d="M10 14.5l1.5 1.5 2.5-3" stroke="var(--color-bg)" strokeWidth="1.6" />
+          </g>
+        )}
       </svg>
-      <span className={`${styles.syncDot} ${dot === 'warn' ? styles.syncDotWarn : dot === 'never' ? styles.syncDotIdle : ''}`} />
+      {dot !== 'synced' && (
+        <span className={`${styles.syncDot} ${dot === 'warn' ? styles.syncDotWarn : styles.syncDotIdle}`} />
+      )}
     </>
   );
 }
@@ -151,11 +158,28 @@ export function Header({
     if (syncingRef.current) return;
     syncingRef.current = true;
     setSyncBusy(true);
+    const flashDone = () => {
+      getDatabase().getCloudStatus()
+        .then((s) => {
+          if (!s.lastError && !s.conflictPending) {
+            setSyncDone(true);
+            if (doneTimer.current) clearTimeout(doneTimer.current);
+            doneTimer.current = setTimeout(() => {
+              setSyncDone(false);
+              doneTimer.current = null;
+            }, 1200);
+          }
+        })
+        .catch(() => {});
+    };
     getDatabase().syncNow()
       .catch(() => {})
       .finally(() => {
         syncingRef.current = false;
         setSyncBusy(false);
+        // Tap with nothing to sync runs no network (no end event) — flash
+        // the tick directly so the tap always answers (T-174).
+        flashDone();
       });
   }, [replaySync, navigate, syncState]);
   const toggleTheme = () => {
