@@ -1828,3 +1828,26 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on `dev`, unpushed. Next: push + reply (OAuth logo upload itself stays a console action).
+
+## Session 2026-10-17 (release v1.17.2 patch)
+
+### Changes
+- User-approved: ship pending dev work (PWA icon set) to production. Gates green on dev tip (typecheck, full lint 0, 104/104, build)
+- Bump `1.17.1 → 1.17.2` PATCH on `dev` (`7df2daa`: package.json + whatsNew + CHANGELOG `[1.17.2] - 2026-10-17`); merged `dev → master` no-ff (`0d28b59`); tag `v1.17.2` live on remote; pushed master + tags + dev
+- Back on clean `dev` (only untracked `Logo_mockups/` source sheet remains)
+
+### Status
+- `master` at v1.17.2. Next: user confirms production deploy (icons + legal contact live), then verification submit after 24h window.
+
+## Session 2026-10-17 (BUG-16 sync popup auto-close + bar stuck at 75%)
+
+### Changes
+- Logged BUG-16 (open/high): GIS popup auto-closes with no callback; `handleSyncNow` awaits unsettled GIS promises forever → stage stuck 75%, no error, reload-only recovery
+- Diagnosis from source reads (dev has BUG-14 `select_account` + BUG-15 network timeouts): remaining hole is NO timeout on GIS token promises (`signIn`/`getValidToken`/`refreshInteractive`) or `loadGis` — BUG-15 covered Drive fetches only. GitNexus index stale for sync symbols (impact/query degraded) — call graph taken from direct reads instead
+- Ruled out: missing client ID (popup appeared → ID baked in, server restarted after `.env.local`)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-16 fixed on `dev` (`5a0ee87`): shared `requestToken` timeout helper + 15s script-load timeout + actionable sign-in error copy; 3 new timeout tests. Gates: typecheck PASS, full lint 0 PASS, unit 107/107 PASS, build PASS. Pre-existing quirk noted: `npm test` also picks up `e2e/*.spec.ts` under vitest (Playwright-runner mismatch, 21 collection failures) — unit scope `npx vitest run src` is the green gate. Next: push dev; user fixes hosted origin allowlist (checklist given) and retests sync.

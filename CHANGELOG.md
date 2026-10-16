@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Google sign-in/sync can no longer hang forever when the popup closes without answering (unauthorized origin, blocker): every popup wait now times out (60s interactive, 10s silent, 15s script load) and Settings shows an actionable error instead of a stuck progress bar.
+
 ## [1.17.2] - 2026-10-17
 
 ### Changed
