@@ -269,6 +269,27 @@
   animation: iconPop 0.25s ease;
 }
 
+/* Spinning sync ring (T-173): honest indeterminate motion, never a fake %. */
+.syncSpinner {
+  animation: syncSpin 1s linear infinite;
+  transform-origin: center;
+}
+
+.syncDoneWrap {
+  display: inline-flex;
+  color: var(--color-success);
+}
+
+@keyframes syncSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .syncSpinner {
+    animation: none;
+  }
+}
+
 .themeBtn {
   width: 36px;
   height: 36px;

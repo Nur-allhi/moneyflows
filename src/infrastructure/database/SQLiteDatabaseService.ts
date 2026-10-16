@@ -54,6 +54,16 @@ function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
 }
 
+/**
+ * Lifecycle events for sync spinners (T-172): fired only around real network
+ * activity, never on idle/cooldown skips. Window-guarded (tests/node safe).
+ */
+function dispatchSyncEvent(name: 'moneyflows:sync-start' | 'moneyflows:sync-end'): void {
+  try {
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event(name));
+  } catch { /* eventing must never break persistence */ }
+}
+
 /** Engine download budget — a dead dev server must fail fast, not trip the 15s boot watchdog. */
 const WASM_FETCH_TIMEOUT_MS = 10_000;
 
@@ -610,36 +620,42 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const hasLocal = effectiveHasLocal(this._isLocalEmpty(), meta?.hash);
     const action = decideSyncAction({ hasLocal, localHash, remoteHash, lastSyncHash: meta?.hash });
     if (action === 'idle') return;
-    if (action === 'upload') {
-      const ok = await cloudSync.sync(token, data, localHash);
-      if (ok) {
-        await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
-        this.cloudLastSyncAt = Date.now();
-        this.cloudLastError = null;
-      } else {
-        this.cloudLastError = 'upload-failed';
-      }
-      return;
-    }
-    if (action === 'pull') {
-      const dl = await cloudSync.download(token);
-      if (dl) {
-        await this._importVerifiedRemote(dl);
+    // Real network activity starts here (T-172) — UI sync spinners listen.
+    dispatchSyncEvent('moneyflows:sync-start');
+    try {
+      if (action === 'upload') {
+        const ok = await cloudSync.sync(token, data, localHash);
+        if (ok) {
+          await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+          this.cloudLastSyncAt = Date.now();
+          this.cloudLastError = null;
+        } else {
+          this.cloudLastError = 'upload-failed';
+        }
         return;
       }
-      // Verified download failed but the sidecar read fine (interrupted
-      // upload, dupes) — heal instead of looping forever (T-160).
-      try {
-        const healed = await this._healRemoteAttempt(token, localHash);
-        if (healed === 'corrupt') this.cloudLastError = 'remote-corrupt';
-        else if (healed === 'empty-remote') this.cloudLastError = null;
-      } catch {
-        this.cloudLastError = 'download-failed';
+      if (action === 'pull') {
+        const dl = await cloudSync.download(token);
+        if (dl) {
+          await this._importVerifiedRemote(dl);
+          return;
+        }
+        // Verified download failed but the sidecar read fine (interrupted
+        // upload, dupes) — heal instead of looping forever (T-160).
+        try {
+          const healed = await this._healRemoteAttempt(token, localHash);
+          if (healed === 'corrupt') this.cloudLastError = 'remote-corrupt';
+          else if (healed === 'empty-remote') this.cloudLastError = null;
+        } catch {
+          this.cloudLastError = 'download-failed';
+        }
+        return;
       }
-      return;
+      const dl = await cloudSync.download(token);
+      await this._flagConflict(dl);
+    } finally {
+      dispatchSyncEvent('moneyflows:sync-end');
     }
-    const dl = await cloudSync.download(token);
-    await this._flagConflict(dl);
   }
 
   /**

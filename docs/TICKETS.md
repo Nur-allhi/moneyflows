@@ -290,6 +290,8 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-169 | Informed conflict dialog (side-by-side data comparison) | `senior-frontend` | M | **Complete** (pure summaries + SQL wrapper, bytes held + preview API, cards with amounts, Keep-this-device/Download-cloud-data, 97/97 tests) |
 | T-170 | Informed update prompt (what-changed preview on pull) | `senior-frontend` | M | **Complete** (verified-download preview, no import/state change, Cloud-first cards, Later/Refresh kept, 97/97) |
 | T-171 | No-change boot writes nothing (conditional recalc) | `senior-backend` | M | **Complete** (pure compute+diff, update-only-stale + flush-only-if-changed, 104/104 tests) |
+| T-172 | Header sync button triggers Sync-now on tap | `senior-frontend` | S | **Complete** (tap = immediate syncNow, guests keep deep link, start/end lifecycle events, re-entrancy guard) |
+| T-173 | Circular sync animation on header button (all syncs) | `senior-frontend` | M | **Complete** (ring spin on any sync incl. background auto-sync, full-ring check flash on clean end, dot refresh, reduced-motion guard) |
 
 ### T-171 - No-change boot writes nothing (conditional recalc)
 **Skill:** `senior-backend`
@@ -478,6 +480,26 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 3. Service holds conflict remote bytes in memory + `remoteSavedAt`, exposes `getConflictPreview()`; cleared on resolve/sign-out. Dialog renders two stacked cards; same Modal; `DESIGN_IDENTITY.md §17` checklist.
 4. Full gates + e2e diverged fixture (cards render with correct counts).
 **Acceptance:** both-sides-diverged shows what/where is newer with amounts; choice is informed; fallback dialog unchanged when preview unavailable.
+
+### T-172 - Header sync button triggers Sync-now on tap
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/Header.tsx`, `src/infrastructure/database/SQLiteDatabaseService.ts` (lifecycle events)
+**Content:**
+1. Tap = immediate `syncNow()` (force path, same as Settings button) — no Settings trip. Guests (signed out) keep the old deep-link into Settings Backup as an invitation to sign in.
+2. Service dispatches `moneyflows:sync-start` / `moneyflows:sync-end` window events around real network sync activity only (post idle-check in `_maybeCloudSync`) — background auto-syncs included, cooldown-skips excluded. Never throws, zero UI coupling.
+3. Full gates green.
+**Acceptance:** signed-in tap syncs within seconds from the header; guest tap opens Settings Backup; no event fires when there is nothing to sync.
+
+### T-173 - Circular sync animation on header button (all syncs)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/components/Header.tsx`, `Header.module.css`, `src/presentation/hooks/useCloudIndicator.ts` (or new hook state)
+**Content:**
+1. Button states: idle (cloud icon + status dot, as today) → syncing (rotating ring arc) → done (full ring + check flash ~1.2s, then idle) / warn on error. Driven by the T-172 lifecycle events + fresh `getCloudStatus()` on end — honest states only, no fake percentages.
+2. Both desktop and mobile instances; `prefers-reduced-motion` guard; token-only CSS; `DESIGN_IDENTITY.md §17` checklist.
+3. Full gates green.
+**Acceptance:** add a transaction → ring spins without any tap; tap → spins → completes; error → warn state; guests see nothing.
 
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
