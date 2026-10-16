@@ -78,9 +78,16 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
       await refresh();
       await new Promise((resolve) => setTimeout(resolve, DONE_HOLD_MS));
     } catch (e) {
-      setError(e instanceof Error && /cancel|dismiss|popup|closed/i.test(e.message)
-        ? 'Sign-in was cancelled — try again.'
-        : 'Sign-in failed — check your connection and try again.');
+      // BUG-16: a popup that dies with no answer is a config/blocker issue,
+      // not a user cancel — say so instead of hanging or mislabeling it.
+      const msg = e instanceof Error ? e.message : '';
+      if (/timed out|no response/i.test(msg)) {
+        setError('Google closed the popup without signing in — this site may not be an authorized origin, or a blocker stopped the popup. Check and try again.');
+      } else if (/cancel|dismiss|popup|closed/i.test(msg)) {
+        setError('Sign-in was cancelled — try again.');
+      } else {
+        setError('Sign-in failed — check your connection and try again.');
+      }
     } finally {
       setBusy(false);
       setStage(null);

@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { GoogleAuth, loadGis, resetGisLoaderForTests } from '../GoogleAuth';
+import {
+  GoogleAuth,
+  loadGis,
+  resetGisLoaderForTests,
+  GIS_INTERACTIVE_TOKEN_TIMEOUT_MS,
+  GIS_SILENT_TOKEN_TIMEOUT_MS,
+} from '../GoogleAuth';
 
 interface TokenResponse {
   access_token?: string;
@@ -16,6 +22,8 @@ interface CapturedClient {
 const captured: CapturedClient[] = [];
 const requestedPrompts: string[] = [];
 let nextResponse: TokenResponse = { access_token: 'tok-1', expires_in: 3600 };
+/** BUG-16: popup dies with no callback — every wait must still settle. */
+let neverRespond = false;
 let revoked: string[] = [];
 
 function installGisMock() {
@@ -27,6 +35,7 @@ function installGisMock() {
           return {
             requestAccessToken: (opts?: { prompt: string }) => {
               requestedPrompts.push(opts?.prompt ?? '');
+              if (neverRespond) return;
               const resp = nextResponse;
               void Promise.resolve().then(() => cfg.callback(resp));
             },
@@ -48,6 +57,7 @@ beforeEach(async () => {
   requestedPrompts.length = 0;
   revoked = [];
   nextResponse = { access_token: 'tok-1', expires_in: 3600 };
+  neverRespond = false;
   resetGisLoaderForTests();
   installGisMock();
   vi.stubGlobal('fetch', vi.fn(async () => ({
@@ -188,5 +198,56 @@ describe('GoogleAuth (T-145)', () => {
     captured.length = 0;
     await expect(new GoogleAuth().getValidToken()).resolves.toBeNull();
     expect(captured).toHaveLength(0);
+  });
+
+  it('signIn rejects instead of hanging when the popup never answers (BUG-16)', async () => {
+    const auth = new GoogleAuth();
+    neverRespond = true;
+    try {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      const assertion = expect(auth.signIn('client-123')).rejects.toThrow(/timed out|no response/);
+      await vi.advanceTimersByTimeAsync(GIS_INTERACTIVE_TOKEN_TIMEOUT_MS + 1000);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+      neverRespond = false;
+    }
+  });
+
+  it('silent renewal times out to null (and backs off) when the popup never answers (BUG-16)', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2 * 3600_000);
+    neverRespond = true;
+    try {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      const first = expect(auth.getValidToken()).resolves.toBeNull();
+      await vi.advanceTimersByTimeAsync(GIS_SILENT_TOKEN_TIMEOUT_MS + 1000);
+      await first;
+      const callsAfterFirst = captured.length;
+      const second = expect(auth.getValidToken()).resolves.toBeNull();
+      await vi.advanceTimersByTimeAsync(GIS_SILENT_TOKEN_TIMEOUT_MS + 1000);
+      await second;
+      expect(captured.length).toBe(callsAfterFirst);
+    } finally {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+      neverRespond = false;
+    }
+  });
+
+  it('refreshInteractive returns null when the popup never answers (BUG-16)', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    neverRespond = true;
+    try {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      const assertion = expect(auth.refreshInteractive()).resolves.toBeNull();
+      await vi.advanceTimersByTimeAsync(GIS_INTERACTIVE_TOKEN_TIMEOUT_MS + 1000);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+      neverRespond = false;
+    }
   });
 });

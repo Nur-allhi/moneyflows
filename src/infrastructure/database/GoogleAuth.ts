@@ -81,6 +81,57 @@ function getGis(): GisNamespace | null {
   return g?.accounts?.oauth2 ? g : null;
 }
 
+/**
+ * GIS wait budget (BUG-16): the token popup sometimes dies without ever
+ * invoking its callback (unauthorized origin, blocker/FedCM kill), and the
+ * GIS script itself can stall. Unbounded awaits would hang the Settings
+ * progress bar forever, so every wait races against a timer. Interactive
+ * budgets stay generous (a human picks an account); silent ones stay short.
+ */
+export const GIS_SCRIPT_TIMEOUT_MS = 15_000;
+export const GIS_SILENT_TOKEN_TIMEOUT_MS = 10_000;
+export const GIS_INTERACTIVE_TOKEN_TIMEOUT_MS = 60_000;
+
+/** Token request that always settles: callback, sync throw, or timeout. */
+function requestToken(
+  gis: GisNamespace,
+  clientId: string,
+  prompt: string,
+  timeoutMs: number,
+  callbackError: (resp: GisTokenResponse) => Error,
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error('Google sign-in timed out: popup closed with no response'));
+    }, timeoutMs);
+    const client = gis.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: SCOPES,
+      callback: (resp) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (resp.error || !resp.access_token) {
+          reject(callbackError(resp));
+          return;
+        }
+        resolve(resp.access_token);
+      },
+    });
+    try {
+      client.requestAccessToken({ prompt });
+    } catch (e) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(e instanceof Error ? e : new Error(String(e)));
+    }
+  });
+}
+
 /** Memoized GIS script load; resolves immediately when already present (tests). */
 let gisPromise: Promise<void> | null = null;
 export function loadGis(): Promise<void> {
@@ -91,12 +142,21 @@ export function loadGis(): Promise<void> {
       reject(new Error('GIS unavailable: no document'));
       return;
     }
+    // BUG-16: a stalled script must fail, never hang sign-in/sync callers.
+    const timer = setTimeout(() => reject(new Error('GIS script timed out')), GIS_SCRIPT_TIMEOUT_MS);
     const el = document.createElement('script');
     el.src = GIS_SCRIPT_URL;
     el.async = true;
     el.defer = true;
-    el.onload = () => (getGis() ? resolve() : reject(new Error('GIS script loaded but api missing')));
-    el.onerror = () => reject(new Error('GIS script failed to load'));
+    el.onload = () => {
+      clearTimeout(timer);
+      if (getGis()) resolve();
+      else reject(new Error('GIS script loaded but api missing'));
+    };
+    el.onerror = () => {
+      clearTimeout(timer);
+      reject(new Error('GIS script failed to load'));
+    };
     document.head.appendChild(el);
   });
   gisPromise.catch(() => { gisPromise = null; });
@@ -210,27 +270,18 @@ export class GoogleAuth {
     await loadGis();
     const gis = getGis();
     if (!gis) throw new Error('Google Identity Services unavailable');
-    const token = await new Promise<string>((resolve, reject) => {
-      const client = gis.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: SCOPES,
-        callback: (resp) => {
-          if (resp.error || !resp.access_token) {
-            reject(new Error(`Google sign-in failed: ${resp.error ?? 'no token'}`));
-            return;
-          }
-          resolve(resp.access_token);
-        },
-      });
-      try {
-        // Explicit user tap: always offer the account chooser. prompt:''
-        // fails closed (popup opens then auto-closes) when no Google session
-        // can be silently reused — e.g. the morning after sign-in (BUG-14).
-        client.requestAccessToken({ prompt: 'select_account' });
-      } catch (e) {
-        reject(e instanceof Error ? e : new Error(String(e)));
-      }
-    });
+    // Explicit user tap: always offer the account chooser. prompt:''
+    // fails closed (popup opens then auto-closes) when no Google session
+    // can be silently reused — e.g. the morning after sign-in (BUG-14).
+    // BUG-16: bounded — a popup that dies with no callback rejects instead
+    // of hanging the caller forever.
+    const token = await requestToken(
+      gis,
+      clientId,
+      'select_account',
+      GIS_INTERACTIVE_TOKEN_TIMEOUT_MS,
+      (resp) => new Error(`Google sign-in failed: ${resp.error ?? 'no token'}`),
+    );
     const profile = await this.fetchProfile(token).catch(() => null);
     this.token = token;
     this.expiresAtMs = Date.now() + 3600_000;
@@ -282,23 +333,18 @@ export class GoogleAuth {
     const gis = getGis();
     if (!gis) return null;
     try {
-      const token = await new Promise<string>((resolve, reject) => {
-        const client = gis.accounts.oauth2.initTokenClient({
-          client_id: clientId,
-          scope: SCOPES,
-          callback: (resp) => {
-            if (resp.error || !resp.access_token) {
-              reject(new Error(resp.error ?? 'silent refresh needs UI'));
-              return;
-            }
-            resolve(resp.access_token);
-          },
-        });
-        // 'none' = renew silently (GIS still opens a popup window for it, so
-        // background retries outside user gestures are killed by popup
-        // blockers — the session backoff above stops the retry spam).
-        client.requestAccessToken({ prompt: 'none' });
-      });
+      // 'none' = renew silently (GIS still opens a popup window for it, so
+      // background retries outside user gestures are killed by popup
+      // blockers — the session backoff above stops the retry spam).
+      // BUG-16: bounded — a killed popup settles as a silent failure (null),
+      // never a hang.
+      const token = await requestToken(
+        gis,
+        clientId,
+        'none',
+        GIS_SILENT_TOKEN_TIMEOUT_MS,
+        (resp) => new Error(resp.error ?? 'silent refresh needs UI'),
+      );
       this.token = token;
       this.expiresAtMs = Date.now() + 3600_000;
       this.clientId = clientId;
@@ -330,20 +376,15 @@ export class GoogleAuth {
     const gis = getGis();
     if (!gis) return null;
     try {
-      const token = await new Promise<string>((resolve, reject) => {
-        const client = gis.accounts.oauth2.initTokenClient({
-          client_id: clientId,
-          scope: SCOPES,
-          callback: (resp) => {
-            if (resp.error || !resp.access_token) {
-              reject(new Error(resp.error ?? 'interactive refresh cancelled'));
-              return;
-            }
-            resolve(resp.access_token);
-          },
-        });
-        client.requestAccessToken({ prompt: 'select_account' });
-      });
+      // BUG-16: bounded like signIn — a dead popup returns null (caller
+      // shows the reconnect message) instead of hanging the progress bar.
+      const token = await requestToken(
+        gis,
+        clientId,
+        'select_account',
+        GIS_INTERACTIVE_TOKEN_TIMEOUT_MS,
+        (resp) => new Error(resp.error ?? 'interactive refresh cancelled'),
+      );
       this.token = token;
       this.expiresAtMs = Date.now() + 3600_000;
       this.clientId = clientId;

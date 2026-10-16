@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-16: Google popup auto-closes with no callback; Sync-now bar stuck at 75%
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-16 (during: user report — header sync tap opened Google popup that auto-closed; Settings Sync now progress stuck half-done)
+- **Location:** `src/infrastructure/database/GoogleAuth.ts` (`signIn`, `getValidToken`, `refreshInteractive`, `loadGis`) + `src/presentation/components/settings/CloudSyncSection.tsx:93` (`handleSyncNow` stage)
+- **Description:** Tapping sync opens the Google sign-in popup which closes by itself without signing in. Tapping Sync now in Settings then leaves the progress bar stuck at 75% ("Syncing your data…") forever — no error, no recovery without reload. Expected: a closed/cancelled popup always settles into an error message and clears the bar.
+- **Root Cause:** GIS token promises (`new Promise` around `requestAccessToken`) have no timeout and assume the callback always fires; `loadGis()` likewise never times out. When the popup dies without a callback (unauthorized origin, blocker/FedCM kill, dead-session edge), the await hangs forever so `setStage(null)` never runs. BUG-15 added network timeouts but NOT GIS-callback timeouts — this is the remaining hole. Trigger-side candidates: opened URL not in Google Console authorized origins, popup/FedCM blocking, third-party cookies off.
+- **Fix Approach:** user-confirmed (timeouts + config check) — shared `requestToken` helper races every GIS callback against a timer (60s interactive, 10s silent; script load 15s); silent timeout settles as backoff-null, interactive timeout rejects so the bar always clears; sign-in timeout maps to an actionable origin/blocker error instead of the cancel copy.
+- **Resolved:** 2026-10-17 — on `dev`; typecheck PASS, full lint 0 PASS, unit 107/107 PASS (3 new BUG-16 timeout tests), build PASS.
+
+---
+
 ## BUG-10: Nested collapsed disclosure leaks content (Google Drive Sync sliver)
 
 - **Status:** fixed
