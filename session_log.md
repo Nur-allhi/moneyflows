@@ -1789,3 +1789,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (release v1.17.0 via safety branch)
+
+### Changes
+- User-approved release path: `dev → google_signin_backup` (merge `ed4cd12`, clean) → gates green → version bump `1.16.1 → 1.17.0` MINOR on safety (`948ad5d`: package.json + whatsNew 3 bullets + CHANGELOG `[1.17.0] - 2026-10-17`) → `google_signin_backup → master` no-ff (`e0c45de`) → tag `v1.17.0` → pushed all
+- Unrelated PWA-icon work (index.html, icons, Logo_mockups) stashed during branch hops and restored intact — never committed
+- Gates: typecheck PASS, full lint 0 PASS, unit 104/104 PASS, build PASS (merge result + bump commit)
+
+### Status
+- `master` at v1.17.0 (tag live on remote) with sync + legal pages; `dev` and `google_signin_backup` pushed. Next: user verifies production deploy, then Google verification submit.
