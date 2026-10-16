@@ -1766,3 +1766,26 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-16 (app logo sizing)
+
+### Changes
+- User supplied `Logo_mockups/MoneyFlows Fintech Logo Showcase.png` (1254x1254 composite) + approved crop-hero-icon approach
+- Cropped top hero glass tile (413,63,430x430) and middle lockup band (200,530,850x215); resized via System.Drawing HighQualityBicubic
+- `public/`: `icon-512.png` + `icon-192.png` overwritten in place (padded 84% artwork, maskable-safe), new `apple-touch-icon.png` (180), `favicon-32x32.png` + `favicon-16x16.png` (tight crop), `logo-horizontal.png` (850x215, unwired asset for header/splash later)
+- `index.html`: favicon now PNG 32/16 (svg kept as fallback), apple-touch-icon points to new 180px PNG; `manifest.json` unchanged (paths still valid)
+- Gates: build PASS, new PNGs verified in `dist/`
+
+### Status
+- Uncommitted on current branch. Next: commit + continue per user call.
+
+## Session 2026-10-17 (T-176 legal pages)
+
+### Changes
+- User request for Google verification: in-app Privacy + Terms (T-176, `1a5b1bb` on `dev`)
+- Shared `LegalDoc` screen (glass panel, token-only CSS, ≤300 LOC) at guard-exempt `/privacy` + `/terms` (reviewers land without setup); About links; honest copy matching real behavior (local-first, drive.appdata-only, no analytics)
+- `SUPPORT_EMAIL` placeholder left for user to replace before submitting verification
+- Gates: typecheck PASS, scoped lint clean, build PASS, e2e 18 green
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
