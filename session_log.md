@@ -1710,3 +1710,92 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Live on `dev`. Next: user call (release bump per VERSIONING at release time; `master` untouched; Other Ledgers V2 on "next update").
+
+## Session 2026-10-17 (T-169 informed conflict dialog)
+
+### Changes
+- User spec: compare cloud-vs-local in the popup (amounts shown) + buttons Keep this device / Download cloud data. Built on `dev` (carries all sync work)
+- `cloudDiff.ts`: pure `summarizeRows` (counts, latest-3 signed amounts, last-change) + thin `extractSide` (7 capped queries); 3/3 unit tests with stubs
+- Service: 4 conflict sites funneled through `_flagConflict` (stash + hold bytes + flag); `getConflictPreview()` opens both snapshots in-memory (plain-dialog fallback); preview cleared on resolve; port shapes live in `IDatabaseService`
+- Modal: This-device vs Cloud cards (counts + latest + timestamps) + new button copy; token-only CSS module
+- Drive-by: `dev` typecheck was red before my change (pre-existing, loan-lender-breakdown era) — fixed `LoanService` unknown→Database cast + widened test mock for the new port method
+- Gates: typecheck PASS, scoped lint clean, unit 97/97, build PASS
+- E2E note: live-dialog e2e skipped (no fast trigger seam — 30s poll; manual live test stands in)
+
+### Status
+- Committed `141eef6` on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-170 update preview)
+
+### Changes
+- User report: Refresh prompt said something arrived but not what. Same informed-treatment as T-169 for the pull path
+- T-170 (`8434dd3`): `getUpdatePreview()` (verified download only — no import/state change) + Cloud-first `SideCard` pair in the Refresh prompt; Later/Refresh unchanged; plain-text fallback
+- Gates: typecheck PASS, scoped lint clean, unit 97/97, build PASS
+- E2E note: same 30s-poll seam as T-169 — live two-device test stands in
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-171 phantom sync fix)
+
+### Changes
+- User report confirmed in code: `recalculateBalances()` ran every boot doing blanket `UPDATE accounts SET balance=0, updated_at=now()` + flush — hash changed with zero user edits → phantom uploads/downloads/conflicts
+- T-171 (`f62cba8`): pure `computeBalances` + `diffBalances` (mirrors `applyBalanceChange` exactly); service UPDATEs only stale rows and flushes only when changed; genuinely stale balances still self-correct
+- Gates: typecheck PASS, scoped lint clean, unit 104/104 (7 new), build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply (note: one final upload per device on first boot after fix, then quiet).
+
+## Session 2026-10-17 (T-172/T-173 header tap-to-sync + ring)
+
+### Changes
+- User requests: (1) header sync button syncs immediately, no Settings trip; (2) circular animation on any sync, full round = done
+- T-172 (`9587937` part): tap runs immediate `syncNow()` with re-entrancy guard (guests keep deep link); service emits `moneyflows:sync-start/end` only around real network activity (idle/cooldown skips silent)
+- T-173: `SyncGlyph` states — cloud+dot idle, spinning ring during any sync incl. background auto-syncs, full-ring check flash 1.2s on clean end; dot refreshes on sync-end; both desktop+mobile instances; reduced-motion guard
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-174 tick badge + outer ring)
+
+### Changes
+- User refinements: (1) persistent tick when nothing left to sync; (2) tap-when-idle answers with the tick; (3) ring orbits OUTSIDE the cloud, not inside
+- T-174 (`a88994c`): synced idle = cloud + centered green tick badge (replaces corner dot); tap flashes completion even with zero network; spinner = centered cloud + rotating outer arc (r=10, transform-box fill-box); reduced-motion guard kept
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-175 spinner orbit fix)
+
+### Changes
+- User report: animation read as inner clutter, not an outer circle. Cause: r=10 ring overlapped the full-size cloud edges
+- T-175 (`a14a823`): cloud shrinks to 62% centered, arc rides r=10.5 fully outside; verified with screenshots 450ms apart showing the arc at different orbit positions (frame hashes differ)
+- Gates: typecheck PASS, scoped lint clean, build PASS (probe spec deleted after use)
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-16 (app logo sizing)
+
+### Changes
+- User supplied `Logo_mockups/MoneyFlows Fintech Logo Showcase.png` (1254x1254 composite) + approved crop-hero-icon approach
+- Cropped top hero glass tile (413,63,430x430) and middle lockup band (200,530,850x215); resized via System.Drawing HighQualityBicubic
+- `public/`: `icon-512.png` + `icon-192.png` overwritten in place (padded 84% artwork, maskable-safe), new `apple-touch-icon.png` (180), `favicon-32x32.png` + `favicon-16x16.png` (tight crop), `logo-horizontal.png` (850x215, unwired asset for header/splash later)
+- `index.html`: favicon now PNG 32/16 (svg kept as fallback), apple-touch-icon points to new 180px PNG; `manifest.json` unchanged (paths still valid)
+- Gates: build PASS, new PNGs verified in `dist/`
+
+### Status
+- Uncommitted on current branch. Next: commit + continue per user call.
+
+## Session 2026-10-17 (T-176 legal pages)
+
+### Changes
+- User request for Google verification: in-app Privacy + Terms (T-176, `1a5b1bb` on `dev`)
+- Shared `LegalDoc` screen (glass panel, token-only CSS, ≤300 LOC) at guard-exempt `/privacy` + `/terms` (reviewers land without setup); About links; honest copy matching real behavior (local-first, drive.appdata-only, no analytics)
+- `SUPPORT_EMAIL` placeholder left for user to replace before submitting verification
+- Gates: typecheck PASS, scoped lint clean, build PASS, e2e 18 green
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.

@@ -54,13 +54,17 @@ export function useCloudIndicator(): { dot: SyncDot; title: string } | null {
     };
     // Instant update after Settings sign-in/sync (no route change there).
     const onStatus = () => { void refresh(); };
+    // Fresh dot the moment any sync finishes (T-173).
+    const onSyncEnd = () => { void refresh(); };
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('moneyflows:cloud-status', onStatus);
+    window.addEventListener('moneyflows:sync-end', onSyncEnd);
     return () => {
       alive = false;
       clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('moneyflows:cloud-status', onStatus);
+      window.removeEventListener('moneyflows:sync-end', onSyncEnd);
     };
   }, [pathname]);
 

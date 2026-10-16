@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { CLOUD_SYNC_COOLDOWN_MS } from '../constants/config';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { formatAmount } from '../utils/format';
+import type { ConflictPreview, SideSummary } from '../../core/ports/IDatabaseService';
 import { Modal } from './Modal';
+import styles from './CloudUpdatePrompt.module.css';
 
 /**
  * Open-tab remote check (Phase 19, T-149) + conflict choice (T-150): while the
@@ -9,9 +13,47 @@ import { Modal } from './Modal';
  * prompts for refresh; a both-sides-moved state offers keep-mine / use-theirs
  * (the remote side is already stashed as a restore point either way).
  */
+function SideCard({ title, sub, side, locale, currency }: {
+  title: string;
+  sub: string;
+  side: SideSummary;
+  locale: string;
+  currency: string;
+}) {
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardTitle}>{title}</div>
+      <div className={styles.cardSub}>{sub}</div>
+      <div className={styles.counts}>
+        {side.transactions} transactions · {side.accounts} accounts · {side.members} members
+      </div>
+      {side.latest.length > 0 ? (
+        <ul className={styles.latestList}>
+          {side.latest.map((t, i) => (
+            <li key={i} className={styles.latestItem}>
+              <span className={styles.latestDesc}>{t.description || '—'}</span>
+              <span className={`${styles.latestAmount} ${t.amount < 0 ? styles.latestAmountNeg : ''}`}>
+                {formatAmount(t.amount, locale, currency)}
+              </span>
+              <span className={styles.latestDate}>{t.date}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className={styles.latestEmpty}>No transactions yet</div>
+      )}
+      {side.lastChange && <div className={styles.cardSub}>Last change {side.lastChange}</div>}
+    </div>
+  );
+}
+
 export function CloudUpdatePrompt() {
+  const locale = useSettingsStore((s) => s.settings.locale);
+  const currency = useSettingsStore((s) => s.settings.currency);
   const [available, setAvailable] = useState(false);
   const [conflict, setConflict] = useState(false);
+  const [preview, setPreview] = useState<ConflictPreview | null>(null);
+  const [updatePreview, setUpdatePreview] = useState<ConflictPreview | null>(null);
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState(false);
   const snoozedUntil = useRef(0);
@@ -23,8 +65,15 @@ export function CloudUpdatePrompt() {
     checking.current = true;
     try {
       const result = await getDatabase().checkRemoteUpdate().catch(() => null);
-      if (result === 'available' && Date.now() >= snoozedUntil.current) setAvailable(true);
-      else if (result === 'conflict') setConflict(true);
+      if (result === 'available' && Date.now() >= snoozedUntil.current) {
+        setAvailable(true);
+        // What-changed cards (T-170); plain text fallback when unavailable.
+        getDatabase().getUpdatePreview().then(setUpdatePreview).catch(() => {});
+      } else if (result === 'conflict') {
+        setConflict(true);
+        // Comparison cards (T-169); plain dialog fallback when unavailable.
+        getDatabase().getConflictPreview().then(setPreview).catch(() => {});
+      }
     } finally {
       checking.current = false;
     }
@@ -45,6 +94,7 @@ export function CloudUpdatePrompt() {
   const handleLater = useCallback(() => {
     snoozedUntil.current = Date.now() + CLOUD_SYNC_COOLDOWN_MS;
     setAvailable(false);
+    setUpdatePreview(null);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -75,6 +125,7 @@ export function CloudUpdatePrompt() {
           return;
         }
         setConflict(false);
+        setPreview(null);
         return;
       }
       setApplyError(true);
@@ -96,7 +147,26 @@ export function CloudUpdatePrompt() {
         onCancel={handleLater}
         onSave={() => { void handleRefresh(); }}
       >
-        <p>Another device synced newer data to your Google Drive. Refresh to load it.</p>
+        {updatePreview ? (
+          <div className={styles.cards}>
+            <SideCard
+              title="New on your Drive"
+              sub={updatePreview.remoteSavedAt ? `Synced ${updatePreview.remoteSavedAt}` : 'Synced from another device'}
+              side={updatePreview.remote}
+              locale={locale}
+              currency={currency}
+            />
+            <SideCard
+              title="On this device"
+              sub="What you have right now"
+              side={updatePreview.local}
+              locale={locale}
+              currency={currency}
+            />
+          </div>
+        ) : (
+          <p>Another device synced newer data to your Google Drive. Refresh to load it.</p>
+        )}
         {applyError && <p>Could not load the update — will retry on the next check.</p>}
       </Modal>
       <Modal
@@ -104,12 +174,34 @@ export function CloudUpdatePrompt() {
         onClose={() => { /* choice required — both options are safe */ }}
         title="Sync conflict"
         cancelLabel="Download cloud data"
-        saveLabel={applying ? 'Saving…' : 'Override cloud'}
+        saveLabel={applying ? 'Saving…' : 'Keep this device'}
         onCancel={() => { void handleResolve('theirs'); }}
         onSave={() => { void handleResolve('mine'); }}
       >
-        <p>This device and another device both changed data since the last sync.</p>
-        <p>The other version is kept as a restore point either way — nothing is lost.</p>
+        {preview ? (
+          <div className={styles.cards}>
+            <SideCard
+              title="This device"
+              sub="What's on this phone or computer right now"
+              side={preview.local}
+              locale={locale}
+              currency={currency}
+            />
+            <SideCard
+              title="Cloud"
+              sub={preview.remoteSavedAt ? `Saved ${preview.remoteSavedAt}` : 'Saved on your Google Drive'}
+              side={preview.remote}
+              locale={locale}
+              currency={currency}
+            />
+            <p className={styles.note}>The side you don&apos;t pick is kept as a restore point — nothing is lost.</p>
+          </div>
+        ) : (
+          <>
+            <p>This device and another device both changed data since the last sync.</p>
+            <p>The other version is kept as a restore point either way — nothing is lost.</p>
+          </>
+        )}
         {applyError && <p>That did not work — check your connection and try again.</p>}
       </Modal>
     </>

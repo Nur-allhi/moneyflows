@@ -4,11 +4,13 @@ import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
-import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile, BootProgress } from '../../core/ports/IDatabaseService';
+import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile, BootProgress, ConflictPreview } from '../../core/ports/IDatabaseService';
 import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS, CLOUD_SYNC_COOLDOWN_MS, CLOUD_BOOT_TIMEOUT_MS, CLOUD_BOOT_SKIP_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
 import { googleAuth } from './GoogleAuth';
 import { cloudSync, decideSyncAction, decideHeal, effectiveHasLocal, cloudRetryDelayMs, getLastSyncMeta, setLastSyncMeta, CLOUD_DB_FILE, CLOUD_HASH_FILE } from './CloudSync';
+import { extractSide } from './cloudDiff';
+import { computeBalances, diffBalances } from './computeBalances';
 import type { CloudDownload } from './CloudSync';
 import { createStorageAdapter, withStorageLock } from './storage';
 import type { IPersistenceAdapter, SnapshotRecord } from './storage/types';
@@ -50,6 +52,16 @@ const SCHEMA = [
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
+}
+
+/**
+ * Lifecycle events for sync spinners (T-172): fired only around real network
+ * activity, never on idle/cooldown skips. Window-guarded (tests/node safe).
+ */
+function dispatchSyncEvent(name: 'moneyflows:sync-start' | 'moneyflows:sync-end'): void {
+  try {
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event(name));
+  } catch { /* eventing must never break persistence */ }
 }
 
 /** Engine download budget — a dead dev server must fail fast, not trip the 15s boot watchdog. */
@@ -171,6 +183,8 @@ export class SQLiteDatabaseService implements IDatabaseService {
   private cloudLastSyncAt = 0;
   private cloudLastError: string | null = null;
   private cloudConflict = false;
+  /** Remote bytes held for the conflict preview dialog (T-169); cleared on resolve. */
+  private lastConflictRemote: { data: Uint8Array; hash: string } | null = null;
   /** Single pending deferred-retry timer (T-163); cleared on the next attempt. */
   private cloudRetryTimer: ReturnType<typeof setTimeout> | null = null;
   /**
@@ -606,38 +620,104 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const hasLocal = effectiveHasLocal(this._isLocalEmpty(), meta?.hash);
     const action = decideSyncAction({ hasLocal, localHash, remoteHash, lastSyncHash: meta?.hash });
     if (action === 'idle') return;
-    if (action === 'upload') {
-      const ok = await cloudSync.sync(token, data, localHash);
-      if (ok) {
-        await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
-        this.cloudLastSyncAt = Date.now();
-        this.cloudLastError = null;
-      } else {
-        this.cloudLastError = 'upload-failed';
-      }
-      return;
-    }
-    if (action === 'pull') {
-      const dl = await cloudSync.download(token);
-      if (dl) {
-        await this._importVerifiedRemote(dl);
+    // Real network activity starts here (T-172) — UI sync spinners listen.
+    dispatchSyncEvent('moneyflows:sync-start');
+    try {
+      if (action === 'upload') {
+        const ok = await cloudSync.sync(token, data, localHash);
+        if (ok) {
+          await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+          this.cloudLastSyncAt = Date.now();
+          this.cloudLastError = null;
+        } else {
+          this.cloudLastError = 'upload-failed';
+        }
         return;
       }
-      // Verified download failed but the sidecar read fine (interrupted
-      // upload, dupes) — heal instead of looping forever (T-160).
-      try {
-        const healed = await this._healRemoteAttempt(token, localHash);
-        if (healed === 'corrupt') this.cloudLastError = 'remote-corrupt';
-        else if (healed === 'empty-remote') this.cloudLastError = null;
-      } catch {
-        this.cloudLastError = 'download-failed';
+      if (action === 'pull') {
+        const dl = await cloudSync.download(token);
+        if (dl) {
+          await this._importVerifiedRemote(dl);
+          return;
+        }
+        // Verified download failed but the sidecar read fine (interrupted
+        // upload, dupes) — heal instead of looping forever (T-160).
+        try {
+          const healed = await this._healRemoteAttempt(token, localHash);
+          if (healed === 'corrupt') this.cloudLastError = 'remote-corrupt';
+          else if (healed === 'empty-remote') this.cloudLastError = null;
+        } catch {
+          this.cloudLastError = 'download-failed';
+        }
+        return;
       }
-      return;
+      const dl = await cloudSync.download(token);
+      await this._flagConflict(dl);
+    } finally {
+      dispatchSyncEvent('moneyflows:sync-end');
     }
-    const dl = await cloudSync.download(token);
-    if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
+  }
+
+  /**
+   * Flags a both-sides-moved state (T-150): stashes the remote as a restore
+   * point, holds its bytes for the comparison dialog (T-169), and raises the
+   * conflict status. Local data is never touched.
+   */
+  private async _flagConflict(dl: CloudDownload | null): Promise<void> {
+    if (dl) {
+      await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
+      this.lastConflictRemote = { data: dl.data, hash: dl.hash };
+    } else {
+      this.lastConflictRemote = null;
+    }
     this.cloudConflict = true;
     this.cloudLastError = 'conflict';
+  }
+
+  /**
+   * Side-by-side data for the conflict dialog (T-169). Null when the preview
+   * is unavailable — callers fall back to the plain dialog.
+   */
+  async getConflictPreview(): Promise<ConflictPreview | null> {
+    const held = this.lastConflictRemote;
+    if (!held || !this.db || !this.SQL) return null;
+    try {
+      const local = extractSide(this.db);
+      const remoteDb = new this.SQL.Database(held.data);
+      try {
+        const remote = extractSide(remoteDb);
+        const info = await this.remoteInfo().catch(() => null);
+        return { local, remote, remoteSavedAt: info?.modifiedTime ?? null };
+      } finally {
+        remoteDb.close();
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * What-changed data for the update prompt (T-170): downloads verified remote
+   * bytes for display only — no import, no meta/state change (Refresh does that).
+   */
+  async getUpdatePreview(): Promise<ConflictPreview | null> {
+    const token = await googleAuth.getValidToken().catch(() => null);
+    if (!token || !this.db || !this.SQL) return null;
+    const dl = await cloudSync.download(token);
+    if (!dl) return null;
+    try {
+      const local = extractSide(this.db);
+      const remoteDb = new this.SQL.Database(dl.data);
+      try {
+        const remote = extractSide(remoteDb);
+        const info = await this.remoteInfo().catch(() => null);
+        return { local, remote, remoteSavedAt: info?.modifiedTime ?? null };
+      } finally {
+        remoteDb.close();
+      }
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -669,9 +749,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
         await this._importVerifiedRemote(dl);
       } else if (action === 'conflict') {
         const dl = await cloudSync.download(token);
-        if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
-        this.cloudConflict = true;
-        this.cloudLastError = 'conflict';
+        await this._flagConflict(dl);
       }
       // idle/upload: nothing to do — the next flush uploads when due.
     })();
@@ -752,9 +830,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
       return (await this._importVerifiedRemote(dl)) ? 'downloaded' : 'idle';
     }
     const dl = await cloudSync.download(token);
-    if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
-    this.cloudConflict = true;
-    this.cloudLastError = 'conflict';
+    await this._flagConflict(dl);
     return 'choice';
   }
 
@@ -776,9 +852,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const action = decideSyncAction({ hasLocal: true, localHash, remoteHash, lastSyncHash: meta?.hash });
     if (action === 'conflict') {
       const dl = await cloudSync.download(token);
-      if (dl) await this._writeSnapshotSlot(dl.data, dl.hash).catch(() => {});
-      this.cloudConflict = true;
-      this.cloudLastError = 'conflict';
+      await this._flagConflict(dl);
       return 'conflict';
     }
     return 'up-to-date';
@@ -787,7 +861,11 @@ export class SQLiteDatabaseService implements IDatabaseService {
   /** Resolves a both-sides-moved conflict after user choice (T-150). */
   async resolveConflict(choice: 'mine' | 'theirs'): Promise<boolean> {
     if (!this.cloudConflict) return true;
-    if (choice === 'theirs') return this.applyRemoteUpdate();
+    if (choice === 'theirs') {
+      const ok = await this.applyRemoteUpdate();
+      if (ok) this.lastConflictRemote = null;
+      return ok;
+    }
     const token = await googleAuth.getValidToken().catch(() => null);
     if (!token || !this.db) return false;
     const data = this.db.export();
@@ -798,6 +876,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
     this.cloudLastSyncAt = Date.now();
     this.cloudLastError = null;
     this.cloudConflict = false;
+    this.lastConflictRemote = null;
     return true;
   }
 
@@ -1347,17 +1426,31 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   async recalculateBalances(): Promise<void> {
-    this.run('UPDATE accounts SET balance=0,updated_at=$now',{ $now: now() });
+    // Compute-first (T-171): only touch rows that actually differ, so a
+    // no-change boot writes nothing and the file hash stays put (no phantom
+    // sync). Replay order and per-type math mirror applyBalanceChange exactly.
+    const current = this.query<{ id: string; balance: number }>('SELECT id, balance FROM accounts');
     const rows = this.query<Record<string, unknown>>(
       "SELECT type,amount,source_account,dest_account FROM transactions WHERE deleted_at IS NULL ORDER BY created_at,rowid",
     );
-    for (const row of rows) {
-      this.applyBalanceChange(
-        row.type as string,
-        row.amount as number,
-        (row.source_account as string) ?? undefined,
-        (row.dest_account as string) ?? undefined,
-      );
+    const expected = computeBalances(
+      rows.map((r) => ({
+        type: r.type as string,
+        amount: r.amount as number,
+        source_account: (r.source_account as string | null) ?? undefined,
+        dest_account: (r.dest_account as string | null) ?? undefined,
+      })),
+      current.map((a) => a.id),
+    );
+    const changed = diffBalances(current, expected);
+    if (changed.length === 0) return;
+    const stamp = now();
+    for (const row of changed) {
+      this.run('UPDATE accounts SET balance=$bal,updated_at=$now WHERE id=$id', {
+        $id: row.id,
+        $bal: row.balance,
+        $now: stamp,
+      });
     }
     await this.flush();
   }

@@ -269,6 +269,28 @@
   animation: iconPop 0.25s ease;
 }
 
+/* Orbiting sync arc (T-173/T-174): honest indeterminate motion, never a fake %. */
+.syncOrbit {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: syncSpin 1s linear infinite;
+}
+
+.syncDoneWrap {
+  display: inline-flex;
+  color: var(--color-success);
+}
+
+@keyframes syncSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .syncOrbit {
+    animation: none;
+  }
+}
+
 .themeBtn {
   width: 36px;
   height: 36px;

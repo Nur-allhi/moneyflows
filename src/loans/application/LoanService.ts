@@ -1,3 +1,4 @@
+import type { Database as SqlJsDb } from 'sql.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Transaction } from '../../core/domain/Transaction';
 import { Account } from '../../core/domain/Account';
@@ -16,7 +17,7 @@ export class LoanService {
     if (db instanceof SQLiteDatabaseService) {
       const raw = db.getSqlJsDb();
       if (!raw) throw new Error('Database not initialized');
-      this.loanDb = new LoanDatabase(raw);
+      this.loanDb = new LoanDatabase(raw as SqlJsDb);
     } else {
       throw new Error('LoanService requires SQLiteDatabaseService');
     }

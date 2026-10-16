@@ -287,6 +287,47 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-166 | Animated water-flow fill on all progress bars | `senior-frontend` | S | **Complete** (diagonal flow overlay on gradient, leading shimmer kept, reduced-motion guard, GPU-cheap) |
 | T-167 | Sync progress completes (100% beat, no abrupt vanish) | `senior-frontend` | S | **Complete** (done stage 100% + Synced ✓ held 1.2s on success; failures still clear to error text) |
 | T-168 | Splash bar shows only on slow boots (600ms gate) | `senior-frontend` | S | **Complete** (bar gated on boot exceeding 600ms; throttled probe shows stages; fast boots clean) |
+| T-169 | Informed conflict dialog (side-by-side data comparison) | `senior-frontend` | M | **Complete** (pure summaries + SQL wrapper, bytes held + preview API, cards with amounts, Keep-this-device/Download-cloud-data, 97/97 tests) |
+| T-170 | Informed update prompt (what-changed preview on pull) | `senior-frontend` | M | **Complete** (verified-download preview, no import/state change, Cloud-first cards, Later/Refresh kept, 97/97) |
+| T-171 | No-change boot writes nothing (conditional recalc) | `senior-backend` | M | **Complete** (pure compute+diff, update-only-stale + flush-only-if-changed, 104/104 tests) |
+| T-172 | Header sync button triggers Sync-now on tap | `senior-frontend` | S | **Complete** (tap = immediate syncNow, guests keep deep link, start/end lifecycle events, re-entrancy guard) |
+| T-173 | Circular sync animation on header button (all syncs) | `senior-frontend` | M | **Complete** (ring spin on any sync incl. background auto-sync, full-ring check flash on clean end, dot refresh, reduced-motion guard) |
+| T-174 | Persistent synced tick + outer ring on header button | `senior-frontend` | S | **Complete** (centered tick badge when synced, tap flashes tick even idle, cloud-centered with orbiting outer arc) |
+| T-175 | Spinner geometry: small cloud + true outer orbit ring | `senior-frontend` | S | **Complete** (62% centered cloud, r=10.5 arc outside it, rotation proven by differing screenshot frames) |
+| T-176 | In-app Privacy + Terms pages (`/privacy`, `/terms`) | `senior-frontend` | S | **Complete** (shared LegalDoc screen, guard-exempt routes, About links, e2e 18 green) |
+
+### T-174 - Persistent synced tick + outer ring on header button
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/Header.tsx`, `Header.module.css`
+**Content:**
+1. Idle-synced state shows a persistent tick: cloud icon with a centered green check badge (nothing-left-to-sync at a glance); never-synced keeps the gray dot, warn keeps the amber dot.
+2. Tap with nothing to sync flashes the completion tick (tap handler flashes on clean status even when no network sync ran).
+3. Spinner redrawn: cloud stays centered, the rotating arc moves to the OUTER ring (r=10) around it; done flash unchanged (full outer ring + check).
+4. Full gates green.
+**Acceptance:** synced idle always shows the tick; tap-when-idle flashes it; spinning ring visibly orbits outside the cloud.
+
+### T-171 - No-change boot writes nothing (conditional recalc)
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/computeBalances.ts` (new) + `__tests__/computeBalances.test.ts`, `SQLiteDatabaseService.recalculateBalances()`
+**Content:**
+1. Root cause (confirmed in code): `recalculateBalances()` runs every boot and blanket-rewrites all account rows with fresh `updated_at` + `flush()` — hash changes with zero user edits → phantom uploads/downloads/conflicts.
+2. Extract pure `computeBalances()` + `diffBalances()` (mirror `applyBalanceChange` branching exactly, deterministic replay order); service UPDATEs only differing rows (stamping only those) and flushes only when something changed.
+3. Behavior-identical: same replay order, same per-type math, opening balances already exist as transactions; stale balances still self-correct.
+4. Unit tests (pure, no wasm): per-type math, unknown-type ignore, diff empty on identical, stale-row detection. Full gates green.
+**Acceptance:** second consecutive boot with no edits produces byte-identical DB (no phantom sync); genuinely stale balances still repair.
+
+### T-170 - Informed update prompt (what-changed preview on pull)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts` (`getUpdatePreview()`), `src/core/ports/IDatabaseService.ts`, `src/presentation/components/CloudUpdatePrompt.tsx`
+**Content:**
+1. User report: the "New data available" prompt says something arrived but not what — same blind choice as the old conflict dialog.
+2. Service `getUpdatePreview(): Promise<ConflictPreview | null>` — verified `download()` (no import, no state change) + local `extractSide` + `remoteInfo` saved-time; null on any failure → current text fallback.
+3. Modal renders the shared `SideCard` pair (Cloud first — it's the news — then This device) with counts + latest-3 amounts; buttons stay Later/Refresh.
+4. No new network shape (one verified download, already fetched again on Refresh); full gates green; e2e skipped (30s poll seam, same as T-169 note).
+**Acceptance:** phone-save → desktop prompt names the new transactions with amounts; fallback text unchanged when preview unavailable.
 
 ### T-168 - Splash bar shows only on slow boots (600ms gate)
 **Skill:** `senior-frontend`
@@ -442,6 +483,37 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 2. Token-only values; `prefers-reduced-motion: reduce` disables the motion (Header precedent); GPU-cheap (background-position only).
 3. `DESIGN_IDENTITY.md §17` motion rules check.
 **Acceptance:** every app progress bar shows continuous flow while busy; still with zero motion when reduced-motion is set.
+
+### T-169 - Informed conflict dialog (side-by-side data comparison)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/cloudDiff.ts` (new) + `__tests__/cloudDiff.test.ts`, `SQLiteDatabaseService.ts` (hold bytes + `getConflictPreview()`), `src/core/ports/IDatabaseService.ts`, `src/presentation/components/CloudUpdatePrompt.tsx`
+**Content:**
+1. User decisions: cards show full latest-3 (description + signed amount + date) with counts + timestamps; buttons **Keep this device** / **Download cloud data**.
+2. Pure `summarizeRows()` over row arrays (counts, latest-3, last-change) — unit-tested with stubs, no wasm in tests. Thin SQL wrapper opens remote bytes in a second in-memory handle (`COUNT(*)`, latest by date, `MAX(updated_at)`); corrupt bytes → null → plain-dialog fallback.
+3. Service holds conflict remote bytes in memory + `remoteSavedAt`, exposes `getConflictPreview()`; cleared on resolve/sign-out. Dialog renders two stacked cards; same Modal; `DESIGN_IDENTITY.md §17` checklist.
+4. Full gates + e2e diverged fixture (cards render with correct counts).
+**Acceptance:** both-sides-diverged shows what/where is newer with amounts; choice is informed; fallback dialog unchanged when preview unavailable.
+
+### T-172 - Header sync button triggers Sync-now on tap
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/components/Header.tsx`, `src/infrastructure/database/SQLiteDatabaseService.ts` (lifecycle events)
+**Content:**
+1. Tap = immediate `syncNow()` (force path, same as Settings button) — no Settings trip. Guests (signed out) keep the old deep-link into Settings Backup as an invitation to sign in.
+2. Service dispatches `moneyflows:sync-start` / `moneyflows:sync-end` window events around real network sync activity only (post idle-check in `_maybeCloudSync`) — background auto-syncs included, cooldown-skips excluded. Never throws, zero UI coupling.
+3. Full gates green.
+**Acceptance:** signed-in tap syncs within seconds from the header; guest tap opens Settings Backup; no event fires when there is nothing to sync.
+
+### T-173 - Circular sync animation on header button (all syncs)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/components/Header.tsx`, `Header.module.css`, `src/presentation/hooks/useCloudIndicator.ts` (or new hook state)
+**Content:**
+1. Button states: idle (cloud icon + status dot, as today) → syncing (rotating ring arc) → done (full ring + check flash ~1.2s, then idle) / warn on error. Driven by the T-172 lifecycle events + fresh `getCloudStatus()` on end — honest states only, no fake percentages.
+2. Both desktop and mobile instances; `prefers-reduced-motion` guard; token-only CSS; `DESIGN_IDENTITY.md §17` checklist.
+3. Full gates green.
+**Acceptance:** add a transaction → ring spins without any tap; tap → spins → completes; error → warn state; guests see nothing.
 
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
