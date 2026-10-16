@@ -1746,3 +1746,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-174 tick badge + outer ring)
+
+### Changes
+- User refinements: (1) persistent tick when nothing left to sync; (2) tap-when-idle answers with the tick; (3) ring orbits OUTSIDE the cloud, not inside
+- T-174 (`a88994c`): synced idle = cloud + centered green tick badge (replaces corner dot); tap flashes completion even with zero network; spinner = centered cloud + rotating outer arc (r=10, transform-box fill-box); reduced-motion guard kept
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
