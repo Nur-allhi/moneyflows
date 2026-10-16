@@ -1492,6 +1492,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - Committed, unpushed. Next: push + reply (pull + rebuild reminder for stale-dist suspicion).
 
+## Session 2026-10-16 (merge sync work into dev)
+
+### Changes
+- User-approved: merged `google_signin_backup → dev` no-ff (`009a38e`, Phases 19–20 T-145..T-168). One conflict (`session_log.md` tail, both sides appended) resolved keeping both histories
+- Gates on merge result: typecheck PASS, full lint `--max-warnings 0` PASS, unit 92/92, build PASS; pushed `dev`
+- Merged `dev → google_signin_backup` (fast-forward) and pushed — both branches even; `master` untouched at v1.16.1
+
+### Status
+- `dev` now carries the sync workstream. Next: user call (further polish or release flow with version bump + tag).
+
 ## Session 2026-10-16 (setup wizard + settings refresh S-1, on feature/setup-settings-refresh)
 
 ### Changes

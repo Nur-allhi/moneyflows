@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-10-17
+
 ### Added
 - Google Drive sync (opt-in, Settings → Backup & Storage): sign in with Google to auto-back up the database to your own Drive and pick it up on other devices. Includes boot import on fresh devices, "New data available" prompt for open tabs, and a keep-mine/use-other-device choice (remote kept as a restore point) when both sides changed.
 - Settings reorganized into five collapsed cards (Preferences, Appearance, Dashboard, Backup & Storage, About) with live status badges — one shared section kit powers both the page and the modal.
