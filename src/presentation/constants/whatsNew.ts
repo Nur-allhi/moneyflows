@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.17.2',
+    items: [
+      'Sharper app icons across phones, browsers and install prompts.',
+    ],
+  },
+  {
     version: '1.17.1',
     items: [
       'Privacy and terms pages now list the correct support contact.',
