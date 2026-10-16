@@ -1635,3 +1635,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, pushed. Next: user verifies data + sign-in live → confirm merge to `dev` (CHANGELOG Added/Fixed ride with merge, no version bump per VERSIONING).
+
+## Session 2026-10-16 (BUG-13 splash progress, on feature/setup-settings-refresh)
+
+### Changes
+- User report: splash bar shows "Starting…" then nothing until app loads. Logged BUG-13 first. Root cause: render gate `{!ready && showProgress}` unmounted the bar the instant boot completed — while splash lingers ~800ms for typing + fade — so staged progress and the final 100% never painted (ProgressBar itself was fine per T-165)
+- Fix: gate on `showProgress` alone with `ready ? 100/'Ready' : live values` — fast boots (<600ms) unchanged, slow boots stage then show Ready through fade
+- Gates: typecheck PASS, scoped lint clean, NEW e2e `17-splash` green (delayed engine → stages → Ready → app)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, unpushed. Next: push → user verifies → confirm merge to `dev`.
