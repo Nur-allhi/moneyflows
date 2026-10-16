@@ -1851,3 +1851,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - BUG-16 fixed on `dev` (`5a0ee87`): shared `requestToken` timeout helper + 15s script-load timeout + actionable sign-in error copy; 3 new timeout tests. Gates: typecheck PASS, full lint 0 PASS, unit 107/107 PASS, build PASS. Pre-existing quirk noted: `npm test` also picks up `e2e/*.spec.ts` under vitest (Playwright-runner mismatch, 21 collection failures) — unit scope `npx vitest run src` is the green gate. Next: push dev; user fixes hosted origin allowlist (checklist given) and retests sync.
+
+## Session 2026-10-17 (merge BUG-16 to master)
+
+### Changes
+- User-approved `dev → master` no-ff (`6854182`): BUG-16 GIS timeout fix (`5a0ee87`) + CHANGELOG Unreleased Fixed + BUGS.md fixed + session logs. No version bump/tag (release step pending user call)
+- Gates re-run on merge result: typecheck PASS, full lint 0 PASS, unit 107/107 PASS, build PASS; pushed `master` (`0d28b59..6854182`)
+- Back on clean `dev` (only untracked `Logo_mockups/` remains)
+
+### Status
+- `master` carries the sync hang fix. Next: deploy hosted app + user verifies origin allowlist, then version-bump release when confirmed.
