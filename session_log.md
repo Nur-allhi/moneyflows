@@ -1687,3 +1687,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push → confirm merge to `dev`.
+
+## Session 2026-10-16 (merge setup-settings-refresh → dev)
+
+### Changes
+- User-approved merge: `feature/setup-settings-refresh` (30 commits: S-1 sections kit, S-2 five cards, S-3 modal thinning, BUG-10/11/13/14/15 fixes, numpad removal, MemberPicker, wizard Try-it removal, guest sync entry, sign-out-erase, recovery slot picker + timeouts + busy states, splash Ready, PWA meta) + CHANGELOG `[Unreleased]` Added/Fixed entries → `dev` via `--no-ff` `a6b21a3`; pushed `dev` (`009a38e..a6b21a3`); branch kept
+- Gates: pre-merge typecheck + full lint 0 + build + unit 94/94 green on branch tip; post-merge typecheck PASS on result; no version bump (feature→dev per VERSIONING)
+- detect_changes scope (earlier): settings/wizard/sync/recovery/docs only, as intended
+
+### Skill(s) Used
+- senior-backend, senior-frontend, gitnexus
+
+### Status
+- Live on `dev`. Next: user call (release bump per VERSIONING at release time; `master` untouched; Other Ledgers V2 on "next update").
