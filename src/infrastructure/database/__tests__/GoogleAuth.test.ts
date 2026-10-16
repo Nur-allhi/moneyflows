@@ -154,6 +154,29 @@ describe('GoogleAuth (T-145)', () => {
     await expect(new GoogleAuth().getValidToken()).resolves.toBeNull();
   });
 
+  it('silent failure backs off for the session until explicit re-auth (BUG-15)', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2 * 3600_000);
+    try {
+      nextResponse = { error: 'interaction_required' };
+      await expect(auth.getValidToken()).resolves.toBeNull();
+      const callsAfterFirst = captured.length;
+      // Second background call: no new GIS popup attempt.
+      await expect(auth.getValidToken()).resolves.toBeNull();
+      expect(captured.length).toBe(callsAfterFirst);
+      // Explicit re-auth clears the backoff; the next expiry retries GIS.
+      nextResponse = { access_token: 'tok-9', expires_in: 3600 };
+      await expect(auth.refreshInteractive()).resolves.toBe('tok-9');
+      nowSpy.mockReturnValue(Date.now() + 4 * 3600_000);
+      nextResponse = { error: 'interaction_required' };
+      await expect(auth.getValidToken()).resolves.toBeNull();
+      expect(captured.length).toBeGreaterThan(callsAfterFirst);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
   it('signOut revokes and clears everything; token gone afterwards', async () => {
     const auth = new GoogleAuth();
     await auth.signIn('client-123');

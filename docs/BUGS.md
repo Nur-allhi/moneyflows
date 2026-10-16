@@ -39,6 +39,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-15: Background silent renewals spam blocked popups; Sync now bar sticks
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-16 (during: user report — Sync-now progress never finishes + console shows 6× `GSI_LOGGER: Failed to open popup window … prompt=none … Maybe blocked by the browser?`)
+- **Location:** `GoogleAuth.getValidToken()` silent path (called from boot/flush background paths) + `CloudSync` Drive fetches (no timeouts)
+- **Description:** (1) Every background silent renewal opens a REAL popup even with `prompt:'none'`; outside user gestures the blocker kills it, so after the hourly token dies the app spams doomed popups on every flush/poll instead of settling into 'reconnect'. (2) `syncNow`'s Drive fetches have no timeout — on a hanging network the Sync-now progress bar sticks at 75% forever instead of failing into an error state.
+- **Root Cause:** silent GIS renewal retried unconditionally per call with no per-session backoff; network layer assumes failure, never hangs.
+- **Fix Approach:** (1) per-session silent-renewal backoff in `getValidToken` — one failure stops background GIS attempts until explicit sign-in/refresh succeeds or sign-out (explicit taps always attempt); (2) 30s `fetchWithTimeout` on all 6 Drive calls + profile fetch, so hangs surface as errors and the bar always completes.
+- **Resolved:** 2026-10-16 — on `feature/setup-settings-refresh`; typecheck + scoped lint clean, unit 94/94 (backoff + timeout tests), e2e cloud-sync 4/4; CHANGELOG entry deferred to `dev` merge.
+
+---
+
 ## BUG-14: Next-morning re-auth popup opens then closes by itself
 
 - **Status:** fixed
