@@ -1714,3 +1714,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed `141eef6` on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-170 update preview)
+
+### Changes
+- User report: Refresh prompt said something arrived but not what. Same informed-treatment as T-169 for the pull path
+- T-170 (`8434dd3`): `getUpdatePreview()` (verified download only — no import/state change) + Cloud-first `SideCard` pair in the Refresh prompt; Later/Refresh unchanged; plain-text fallback
+- Gates: typecheck PASS, scoped lint clean, unit 97/97, build PASS
+- E2E note: same 30s-poll seam as T-169 — live two-device test stands in
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
