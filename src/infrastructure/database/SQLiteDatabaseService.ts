@@ -10,6 +10,7 @@ import { folderSync } from './FolderSync';
 import { googleAuth } from './GoogleAuth';
 import { cloudSync, decideSyncAction, decideHeal, effectiveHasLocal, cloudRetryDelayMs, getLastSyncMeta, setLastSyncMeta, CLOUD_DB_FILE, CLOUD_HASH_FILE } from './CloudSync';
 import { extractSide } from './cloudDiff';
+import { computeBalances, diffBalances } from './computeBalances';
 import type { CloudDownload } from './CloudSync';
 import { createStorageAdapter, withStorageLock } from './storage';
 import type { IPersistenceAdapter, SnapshotRecord } from './storage/types';
@@ -1409,17 +1410,31 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   async recalculateBalances(): Promise<void> {
-    this.run('UPDATE accounts SET balance=0,updated_at=$now',{ $now: now() });
+    // Compute-first (T-171): only touch rows that actually differ, so a
+    // no-change boot writes nothing and the file hash stays put (no phantom
+    // sync). Replay order and per-type math mirror applyBalanceChange exactly.
+    const current = this.query<{ id: string; balance: number }>('SELECT id, balance FROM accounts');
     const rows = this.query<Record<string, unknown>>(
       "SELECT type,amount,source_account,dest_account FROM transactions WHERE deleted_at IS NULL ORDER BY created_at,rowid",
     );
-    for (const row of rows) {
-      this.applyBalanceChange(
-        row.type as string,
-        row.amount as number,
-        (row.source_account as string) ?? undefined,
-        (row.dest_account as string) ?? undefined,
-      );
+    const expected = computeBalances(
+      rows.map((r) => ({
+        type: r.type as string,
+        amount: r.amount as number,
+        source_account: (r.source_account as string | null) ?? undefined,
+        dest_account: (r.dest_account as string | null) ?? undefined,
+      })),
+      current.map((a) => a.id),
+    );
+    const changed = diffBalances(current, expected);
+    if (changed.length === 0) return;
+    const stamp = now();
+    for (const row of changed) {
+      this.run('UPDATE accounts SET balance=$bal,updated_at=$now WHERE id=$id', {
+        $id: row.id,
+        $bal: row.balance,
+        $now: stamp,
+      });
     }
     await this.flush();
   }

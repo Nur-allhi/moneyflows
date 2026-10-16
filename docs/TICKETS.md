@@ -289,6 +289,18 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-168 | Splash bar shows only on slow boots (600ms gate) | `senior-frontend` | S | **Complete** (bar gated on boot exceeding 600ms; throttled probe shows stages; fast boots clean) |
 | T-169 | Informed conflict dialog (side-by-side data comparison) | `senior-frontend` | M | **Complete** (pure summaries + SQL wrapper, bytes held + preview API, cards with amounts, Keep-this-device/Download-cloud-data, 97/97 tests) |
 | T-170 | Informed update prompt (what-changed preview on pull) | `senior-frontend` | M | **Complete** (verified-download preview, no import/state change, Cloud-first cards, Later/Refresh kept, 97/97) |
+| T-171 | No-change boot writes nothing (conditional recalc) | `senior-backend` | M | **Complete** (pure compute+diff, update-only-stale + flush-only-if-changed, 104/104 tests) |
+
+### T-171 - No-change boot writes nothing (conditional recalc)
+**Skill:** `senior-backend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/computeBalances.ts` (new) + `__tests__/computeBalances.test.ts`, `SQLiteDatabaseService.recalculateBalances()`
+**Content:**
+1. Root cause (confirmed in code): `recalculateBalances()` runs every boot and blanket-rewrites all account rows with fresh `updated_at` + `flush()` — hash changes with zero user edits → phantom uploads/downloads/conflicts.
+2. Extract pure `computeBalances()` + `diffBalances()` (mirror `applyBalanceChange` branching exactly, deterministic replay order); service UPDATEs only differing rows (stamping only those) and flushes only when something changed.
+3. Behavior-identical: same replay order, same per-type math, opening balances already exist as transactions; stale balances still self-correct.
+4. Unit tests (pure, no wasm): per-type math, unknown-type ignore, diff empty on identical, stale-row detection. Full gates green.
+**Acceptance:** second consecutive boot with no edits produces byte-identical DB (no phantom sync); genuinely stale balances still repair.
 
 ### T-170 - Informed update prompt (what-changed preview on pull)
 **Skill:** `senior-frontend`
