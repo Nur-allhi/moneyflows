@@ -64,6 +64,13 @@ function dispatchSyncEvent(name: 'moneyflows:sync-start' | 'moneyflows:sync-end'
   } catch { /* eventing must never break persistence */ }
 }
 
+/** Status nudge (BUG-18): background heals refresh header/sidebar indicators. */
+function dispatchCloudStatus(): void {
+  try {
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('moneyflows:cloud-status'));
+  } catch { /* eventing must never break persistence */ }
+}
+
 /** Engine download budget — a dead dev server must fail fast, not trip the 15s boot watchdog. */
 const WASM_FETCH_TIMEOUT_MS = 10_000;
 
@@ -605,7 +612,6 @@ export class SQLiteDatabaseService implements IDatabaseService {
     }
     this._clearCloudRetry();
     this.lastCloudSyncTime = nowMs;
-    if (this.cloudConflict) return;
     const token = await googleAuth.getValidToken().catch(() => null);
     if (!token) {
       const email = await googleAuth.getAccountEmail().catch(() => null);
@@ -619,7 +625,23 @@ export class SQLiteDatabaseService implements IDatabaseService {
     // Fresh device (empty + never synced) counts as no local side → auto-pull.
     const hasLocal = effectiveHasLocal(this._isLocalEmpty(), meta?.hash);
     const action = decideSyncAction({ hasLocal, localHash, remoteHash, lastSyncHash: meta?.hash });
-    if (action === 'idle') return;
+    if (action === 'idle') {
+      // BUG-18 convergence heal: identical sides with a stale/missing
+      // fingerprint (unconfirmed upload) adopt it silently — never a dialog.
+      // A conflict raised on the same state clears itself here.
+      if (hasLocal && (!meta || meta.hash !== localHash)) {
+        await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+        this.cloudLastSyncAt = Date.now();
+        this.cloudConflict = false;
+        if (this.cloudLastError === 'conflict') this.cloudLastError = null;
+        this.lastConflictRemote = null;
+        dispatchCloudStatus();
+      }
+      return;
+    }
+    // A genuine both-sides-moved state still waits for the user's choice
+    // (one cheap hash read per flush runs first so a heal can clear it).
+    if (this.cloudConflict) return;
     // Real network activity starts here (T-172) — UI sync spinners listen.
     dispatchSyncEvent('moneyflows:sync-start');
     try {
@@ -821,7 +843,8 @@ export class SQLiteDatabaseService implements IDatabaseService {
     }
     const localHash = await digestHex(this.db.export());
     if (localHash === remoteHash) {
-      if (!meta) await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+      // BUG-18: converged — refresh a stale fingerprint too, not just a missing one.
+      if (!meta || meta.hash !== localHash) await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
       return 'idle';
     }
     if (meta && localHash === meta.hash) {
@@ -835,11 +858,38 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   /**
+   * Convergence heal (BUG-18): when local and remote hashes are identical,
+   * no conflict can exist regardless of fingerprint staleness. Adopts the
+   * fingerprint, clears a pending conflict, and reports true. False on any
+   * divergence or unknown — genuine states keep the user's choice.
+   */
+  private async healIfConverged(): Promise<boolean> {
+    if (!this.db) return false;
+    const token = await googleAuth.getValidToken().catch(() => null);
+    if (!token) return false;
+    const localHash = await digestHex(this.db.export());
+    const remoteHash = await cloudSync.remoteHash(token);
+    if (!remoteHash || localHash !== remoteHash) return false;
+    await setLastSyncMeta({ hash: localHash, at: Date.now() }).catch(() => {});
+    this.cloudLastSyncAt = Date.now();
+    this.cloudConflict = false;
+    if (this.cloudLastError === 'conflict') this.cloudLastError = null;
+    this.lastConflictRemote = null;
+    dispatchCloudStatus();
+    return true;
+  }
+
+  /**
    * Open-tab remote check (T-149): hash-only cost when clean, full download
    * only via applyRemoteUpdate(). Conflict stashes + flags like boot-pull.
    */
   async checkRemoteUpdate(): Promise<'up-to-date' | 'available' | 'conflict' | null> {
-    if (this.cloudConflict) return 'conflict';
+    // BUG-18: re-verify before re-alarming — an unconfirmed upload that has
+    // since converged heals itself instead of re-raising the dialog.
+    if (this.cloudConflict) {
+      if (await this.healIfConverged().catch(() => false)) return 'up-to-date';
+      return 'conflict';
+    }
     const token = await googleAuth.getValidToken().catch(() => null);
     if (!token || !this.db) return null;
     const meta = await getLastSyncMeta().catch(() => null);

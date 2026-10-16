@@ -198,6 +198,11 @@ describe('decideSyncAction (T-147, Guards 2 + 4)', () => {
   it('never synced + no remote → upload (first backup)', () => {
     expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: null })).toBe('upload');
   });
+
+  it('converged sides idle even with a stale/missing fingerprint (BUG-18)', () => {
+    expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: 'b', lastSyncHash: 'a' })).toBe('idle');
+    expect(decideSyncAction({ hasLocal: true, localHash: 'b', remoteHash: 'b' })).toBe('idle');
+  });
 });
 
 describe('effectiveHasLocal (T-152 fresh-device rule)', () => {

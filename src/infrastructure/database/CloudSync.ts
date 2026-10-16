@@ -36,6 +36,10 @@ export function decideSyncAction(args: {
 }): CloudAction {
   const { hasLocal, localHash, remoteHash, lastSyncHash } = args;
   if (!hasLocal) return remoteHash ? 'pull' : 'idle';
+  // Converged (BUG-18): identical content is never a conflict, no matter how
+  // stale the fingerprint is (unconfirmed uploads, lost meta). Callers heal
+  // the fingerprint on this path instead of raising the choice dialog.
+  if (remoteHash !== null && localHash === remoteHash) return 'idle';
   const localChanged = lastSyncHash === undefined ? true : localHash !== lastSyncHash;
   const remoteChanged = remoteHash !== null && remoteHash !== lastSyncHash;
   if (!localChanged) return remoteChanged ? 'pull' : 'idle';

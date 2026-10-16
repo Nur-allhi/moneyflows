@@ -73,6 +73,10 @@ export function CloudUpdatePrompt() {
         setConflict(true);
         // Comparison cards (T-169); plain dialog fallback when unavailable.
         getDatabase().getConflictPreview().then(setPreview).catch(() => {});
+      } else if (result === 'up-to-date') {
+        // BUG-18: a background-healed conflict dismisses its own dialog.
+        setConflict(false);
+        setPreview(null);
       }
     } finally {
       checking.current = false;
