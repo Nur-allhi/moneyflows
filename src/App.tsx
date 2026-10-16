@@ -12,6 +12,7 @@ import { useTheme } from './presentation/hooks/useTheme';
 import { useOtherLedgerStore } from './otherLedgers/presentation/stores/useOtherLedgerStore';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { getDatabase } from './infrastructure/database/getDatabase';
+import { ensureProactiveRenewal } from './infrastructure/database/GoogleAuth';
 import { ErrorBoundary, logger } from './core/logging';
 import styles from './App.module.css';
 
@@ -118,6 +119,13 @@ function AppLayout() {
 
   useEffect(() => {
     getDatabase().purgeExpiredItems(30).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    // BUG-17: renew the Google token while the user is active so sessions
+    // stretch past the ~1h implicit lifetime; long-idle reopens still need one tap.
+    const stop = ensureProactiveRenewal();
+    return stop;
   }, []);
 
   const [searchOpen, setSearchOpen] = useState(false);

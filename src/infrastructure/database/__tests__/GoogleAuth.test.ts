@@ -3,6 +3,7 @@ import {
   GoogleAuth,
   loadGis,
   resetGisLoaderForTests,
+  shouldProactiveRenew,
   GIS_INTERACTIVE_TOKEN_TIMEOUT_MS,
   GIS_SILENT_TOKEN_TIMEOUT_MS,
 } from '../GoogleAuth';
@@ -248,6 +249,69 @@ describe('GoogleAuth (T-145)', () => {
     } finally {
       vi.useRealTimers();
       neverRespond = false;
+    }
+  });
+
+  it('signIn honors expires_in instead of assuming 1h (BUG-17)', async () => {
+    const auth = new GoogleAuth();
+    nextResponse = { access_token: 'tok-1', expires_in: 1000 };
+    await auth.signIn('client-123');
+    captured.length = 0;
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 500_000);
+    try {
+      // 500s into a 1000s grant: served from cache, zero GIS calls.
+      await expect(auth.getValidToken()).resolves.toBe('tok-1');
+      expect(captured).toHaveLength(0);
+      // Past expiry: silent renewal runs (prompt 'none').
+      nowSpy.mockReturnValue(Date.now() + 2000_000);
+      nextResponse = { access_token: 'tok-2', expires_in: 3600 };
+      await expect(auth.getValidToken()).resolves.toBe('tok-2');
+      expect(requestedPrompts[requestedPrompts.length - 1]).toBe('none');
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('shouldProactiveRenew fires only inside the final window', () => {
+    const E = 1_000_000;
+    expect(shouldProactiveRenew(E - 600_001, E)).toBe(false);
+    expect(shouldProactiveRenew(E - 600_000, E)).toBe(true);
+    expect(shouldProactiveRenew(E - 1, E)).toBe(true);
+    expect(shouldProactiveRenew(E, E)).toBe(false);
+    expect(shouldProactiveRenew(0, 0)).toBe(false);
+  });
+
+  it('renewBeforeExpiry silently renews inside the final window (BUG-17)', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    captured.length = 0;
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 55 * 60_000);
+    try {
+      nextResponse = { access_token: 'tok-9', expires_in: 3600 };
+      await expect(auth.renewBeforeExpiry()).resolves.toBe('tok-9');
+      expect(requestedPrompts[requestedPrompts.length - 1]).toBe('none');
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('renewBeforeExpiry stays quiet with zero GIS calls outside the window (BUG-17)', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    captured.length = 0;
+    await expect(auth.renewBeforeExpiry()).resolves.toBe('tok-1');
+    expect(captured).toHaveLength(0);
+  });
+
+  it('renewBeforeExpiry past expiry delegates to the normal path (BUG-17)', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2 * 3600_000);
+    try {
+      nextResponse = { error: 'interaction_required' };
+      await expect(auth.renewBeforeExpiry()).resolves.toBeNull();
+    } finally {
+      vi.restoreAllMocks();
     }
   });
 });

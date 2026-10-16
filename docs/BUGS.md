@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-17: Sync asks to sign in again on every app open
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-10-17 (during: user report — every Sync-now tap after opening the app demands Google sign-in)
+- **Location:** `src/infrastructure/database/GoogleAuth.ts` (`getValidToken` persistence + silent renewal) + `CloudSyncSection.handleSyncNow` fallback
+- **Description:** Each fresh app open followed by Sync now pops the Google sign-in instead of reusing the previous session. Expected: within the token lifetime (and whenever silent renewal can succeed) sync proceeds with no popup.
+- **Root Cause:** diagnosed 2026-10-17 (hours-later + same-URL answers rule out storage loss): the GIS implicit-flow token lives ~1h; on reopen the saved token is expired and silent `prompt:'none'` renewal fails, so every old session falls through to the interactive popup. Silent path is fragile by construction — GIS opens a real popup even for `none` (see BUG-15), so popup blockers kill the gesture-less boot attempt and third-party-cookie/FedCM blocks kill the Google-session reuse. Environmental checks (cookies, popup allow, test-user status) may restore silent renewal on their own.
+- **Fix Approach:** user-confirmed (stretch + smooth) — `requestToken` now returns the real `expires_in` lifetime instead of assuming 1h (all three grant paths); NEW `renewBeforeExpiry()` silently renews inside the final 10-min window (activation-gated, throttled, backoff-honoring, expired delegates to the normal path); NEW `ensureProactiveRenewal()` activity listener wired once in `AppLayout`. Long-idle reopens still need one tap (implicit-flow platform limit, no backend).
+- **Resolved:** 2026-10-17 — on `dev`; typecheck PASS, full lint 0 PASS, unit 112/112 PASS (5 new BUG-17 tests), build PASS.
+
+---
+
 ## BUG-16: Google popup auto-closes with no callback; Sync-now bar stuck at 75%
 
 - **Status:** fixed

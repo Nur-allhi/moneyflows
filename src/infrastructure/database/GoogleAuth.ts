@@ -92,6 +92,46 @@ export const GIS_SCRIPT_TIMEOUT_MS = 15_000;
 export const GIS_SILENT_TOKEN_TIMEOUT_MS = 10_000;
 export const GIS_INTERACTIVE_TOKEN_TIMEOUT_MS = 60_000;
 
+/** Granted token plus its real lifetime (BUG-17 honors `expires_in`). */
+interface TokenGrant {
+  token: string;
+  expiresInMs: number;
+}
+
+/** Fallback lifetime when GIS omits `expires_in` (classic 1h grants). */
+const FALLBACK_TOKEN_TTL_MS = 3600_000;
+
+function tokenTtlMs(resp: GisTokenResponse): number {
+  return typeof resp.expires_in === 'number' && Number.isFinite(resp.expires_in) && resp.expires_in > 0
+    ? resp.expires_in * 1000
+    : FALLBACK_TOKEN_TTL_MS;
+}
+
+/**
+ * Proactive-renewal window (BUG-17): while the user is actively using the app
+ * with a token nearing expiry, a silent renewal is attempted — input events
+ * carry user activation, which is when the GIS popup best survives blockers.
+ */
+export const PROACTIVE_RENEW_BEFORE_EXPIRY_MS = 10 * 60_000;
+const PROACTIVE_RENEW_THROTTLE_MS = 5 * 60_000;
+
+/** Pure decision (tested): due when a live token has entered its final window. */
+export function shouldProactiveRenew(nowMs: number, expiresAtMs: number): boolean {
+  return expiresAtMs > 0 && nowMs >= expiresAtMs - PROACTIVE_RENEW_BEFORE_EXPIRY_MS && nowMs < expiresAtMs;
+}
+
+/** True when the page holds transient activation (or the API is absent). */
+function hasUserActivation(): boolean {
+  try {
+    const nav = typeof navigator !== 'undefined'
+      ? (navigator as Navigator & { userActivation?: { isActive?: boolean } })
+      : undefined;
+    return nav?.userActivation?.isActive !== false;
+  } catch {
+    return true;
+  }
+}
+
 /** Token request that always settles: callback, sync throw, or timeout. */
 function requestToken(
   gis: GisNamespace,
@@ -99,8 +139,8 @@ function requestToken(
   prompt: string,
   timeoutMs: number,
   callbackError: (resp: GisTokenResponse) => Error,
-): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
+): Promise<TokenGrant> {
+  return new Promise<TokenGrant>((resolve, reject) => {
     let settled = false;
     const timer = setTimeout(() => {
       if (settled) return;
@@ -118,7 +158,7 @@ function requestToken(
           reject(callbackError(resp));
           return;
         }
-        resolve(resp.access_token);
+        resolve({ token: resp.access_token, expiresInMs: tokenTtlMs(resp) });
       },
     });
     try {
@@ -244,6 +284,8 @@ export class GoogleAuth {
   private name: string | null = null;
   private photo: string | null = null;
   private clientId: string | null = null;
+  /** Last activity-triggered renewal attempt (BUG-17 throttle). */
+  private lastProactiveAttemptMs = 0;
 
   /** Last signed-in email (from persisted state); null when never signed in. */
   async getAccountEmail(): Promise<string | null> {
@@ -275,7 +317,7 @@ export class GoogleAuth {
     // can be silently reused — e.g. the morning after sign-in (BUG-14).
     // BUG-16: bounded — a popup that dies with no callback rejects instead
     // of hanging the caller forever.
-    const token = await requestToken(
+    const { token, expiresInMs } = await requestToken(
       gis,
       clientId,
       'select_account',
@@ -284,7 +326,7 @@ export class GoogleAuth {
     );
     const profile = await this.fetchProfile(token).catch(() => null);
     this.token = token;
-    this.expiresAtMs = Date.now() + 3600_000;
+    this.expiresAtMs = Date.now() + expiresInMs;
     this.email = profile?.email || null;
     this.name = profile?.name ?? null;
     this.photo = profile?.photo ?? null;
@@ -325,6 +367,19 @@ export class GoogleAuth {
     // popup or dead session) — background callers return null immediately
     // instead of opening another doomed popup on every flush/poll.
     if (silentRenewalDead) return null;
+    return this.silentRenew();
+  }
+
+  /**
+   * One silent `prompt:'none'` renewal (no UI while the Google session
+   * lives). Shared by background `getValidToken` and activity-triggered
+   * `renewBeforeExpiry`. Failure arms the session backoff and yields null.
+   */
+  private async silentRenew(): Promise<string | null> {
+    if (silentRenewalDead) return null;
+    const saved = await idbGet().catch(() => null);
+    const clientId = this.clientId ?? saved?.clientId;
+    if (!clientId) return null;
     try {
       await loadGis();
     } catch {
@@ -338,7 +393,7 @@ export class GoogleAuth {
       // blockers — the session backoff above stops the retry spam).
       // BUG-16: bounded — a killed popup settles as a silent failure (null),
       // never a hang.
-      const token = await requestToken(
+      const { token, expiresInMs } = await requestToken(
         gis,
         clientId,
         'none',
@@ -346,7 +401,7 @@ export class GoogleAuth {
         (resp) => new Error(resp.error ?? 'silent refresh needs UI'),
       );
       this.token = token;
-      this.expiresAtMs = Date.now() + 3600_000;
+      this.expiresAtMs = Date.now() + expiresInMs;
       this.clientId = clientId;
       const email = this.email ?? saved?.email ?? '';
       const name = this.name ?? saved?.name ?? '';
@@ -357,6 +412,37 @@ export class GoogleAuth {
       silentRenewalDead = true;
       return null;
     }
+  }
+
+  /**
+   * Activity-triggered renewal (BUG-17): renews a soon-expiring token while
+   * the user is active (input = user activation = the GIS popup's best
+   * chance). Never shows UI; honors the session backoff; throttled.
+   * Returns the usable token, the still-current one when not due, or null.
+   */
+  async renewBeforeExpiry(): Promise<string | null> {
+    if (!this.token) {
+      const saved = await idbGet().catch(() => null);
+      if (!saved?.token || !(saved.expiresAtMs > 0)) return null;
+      this.token = saved.token;
+      this.expiresAtMs = saved.expiresAtMs;
+      this.email = saved.email || null;
+      this.name = saved.name ?? null;
+      this.photo = saved.photo ?? null;
+      this.clientId = saved.clientId ?? this.clientId;
+    }
+    if (!this.token) return null;
+    const now = Date.now();
+    // Already expired: the normal path decides (silent attempt or null).
+    if (now >= this.expiresAtMs) return this.getValidToken();
+    if (!shouldProactiveRenew(now, this.expiresAtMs)) return this.token;
+    // No activation (e.g. a programmatic tick): stay quiet without arming
+    // the backoff — the next real input retries.
+    if (!hasUserActivation()) return this.token;
+    if (now - this.lastProactiveAttemptMs < PROACTIVE_RENEW_THROTTLE_MS) return this.token;
+    this.lastProactiveAttemptMs = now;
+    const renewed = await this.silentRenew();
+    return renewed ?? this.token;
   }
 
   /**
@@ -378,7 +464,7 @@ export class GoogleAuth {
     try {
       // BUG-16: bounded like signIn — a dead popup returns null (caller
       // shows the reconnect message) instead of hanging the progress bar.
-      const token = await requestToken(
+      const { token, expiresInMs } = await requestToken(
         gis,
         clientId,
         'select_account',
@@ -386,7 +472,7 @@ export class GoogleAuth {
         (resp) => new Error(resp.error ?? 'interactive refresh cancelled'),
       );
       this.token = token;
-      this.expiresAtMs = Date.now() + 3600_000;
+      this.expiresAtMs = Date.now() + expiresInMs;
       this.clientId = clientId;
       const email = this.email ?? saved?.email ?? '';
       const name = this.name ?? saved?.name ?? '';
@@ -425,3 +511,34 @@ export class GoogleAuth {
 }
 
 export const googleAuth = new GoogleAuth();
+
+let proactiveListening = false;
+
+/**
+ * Registers one debounced activity listener (BUG-17): pointer/key input
+ * nudges `renewBeforeExpiry` on the shared instance so sessions stretch
+ * past the ~1h implicit lifetime while the app is in use. Call once at app
+ * boot; returns an unsubscribe. No-op without DOM (tests, SSR).
+ */
+export function ensureProactiveRenewal(): () => void {
+  if (proactiveListening || typeof window === 'undefined' || typeof document === 'undefined') {
+    return () => {};
+  }
+  proactiveListening = true;
+  let queued = false;
+  const onActivity = () => {
+    if (queued) return;
+    queued = true;
+    setTimeout(() => {
+      queued = false;
+      void googleAuth.renewBeforeExpiry().catch(() => {});
+    }, 1000);
+  };
+  window.addEventListener('pointerdown', onActivity);
+  window.addEventListener('keydown', onActivity);
+  return () => {
+    window.removeEventListener('pointerdown', onActivity);
+    window.removeEventListener('keydown', onActivity);
+    proactiveListening = false;
+  };
+}
