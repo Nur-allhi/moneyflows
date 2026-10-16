@@ -26,6 +26,7 @@ const OtherLedgersIndex = lazy(() => import('./otherLedgers/presentation/screens
 const OtherLedgerDetail = lazy(() => import('./otherLedgers/presentation/screens/OtherLedgerDetail').then(m => ({ default: m.OtherLedgerDetail })));
 const MemberReportScreen = lazy(() => import('./reports/presentation/screens/MemberReportScreen').then(m => ({ default: m.MemberReportScreen })));
 const SetupWizard = lazy(() => import('./presentation/screens/SetupWizard').then(m => ({ default: m.SetupWizard })));
+const LegalDoc = lazy(() => import('./presentation/screens/LegalDoc').then(m => ({ default: m.LegalDoc })));
 const SettingsPage = lazy(() => import('./presentation/screens/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 function Svg({ d, children }: { d?: string; children?: JSX.Element }) {
@@ -208,6 +209,8 @@ export function App() {
       <Suspense fallback={<div className="skeleton skeleton-wizard" />}>
         <Routes>
           <Route path="/setup" element={<SetupWizard />} />
+          <Route path="/privacy" element={<LegalDoc kind="privacy" />} />
+          <Route path="/terms" element={<LegalDoc kind="terms" />} />
           <Route element={<SetupGuard><AppLayout /></SetupGuard>}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/member" element={<MemberList />} />

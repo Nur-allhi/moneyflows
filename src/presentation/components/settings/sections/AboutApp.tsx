@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { WhatsNewModal } from '../../WhatsNewModal';
 import { whatsNewFor } from '../../../constants/whatsNew';
 import { APP_VERSION } from '../../../constants/appVersion';
@@ -48,6 +49,13 @@ export function AboutApp({ cx, onReplayWizard }: AboutAppProps) {
         <button className={cx.restoreBtn} onClick={() => setWhatsNewOpen(true)}>View</button>
       </div>
       <div className={cx.versionLine}>MoneyFlows v{APP_VERSION}</div>
+      <div className={cx.statusRow}>
+        <span className={cx.statusText}>
+          <Link to="/privacy">Privacy Policy</Link>
+          {' · '}
+          <Link to="/terms">Terms of Service</Link>
+        </span>
+      </div>
       {onReplayWizard && (
         <button className={disclosureStyles.showAllBtn} onClick={onReplayWizard}>Replay setup wizard</button>
       )}
