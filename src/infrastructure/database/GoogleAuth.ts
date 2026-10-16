@@ -9,6 +9,8 @@
  *   into persistence callers.
  */
 
+import { fetchWithTimeout } from './CloudSync';
+
 const GIS_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 export const DRIVE_APPDATA_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
 const SCOPES = `${DRIVE_APPDATA_SCOPE} openid email profile`;
@@ -19,6 +21,15 @@ const USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
 const IDB_DB = 'moneyflows_google_auth';
 const IDB_STORE = 'auth';
 const IDB_KEY = 'google_auth_state';
+
+/**
+ * Per-session silent-renewal backoff (BUG-15): GIS opens a real popup even for
+ * prompt:'none', so background retries outside user gestures are killed by
+ * popup blockers — and a dead session can never succeed either. Once silent
+ * renewal fails, background callers stop trying until an explicit sign-in
+ * succeeds; explicit taps always attempt (they carry activation).
+ */
+let silentRenewalDead = false;
 
 interface GisTokenResponse {
   access_token: string;
@@ -212,7 +223,10 @@ export class GoogleAuth {
         },
       });
       try {
-        client.requestAccessToken({ prompt: '' });
+        // Explicit user tap: always offer the account chooser. prompt:''
+        // fails closed (popup opens then auto-closes) when no Google session
+        // can be silently reused — e.g. the morning after sign-in (BUG-14).
+        client.requestAccessToken({ prompt: 'select_account' });
       } catch (e) {
         reject(e instanceof Error ? e : new Error(String(e)));
       }
@@ -232,6 +246,7 @@ export class GoogleAuth {
       token,
       expiresAtMs: this.expiresAtMs,
     });
+    silentRenewalDead = false;
     return token;
   }
 
@@ -255,6 +270,10 @@ export class GoogleAuth {
     }
     const clientId = this.clientId ?? saved?.clientId;
     if (!clientId) return null;
+    // Backoff: a failed silent renewal stays failed this session (blocked
+    // popup or dead session) — background callers return null immediately
+    // instead of opening another doomed popup on every flush/poll.
+    if (silentRenewalDead) return null;
     try {
       await loadGis();
     } catch {
@@ -275,8 +294,9 @@ export class GoogleAuth {
             resolve(resp.access_token);
           },
         });
-        // 'none' = renew silently; errors (never a popup) when interaction
-        // is genuinely required — caller then surfaces "Reconnect".
+        // 'none' = renew silently (GIS still opens a popup window for it, so
+        // background retries outside user gestures are killed by popup
+        // blockers — the session backoff above stops the retry spam).
         client.requestAccessToken({ prompt: 'none' });
       });
       this.token = token;
@@ -288,6 +308,7 @@ export class GoogleAuth {
       await idbSet({ clientId, email, name, photo, token, expiresAtMs: this.expiresAtMs });
       return token;
     } catch {
+      silentRenewalDead = true;
       return null;
     }
   }
@@ -321,7 +342,7 @@ export class GoogleAuth {
             resolve(resp.access_token);
           },
         });
-        client.requestAccessToken({ prompt: '' });
+        client.requestAccessToken({ prompt: 'select_account' });
       });
       this.token = token;
       this.expiresAtMs = Date.now() + 3600_000;
@@ -330,6 +351,7 @@ export class GoogleAuth {
       const name = this.name ?? saved?.name ?? '';
       const photo = this.photo ?? saved?.photo ?? '';
       await idbSet({ clientId, email, name, photo, token, expiresAtMs: this.expiresAtMs });
+      silentRenewalDead = false;
       return token;
     } catch {
       return null;
@@ -348,11 +370,12 @@ export class GoogleAuth {
     this.name = null;
     this.photo = null;
     this.clientId = null;
+    silentRenewalDead = false;
     await idbClear();
   }
 
   private async fetchProfile(token: string): Promise<{ email: string; name: string | null; photo: string | null }> {
-    const res = await fetch(USERINFO_URL, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetchWithTimeout(USERINFO_URL, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`userinfo ${res.status}`);
     const body = (await res.json()) as { email?: string; name?: string; picture?: string };
     if (!body.email) throw new Error('userinfo missing email');

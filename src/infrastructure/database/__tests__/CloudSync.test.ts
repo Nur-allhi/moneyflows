@@ -289,8 +289,7 @@ describe('decideHeal (T-160)', () => {
   });
 });
 
-describe('cloudRetryDelayMs (T-163)', () => {
-  it('returns null when a retry is already pending (single timer)', () => {
+describe('cloudRetryDelayMs (T-163)', () => {  it('returns null when a retry is already pending (single timer)', () => {
     expect(cloudRetryDelayMs(1000, 0, 30_000, true)).toBeNull();
   });
 
@@ -303,8 +302,22 @@ describe('cloudRetryDelayMs (T-163)', () => {
   });
 
   it('returns null when the window already elapsed', () => {
-    expect(cloudRetryDelayMs(31_000, 1000, 30_000, false)).toBeNull();
     expect(cloudRetryDelayMs(31_000, 1000, 30_000, true)).toBeNull();
+    expect(cloudRetryDelayMs(31_000, 1000, 30_000, false)).toBeNull();
+  });
+});
+
+describe('fetchWithTimeout (BUG-15)', () => {
+  it('listFiles gives up on a hanging network instead of pending forever', async () => {
+    vi.useFakeTimers();
+    try {
+      queue.push(() => new Promise<Response>(() => {}));
+      const p = new CloudSync().listFiles('tok', CLOUD_DB_FILE);
+      await vi.advanceTimersByTimeAsync(31_000);
+      await expect(p).resolves.toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

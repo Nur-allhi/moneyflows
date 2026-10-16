@@ -26,6 +26,99 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-10: Nested collapsed disclosure leaks content (Google Drive Sync sliver)
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-10-16 (during: settings refresh S-2 verification, user report "Drive option going behind")
+- **Location:** `src/presentation/components/settings/SettingsDisclosure.module.css:111` (`.trayOpen .trayInner`); visible in `BackupCard.tsx` (Google Drive Sync nested inside Backup & Storage card)
+- **Description:** The collapsed Google Drive Sync section shows a clipped sliver of its body text ("Online sync is not set up…", cut mid-line) spilling into the Engine Health area. Top-level collapsed cards measure 0px; the nested tray measures ~29px. Expected: collapsed = 0px, nothing visible.
+- **Root Cause:** `.trayOpen .trayInner` is a descendant selector — the open outer card's rule also matches the nested closed disclosure's trayInner, giving it open padding (12/16/16). The padding inflates the `0fr` grid track so one text line leaks. Any future nested disclosure would hit the same.
+- **Fix Approach:** user-confirmed — scope the selector to `.trayOpen > .trayInner` (direct child) so open padding never reaches nested closed trays.
+- **Resolved:** 2026-10-16 — one-selector fix on `feature/setup-settings-refresh`; verified live (nested Drive tray 29px → 0px, top-level trays unaffected); CHANGELOG entry deferred to `dev` merge.
+
+---
+
+## BUG-15: Background silent renewals spam blocked popups; Sync now bar sticks
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-16 (during: user report — Sync-now progress never finishes + console shows 6× `GSI_LOGGER: Failed to open popup window … prompt=none … Maybe blocked by the browser?`)
+- **Location:** `GoogleAuth.getValidToken()` silent path (called from boot/flush background paths) + `CloudSync` Drive fetches (no timeouts)
+- **Description:** (1) Every background silent renewal opens a REAL popup even with `prompt:'none'`; outside user gestures the blocker kills it, so after the hourly token dies the app spams doomed popups on every flush/poll instead of settling into 'reconnect'. (2) `syncNow`'s Drive fetches have no timeout — on a hanging network the Sync-now progress bar sticks at 75% forever instead of failing into an error state.
+- **Root Cause:** silent GIS renewal retried unconditionally per call with no per-session backoff; network layer assumes failure, never hangs.
+- **Fix Approach:** (1) per-session silent-renewal backoff in `getValidToken` — one failure stops background GIS attempts until explicit sign-in/refresh succeeds or sign-out (explicit taps always attempt); (2) 30s `fetchWithTimeout` on all 6 Drive calls + profile fetch, so hangs surface as errors and the bar always completes.
+- **Resolved:** 2026-10-16 — on `feature/setup-settings-refresh`; typecheck + scoped lint clean, unit 94/94 (backoff + timeout tests), e2e cloud-sync 4/4; CHANGELOG entry deferred to `dev` merge.
+
+---
+
+## BUG-14: Next-morning re-auth popup opens then closes by itself
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-10-16 (during: user report — signed in last night, morning Sync-now shows Google popup that auto-closes)
+- **Location:** `src/infrastructure/database/GoogleAuth.ts:215` (`signIn`) + `:324` (`refreshInteractive`) — both `requestAccessToken({ prompt: '' })`
+- **Description:** Access tokens live ~1h (GIS implicit flow, no refresh tokens); overnight the persisted token expires and silent `prompt:'none'` renewal fails (dead Google session / blocked third-party cookies). The explicit-tap fallback opens the popup with `prompt:''`, which fails closed (instant error, popup auto-closes) instead of offering the account chooser. Expected: tapping Sign in / Sync now always presents the chooser.
+- **Root Cause:** `prompt:''` lets Google attempt silent issuance inside the popup and die with no UI; explicit user taps need `prompt:'select_account'`.
+- **Fix Approach:** explicit taps (`signIn`, `refreshInteractive`) now request `prompt:'select_account'` — chooser always offered; silent `prompt:'none'` path untouched for background callers.
+- **Resolved:** 2026-10-16 — on `feature/setup-settings-refresh`; typecheck + scoped lint clean, unit 92/92 (prompt assertions added/updated); CHANGELOG entry deferred to `dev` merge.
+
+---
+
+## BUG-13: Splash progress bar vanishes mid-splash, never shows completion
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-16 (during: user report — bar shows "Starting…" then nothing until app loads)
+- **Location:** `src/presentation/components/SplashScreen.tsx:80` (`{!ready && showProgress && ...}`)
+- **Description:** On boots slower than 600ms the progress bar appears, but unmounts the instant `ready` fires — while the splash lingers ~800ms more for typing + fade. Users see a frozen "Starting…" flash, never staged progress or completion. Expected: bar stays through fade-out showing 100%.
+- **Root Cause:** `!ready` in the render gate unmounts the bar (and its final 100%/Finalizing paint, batched with `ready`) before the fade completes. ProgressBar itself applies every update (T-165) — it just never stays mounted to show them.
+- **Fix Approach:** render gate `{showProgress && ...}` with `ready ? 100/'Ready' : percent/status` — bar stays mounted through typing + fade showing completion.
+- **Resolved:** 2026-10-16 — one-condition fix on `feature/setup-settings-refresh`; NEW e2e `17-splash` green (delayed engine → staged labels → Ready visible through fade → app loads); CHANGELOG entry deferred to `dev` merge.
+
+---
+
+## BUG-12: Startup timed out — recovery screen after dev restart / sign-out-erase window
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-16 (during: user manual test — Database Error "Startup timed out. Your data may need recovery." with restore auto-backup / Start Fresh options)
+- **Location:** boot init path (`getDatabase`/`initDatabase`, splash watchdog) — possibly connected to sign-out-erase `resetStorage()` on `feature/setup-settings-refresh`
+- **Description:** App boots into the Database Error recovery screen instead of normal startup. Observed after the dev-server restart / sign-out-erase testing window. Expected: normal boot to dashboard/wizard.
+- **Triage 2026-10-16:** loaded `/` read-only via probe — boots clean to dashboard, all 5 members + balances present, 0 console errors. Data is NOT wiped (rules out a completed sign-out-erase) and current boot is healthy. Server responds 200; repeat probe also clean — failure is isolated to the user's browser tab (hung boot / stale service worker / stuck recovery screen), not server or data. Awaiting what the tab shows.
+- **Triage 2026-10-16 (2):** user confirms Playwright (clean profile) loads perfectly, normal Chrome errors repeatedly → profile-specific stored state (their OPFS/IDB/SW), not server or code. Error text is the watchdog ("Startup timed out") = a >15s HANG, not a thrown init error. Next: user tries Restore Latest Backup (safe) + shares console errors + storage size.
+- **Triage 2026-10-16 (3):** restore completed (console clean) but after minutes-long load the app shows the SETUP WIZARD = restored DB has no members (+ setupComplete false). Mechanism: `restoreNewestSnapshot()` restores slot 0 = newest ring entry — and `resetStorage()`/empty flushes snapshot the EMPTY db into slot 0, so newest ≠ good data. Older slots may still hold the real data. Also user's dev server is DOWN (vite WS "server connection lost" in their console) — must restart and leave running. Next: snapshot inventory from their console (slots/times/sizes + settings flag), then restore the correct older slot; DO NOT enter wizard data yet (new snapshots rotate the ring).
+- **Root cause 2026-10-16 (4, user-confirmed trigger: AFTER my sign-out-erase):** two defects in my path: (1) `resetStorage()` flushes the empty schema THROUGH the snapshot ring — slot 0 becomes an empty snapshot, so any later "Restore Latest Backup" lands on an empty DB → wizard. The sign-out wipe itself worked (e2e green); (2) recovery screen offers ONLY newest slot, no way to pick an older one. Fix: suppress snapshot during reset flush + exact-slot restore + slot picker UI + watchdog message names the stalled stage. Server flapping (repeated :3000 kills) explains the hangs/load delays.
+- **Root Cause:** (unknown until diagnosed — candidates: OPFS state left by `resetStorage().clearAll()` + re-init; splash watchdog firing on slow ID-less/GIS boot; unrelated OPFS corruption)
+- **Fix Approach:** user-confirmed direction (make recovery work + app loads to wizard): (1) `resetStorage()` suppresses the snapshot ring while flushing the empty schema — slot 0 can never be an empty snapshot again; (2) NEW `restoreSnapshotExact()` on the port/service (no fallback, per-slot errors); (3) recovery screen lists every slot with time + exact restore buttons + truthful Start Fresh copy ("resets to empty"); (4) watchdog message names the stalled boot stage.
+- **Resolved:** 2026-10-16 — full computer restart cleared it; hosted + dev apps both load normally. Root cause was OS/machine-level (stale loopback sockets, zombie `vite`/Chrome processes from repeated :3000 kills, or a hung profile network service) — never app code or data: clean profiles always booted, and no data was lost. All hardening shipped along the way stays (slot picker, exact restore, no empty snapshots, boot/storage timeouts, busy states, guest sync entry, sign-out-erase). Lesson: after 2–3 kill/restart cycles, reboot before blaming the app. CHANGELOG entries ride with the `dev` merge.
+
+---
+
+## BUG-11: Primary Member uses native select (design mismatch); effect is invisible
+- **Verification 2026-10-16:** typecheck PASS, scoped lint clean, NEW e2e `16-recovery` green (forced engine failure → Database Error UI + actions, slot list degrades without crashing), fresh-profile boot lands on the 4-step wizard with 0 errors. User action still needed: restart dev (was down), reload normal Chrome — expect the wizard (device was wiped by their sign-out, as requested) — then sign in / re-setup; older slots only help if they predate the wipe.
+- **Root cause 2026-10-16 (4, from pasted screen):** stall was at boot stage `Starting…` = the sql.js engine file never finished loading (dead/restarting server), and Start Fresh silently no-ops without the engine (needs storage+SQL) → dead-end loop. Fixed: `wipePersistedStorage()` engine-free wipe (OPFS files + LS keys + cloud-sync IDB; auth/settings kept) wired to Start Fresh + `setupComplete:false` + reload; engine download now has a 10s timeout with an actionable message ("is the dev server running?") instead of a 15s mystery hang.
+- **Triage 2026-10-16 (5):** user confirms MCP (clean profile) loads, normal Chrome still fails → 100% profile-local (SW/OPFS/IDB/extensions), server+code exonerated. Discriminator: incognito load test + exact current message (new code names the stalled stage).
+- **Triage 2026-10-16 (6):** all 4 profile steps exhausted (single tab, hard refresh, SW unregistered, extensions off), other browsers fine → remaining suspect is the origin storage APIs themselves hanging (no error, just pending) — the one boot path with zero timeout. Fixed: 12s `withStorageTimeout` around adapter init + main read + snapshot recovery + slot-list load; hung origin now fails fast into the working Start Fresh instead of the 15s watchdog loop.
+- **Triage 2026-10-16 (7):** user clarifies device is empty (expects wizard) but recovery buttons appear dead. Cause: recovery actions had no busy feedback and could hang silently on the same poisoned storage (wipe awaited hung stores forever; restore loop uncapped). Fixed: per-store 8s timeouts with a `WipeReport` (opfs/local/cloudMeta) + manual-clear guidance naming failed stores; all restore paths capped; Restoring…/Wiping… busy states; actions mutually disabled while one runs.
+- **Triage 2026-10-16 (8):** hosted STABLE version also fails in the SAME single Chrome profile, works in user's other profiles. Different origin (separate OPFS/IDB/SW/cache) + released code (no branch changes) → exonerates dev server, all recent code, AND origin site data. Remaining suspects are profile-global: extensions, flags/policies, GPU/WASM environment. Next: exact hosted failure text + console, extension list diff.
+- **Triage 2026-10-16 (9):** hosted shows the same 15s watchdog on OLD released code → hang is in long-stable paths (engine/storage/balances), profile does it to every origin. Per-profile network layer is now prime suspect: Chrome proxy and Secure-DNS settings are per-profile (a dead proxy / dead DNS provider hangs every fetch on every site, matching both origins). Extension-disable still unconfirmed. Next: confirm extensions all-off, proxy + SecureDNS state, chrome://version command line.
+
+---
+
+## BUG-11: Primary Member uses native select (design mismatch); effect is invisible
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-16 (during: settings refresh, user report "dropdown not matching + function not working")
+- **Location:** `src/presentation/components/settings/sections/MoneyRegionFields.tsx:47` (native `<select>`)
+- **Description:** The Primary Member dropdown is a browser-native select while every other picker in the app uses the modal-picker pattern (DESIGN_IDENTITY §9 deprecates native selects) — popup styling/behavior doesn't match. Separately, setting it changes nothing visible: it only attributes new transactions' memberId (`transactionForm/useSubmit.ts:52`), so users can't tell it worked.
+- **Root Cause:** (design) native select never migrated when T-155 established the picker pattern; (perception) no helper copy and no visible confirmation of what Primary Member does.
+- **Fix Approach:** user-confirmed modal picker — NEW `MemberPicker` (trigger + overlay + list, own tokens-only CSS, reduced-motion guard) in `MoneyRegionFields`, plus "New transactions belong to this member." helper.
+- **Resolved:** 2026-10-16 — on `feature/setup-settings-refresh`; verified live (open → pick Namira → Save → id persisted + trigger label updates; reset to null after); CHANGELOG entry deferred to `dev` merge.
+
+---
+
 ## BUG-9: Big amounts clipped on the left in Recent Transactions
 
 - **Status:** fixed

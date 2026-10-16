@@ -93,3 +93,80 @@ async function findNewestValidSnapshot(adapter: IPersistenceAdapter, max: number
   }
   return null;
 }
+
+/**
+ * Engine-free nuclear wipe for the recovery screen (BUG-12): Start Fresh must
+ * work even when sql.js never loaded (storage/SQL unset), where
+ * `resetStorage()` silently no-ops and the reload loops back to the error.
+ * Clears main + snapshot ring on both backends plus the cloud-sync
+ * fingerprint (a fresh device must not pose as previously-synced). Auth,
+ * app settings, and folder handles are left alone — boot re-pulls from
+ * Drive when signed in (self-healing), settings are reset separately.
+ *
+ * Each store races a timeout and reports per-store success: a hung store
+ * (damaged origin storage pends forever) must not block the others, and the
+ * caller can tell the user exactly what needs manual clearing.
+ */
+export interface WipeReport {
+  opfs: boolean;
+  local: boolean;
+  cloudMeta: boolean;
+}
+
+async function bestEffortStore(work: Promise<unknown>, ms: number): Promise<boolean> {
+  try {
+    await Promise.race([
+      work,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('store timeout')), ms)),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const WIPE_STORE_TIMEOUT_MS = 8000;
+
+export async function wipePersistedStorage(config: {
+  mainKey: string;
+  snapshotPrefix: string;
+  maxSnapshots: number;
+  mainFileName?: string;
+  snapshotDirName?: string;
+}): Promise<WipeReport> {
+  const mainFile = config.mainFileName ?? 'money_flows.db';
+  const snapDir = config.snapshotDirName ?? 'snapshots';
+  const opfs = await bestEffortStore(
+    (async () => {
+      if (!OpfsAdapter.supported()) return;
+      const root = await navigator.storage.getDirectory();
+      await root.removeEntry(mainFile).catch(() => {});
+      await root.removeEntry(snapDir, { recursive: true }).catch(() => {});
+    })(),
+    WIPE_STORE_TIMEOUT_MS,
+  );
+  const local = await bestEffortStore(
+    (async () => {
+      localStorage.removeItem(config.mainKey);
+      for (let i = 0; i < config.maxSnapshots; i++) {
+        localStorage.removeItem(`${config.snapshotPrefix}${i}`);
+      }
+      localStorage.removeItem(STORAGE_VERSION_FLAG);
+    })(),
+    WIPE_STORE_TIMEOUT_MS,
+  );
+  const cloudMeta = await bestEffortStore(
+    new Promise<void>((resolve) => {
+      try {
+        const req = indexedDB.deleteDatabase('moneyflows_cloud_sync');
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+        req.onblocked = () => resolve();
+      } catch {
+        resolve();
+      }
+    }),
+    WIPE_STORE_TIMEOUT_MS,
+  );
+  return { opfs, local, cloudMeta };
+}

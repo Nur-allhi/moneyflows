@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Google Drive sync (opt-in, Settings → Backup & Storage): sign in with Google to auto-back up the database to your own Drive and pick it up on other devices. Includes boot import on fresh devices, "New data available" prompt for open tabs, and a keep-mine/use-other-device choice (remote kept as a restore point) when both sides changed.
+- Settings reorganized into five collapsed cards (Preferences, Appearance, Dashboard, Backup & Storage, About) with live status badges — one shared section kit powers both the page and the modal.
+- Backup & Storage: Sign out erases the device (after a final backup attempt with a warned choice on failure) and returns to the setup wizard so another Google account can sign in; Drive backup untouched. Header cloud button is now also visible to signed-out guests as a sign-in entry point.
+- Database Error screen lists every auto-backup with its date/time and restores the exact slot picked; Start Fresh works without the engine and reports per-store results.
+
+### Fixed
+- Nested collapsed sections (e.g. Google Drive Sync inside Backup & Storage) no longer leak a clipped line of content when closed.
+- Primary Member picker matches the app's modal-picker pattern (was a native dropdown) with helper text explaining new transactions belong to that member; removed the dead Numpad Max Digits setting (written, never read).
+- Splash progress bar stays through the fade-out and shows 100% Ready instead of freezing on "Starting…".
+- Google re-auth after token expiry always offers the account chooser (was auto-closing); background silent renewals back off per session instead of spamming blocked popups; all Drive requests time out so Sync-now always finishes or fails cleanly.
+- Boot and origin-storage hangs fail fast with actionable messages; engine download reports a dead dev server instead of stalling startup.
 
 ## [1.16.1] - 2026-10-14
 

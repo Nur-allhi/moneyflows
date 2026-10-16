@@ -108,7 +108,10 @@
   padding: 0 var(--space-4);
 }
 
-.trayOpen .trayInner {
+/* Direct child only: a nested closed disclosure inside an open tray must
+   keep zero padding so its 0fr track collapses (BUG-10: descendant selector
+   leaked open padding into nested trays, e.g. Google Drive Sync). */
+.trayOpen > .trayInner {
   padding: var(--space-3) var(--space-4) var(--space-4);
   border-top: 1px solid var(--color-border);
 }

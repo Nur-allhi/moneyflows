@@ -76,6 +76,8 @@ describe('GoogleAuth (T-145)', () => {
     await expect(auth.getAccountEmail()).resolves.toBe('user@gmail.com');
     expect(captured[0]).toMatchObject({ client_id: 'client-123' });
     expect(String(captured[0]?.scope)).toContain('drive.appdata');
+    // Explicit tap offers the chooser (BUG-14: '' fails closed overnight).
+    expect(requestedPrompts[requestedPrompts.length - 1]).toBe('select_account');
   });
 
   it('signIn persists the profile (name + photo) for the sidebar', async () => {
@@ -128,7 +130,7 @@ describe('GoogleAuth (T-145)', () => {
     try {
       nextResponse = { access_token: 'tok-3', expires_in: 3600 };
       await expect(auth.refreshInteractive()).resolves.toBe('tok-3');
-      expect(requestedPrompts[requestedPrompts.length - 1]).toBe('');
+      expect(requestedPrompts[requestedPrompts.length - 1]).toBe('select_account');
       await expect(auth.getValidToken()).resolves.toBe('tok-3');
     } finally {
       vi.restoreAllMocks();
@@ -150,6 +152,29 @@ describe('GoogleAuth (T-145)', () => {
 
   it('getValidToken returns null when never signed in', async () => {
     await expect(new GoogleAuth().getValidToken()).resolves.toBeNull();
+  });
+
+  it('silent failure backs off for the session until explicit re-auth (BUG-15)', async () => {
+    const auth = new GoogleAuth();
+    await auth.signIn('client-123');
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2 * 3600_000);
+    try {
+      nextResponse = { error: 'interaction_required' };
+      await expect(auth.getValidToken()).resolves.toBeNull();
+      const callsAfterFirst = captured.length;
+      // Second background call: no new GIS popup attempt.
+      await expect(auth.getValidToken()).resolves.toBeNull();
+      expect(captured.length).toBe(callsAfterFirst);
+      // Explicit re-auth clears the backoff; the next expiry retries GIS.
+      nextResponse = { access_token: 'tok-9', expires_in: 3600 };
+      await expect(auth.refreshInteractive()).resolves.toBe('tok-9');
+      nowSpy.mockReturnValue(Date.now() + 4 * 3600_000);
+      nextResponse = { error: 'interaction_required' };
+      await expect(auth.getValidToken()).resolves.toBeNull();
+      expect(captured.length).toBeGreaterThan(callsAfterFirst);
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 
   it('signOut revokes and clears everything; token gone afterwards', async () => {

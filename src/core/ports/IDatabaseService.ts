@@ -123,6 +123,8 @@ export interface IDatabaseService {
 
   getSnapshots(): Promise<SnapshotInfo[]>;
   restoreSnapshot(index: number): Promise<void>;
+  /** Exact-slot restore for the recovery screen — no fallback, throws per-slot errors. */
+  restoreSnapshotExact(index: number): Promise<void>;
   restoreNewestSnapshot(): Promise<boolean>;
   resetStorage(): Promise<void>;
   getStorageHealth(): StorageHealth;

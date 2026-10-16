@@ -77,9 +77,9 @@ export function SplashScreen({ ready, onFinish, percent = 0, status = '' }: Spla
         {!done && <span className={styles.cursor} />}
       </div>
       <span className={styles.version}>v{APP_VERSION}</span>
-      {!ready && showProgress && (
+      {showProgress && (
         <div className={styles.bootProgress}>
-          <ProgressBar percent={percent} sublabel={status} />
+          <ProgressBar percent={ready ? 100 : percent} sublabel={ready ? 'Ready' : status} />
         </div>
       )}
     </div>
