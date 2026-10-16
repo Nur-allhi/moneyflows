@@ -1861,3 +1861,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - `master` carries the sync hang fix. Next: deploy hosted app + user verifies origin allowlist, then version-bump release when confirmed.
+
+## Session 2026-10-17 (BUG-17 sign-in on every app open)
+
+### Changes
+- Logged BUG-17 (medium): hours-later + same-URL answers ruled out storage loss → ~1h token + failing silent renewal. User chose stretch + smooth over re-auth-UX-only/backend options
+- Fixed on `dev` (`8ca1547`, same commit: BUGS.md fixed + CHANGELOG Fixed): real `expires_in` honored on all grant paths; NEW `renewBeforeExpiry()` (10-min window, activation-gated, 5-min throttle, backoff-honoring, expired delegates to normal path); NEW `ensureProactiveRenewal()` wired once in `AppLayout`; 5 new tests
+- Gates: typecheck PASS, full lint 0 PASS, unit 112/112 PASS, build PASS. `detect_changes` medium (AppLayout mount effect only — expected). Stays on `dev` (no master merge requested)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-17 fixed on `dev`, unpushed. Next: push + user retests; long-idle reopens still need one tap by platform design.
