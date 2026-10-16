@@ -50,10 +50,6 @@ export function SetupWizard() {
   const [cont2Key, replayCont2] = useReplay();
   const [back3Key, replayBack3] = useReplay();
   const [nextKey, replayNext] = useReplay();
-  const [emptyKey, replayEmpty] = useReplay();
-  const [sampleKey, replaySample] = useReplay();
-  const [back4Key, replayBack4] = useReplay();
-
   const finish = (goDashboard = true) => {
     updateSettings({ setupComplete: true });
     if (goDashboard) navigate('/', { replace: true });
@@ -122,22 +118,7 @@ export function SetupWizard() {
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
 
-  const handleLoadSample = async () => {
-    const db = getDatabase();
-    const m1 = new Member(uuidv4(), 'You', 'You');
-    const m2 = new Member(uuidv4(), 'Family', 'Fam');
-    await db.saveMember(m1);
-    await db.saveMember(m2);
-    const a1 = new Account(uuidv4(), m1.id, 'bKash', 'mobile_wallet', 5000);
-    const a2 = new Account(uuidv4(), m1.id, 'Cash', 'cash', 2000);
-    await db.saveAccount(a1);
-    await db.saveAccount(a2);
-    await fetchMembers();
-    await fetchAccounts();
-    finish();
-  };
-
-  const total = 5;
+  const total = 4;
   const progress = ((step + 1) / total) * 100;
 
   return (
@@ -293,21 +274,7 @@ export function SetupWizard() {
               <p className={styles.sub}>Tap any row to edit. Use search and filters on every ledger.</p>
               <div className={styles.actions}>
                 <button className={`${styles.secondary} ${back3Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack3(); setStep(2); }}><span className="anim-target" key={back3Key}>Back</span></button>
-                <button className={`${styles.primary} ${nextKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNext(); setStep(4); }}><span className="anim-target" key={nextKey}>Next</span></button>
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className={styles.step}>
-              <h2 className={styles.h2}>Try it</h2>
-              <p className={styles.sub}>Start empty or load a sample family to explore instantly. Sample data can be deleted from Recycle Bin anytime.</p>
-              <div className={styles.choices}>
-                <button className={`${styles.choice} ${emptyKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEmpty(); finish(); }}><span className="anim-target" key={emptyKey}><span className={styles.choiceTitle}>Start empty</span><span className={styles.choiceSub}>Recommended — your real data</span></span></button>
-                <button className={`${styles.choicePrimary} ${sampleKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySample(); void handleLoadSample(); }}><span className="anim-target" key={sampleKey}><span className={styles.choiceTitle}>Load sample family</span><span className={styles.choiceSub}>4 members · 6 accounts · 12 transactions</span></span></button>
-              </div>
-              <div className={styles.actions}>
-                <button className={`${styles.secondary} ${back4Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack4(); setStep(3); }}><span className="anim-target" key={back4Key}>Back</span></button>
+                <button className={`${styles.primary} ${nextKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNext(); finish(); }}><span className="anim-target" key={nextKey}>Finish → Dashboard</span></button>
               </div>
             </div>
           )}

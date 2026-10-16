@@ -1,0 +1,202 @@
+/* Member picker — modal-picker pattern (DESIGN_IDENTITY §9), tokens only. */
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in oklch, var(--color-wash) 3%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.trigger:hover {
+  border-color: var(--color-primary);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.trigger:active {
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
+}
+
+.value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arrow {
+  flex-shrink: 0;
+  margin-left: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 350;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0% 0 0 / 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: memberPickerFadeIn 0.2s ease-out;
+}
+
+.modal {
+  width: 360px;
+  max-width: 85vw;
+  max-height: 70vh;
+  background: color-mix(in oklch, var(--color-bg) 95%, transparent);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid color-mix(in oklch, var(--color-wash) 10%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: memberPickerSlideIn 0.2s ease-out;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  gap: var(--space-2);
+}
+
+.title {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.close {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.close:hover {
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.item:hover {
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.item:active {
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
+}
+
+.itemActive {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
+  box-shadow: 0 0 16px var(--color-primary-glow);
+}
+
+.itemActive .itemSub {
+  color: var(--color-text-on-primary);
+  opacity: 0.8;
+}
+
+.itemName {
+  font-size: var(--text-base);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.itemSub {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.empty {
+  padding: var(--space-4);
+  text-align: center;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+@keyframes memberPickerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes memberPickerSlideIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .modal {
+    animation: none;
+  }
+}

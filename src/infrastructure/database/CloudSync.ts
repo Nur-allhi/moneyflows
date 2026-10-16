@@ -109,6 +109,27 @@ export function resetCloudMetaForTests(): void {
 }
 
 /**
+ * Sign-out wipe: forgets the last-sync fingerprint (memory + IDB) so a fresh
+ * device never mistakes itself for a previously-synced one (T-152 rule).
+ */
+export async function clearLastSyncMeta(): Promise<void> {
+  metaMemory.delete(META_KEY);
+  const db = await openMetaDb();
+  if (!db) return;
+  await new Promise<void>((resolve) => {
+    try {
+      const tx = db.transaction(META_STORE, 'readwrite');
+      tx.objectStore(META_STORE).delete(META_KEY);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    } catch {
+      db.close();
+      resolve();
+    }
+  });
+}
+
+/**
  * Fresh-device rule (T-152): an empty local DB that never synced counts as
  * "no local side" — so it auto-pulls instead of conflicting. An emptied
  * previously-synced device stays a real local side (deliberate-wipe ambiguity).
@@ -165,10 +186,34 @@ function authHeaders(token: string): Record<string, string> {
   return { Authorization: `Bearer ${token}` };
 }
 
+/** Drive request budget (BUG-15): a hanging network must fail, never stick
+ * Sync-now at 75% forever. Abort cancels real requests; the race guarantees
+ * settlement even when a fetch ignores the signal. */
+const DRIVE_FETCH_TIMEOUT_MS = 30_000;
+
+export async function fetchWithTimeout(
+  input: string,
+  init?: RequestInit,
+  timeoutMs: number = DRIVE_FETCH_TIMEOUT_MS,
+): Promise<Response> {
+  const ctrl = new AbortController();
+  const abortTimer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await Promise.race([
+      fetch(input, { ...init, signal: ctrl.signal }),
+      new Promise<Response>((_, reject) =>
+        setTimeout(() => reject(new Error('drive request timed out')), timeoutMs),
+      ),
+    ]);
+  } finally {
+    clearTimeout(abortTimer);
+  }
+}
+
 /** All matches newest-first (T-160). Throws on failure — callers convert. */
 async function findFiles(token: string, name: string): Promise<DriveFileRef[]> {
   const q = encodeURIComponent(`'${APPDATA}' in parents and name='${name}' and trashed=false`);
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `${DRIVE_FILES}?q=${q}&spaces=${APPDATA}&orderBy=modifiedTime%20desc&fields=files(id,modifiedTime)`,
     { headers: authHeaders(token) },
   );
@@ -179,7 +224,7 @@ async function findFiles(token: string, name: string): Promise<DriveFileRef[]> {
 
 async function deleteFileBestEffort(token: string, id: string): Promise<void> {
   try {
-    await fetch(`${DRIVE_FILES}/${id}`, { method: 'DELETE', headers: authHeaders(token) });
+    await fetchWithTimeout(`${DRIVE_FILES}/${id}`, { method: 'DELETE', headers: authHeaders(token) });
   } catch { /* dedupe is hygiene, never fatal */ }
 }
 
@@ -187,7 +232,7 @@ async function uploadNew(token: string, name: string, mime: string, bytes: Uint8
   const form = new FormData();
   form.append('metadata', new Blob([JSON.stringify({ name, parents: [APPDATA] })], { type: 'application/json' }));
   form.append('media', new Blob([bytes as unknown as BlobPart], { type: mime }));
-  const res = await fetch(`${DRIVE_UPLOAD}?uploadType=multipart`, {
+  const res = await fetchWithTimeout(`${DRIVE_UPLOAD}?uploadType=multipart`, {
     method: 'POST',
     headers: authHeaders(token),
     body: form,
@@ -199,7 +244,7 @@ async function uploadNew(token: string, name: string, mime: string, bytes: Uint8
 }
 
 async function updateFile(token: string, id: string, mime: string, bytes: Uint8Array): Promise<void> {
-  const res = await fetch(`${DRIVE_UPLOAD}/${id}?uploadType=media`, {
+  const res = await fetchWithTimeout(`${DRIVE_UPLOAD}/${id}?uploadType=media`, {
     method: 'PATCH',
     headers: { ...authHeaders(token), 'Content-Type': mime },
     body: bytes as unknown as BodyInit,
@@ -251,7 +296,7 @@ export class CloudSync {
   /** Raw bytes of a file id — caller verifies (T-160 heal). Null on any failure. */
   async downloadBytes(token: string, id: string): Promise<Uint8Array | null> {
     try {
-      const res = await fetch(`${DRIVE_FILES}/${id}?alt=media`, { headers: authHeaders(token) });
+      const res = await fetchWithTimeout(`${DRIVE_FILES}/${id}?alt=media`, { headers: authHeaders(token) });
       if (!res.ok) return null;
       return new Uint8Array(await res.arrayBuffer());
     } catch {
@@ -279,7 +324,7 @@ export class CloudSync {
     const files = await this.listFiles(token, CLOUD_HASH_FILE);
     if (!files[0]) return null;
     try {
-      const res = await fetch(`${DRIVE_FILES}/${files[0].id}?alt=media`, { headers: authHeaders(token) });
+      const res = await fetchWithTimeout(`${DRIVE_FILES}/${files[0].id}?alt=media`, { headers: authHeaders(token) });
       if (!res.ok) return null;
       const text = (await res.text()).trim();
       return text || null;

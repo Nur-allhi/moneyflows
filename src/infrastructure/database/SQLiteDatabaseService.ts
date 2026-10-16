@@ -52,6 +52,53 @@ function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
 }
 
+/** Engine download budget — a dead dev server must fail fast, not trip the 15s boot watchdog. */
+const WASM_FETCH_TIMEOUT_MS = 10_000;
+
+/** Local-storage budget (BUG-12): origin storage in a damaged profile can hang
+ * forever (no error, just pending) — fail fast so the recovery screen, whose
+ * Start Fresh wipe needs no engine, can actually clear it. */
+const STORAGE_INIT_TIMEOUT_MS = 12_000;
+
+export function withStorageTimeout<T>(work: Promise<T>): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              'Local storage is not responding — site data for this origin may be damaged. Use Start Fresh below to clear it.',
+            ),
+          ),
+        STORAGE_INIT_TIMEOUT_MS,
+      ),
+    ),
+  ]);
+}
+
+/**
+ * Fetches the sql.js engine file with a timeout and hands sql.js a blob URL.
+ * Without this, a dead/unreachable server leaves the fetch pending forever and
+ * boot dies at "Starting…" with only the watchdog message (BUG-12).
+ */
+async function fetchWasmUrl(url: string): Promise<string> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), WASM_FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`Engine file unreachable (HTTP ${res.status}) — is the dev server running?`);
+    return URL.createObjectURL(await res.blob());
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') {
+      throw new Error('Engine download timed out — is the dev server running?');
+    }
+    throw e instanceof Error ? e : new Error(String(e));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function rowToMember(r: Record<string, unknown>): Member {
   return new Member(r.id as string, r.name as string, r.short_name as string, r.email as string,
     r.phone as string, r.avatar_url as string, (r.is_external as number) === 1,
@@ -126,24 +173,37 @@ export class SQLiteDatabaseService implements IDatabaseService {
   private cloudConflict = false;
   /** Single pending deferred-retry timer (T-163); cleared on the next attempt. */
   private cloudRetryTimer: ReturnType<typeof setTimeout> | null = null;
+  /**
+   * True while resetStorage() flushes the empty schema — an empty DB must
+   * never enter the snapshot ring (BUG-12: it would become slot 0 and any
+   * later "Restore Latest Backup" would land on an empty database).
+   * Checked synchronously before the first await in _maybeSnapshot, so the
+   * fire-and-forget flush call cannot race it.
+   */
+  private suppressSnapshot = false;
 
   getSqlJsDb(): SqlJsDb | null { return this.db; }
 
   async init(progress?: BootProgress): Promise<void> {
     progress?.(0.05, 'Starting…');
-    this.SQL = await initSqlJs({ locateFile: () => '/sql-wasm.wasm' });
+    const wasmUrl = await fetchWasmUrl('/sql-wasm.wasm');
+    this.SQL = await initSqlJs({ locateFile: (file) => (file.endsWith('.wasm') ? wasmUrl : file) });
     progress?.(0.15, 'Starting engine…');
-    const { adapter } = await createStorageAdapter({
-      mainKey: STORAGE_KEY,
-      snapshotPrefix: SNAPSHOT_PREFIX,
-      maxSnapshots: MAX_SNAPSHOTS,
-    });
+    const { adapter } = await withStorageTimeout(
+      createStorageAdapter({
+        mainKey: STORAGE_KEY,
+        snapshotPrefix: SNAPSHOT_PREFIX,
+        maxSnapshots: MAX_SNAPSHOTS,
+      }),
+    );
     this.storage = adapter;
 
-    const saved = await this.storage.readMain().catch((e) => {
-      if (e instanceof StorageCorruptError) return null;
-      throw e;
-    });
+    const saved = await withStorageTimeout(
+      this.storage.readMain().catch((e) => {
+        if (e instanceof StorageCorruptError) return null;
+        throw e;
+      }),
+    );
     progress?.(0.4, 'Loading your data…');
     let loaded = false;
     if (saved) {
@@ -154,7 +214,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
       } catch {
         this.db = null;
       }
-      if (!loaded) await this._recoverFromSnapshots();
+      if (!loaded) await withStorageTimeout(this._recoverFromSnapshots());
     }
     if (!this.db) {
       this.db = new this.SQL.Database();
@@ -345,6 +405,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   private async _maybeSnapshot(data: Uint8Array): Promise<void> {
+    if (this.suppressSnapshot) return;
     const t = Date.now();
     if (t - this.lastSnapshotTime < SNAPSHOT_COOLDOWN_MS) return;
     this.lastSnapshotTime = t;
@@ -811,8 +872,7 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   /** Loads the requested snapshot (falling back to older ones). Caller decides on UI refresh. */
-  async restoreSnapshot(index: number): Promise<void> {
-    for (let i = index; i >= 0; i--) {
+  async restoreSnapshot(index: number): Promise<void> {    for (let i = index; i >= 0; i--) {
       try {
         const snap = await this.storage!.readSnapshot(i);
         if (!snap) continue;
@@ -849,6 +909,27 @@ export class SQLiteDatabaseService implements IDatabaseService {
     await this.storage.clearAll();
     this.db = new this.SQL!.Database();
     this.db.run(SCHEMA);
+    this.dirty = true;
+    this.suppressSnapshot = true;
+    try {
+      await this.flush();
+    } finally {
+      this.suppressSnapshot = false;
+    }
+  }
+
+  /**
+   * Restores exactly the requested slot — no fallback. Throws when the slot
+   * is missing or fails verification, so recovery UI can report per-slot.
+   */
+  async restoreSnapshotExact(index: number): Promise<void> {
+    const snap = await this.storage!.readSnapshot(index);
+    if (!snap) throw new Error(`No backup found in slot ${index + 1}`);
+    const hash = await digestHex(snap.data);
+    if (hash !== snap.hash) throw new Error(`Backup ${index + 1} failed verification`);
+    if (!this.SQL) throw new Error('Database engine not ready');
+    this.db = new this.SQL.Database(snap.data);
+    await this._migrate();
     this.dirty = true;
     await this.flush();
   }

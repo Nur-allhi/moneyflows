@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { getDatabase } from '../../../infrastructure/database/getDatabase';
+import { clearLastSyncMeta } from '../../../infrastructure/database/CloudSync';
 import { googleAuth } from '../../../infrastructure/database/GoogleAuth';
 import { GOOGLE_CLIENT_ID, isGoogleSyncConfigured } from '../../constants/googleClient';
 import type { CloudStatus } from '../../../core/ports/IDatabaseService';
@@ -41,6 +42,7 @@ function formatSyncTime(at: number, locale: string): string {
 /** Google Drive sync block for Settings → Backup & Storage (Phase 19, T-148). */
 export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean }) {
   const locale = useSettingsStore((s) => s.settings.locale);
+  const updateSettings = useSettingsStore((s) => s.updateSettings);
   const [status, setStatus] = useState<CloudStatus | null>(null);
   const [remote, setRemote] = useState<{ dbFiles: number; hashPresent: boolean; modifiedTime: string | null } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -111,16 +113,43 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
     }
   }, []);
 
-  const handleDisconnect = useCallback(async () => {
+  /**
+   * Sign out + erase device: final upload first (aborts to a warned choice
+   * when the backup fails), then revoke Google, wipe local DB + snapshots +
+   * sync fingerprint, and land on the wizard so another account can sign in.
+   * The Drive backup itself is never touched.
+   */
+  const handleSignOut = useCallback(async () => {
+    if (!window.confirm('Sign out of Google and erase this device’s data? Your Drive backup stays untouched — this device is wiped so another account can sign in.')) return;
     setBusy(true);
+    setError(null);
+    setStage('syncing');
     try {
+      let backedUp = false;
+      try {
+        const st = await getDatabase().syncNow();
+        backedUp = !st.lastError;
+      } catch {
+        backedUp = false;
+      }
+      if (!backedUp) {
+        if (!window.confirm('Couldn’t back up to Drive (offline?). Unsynced changes will be lost. Sign out anyway?')) {
+          setBusy(false);
+          setStage(null);
+          return;
+        }
+      }
       await googleAuth.signOut();
-      setRemote(null);
-      await refresh();
-    } finally {
+      await getDatabase().resetStorage();
+      await clearLastSyncMeta();
+      updateSettings({ setupComplete: false });
+      window.location.reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sign out failed — try again.');
       setBusy(false);
+      setStage(null);
     }
-  }, [refresh]);
+  }, [updateSettings]);
 
   /** Warned escape hatch for a corrupt remote (T-160): explicit choice only. */
   const handleReplaceCloud = useCallback(async () => {
@@ -194,11 +223,11 @@ export function CloudSyncSection({ forceOpen = false }: { forceOpen?: boolean })
                 Replace cloud backup
               </button>
             )}
-            <button className={styles.actionBtn} onClick={handleDisconnect} disabled={busy}>
-              Disconnect
+            <button className={styles.actionBtn} onClick={handleSignOut} disabled={busy}>
+              Sign out
             </button>
           </div>
-          <div className={styles.note}>Disconnecting signs you out only — this device keeps its data.</div>
+          <div className={styles.note}>Signing out erases this device’s data — your Drive backup stays.</div>
         </>
       )}
     </SettingsDisclosure>
