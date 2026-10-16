@@ -1874,3 +1874,26 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - BUG-17 fixed on `dev`, unpushed. Next: push + user retests; long-idle reopens still need one tap by platform design.
+
+## Session 2026-10-17 (merge BUG-17 to master)
+
+### Changes
+- User-approved `dev → master` no-ff (`50910dc`): BUG-17 token-lifetime fix (`8ca1547`) + CHANGELOG Unreleased Fixed + BUGS.md fixed + session logs. No version bump/tag (release step pending user call)
+- Gates re-run on merge result: typecheck PASS, full lint 0 PASS, unit 112/112 PASS, build PASS; pushed `master` (`6854182..50910dc`)
+- Back on clean `dev` (only untracked `Logo_mockups/` remains). Week-long token question answered: not possible client-side (Google fixes ~1h); direction question dismissed → staying as-is
+
+### Status
+- `master` carries both sync fixes (BUG-16 hang + BUG-17 hourly re-sign). Next: deploy hosted app + user retests, then version-bump release when confirmed.
+
+## Session 2026-10-17 (BUG-18 false conflict on one device)
+
+### Changes
+- Logged BUG-18 (high): single-tab + normal-use answers ruled out multi-tab/meta-loss → unconfirmed-upload stale fingerprint; user chose convergence guard
+- Fixed on `dev` (`a2fea0b`, same commit: BUGS.md fixed + CHANGELOG Fixed): `decideSyncAction` convergence-idle + flush fingerprint heal + `healIfConverged()` re-verify + reconcile stale-meta refresh + dialog auto-dismiss; convergence tests added
+- Gates: typecheck PASS, full lint 0 PASS, unit 113/113 PASS, build PASS. `detect_changes` flagged HIGH but attribution is stale-index noise (untouched methods/processes) — diff-verified confinement to sync paths + green gates. Stays on `dev` (no master merge requested)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-18 fixed on `dev`, unpushed. Next: push + user retests; genuine two-device conflicts still ask as before.

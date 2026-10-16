@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-18: False sync conflict on a single device
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-17 (during: user report — conflict dialog while editing on one device only, no real data difference; mentions timestamp)
+- **Location:** `decideSyncAction` + all four conflict-raising paths (`_maybeCloudSync`, `_cloudBootPull`, `reconcileAfterSignIn`, `checkRemoteUpdate` in `SQLiteDatabaseService.ts`) + `CloudUpdatePrompt.tsx` dialog copy
+- **Description:** "Sync conflict — another device changed data" appears although only one device edits and both sides look the same. Expected: single-device states never raise a both-sides-moved choice.
+- **Root Cause:** diagnosed 2026-10-17 (single tab + during-normal-use answers rule out multi-tab disagreement and sign-in/data-clear fingerprint loss): unconfirmed upload → stale fingerprint. An upload can land server-side while the client records failure (slow-network timeout on the response, stale verification read — BUG-15 timeouts made hangs fail, but a timed-out-while-successful upload still leaves meta stale). Next cycle the identical content triple-differs (local ≠ fingerprint, remote ≠ fingerprint) and `decideSyncAction` returns `conflict` — it never checks that local and remote are actually identical. The dialog's "Saved {time}" is then the user's own upload time, which is why the timestamp looks suspicious but meaningless.
+- **Fix Approach:** user-confirmed (convergence guard) — `decideSyncAction` returns `idle` when local and remote hashes are identical regardless of fingerprint staleness; `_maybeCloudSync` heals the fingerprint + clears a same-state conflict on that path (conflict early-return moved after); NEW `healIfConverged()` re-verifies before `checkRemoteUpdate` re-alarms; sign-in reconcile refreshes stale fingerprints too; healed conflicts dismiss their own dialog. Genuine both-sides-moved states still ask.
+- **Resolved:** 2026-10-17 — on `dev`; typecheck PASS, full lint 0 PASS, unit 113/113 PASS (convergence tests), build PASS.
+
+---
+
 ## BUG-17: Sync asks to sign in again on every app open
 
 - **Status:** fixed
