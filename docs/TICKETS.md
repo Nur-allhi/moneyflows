@@ -287,6 +287,7 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-166 | Animated water-flow fill on all progress bars | `senior-frontend` | S | **Complete** (diagonal flow overlay on gradient, leading shimmer kept, reduced-motion guard, GPU-cheap) |
 | T-167 | Sync progress completes (100% beat, no abrupt vanish) | `senior-frontend` | S | **Complete** (done stage 100% + Synced ✓ held 1.2s on success; failures still clear to error text) |
 | T-168 | Splash bar shows only on slow boots (600ms gate) | `senior-frontend` | S | **Complete** (bar gated on boot exceeding 600ms; throttled probe shows stages; fast boots clean) |
+| T-169 | Informed conflict dialog (side-by-side data comparison) | `senior-frontend` | M | **Complete** (pure summaries + SQL wrapper, bytes held + preview API, cards with amounts, Keep-this-device/Download-cloud-data, 97/97 tests) |
 
 ### T-168 - Splash bar shows only on slow boots (600ms gate)
 **Skill:** `senior-frontend`
@@ -442,6 +443,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 2. Token-only values; `prefers-reduced-motion: reduce` disables the motion (Header precedent); GPU-cheap (background-position only).
 3. `DESIGN_IDENTITY.md §17` motion rules check.
 **Acceptance:** every app progress bar shows continuous flow while busy; still with zero motion when reduced-motion is set.
+
+### T-169 - Informed conflict dialog (side-by-side data comparison)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/cloudDiff.ts` (new) + `__tests__/cloudDiff.test.ts`, `SQLiteDatabaseService.ts` (hold bytes + `getConflictPreview()`), `src/core/ports/IDatabaseService.ts`, `src/presentation/components/CloudUpdatePrompt.tsx`
+**Content:**
+1. User decisions: cards show full latest-3 (description + signed amount + date) with counts + timestamps; buttons **Keep this device** / **Download cloud data**.
+2. Pure `summarizeRows()` over row arrays (counts, latest-3, last-change) — unit-tested with stubs, no wasm in tests. Thin SQL wrapper opens remote bytes in a second in-memory handle (`COUNT(*)`, latest by date, `MAX(updated_at)`); corrupt bytes → null → plain-dialog fallback.
+3. Service holds conflict remote bytes in memory + `remoteSavedAt`, exposes `getConflictPreview()`; cleared on resolve/sign-out. Dialog renders two stacked cards; same Modal; `DESIGN_IDENTITY.md §17` checklist.
+4. Full gates + e2e diverged fixture (cards render with correct counts).
+**Acceptance:** both-sides-diverged shows what/where is newer with amounts; choice is informed; fallback dialog unchanged when preview unavailable.
 
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.

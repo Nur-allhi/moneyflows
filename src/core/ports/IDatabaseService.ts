@@ -67,6 +67,33 @@ export type CloudReconcile = 'downloaded' | 'uploaded' | 'idle' | 'choice' | 'si
 /** Boot progress callback (T-161): fraction 0..1 with a plain-language stage label. */
 export type BootProgress = (fraction: number, label: string) => void;
 
+/** One latest-transaction line in a conflict comparison card (T-169). */
+export interface PreviewTx {
+  description: string;
+  /** Signed amount: outflows negative, inflows positive, transfers as-is. */
+  amount: number;
+  /** YYYY-MM-DD. */
+  date: string;
+}
+
+/** One side of a conflict comparison card (T-169). */
+export interface SideSummary {
+  transactions: number;
+  accounts: number;
+  members: number;
+  latest: PreviewTx[];
+  /** MAX(updated_at) across tables, ISO-ish string, or null when empty. */
+  lastChange: string | null;
+}
+
+/** Side-by-side conflict comparison for the dialog (T-169). */
+export interface ConflictPreview {
+  local: SideSummary;
+  remote: SideSummary;
+  /** Drive server-side saved time of the remote copy (may be null). */
+  remoteSavedAt: string | null;
+}
+
 export interface IDatabaseService {
   init(): Promise<void>;
   getSqlJsDb(): unknown;
@@ -146,6 +173,8 @@ export interface IDatabaseService {
   remoteInfo(): Promise<{ dbFiles: number; hashPresent: boolean; modifiedTime: string | null } | null>;
   /** Explicit user escape hatch for a corrupt remote: replaces cloud with this device. Warned button only. */
   overwriteRemote(): Promise<boolean>;
+  /** Side-by-side data for the conflict dialog (T-169). Null when unavailable — plain dialog fallback. */
+  getConflictPreview(): Promise<ConflictPreview | null>;
 
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;
