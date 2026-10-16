@@ -1735,3 +1735,14 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on `dev`, unpushed. Next: push + reply (note: one final upload per device on first boot after fix, then quiet).
+
+## Session 2026-10-17 (T-172/T-173 header tap-to-sync + ring)
+
+### Changes
+- User requests: (1) header sync button syncs immediately, no Settings trip; (2) circular animation on any sync, full round = done
+- T-172 (`9587937` part): tap runs immediate `syncNow()` with re-entrancy guard (guests keep deep link); service emits `moneyflows:sync-start/end` only around real network activity (idle/cooldown skips silent)
+- T-173: `SyncGlyph` states — cloud+dot idle, spinning ring during any sync incl. background auto-syncs, full-ring check flash 1.2s on clean end; dot refreshes on sync-end; both desktop+mobile instances; reduced-motion guard
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
