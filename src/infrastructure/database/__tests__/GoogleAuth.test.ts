@@ -76,6 +76,8 @@ describe('GoogleAuth (T-145)', () => {
     await expect(auth.getAccountEmail()).resolves.toBe('user@gmail.com');
     expect(captured[0]).toMatchObject({ client_id: 'client-123' });
     expect(String(captured[0]?.scope)).toContain('drive.appdata');
+    // Explicit tap offers the chooser (BUG-14: '' fails closed overnight).
+    expect(requestedPrompts[requestedPrompts.length - 1]).toBe('select_account');
   });
 
   it('signIn persists the profile (name + photo) for the sidebar', async () => {
@@ -128,7 +130,7 @@ describe('GoogleAuth (T-145)', () => {
     try {
       nextResponse = { access_token: 'tok-3', expires_in: 3600 };
       await expect(auth.refreshInteractive()).resolves.toBe('tok-3');
-      expect(requestedPrompts[requestedPrompts.length - 1]).toBe('');
+      expect(requestedPrompts[requestedPrompts.length - 1]).toBe('select_account');
       await expect(auth.getValidToken()).resolves.toBe('tok-3');
     } finally {
       vi.restoreAllMocks();

@@ -212,7 +212,10 @@ export class GoogleAuth {
         },
       });
       try {
-        client.requestAccessToken({ prompt: '' });
+        // Explicit user tap: always offer the account chooser. prompt:''
+        // fails closed (popup opens then auto-closes) when no Google session
+        // can be silently reused — e.g. the morning after sign-in (BUG-14).
+        client.requestAccessToken({ prompt: 'select_account' });
       } catch (e) {
         reject(e instanceof Error ? e : new Error(String(e)));
       }
@@ -321,7 +324,7 @@ export class GoogleAuth {
             resolve(resp.access_token);
           },
         });
-        client.requestAccessToken({ prompt: '' });
+        client.requestAccessToken({ prompt: 'select_account' });
       });
       this.token = token;
       this.expiresAtMs = Date.now() + 3600_000;

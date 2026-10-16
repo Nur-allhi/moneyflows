@@ -39,6 +39,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-14: Next-morning re-auth popup opens then closes by itself
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-10-16 (during: user report — signed in last night, morning Sync-now shows Google popup that auto-closes)
+- **Location:** `src/infrastructure/database/GoogleAuth.ts:215` (`signIn`) + `:324` (`refreshInteractive`) — both `requestAccessToken({ prompt: '' })`
+- **Description:** Access tokens live ~1h (GIS implicit flow, no refresh tokens); overnight the persisted token expires and silent `prompt:'none'` renewal fails (dead Google session / blocked third-party cookies). The explicit-tap fallback opens the popup with `prompt:''`, which fails closed (instant error, popup auto-closes) instead of offering the account chooser. Expected: tapping Sign in / Sync now always presents the chooser.
+- **Root Cause:** `prompt:''` lets Google attempt silent issuance inside the popup and die with no UI; explicit user taps need `prompt:'select_account'`.
+- **Fix Approach:** explicit taps (`signIn`, `refreshInteractive`) now request `prompt:'select_account'` — chooser always offered; silent `prompt:'none'` path untouched for background callers.
+- **Resolved:** 2026-10-16 — on `feature/setup-settings-refresh`; typecheck + scoped lint clean, unit 92/92 (prompt assertions added/updated); CHANGELOG entry deferred to `dev` merge.
+
+---
+
 ## BUG-13: Splash progress bar vanishes mid-splash, never shows completion
 
 - **Status:** fixed
