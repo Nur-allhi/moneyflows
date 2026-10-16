@@ -1756,3 +1756,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-175 spinner orbit fix)
+
+### Changes
+- User report: animation read as inner clutter, not an outer circle. Cause: r=10 ring overlapped the full-size cloud edges
+- T-175 (`a14a823`): cloud shrinks to 62% centered, arc rides r=10.5 fully outside; verified with screenshots 450ms apart showing the arc at different orbit positions (frame hashes differ)
+- Gates: typecheck PASS, scoped lint clean, build PASS (probe spec deleted after use)
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
