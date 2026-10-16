@@ -1648,3 +1648,16 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on branch, unpushed. Next: push → user verifies → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-14 morning re-auth auto-close, on feature/setup-settings-refresh)
+
+### Changes
+- User report: signed in at night, morning Sync-now popup opens then auto-closes. Logged BUG-14 first. Diagnosis: hourly access tokens (GIS implicit flow, no refresh tokens) + dead overnight Google session → silent `none` renewal null → explicit fallback opened popup with `prompt:''`, which fails closed instead of offering the chooser
+- Fix: `signIn` + `refreshInteractive` request `prompt:'select_account'`; silent path untouched. Unit prompt assertions added/updated
+- Gates: typecheck PASS, scoped lint clean, unit 92/92
+
+### Skill(s) Used
+- senior-backend
+
+### Status
+- Committed on branch, unpushed. Next: push → user reloads dev (picks up fix), taps Sync now → chooser appears → confirm merge to `dev`.
