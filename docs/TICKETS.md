@@ -288,6 +288,18 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-167 | Sync progress completes (100% beat, no abrupt vanish) | `senior-frontend` | S | **Complete** (done stage 100% + Synced ✓ held 1.2s on success; failures still clear to error text) |
 | T-168 | Splash bar shows only on slow boots (600ms gate) | `senior-frontend` | S | **Complete** (bar gated on boot exceeding 600ms; throttled probe shows stages; fast boots clean) |
 | T-169 | Informed conflict dialog (side-by-side data comparison) | `senior-frontend` | M | **Complete** (pure summaries + SQL wrapper, bytes held + preview API, cards with amounts, Keep-this-device/Download-cloud-data, 97/97 tests) |
+| T-170 | Informed update prompt (what-changed preview on pull) | `senior-frontend` | M | **Complete** (verified-download preview, no import/state change, Cloud-first cards, Later/Refresh kept, 97/97) |
+
+### T-170 - Informed update prompt (what-changed preview on pull)
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/infrastructure/database/SQLiteDatabaseService.ts` (`getUpdatePreview()`), `src/core/ports/IDatabaseService.ts`, `src/presentation/components/CloudUpdatePrompt.tsx`
+**Content:**
+1. User report: the "New data available" prompt says something arrived but not what — same blind choice as the old conflict dialog.
+2. Service `getUpdatePreview(): Promise<ConflictPreview | null>` — verified `download()` (no import, no state change) + local `extractSide` + `remoteInfo` saved-time; null on any failure → current text fallback.
+3. Modal renders the shared `SideCard` pair (Cloud first — it's the news — then This device) with counts + latest-3 amounts; buttons stay Later/Refresh.
+4. No new network shape (one verified download, already fetched again on Refresh); full gates green; e2e skipped (30s poll seam, same as T-169 note).
+**Acceptance:** phone-save → desktop prompt names the new transactions with amounts; fallback text unchanged when preview unavailable.
 
 ### T-168 - Splash bar shows only on slow boots (600ms gate)
 **Skill:** `senior-frontend`

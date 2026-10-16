@@ -53,6 +53,7 @@ export function CloudUpdatePrompt() {
   const [available, setAvailable] = useState(false);
   const [conflict, setConflict] = useState(false);
   const [preview, setPreview] = useState<ConflictPreview | null>(null);
+  const [updatePreview, setUpdatePreview] = useState<ConflictPreview | null>(null);
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState(false);
   const snoozedUntil = useRef(0);
@@ -64,8 +65,11 @@ export function CloudUpdatePrompt() {
     checking.current = true;
     try {
       const result = await getDatabase().checkRemoteUpdate().catch(() => null);
-      if (result === 'available' && Date.now() >= snoozedUntil.current) setAvailable(true);
-      else if (result === 'conflict') {
+      if (result === 'available' && Date.now() >= snoozedUntil.current) {
+        setAvailable(true);
+        // What-changed cards (T-170); plain text fallback when unavailable.
+        getDatabase().getUpdatePreview().then(setUpdatePreview).catch(() => {});
+      } else if (result === 'conflict') {
         setConflict(true);
         // Comparison cards (T-169); plain dialog fallback when unavailable.
         getDatabase().getConflictPreview().then(setPreview).catch(() => {});
@@ -90,6 +94,7 @@ export function CloudUpdatePrompt() {
   const handleLater = useCallback(() => {
     snoozedUntil.current = Date.now() + CLOUD_SYNC_COOLDOWN_MS;
     setAvailable(false);
+    setUpdatePreview(null);
   }, []);
 
   const handleRefresh = useCallback(async () => {
@@ -142,7 +147,26 @@ export function CloudUpdatePrompt() {
         onCancel={handleLater}
         onSave={() => { void handleRefresh(); }}
       >
-        <p>Another device synced newer data to your Google Drive. Refresh to load it.</p>
+        {updatePreview ? (
+          <div className={styles.cards}>
+            <SideCard
+              title="New on your Drive"
+              sub={updatePreview.remoteSavedAt ? `Synced ${updatePreview.remoteSavedAt}` : 'Synced from another device'}
+              side={updatePreview.remote}
+              locale={locale}
+              currency={currency}
+            />
+            <SideCard
+              title="On this device"
+              sub="What you have right now"
+              side={updatePreview.local}
+              locale={locale}
+              currency={currency}
+            />
+          </div>
+        ) : (
+          <p>Another device synced newer data to your Google Drive. Refresh to load it.</p>
+        )}
         {applyError && <p>Could not load the update — will retry on the next check.</p>}
       </Modal>
       <Modal

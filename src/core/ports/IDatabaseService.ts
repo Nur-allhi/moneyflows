@@ -175,6 +175,8 @@ export interface IDatabaseService {
   overwriteRemote(): Promise<boolean>;
   /** Side-by-side data for the conflict dialog (T-169). Null when unavailable — plain dialog fallback. */
   getConflictPreview(): Promise<ConflictPreview | null>;
+  /** What-changed data for the update prompt (T-170): verified download, no import, no state change. */
+  getUpdatePreview(): Promise<ConflictPreview | null>;
 
   getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;

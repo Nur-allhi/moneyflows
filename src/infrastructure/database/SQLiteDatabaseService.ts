@@ -680,6 +680,30 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   /**
+   * What-changed data for the update prompt (T-170): downloads verified remote
+   * bytes for display only — no import, no meta/state change (Refresh does that).
+   */
+  async getUpdatePreview(): Promise<ConflictPreview | null> {
+    const token = await googleAuth.getValidToken().catch(() => null);
+    if (!token || !this.db || !this.SQL) return null;
+    const dl = await cloudSync.download(token);
+    if (!dl) return null;
+    try {
+      const local = extractSide(this.db);
+      const remoteDb = new this.SQL.Database(dl.data);
+      try {
+        const remote = extractSide(remoteDb);
+        const info = await this.remoteInfo().catch(() => null);
+        return { local, remote, remoteSavedAt: info?.modifiedTime ?? null };
+      } finally {
+        remoteDb.close();
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Boot-pull after local boot (Guard 2): fresh device imports a verified
    * remote; clean-but-stale local pulls a newer remote; changed local never
    * gets overwritten (conflict path stashes + flags instead).

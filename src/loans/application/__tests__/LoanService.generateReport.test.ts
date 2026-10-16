@@ -19,10 +19,11 @@ const BORROWER = new Account('acct-borrower', '', 'Home EXP', 'cash', 0);
  */
 function makeService(transactions: Transaction[]): LoanService {
   const db = Object.create(SQLiteDatabaseService.prototype) as SQLiteDatabaseService &
-    Pick<IDatabaseService, 'getTransactions' | 'getAccounts' | 'getConflictPreview'> & { getSqlJsDb: () => unknown };
+    Pick<IDatabaseService, 'getTransactions' | 'getAccounts' | 'getConflictPreview' | 'getUpdatePreview'> & { getSqlJsDb: () => unknown };
   db.getTransactions = async () => transactions;
   db.getAccounts = async () => [LENDER, BORROWER];
   db.getConflictPreview = async () => null;
+  db.getUpdatePreview = async () => null;
   db.getSqlJsDb = () => ({}) as never;
   return new LoanService(db);
 }
