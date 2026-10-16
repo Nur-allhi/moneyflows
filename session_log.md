@@ -1700,3 +1700,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Live on `dev`. Next: user call (release bump per VERSIONING at release time; `master` untouched; Other Ledgers V2 on "next update").
+
+## Session 2026-10-17 (T-169 informed conflict dialog)
+
+### Changes
+- User spec: compare cloud-vs-local in the popup (amounts shown) + buttons Keep this device / Download cloud data. Built on `dev` (carries all sync work)
+- `cloudDiff.ts`: pure `summarizeRows` (counts, latest-3 signed amounts, last-change) + thin `extractSide` (7 capped queries); 3/3 unit tests with stubs
+- Service: 4 conflict sites funneled through `_flagConflict` (stash + hold bytes + flag); `getConflictPreview()` opens both snapshots in-memory (plain-dialog fallback); preview cleared on resolve; port shapes live in `IDatabaseService`
+- Modal: This-device vs Cloud cards (counts + latest + timestamps) + new button copy; token-only CSS module
+- Drive-by: `dev` typecheck was red before my change (pre-existing, loan-lender-breakdown era) — fixed `LoanService` unknown→Database cast + widened test mock for the new port method
+- Gates: typecheck PASS, scoped lint clean, unit 97/97, build PASS
+- E2E note: live-dialog e2e skipped (no fast trigger seam — 30s poll; manual live test stands in)
+
+### Status
+- Committed `141eef6` on `dev`, unpushed. Next: push + reply.
