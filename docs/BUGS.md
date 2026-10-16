@@ -39,6 +39,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-13: Splash progress bar vanishes mid-splash, never shows completion
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-16 (during: user report — bar shows "Starting…" then nothing until app loads)
+- **Location:** `src/presentation/components/SplashScreen.tsx:80` (`{!ready && showProgress && ...}`)
+- **Description:** On boots slower than 600ms the progress bar appears, but unmounts the instant `ready` fires — while the splash lingers ~800ms more for typing + fade. Users see a frozen "Starting…" flash, never staged progress or completion. Expected: bar stays through fade-out showing 100%.
+- **Root Cause:** `!ready` in the render gate unmounts the bar (and its final 100%/Finalizing paint, batched with `ready`) before the fade completes. ProgressBar itself applies every update (T-165) — it just never stays mounted to show them.
+- **Fix Approach:** render gate `{showProgress && ...}` with `ready ? 100/'Ready' : percent/status` — bar stays mounted through typing + fade showing completion.
+- **Resolved:** 2026-10-16 — one-condition fix on `feature/setup-settings-refresh`; NEW e2e `17-splash` green (delayed engine → staged labels → Ready visible through fade → app loads); CHANGELOG entry deferred to `dev` merge.
+
+---
+
 ## BUG-12: Startup timed out — recovery screen after dev restart / sign-out-erase window
 
 - **Status:** fixed
