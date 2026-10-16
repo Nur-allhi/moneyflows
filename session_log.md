@@ -1809,3 +1809,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - `master` at v1.17.0 (tag live on remote) with sync + legal pages; `dev` and `google_signin_backup` pushed. Next: user verifies production deploy, then Google verification submit.
+
+## Session 2026-10-17 (release v1.17.1 patch)
+
+### Changes
+- User-approved: ship real support inbox to production. Synced `origin/master` back into `dev` (clean), bumped `1.17.0 → 1.17.1` PATCH on `dev` (`4aeed1a`: package.json + whatsNew + CHANGELOG `[1.17.1] - 2026-10-17`), merged `dev → master` no-ff (`01bff92`), tagged `v1.17.1`, pushed master + tags + dev
+- Unrelated PWA-icon work stashed across hops and restored intact — never committed
+- Gates: typecheck PASS, build PASS (bump commit)
+
+### Status
+- `master` at v1.17.1 (tag live). Next: user confirms production deploy, then verification submit.
