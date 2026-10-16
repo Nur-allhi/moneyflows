@@ -1725,3 +1725,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-171 phantom sync fix)
+
+### Changes
+- User report confirmed in code: `recalculateBalances()` ran every boot doing blanket `UPDATE accounts SET balance=0, updated_at=now()` + flush — hash changed with zero user edits → phantom uploads/downloads/conflicts
+- T-171 (`f62cba8`): pure `computeBalances` + `diffBalances` (mirrors `applyBalanceChange` exactly); service UPDATEs only stale rows and flushes only when changed; genuinely stale balances still self-correct
+- Gates: typecheck PASS, scoped lint clean, unit 104/104 (7 new), build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply (note: one final upload per device on first boot after fix, then quiet).
