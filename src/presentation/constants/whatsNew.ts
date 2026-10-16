@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.17.1',
+    items: [
+      'Privacy and terms pages now list the correct support contact.',
+    ],
+  },
+  {
     version: '1.17.0',
     items: [
       'Back up to Google Drive: sign in once and your data syncs across your devices automatically.',
