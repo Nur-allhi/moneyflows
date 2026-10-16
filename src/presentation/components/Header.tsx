@@ -45,9 +45,11 @@ function SyncGlyph({ animKey, dot, spinning, justDone }: {
 }) {
   if (spinning) {
     return (
-      <svg key={`spin-${animKey}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
-        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" strokeOpacity="0.55" />
-        <circle className={styles.syncOrbit} cx="12" cy="12" r="10" strokeWidth="2.2" strokeDasharray="30 100" pathLength={100} transform="rotate(-90 12 12)" />
+      <svg key={`spin-${animKey}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" aria-hidden="true">
+        <g transform="translate(12 12) scale(0.62) translate(-12 -12)" strokeOpacity="0.85">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+        </g>
+        <circle className={styles.syncOrbit} cx="12" cy="12" r="10.5" strokeWidth="2" strokeDasharray="28 100" pathLength={100} />
       </svg>
     );
   }

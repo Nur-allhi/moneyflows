@@ -293,6 +293,7 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 | T-172 | Header sync button triggers Sync-now on tap | `senior-frontend` | S | **Complete** (tap = immediate syncNow, guests keep deep link, start/end lifecycle events, re-entrancy guard) |
 | T-173 | Circular sync animation on header button (all syncs) | `senior-frontend` | M | **Complete** (ring spin on any sync incl. background auto-sync, full-ring check flash on clean end, dot refresh, reduced-motion guard) |
 | T-174 | Persistent synced tick + outer ring on header button | `senior-frontend` | S | **Complete** (centered tick badge when synced, tap flashes tick even idle, cloud-centered with orbiting outer arc) |
+| T-175 | Spinner geometry: small cloud + true outer orbit ring | `senior-frontend` | S | **Complete** (62% centered cloud, r=10.5 arc outside it, rotation proven by differing screenshot frames) |
 
 ### T-174 - Persistent synced tick + outer ring on header button
 **Skill:** `senior-frontend`
