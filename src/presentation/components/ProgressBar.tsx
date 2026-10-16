@@ -11,12 +11,20 @@ interface ProgressBarProps {
 export function ProgressBar({ percent, label, sublabel, className = '' }: ProgressBarProps) {
   const [width, setWidth] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  // Once visible, every percent change applies directly (T-165). The old code
+  // disconnected the observer after its first trigger, freezing the bar.
+  const visibleRef = useRef(false);
 
   useEffect(() => {
+    if (visibleRef.current) {
+      const id = requestAnimationFrame(() => setWidth(percent));
+      return () => cancelAnimationFrame(id);
+    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry) return;
         if (entry.isIntersecting) {
+          visibleRef.current = true;
           requestAnimationFrame(() => setWidth(percent));
           observer.disconnect();
         }

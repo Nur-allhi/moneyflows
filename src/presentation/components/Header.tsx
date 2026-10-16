@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
+import { useCloudIndicator } from '../hooks/useCloudIndicator';
+import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { useReplay } from '../hooks/useReplay';
 import { useSearchStore } from '../stores/useSearchStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -30,6 +32,55 @@ function formatDate(): string {
   return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+/**
+ * Sync button glyph states (T-173/T-174): idle cloud (centered tick badge when
+ * fully synced, status dot otherwise), outer orbiting arc while any real sync
+ * runs, full outer ring + check flash on clean completion. Honest states only.
+ */
+function SyncGlyph({ animKey, dot, spinning, justDone }: {
+  animKey: string | number;
+  dot: 'synced' | 'never' | 'warn';
+  spinning: boolean;
+  justDone: boolean;
+}) {
+  if (spinning) {
+    return (
+      <svg key={`spin-${animKey}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="20" height="20" aria-hidden="true">
+        <g transform="translate(12 12) scale(0.62) translate(-12 -12)" strokeOpacity="0.85">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+        </g>
+        <circle className={styles.syncOrbit} cx="12" cy="12" r="10.5" strokeWidth="2" strokeDasharray="28 100" pathLength={100} />
+      </svg>
+    );
+  }
+  if (justDone) {
+    return (
+      <span className={styles.syncDoneWrap}>
+        <svg key={`done-${animKey}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M8.5 12.5l2.5 2.5 4.5-5.5" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <>
+      <svg key={animKey} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" aria-hidden="true">
+        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+        {dot === 'synced' && (
+          <g>
+            <circle cx="12" cy="14.5" r="5" fill="var(--color-success)" stroke="none" />
+            <path d="M10 14.5l1.5 1.5 2.5-3" stroke="var(--color-bg)" strokeWidth="1.6" />
+          </g>
+        )}
+      </svg>
+      {dot !== 'synced' && (
+        <span className={`${styles.syncDot} ${dot === 'warn' ? styles.syncDotWarn : styles.syncDotIdle}`} />
+      )}
+    </>
+  );
+}
+
 export function Header({
   title,
   showLogo = true,
@@ -56,6 +107,83 @@ export function Header({
   const [themeKey, replayTheme] = useReplay();
   const [bellKey, replayBell] = useReplay();
   const [clearKey, replayClear] = useReplay();
+  const [syncKey, replaySync] = useReplay();
+  const syncState = useCloudIndicator();
+  const syncingRef = useRef(false);
+  /** Re-entrancy + visual busy flag for tap-to-sync (T-172/T-173). */
+  const [syncBusy, setSyncBusy] = useState(false);
+  /** Brief completion flash after a clean sync (T-173). */
+  const [syncDone, setSyncDone] = useState(false);
+  const doneTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const onStart = () => {
+      if (doneTimer.current) {
+        clearTimeout(doneTimer.current);
+        doneTimer.current = null;
+      }
+      setSyncDone(false);
+      setSyncBusy(true);
+    };
+    const onEnd = () => {
+      setSyncBusy(false);
+      getDatabase().getCloudStatus()
+        .then((s) => {
+          if (!s.lastError && !s.conflictPending) {
+            setSyncDone(true);
+            if (doneTimer.current) clearTimeout(doneTimer.current);
+            doneTimer.current = setTimeout(() => {
+              setSyncDone(false);
+              doneTimer.current = null;
+            }, 1200);
+          }
+        })
+        .catch(() => {});
+    };
+    window.addEventListener('moneyflows:sync-start', onStart);
+    window.addEventListener('moneyflows:sync-end', onEnd);
+    return () => {
+      window.removeEventListener('moneyflows:sync-start', onStart);
+      window.removeEventListener('moneyflows:sync-end', onEnd);
+      if (doneTimer.current) clearTimeout(doneTimer.current);
+    };
+  }, []);
+  /**
+   * Tap = immediate Sync-now for signed-in users (T-172); guests keep the
+   * deep link into Settings Backup as a sign-in invitation.
+   */
+  const openSyncSettings = useCallback(() => {
+    replaySync();
+    if (!syncState) {
+      navigate('/settings?tab=backup&open=google-drive-sync');
+      return;
+    }
+    if (syncingRef.current) return;
+    syncingRef.current = true;
+    setSyncBusy(true);
+    const flashDone = () => {
+      getDatabase().getCloudStatus()
+        .then((s) => {
+          if (!s.lastError && !s.conflictPending) {
+            setSyncDone(true);
+            if (doneTimer.current) clearTimeout(doneTimer.current);
+            doneTimer.current = setTimeout(() => {
+              setSyncDone(false);
+              doneTimer.current = null;
+            }, 1200);
+          }
+        })
+        .catch(() => {});
+    };
+    getDatabase().syncNow()
+      .catch(() => {})
+      .finally(() => {
+        syncingRef.current = false;
+        setSyncBusy(false);
+        // Tap with nothing to sync runs no network (no end event) — flash
+        // the tick directly so the tap always answers (T-174).
+        flashDone();
+      });
+  }, [replaySync, navigate, syncState]);
   const toggleTheme = () => {
     replayTheme();
     useSettingsStore
@@ -236,10 +364,30 @@ export function Header({
             )}
             </span>
           </button>
+          {syncState && (
+            <button
+              className={`${styles.syncBtnMobile} ${syncKey > 0 ? styles.syncPop : ''}`}
+              onClick={openSyncSettings}
+              aria-label={`Cloud sync: ${syncBusy ? 'syncing' : syncState.title}`}
+              title={syncBusy ? 'Syncing…' : syncState.title}
+            >
+              <SyncGlyph animKey={`m-${syncKey}`} dot={syncState.dot} spinning={syncBusy} justDone={syncDone && !syncBusy} />
+            </button>
+          )}
         </div>
         <button className={`${styles.notifBtn} ${bellKey > 0 ? styles.bellRing : ''}`} onClick={replayBell} aria-label="Notifications">
           {'\uD83D\uDD14'}
         </button>
+        {syncState && (
+          <button
+            className={`${styles.syncBtn} ${syncKey > 0 ? styles.syncPop : ''}`}
+            onClick={openSyncSettings}
+            aria-label={`Cloud sync: ${syncBusy ? 'syncing' : syncState.title}`}
+            title={syncBusy ? 'Syncing…' : syncState.title}
+          >
+            <SyncGlyph animKey={syncKey} dot={syncState.dot} spinning={syncBusy} justDone={syncDone && !syncBusy} />
+          </button>
+        )}
       </div>
     </header>
   );

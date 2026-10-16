@@ -13,10 +13,12 @@ interface SidebarProps {
   items: NavItem[];
   footerLabel?: string;
   footerRole?: string;
+  /** Google photo URL (T-158); initial-letter avatar when absent. */
+  footerPhoto?: string | null;
   className?: string;
 }
 
-export function Sidebar({ items, footerLabel, footerRole, className = '' }: SidebarProps) {
+export function Sidebar({ items, footerLabel, footerRole, footerPhoto, className = '' }: SidebarProps) {
   const collapsedPref = useSettingsStore((s) => s.settings.sidebarCollapsed ?? false);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
   const [peeking, setPeeking] = useState(false);
@@ -66,7 +68,11 @@ export function Sidebar({ items, footerLabel, footerRole, className = '' }: Side
       {(footerLabel || footerRole) && (
         <div className={styles.footer}>
           <div className={styles.footerAvatar}>
-            {footerLabel?.charAt(0).toUpperCase() ?? 'F'}
+            {footerPhoto ? (
+              <img className={styles.footerPhoto} src={footerPhoto} alt="" referrerPolicy="no-referrer" />
+            ) : (
+              footerLabel?.charAt(0).toUpperCase() ?? 'F'
+            )}
           </div>
           <div className={styles.footerText}>
             <div className={styles.footerName}>{footerLabel}</div>

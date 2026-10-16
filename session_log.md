@@ -1314,3 +1314,488 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - User: avatar sat slightly left when sidebar folded. Cause: .collapsed .footer centers content but the 10px flex gap to the zero-width footerText still applied, pushing the avatar 5px left. Fix: gap:0 in collapsed footer
 - Playwright proof: collapsed, avatar center 50 == footer center 50. Screenshot. tsc + eslint clean
 - Status: uncommitted on dev. Next: user verifies, then commit.
+
+## Session 2026-10-14 (release v1.16.1)
+
+### Changes
+- User-approved: commit + push + merge to master. PATCH 1.16.0 -> 1.16.1: da17e4d fix (recent desc 3-line clamp, date nowrap+breathing room, collapsed avatar centering) + bump (package.json + whatsNew 1.16.1 + CHANGELOG [1.16.1])
+- Gates: build PASS, eslint clean, unit 48/48, detect_changes low risk/no affected flows; verified live with measurements + screenshots
+- Flow: pushed dev -> merge no-ff -> tag v1.16.1 -> pushed master --follow-tags; dev ff + pushed; back on dev, clean
+
+### Status
+- On clean `dev`. Next: user's process-improvement round for sync, then next changes on `dev`.
+
+## Session 2026-10-15 (safety branch google_signin_backup)
+
+### Changes
+- User directive: keep `master` stable without Google backup; isolate sync work. Created `google_signin_backup` off `dev`, merged `feature/online-sync-drive` no-ff (`881b249`, Phase 19 T-145..T-153), typecheck green, pushed with `-u`
+- Back on `dev` (plan commit `73df24d` pushed); `master` untouched at v1.16.1
+- Topology: `master` (stable, no sync) ← `dev` (next changes) → periodic merge into `google_signin_backup` (sync workstream, merges on user call)
+
+## Session 2026-10-15 (Phase 19 online sync — plan + T-145/T-146)
+
+### Changes
+- User-approved Path 1 (Google login + Drive appDataFolder). Wrote `docs/plans/ONLINE_SYNC_PLAN.md` (arch, 4 merge-blocking guards, console setup, release) + raised Phase 19 tickets T-145..T-151 in `docs/TICKETS.md`; committed `73df24d` on dev
+- Created branch `feature/online-sync-drive` off dev, pushed with `-u`
+- T-145 (`bc4f61e`): `GoogleAuth.ts` — memoized GIS loader (no npm dep), memory-only token, IDB email+expiry, silent refresh w/ 60s skew, signOut revokes; 7/7 vitest green
+- T-146 (`42ca7a5`): `CloudSync.ts` — upsert `moneyflows.db` + `.sha256` sidecar, metadata-only `remoteHash()`, hash-verified `download()`; never throws; 9/9 vitest green
+- Gates on both: typecheck PASS, scoped eslint `--max-warnings 0` clean (full-repo lint still has pre-existing `LedgerSection.tsx:82` warning)
+
+### Skill(s) Used
+- senior-frontend (T-145), senior-backend (T-146)
+
+### Status
+- T-145/T-146 complete on branch (unpushed). Next: T-147 wiring (`impact` on `flush` first) → T-148/149/150 UI → T-151 verification → user-confirmed merge to dev.
+
+## Session 2026-10-15 (Phase 19 complete T-147..T-151)
+
+### Changes
+- T-147 (`6c8200b`): `_maybeCloudSync` fire-and-forget in `flush()` (hidden-tab force), `_cloudBootPull` under 8s timeout, pure `decideSyncAction` (6/6 matrix tests), `getCloudStatus()`; `impact(flush)` = CRITICAL as expected (central durability point) — change strictly additive, signed-out path is cooldown + IDB-miss
+- T-148 (`df1a486`): `CloudSyncSection` in Settings → Backup (Connect/status/Sync now/Disconnect + console setup copy), `CloudStatus` + `syncNow()` on `IDatabaseService` port, `cloudClientId` in AppSettings (live status, no dual-write)
+- T-149 (`9e66c68`): `checkRemoteUpdate`/`applyRemoteUpdate` + `CloudUpdatePrompt` in AppLayout (visible-tab cooldown poll, refocus check, snooze, reload-on-apply)
+- T-150 (`7848d22`): `resolveConflict(mine/theirs)` + conflict dialog (required choice, remote kept as restore point either way); repaired two edit slips (dropped newline, clobbered method header) caught by read-back
+- T-151 (`df42280` + `dd40c49`): e2e `15-cloud-sync` 2/2 green (mocked GIS/Drive: connect→upload + offline-boot→warn), SECURITY/TAD/CHANGELOG docs, no version bump (release-time per plan)
+- Gates: typecheck PASS, full `lint --max-warnings 0` PASS, build PASS, unit 70/70 (18 e2e-under-vitest import failures are pre-existing), `detect_changes` LOW on final diff
+
+### Skill(s) Used
+- senior-backend (T-146/147), senior-frontend (T-145/148/149/150), code-reviewer (T-151)
+
+### Status
+- Phase 19 complete on `feature/online-sync-drive`, pushed. Next: user reviews → confirm merge to `dev`; live test needs user's OAuth Client ID (plan §4); version bump at release (MINOR per §2).
+
+## Session 2026-10-15 (Sign in with Google — no more Client ID paste)
+
+### Changes
+- User feedback: per-user Client ID paste is inconvenient → switched to one app-owned OAuth client baked in at build time (`GOOGLE_CLIENT_ID` real-env/`.env.local` → `__GOOGLE_CLIENT_ID__` → `constants/googleClient.ts`, mirrors `__APP_VERSION__` pattern; `.env*` already gitignored)
+- `CloudSyncSection` simplified: explainer + **Sign in with Google** button (unconfigured builds show "not set up", stay fully local); dropped `cloudClientId` from AppSettings (branch-only field, never released)
+- `playwright.config` webServer passes a dummy ID (GIS fully stubbed in e2e); plan §2/§4 + README updated (publisher one-time setup, zero user setup)
+- Debugging saga: e2e kept failing on a stale vite server squatting :3000 (pre-change code + `reuseExistingServer` kept reusing it); `netstat -p TCP` missed the IPv6 listener — `netstat -ano` found PID 10672, killed it; verified env flow with a temp config probe (removed after); `CI=1` forces a fresh server
+- Gates: typecheck PASS, scoped lint clean, build PASS, e2e `15-cloud-sync` 2/2 green
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- On `feature/online-sync-drive`, unpushed. Next: commit + push; user creates ONE OAuth client (plan §4) into `.env.local`, runs `npm run dev`, taps Sign in with Google for the live test.
+
+## Session 2026-10-15 (T-152/T-153 deterministic sync + wizard gate)
+
+### Changes
+- User directive: choice only for genuine both-sides data; entry gate Sign in vs Guest (Option A confirmed). Raised T-152/T-153, both built on branch
+- T-152: `reconcileAfterSignIn()` shared by wizard/Settings/boot (`downloaded`/`uploaded`/`idle`/`choice`/`signed-out`), `_isLocalEmpty()` row counts, `effectiveHasLocal` (empty+never-synced auto-pulls; emptied-after-sync stays conflict), `_importVerifiedRemote` extracted and reused in 3 pull sites; db tests 28/28
+- T-153: wizard step 0 gate (Sign in with Google → downloaded skips to dashboard, else step 1; guest unchanged; unconfigured builds keep Get Started; "Welcome" copy kept for e2e), Settings sign-in reconciles (downloaded → reload), conflict buttons reworded to Override cloud / Download cloud data
+- Process fix for me: no more trailing-newline edit anchors (caused 3 same-line corruptions, all caught by read-back); pre-check :3000 with `netstat -ano` before e2e (another stale vite squatter killed)
+- Gates: typecheck PASS, scoped lint clean, build PASS, unit 73/73, e2e 13-wizard + 15-cloud-sync 4/4 green
+
+### Skill(s) Used
+- senior-backend (T-152), senior-frontend (T-153)
+
+### Status
+- Unpushed on branch. Next: commit + push; reply to user's live-test conflict (their wipe case now auto-downloads — retest by clearing site data + sign in).
+
+## Session 2026-10-15 (Phase 20 sync UX polish T-154..T-158)
+
+### Changes
+- Built on `google_signin_backup` (keeps `dev`/`master` clean per safety topology). All 5 user-requested improvements, sequential commits:
+- T-154 (`5f6e4b6`): staged sign-in progress — Opening Google… → Syncing your data… with ProgressBar in Settings + wizard gate, actions disabled, stay-on-screen copy
+- T-155 (`9e9b7cb`): wizard money-step native selects → modal picker pattern per DESIGN_IDENTITY §9 (trigger + overlay + active gradient, token-only CSS, zero selects left)
+- T-156 (`058b854`): `CLOUD_SYNC_COOLDOWN_MS` 120s→30s — every mutation already auto-syncs via flush (hash-skipped, hidden-tab force); no Sync-now needed
+- T-157 (`d0a84da`): `useCloudIndicator` + header cloud button beside bell (desktop + mobile instances, guests see nothing, tap → Settings)
+- T-158 (`ad38e12`): `profile` scope for name/photo (persisted, never logged) → sidebar footer shows photo + name + email; guests keep Family footer
+- Gates: typecheck PASS, lint `--max-warnings 0` PASS, build PASS, unit 74/74, e2e wizard/backup/cloud-sync 5/5
+- Self-correction: trailing-newline edit slips recurred (4th instance) — rule now enforced: anchors end on full code lines + read-back every edit
+
+### Skill(s) Used
+- senior-frontend (T-154/155/157/158), senior-backend (T-156)
+
+### Status
+- Phase 20 complete on `google_signin_backup`, pushed. Next: user live-tests (consent now also shows `profile` scope); `master` still clean v1.16.1.
+
+## Session 2026-10-15 (header deep link follow-up)
+
+### Changes
+- User request: header sync button now navigates `/settings?tab=backup&open=google-drive-sync` — Backup tab with Google section already open, Sync now one tap away
+- Real bug found by e2e: after Settings sign-in (no route change) the header/sidebar kept stale state up to 30s → added `moneyflows:cloud-status` window event fired from section refresh, consumed by `useCloudIndicator` + App footer effect
+- Gates: typecheck + scoped lint clean, e2e `15-cloud-sync` 3/3 (incl. new deep-link round trip)
+
+### Status
+- Committed `9469978`, unpushed. Next: push + reply.
+
+## Session 2026-10-15 (T-159 session persistence)
+
+### Changes
+- User report: Sync-now re-opened the Google popup. Root cause: (1) token memory-only, wiped on every reload (sign-in itself reloads on download); (2) refresh used `prompt:''` = popup — the silent mechanism is `prompt:'none'`
+- T-159 (`db8a84c`): token persisted in IDB + hydrated across reloads; `getValidToken()` = memory → persisted → silent `none` (never UI, never throws); new `refreshInteractive()` for explicit taps only; Sync-now cache-first with interactive fallback
+- Result spec: active users stay signed in for days across reloads; long-idle (dead Google session) or wiped storage → single re-sign-in
+- Gates: typecheck PASS, scoped lint clean, 10/10 auth tests (hydration with zero GIS calls, prompt assertions, sign-out clears)
+
+### Status
+- Committed, unpushed. Next: push + reply; user retests Sync-now (no popup expected within the hour).
+
+## Session 2026-10-15 (T-160 download resilience)
+
+### Changes
+- User report: cleared storage → sign in → "Last download failed" loop with cloud data present. Diagnosis: message comes only from the pull branch, i.e. sidecar reads fine but DB bytes mismatch — classic interrupted upload (tab closed/suspended between DB and sidecar writes); plain retries can never succeed
+- T-160 (`c80dbc0`): newest-wins reads (`orderBy=modifiedTime desc`), upsert deletes older dupes, `_healRemoteAttempt` (stale sidecar→rewrite, orphan→cleanup, valid bytes + empty device→adopt, else `remote-corrupt` preserving everything), `remoteInfo()` diagnostics row, `overwriteRemote()` warned escape hatch + Replace-cloud-backup button
+- Cloud/data still never auto-overwritten: corrupt path touches nothing; empty device never uploads
+- Gates: typecheck PASS, scoped lint clean, 38/38 db tests (incl. 7-case heal matrix), e2e cloud-sync/backup 4/4, build PASS
+- Process note: one more trailing-newline anchor slip caught by read-back (ports file) — rule holds: full-line anchors + verify after every edit
+
+### Status
+- Committed, unpushed. Next: push + reply with retest steps (user's broken remote should self-heal on next Sync-now).
+
+## Session 2026-10-15 (e2e mock glob gotcha)
+
+### Changes
+- T-160 e2e initially failed with real-app-correct code: probe proved Playwright glob `**/drive/v3/files**` does NOT match file-id URLs carrying `?alt=media` (content fetches escaped to real Google → 401), while regex and `**/drive/v3/files/*` match everything
+- Fix (`f6ad10c`): stateful Drive mocks (created files persist, sidecar hash readable back) + regex route matcher — write-verify now proven end-to-end in e2e, 2/2 green
+- Lesson: when app logic looks right but e2e disagrees, isolate mock-vs-app with a minimal probe before touching product code
+
+## Session 2026-10-15 (T-161/T-162/T-163 boot, verify, retry)
+
+### Changes
+- User reports: (1) post-download reload sits on a blind splash for seconds; (2) auto-sync must never damage data mid-sync; (3) when does auto-sync run after a save?
+- T-161: `BootProgress` threading (`initDatabase` → `init`) with staged splash bar + labels; boot cloud check skipped when persisted meta is fresh (<60s) — covers reload-right-after-sync
+- T-162: upload write-verify (sidecar read-back, exactly one re-upload on tear) — torn pairs get completed or reported, never silently persisted
+- T-163 (`1ca31e7`): deferred retry — a cooldown-skipped flush schedules one one-shot retry at window expiry via re-flush; pure `cloudRetryDelayMs` helper 4/4 tests
+- Gates: typecheck PASS, scoped lint clean, 44/44 db tests, build PASS
+
+### Status
+- Committed, unpushed. Next: push + reply (incl. whole-DB-vs-delta explainer).
+
+## Session 2026-10-16 (T-164..T-166 progress UX)
+
+### Changes
+- User reports: (1) wizard button stuck on Opening Google; (2) splash bar never completes before app loads; (3) bars should feel alive (water flow)
+- T-164: busy button copy advances google→syncing in both sign-in flows, agreeing with the staged bar
+- T-165 (`1beaffb` part): root cause of frozen bar — observer disconnected after first paint so later percents never applied; visibility ref keeps every update flowing (0.6s glide already in CSS)
+- T-166: diagonal stripe flow over the gradient + leading shimmer kept + `prefers-reduced-motion` guard; GPU-cheap background-position only
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed, unpushed. Next: push + reply.
+
+## Session 2026-10-16 (T-167 completion beat)
+
+### Changes
+- User report: Sync-now bar stuck at 75% then vanished. Root cause: stages topped out at 75% with no 100% state — unmount on finish looked like a cut
+- T-167 (`ee9c90c`): `done` stage (100%, Synced ✓) held 1.2s on success in both sign-in and Sync-now via shared `StageBar`; failures keep clear-to-error behavior
+- Gates: typecheck PASS, scoped lint clean
+
+## Session 2026-10-16 (T-168 splash visibility)
+
+### Changes
+- User report: splash bar never shows after sign-in. Probed it live: the bar always rendered — but local boots finish in ~200ms ("Finalizing…" already at 100ms), flashing past perception
+- T-168 (`1b837b3`): narration appears only while boot exceeds 600ms — fast boots stay clean, slow boots (8x-throttle probe: bar + stage text verified) narrate every stage. Typing/fade/watchdog untouched
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed, unpushed. Next: push + reply (pull + rebuild reminder for stale-dist suspicion).
+
+## Session 2026-10-16 (merge sync work into dev)
+
+### Changes
+- User-approved: merged `google_signin_backup → dev` no-ff (`009a38e`, Phases 19–20 T-145..T-168). One conflict (`session_log.md` tail, both sides appended) resolved keeping both histories
+- Gates on merge result: typecheck PASS, full lint `--max-warnings 0` PASS, unit 92/92, build PASS; pushed `dev`
+- Merged `dev → google_signin_backup` (fast-forward) and pushed — both branches even; `master` untouched at v1.16.1
+
+### Status
+- `dev` now carries the sync workstream. Next: user call (further polish or release flow with version bump + tag).
+
+## Session 2026-10-16 (setup wizard + settings refresh S-1, on feature/setup-settings-refresh)
+
+### Changes
+- User request: setup wizard + Settings layout improvement — organized/stacked first-run, categorized card-based Settings, all collapsed by default. Confirmed: 3-step stacked wizard + unify Page+Modal. Branch `feature/setup-settings-refresh` off dev, pushed with -u
+- S-1 (no visual change): NEW `components/settings/sections/` kit — `useBackupState` hook (snapshots/health/folder/restore/import logic unified), `MoneyRegionFields`, `LimitsFields`, `RestorePoints`, `FolderBackup`, `EngineHealth`, `ImportExportRow`, `AboutApp` (owns install-prompt + whats-new state), `cx` CSS-module passthrough (keeps Modal vs Page visuals pixel-identical), barrel `index.ts`
+- `SettingsModal.tsx` 463→~160 LOC rewired to kit (same titles/subtitles/badges/defaultOpen); `SettingsPage.tsx` General/Backup/About bodies rewired (Dashboard/Activity/Diagnostics untouched for S-2)
+- Noted: header gear navigates to /settings — `settings` modal registry entry has no open() callers (unreachable UI, still compiles); S-3 call pending
+- Gates: typecheck PASS, eslint --max-warnings 0 PASS (touched), build PASS, Playwright live :3000 General/Backup/About tabs verified identical, detect_changes touched exactly the 2 hosts (backup/restore flows, as intended); stale GitNexus index (231 behind) noted, manual blast radius LOW
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- S-1 complete on branch, unpushed. Next: S-2 5-card collapsed IA on SettingsPage.
+
+## Session 2026-10-16 (setup wizard + settings refresh S-2, on feature/setup-settings-refresh)
+
+### Changes
+- S-2: SettingsPage 5 tabs → 5 collapsed cards in a centered 760px stack (Preferences / Appearance / Dashboard / Backup & Storage / About), all `defaultOpen={false}` with live badges (currency, theme·accent, n-of-6 on, snapshot count, version)
+- NEW cards: `PreferencesCard` (draft + inline Save, `saveMode` prop for S-3 modal reuse), `AppearanceCard`, `DashboardCard` (7 instant switches from store), `BackupCard` (restore + folder + Drive sync + engine + import/export + import overlay moved in), `AboutCard` (AboutApp + activity + diagnostics + log actions moved in)
+- SettingsPage.tsx → ~60 LOC composition; dead tab CSS removed (.layout/.subNav/.navItem/.content/.card/.cardHead/.separator + mobile block); `?tab=backup&open=google-drive-sync` deep link preserved via remount key + scroll-into-view
+- Gates: typecheck PASS, eslint --max-warnings 0 PASS, build PASS; Playwright live :3000 — 0 expanded by default, tap expands, deep link opens Backup + Drive section, screenshot confirms stacked cards
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- S-2 complete on branch, unpushed. Next: S-3 thin SettingsModal to wrapper.
+
+## Session 2026-10-16 (user feedback batch: 5 settings/wizard items, on feature/setup-settings-refresh)
+
+### Changes
+- User reported 5 items; investigated each live before touching code (per §3.10/§3.11); confirmed plan via question tool (modal picker, auto-skip Try-it, execute all)
+- (1) Primary member: dropdown DID save (attribution in useSubmit.ts:52, invisible effect) but native select mismatched app pickers → logged BUG-11, built NEW `MemberPicker` modal picker (own tokens CSS, reduced-motion guard) + "New transactions belong to this member." helper; verified pick→Save→persist→label; env reset to null after
+- (2) Locale: answered (Intl number/date formatting; bn-BD = Bengali digits) + added helper "Formats numbers & dates — bn-BD renders Bengali digits."
+- (3) Numpad Max Digits confirmed 100% dead (written, read nowhere) → removed everywhere (AppSettings, config consts, LimitsFields, PreferencesCard, e2e seeds). Dashboard limit verified WORKING live (limit=2 → 2 rows + Load more 323; restored 5 after) → added helper "Dashboard Recent Transactions only — ledgers show everything." (likely missed Save tap or ledger expectation)
+- (4) Drive "going behind" → logged BUG-10, root cause measured (closed nested tray 29px not 0: `.trayOpen .trayInner` descendant selector leaked open padding into nested tray) → scoped to `>`; verified 29px→0px; marked fixed (CHANGELOG at merge)
+- (5) Wizard Try-it: agreed irrelevant after real data — found Try-it UNREACHABLE (member-save on Continue means step 3 always has data) → removed step 4 + handleLoadSample + dead keys/CSS, 5→4 dots, How-it-works always "Finish → Dashboard". NOTE: sample-data entry point is gone; say the word to put it on step 0
+- S-3 also done: SettingsModal 463→~70 LOC (5 shared cards, Done footer; +switch/log/import utilities in its CSS). Modal still has no open() callers (header gear routes to /settings) — noted, kept compiling
+- Gates: typecheck PASS, full `npm run lint` 0, build PASS, unit 92/92, scratch e2e 99-wizard-finish 2/2 green (deleted after) + 13-wizard 2/2, detect_changes vs dev MEDIUM (settings/wizard/docs scope, 1 intended process)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Full batch complete on branch. Next: push + user verifies live → confirm merge to `dev` (CHANGELOG Added/Fixed entries ride with merge).
+
+## Session 2026-10-16 (guest Google sign-in entry, on feature/setup-settings-refresh)
+
+### Changes
+- User report: skipped wizard → dashboard → Settings has no Google sign-in. Diagnosed two layers: (1) running :3000 predates `.env.local` key — served ID-less build ("not set up", no button) though the key exists on disk; (2) even configured, sign-in is buried (collapsed Backup card → nested disclosure) and guests see zero sync affordance (header button hid when signed out, wizard skipped)
+- User-confirmed: header button for guests. `useCloudIndicator.ts` now returns idle guest state (`never` dot + "Sign in to back up to Google Drive") when signed out AND build configured; null only when unconfigured (no dead button). No Header markup change — existing buttons + Backup deep link render as-is
+- Verification saga: scratch e2e failed first on reused ID-less :3000 (proving the env diagnosis); killed :3000 squatter (PID 6520), `CI=1` fresh server with dummy ID → scratch 98-guest-sync green (button visible → deep link → Drive section), spec deleted after
+- Gates: typecheck PASS, eslint clean
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, unpushed. Next: push; USER MUST RESTART `npm run dev` (picks up `.env.local` key) → header cloud button + Settings sign-in appear; then verify → confirm merge to `dev`.
+
+## Session 2026-10-16 (sign-out-erase for account switch, on feature/setup-settings-refresh)
+
+### Changes
+- User request: after Google sign-in, Backup & Storage should offer Sync Now + Sign out; sign-out clears local synced data so another account can sign in. (Sync Now already existed — user never saw it: still on ID-less :3000 build. Disconnect renamed to Sign out.)
+- User-confirmed: erase-device semantics + sync-first guard (Q2 unanswered → safe default: final sync, warned second-confirm on failure, never silent destroy)
+- `CloudSync.ts`: NEW `clearLastSyncMeta()` (memory + IDB fingerprint) so a wiped device never poses as previously-synced under T-152 rules
+- `CloudSyncSection.tsx`: `handleDisconnect` → `handleSignOut` — confirm → best-effort final `syncNow()` (failure → "Unsynced changes will be lost. Sign out anyway?" second confirm) → `googleAuth.signOut()` (revoke + auth IDB) → `resetStorage()` (DB + snapshots) → `clearLastSyncMeta()` → `setupComplete:false` → reload to wizard. Drive backup untouched. Note copy updated.
+- e2e `15-cloud-sync`: NEW sign-out test (mocked GIS/Drive: sign in → Sign out → setupComplete false → /setup Welcome → 0 members); fixed S-2 fallout (Backup heading → disclosure text). Debugging notes: closed trays stay in DOM (snapshot shows hidden content — not a bug); fresh boot holds 1–2 empty-DB snapshots (harmless ring, asserted around it); had to kill unknown :3000 squatter for CI fresh-ID server
+- Gates: typecheck PASS, scoped lint clean, e2e cloud-sync 4/4 green (incl. pre-existing 2)
+
+### Skill(s) Used
+- senior-backend (CloudSync meta), senior-frontend (section + e2e)
+
+### Status
+- Committed on branch, unpushed. Next: push → user restarts dev → verifies sign-in + sign-out flow → confirm merge to `dev` (CHANGELOG entries ride with merge).
+
+## Session 2026-10-16 (BUG-12 recovery fix after sign-out-erase, on feature/setup-settings-refresh)
+
+### Changes
+- User report: Database Error after my sign-out-erase; restore led to empty wizard. Diagnosed: (1) `resetStorage()` flushed the empty schema THROUGH the snapshot ring → slot 0 became an empty snapshot → later Restore Latest landed on empty DB (the wipe itself worked, e2e-green); (2) recovery screen offered only newest slot; (3) repeated :3000 kills caused hangs/slow loads on top
+- Fix: `suppressSnapshot` flag (checked synchronously, race-free with fire-and-forget flush) so reset flushes never enter the ring; NEW `restoreSnapshotExact()` on port + service (no fallback, per-slot errors); recovery screen lists all slots with times + exact restore buttons, truthful Start Fresh copy ("resets to empty"), watchdog message names stalled stage, "No older backups" empty state
+- Gates: typecheck PASS, scoped lint clean, unit 92/92, NEW e2e `16-recovery` green (forced wasm failure → error UI + actions, no crash), fresh-profile boot → 4-step wizard, 0 errors
+- BUG-12 stays OPEN until user confirms data back. Restarted their dev server detached (was down; mine has `.env.local` key via vite). Told user: expect wizard (wiped as requested) → sign in / re-setup; older slots only predate the wipe
+
+### Skill(s) Used
+- senior-backend (service/port), senior-frontend (recovery UI + e2e)
+
+### Status
+- Committed on branch, unpushed. Next: push → user reloads normal Chrome → reports → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-12 storage-hang timeout, on feature/setup-settings-refresh)
+
+### Changes
+- User exhausted all 4 profile steps (single tab, hard refresh, SW unregistered, extensions off); other browsers + incognito fine → last suspect is origin storage APIs hanging with no error (the only boot path without any timeout)
+- Fix: 12s `withStorageTimeout` (exported for reuse) around adapter init + main read + snapshot recovery + recovery slot-list load; hung origin now fails fast with "site data may be damaged / use Start Fresh" into the engine-free wipe path instead of the 15s watchdog dead loop
+- Gates: typecheck PASS, scoped lint clean, unit 92/92 (11 files), `16-recovery` + `13-wizard` e2e green
+
+### Skill(s) Used
+- senior-backend
+
+### Status
+- Committed on branch, unpushed. Next: push → user hard-reloads normal Chrome (picks up fix) → Start Fresh if recovery shows → sign in → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-12 dead-end loop fix, on feature/setup-settings-refresh)
+
+### Changes
+- User pasted the new recovery screen: stall at `Starting…` = sql.js engine file never loaded (dead/restarting server — only :3000 listener is my detached server, no port conflict), and Start Fresh silently no-ops without engine/storage/SQL → reload loop. Both confirmed by reading init vs handler preconditions
+- Fix: NEW `wipePersistedStorage()` in storage/index (OPFS main+snapshots dir, LS main+ring+flag, cloud-sync IDB; auth/settings kept so signed-in boot re-pulls Drive) wired to Start Fresh + `setupComplete:false` + reload — works with zero engine; engine download via blob URL with 10s timeout and actionable error ("is the dev server running?") instead of 15s mystery hang
+- Gates: typecheck PASS, scoped lint clean, unit 92/92, `16-recovery` e2e still green, clean-profile boot → wizard 0 errors (exercises new wasm path)
+- BUG-12 updated (stays open until user confirms). Server: single :3000 (mine, detached, has key) — user must use it, not start a second one
+
+### Skill(s) Used
+- senior-backend (storage/service), senior-frontend (recovery handler)
+
+### Status
+- Committed on branch, unpushed. Next: push → user reloads normal Chrome → reports → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-12 dead-button fix, on feature/setup-settings-refresh)
+
+### Changes
+- User: device empty, expects wizard, recovery buttons appear dead. Cause: recovery actions had no busy feedback and hung silently on poisoned storage (wipe awaited hung stores forever; restore loop uncapped) — clicks looked dead
+- Fix: per-store 8s timeouts in `wipePersistedStorage` returning a `WipeReport`; all restore paths capped via `withStorageTimeout`; Restoring…/Wiping… busy states with mutual disabling; wipe failure renders manual-clear guidance (F12 → Application → Storage → Clear site data → reload)
+- Gates: typecheck PASS, scoped lint clean, unit green, `16-recovery` e2e green, build PASS
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, unpushed. Next: push → user hard-reloads (Ctrl+Shift+R) normal Chrome → Start Fresh → wizard → sign in → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-12 resolved by reboot, on feature/setup-settings-refresh)
+
+### Changes
+- User confirmed: hosted stable ALSO fails in the same single Chrome profile (works in other profiles) → exonerated dev server, all recent code, and origin site data (different origin + released code). Suspects narrowed to profile-global (extensions/proxy/SecureDNS/GPU/WASM)
+- User rebooted the computer: hosted + dev apps both load normally → BUG-12 closed as OS/machine-level (stale loopback sockets / zombie vite+Chrome processes from repeated :3000 kills / hung profile network service). No data lost. Lesson logged: after 2–3 kill/restart cycles, reboot before blaming the app
+- Cleaned BUG-12 duplicate Status/Resolved fields from the triage appends (single fields per template)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, pushed. Next: user verifies data + sign-in live → confirm merge to `dev` (CHANGELOG Added/Fixed ride with merge, no version bump per VERSIONING).
+
+## Session 2026-10-16 (BUG-13 splash progress, on feature/setup-settings-refresh)
+
+### Changes
+- User report: splash bar shows "Starting…" then nothing until app loads. Logged BUG-13 first. Root cause: render gate `{!ready && showProgress}` unmounted the bar the instant boot completed — while splash lingers ~800ms for typing + fade — so staged progress and the final 100% never painted (ProgressBar itself was fine per T-165)
+- Fix: gate on `showProgress` alone with `ready ? 100/'Ready' : live values` — fast boots (<600ms) unchanged, slow boots stage then show Ready through fade
+- Gates: typecheck PASS, scoped lint clean, NEW e2e `17-splash` green (delayed engine → stages → Ready → app)
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, unpushed. Next: push → user verifies → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-14 morning re-auth auto-close, on feature/setup-settings-refresh)
+
+### Changes
+- User report: signed in at night, morning Sync-now popup opens then auto-closes. Logged BUG-14 first. Diagnosis: hourly access tokens (GIS implicit flow, no refresh tokens) + dead overnight Google session → silent `none` renewal null → explicit fallback opened popup with `prompt:''`, which fails closed instead of offering the chooser
+- Fix: `signIn` + `refreshInteractive` request `prompt:'select_account'`; silent path untouched. Unit prompt assertions added/updated
+- Gates: typecheck PASS, scoped lint clean, unit 92/92
+
+### Skill(s) Used
+- senior-backend
+
+### Status
+- Committed on branch, unpushed. Next: push → user reloads dev (picks up fix), taps Sync now → chooser appears → confirm merge to `dev`.
+
+## Session 2026-10-16 (BUG-15 popup spam + stuck sync bar, on feature/setup-settings-refresh)
+
+### Changes
+- User report: Sync-now progress never finishes + console shows 6× `GSI_LOGGER: Failed to open popup … prompt=none … blocked?`. Logged BUG-15 first. Diagnosis: GIS opens a REAL popup even for silent `prompt:'none'` — background retries (boot/flush/polls) outside gestures get blocker-killed, spamming doomed popups after the hourly token dies; Drive fetches had zero timeouts so a hanging network stuck the bar at 75% forever
+- Fix: per-session silent-renewal backoff (`silentRenewalDead`, cleared by explicit sign-in/refresh/sign-out — explicit taps always attempt); 30s `fetchWithTimeout` (abort + race guarantee) on all 6 Drive calls + profile fetch
+- Gates: typecheck PASS, scoped lint clean, unit 94/94 (backoff + timeout tests), e2e cloud-sync 4/4 green
+
+### Skill(s) Used
+- senior-backend
+
+### Status
+- Committed on branch, unpushed. Next: push → user verifies Sync now completes-or-errors-cleanly → confirm merge to `dev`.
+
+## Session 2026-10-16 (console hygiene meta fix, on feature/setup-settings-refresh)
+
+### Changes
+- User: cleared local storage, sync works; asked about console lines. All benign dev-mode noise: React DevTools hint, install-banner suppression (intentional, own Install UI), router v7 future-flag warnings (dev-only, production-silent), and attached effect stacks (not errors). Notably: zero GSI popup errors now
+- Fix: added standard `mobile-web-app-capable` alongside the Apple tag (silences Chrome deprecation, iOS still needs theirs)
+- Gates: build PASS
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on branch, unpushed. Next: push → confirm merge to `dev`.
+
+## Session 2026-10-16 (merge setup-settings-refresh → dev)
+
+### Changes
+- User-approved merge: `feature/setup-settings-refresh` (30 commits: S-1 sections kit, S-2 five cards, S-3 modal thinning, BUG-10/11/13/14/15 fixes, numpad removal, MemberPicker, wizard Try-it removal, guest sync entry, sign-out-erase, recovery slot picker + timeouts + busy states, splash Ready, PWA meta) + CHANGELOG `[Unreleased]` Added/Fixed entries → `dev` via `--no-ff` `a6b21a3`; pushed `dev` (`009a38e..a6b21a3`); branch kept
+- Gates: pre-merge typecheck + full lint 0 + build + unit 94/94 green on branch tip; post-merge typecheck PASS on result; no version bump (feature→dev per VERSIONING)
+- detect_changes scope (earlier): settings/wizard/sync/recovery/docs only, as intended
+
+### Skill(s) Used
+- senior-backend, senior-frontend, gitnexus
+
+### Status
+- Live on `dev`. Next: user call (release bump per VERSIONING at release time; `master` untouched; Other Ledgers V2 on "next update").
+
+## Session 2026-10-17 (T-169 informed conflict dialog)
+
+### Changes
+- User spec: compare cloud-vs-local in the popup (amounts shown) + buttons Keep this device / Download cloud data. Built on `dev` (carries all sync work)
+- `cloudDiff.ts`: pure `summarizeRows` (counts, latest-3 signed amounts, last-change) + thin `extractSide` (7 capped queries); 3/3 unit tests with stubs
+- Service: 4 conflict sites funneled through `_flagConflict` (stash + hold bytes + flag); `getConflictPreview()` opens both snapshots in-memory (plain-dialog fallback); preview cleared on resolve; port shapes live in `IDatabaseService`
+- Modal: This-device vs Cloud cards (counts + latest + timestamps) + new button copy; token-only CSS module
+- Drive-by: `dev` typecheck was red before my change (pre-existing, loan-lender-breakdown era) — fixed `LoanService` unknown→Database cast + widened test mock for the new port method
+- Gates: typecheck PASS, scoped lint clean, unit 97/97, build PASS
+- E2E note: live-dialog e2e skipped (no fast trigger seam — 30s poll; manual live test stands in)
+
+### Status
+- Committed `141eef6` on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-170 update preview)
+
+### Changes
+- User report: Refresh prompt said something arrived but not what. Same informed-treatment as T-169 for the pull path
+- T-170 (`8434dd3`): `getUpdatePreview()` (verified download only — no import/state change) + Cloud-first `SideCard` pair in the Refresh prompt; Later/Refresh unchanged; plain-text fallback
+- Gates: typecheck PASS, scoped lint clean, unit 97/97, build PASS
+- E2E note: same 30s-poll seam as T-169 — live two-device test stands in
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-171 phantom sync fix)
+
+### Changes
+- User report confirmed in code: `recalculateBalances()` ran every boot doing blanket `UPDATE accounts SET balance=0, updated_at=now()` + flush — hash changed with zero user edits → phantom uploads/downloads/conflicts
+- T-171 (`f62cba8`): pure `computeBalances` + `diffBalances` (mirrors `applyBalanceChange` exactly); service UPDATEs only stale rows and flushes only when changed; genuinely stale balances still self-correct
+- Gates: typecheck PASS, scoped lint clean, unit 104/104 (7 new), build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply (note: one final upload per device on first boot after fix, then quiet).
+
+## Session 2026-10-17 (T-172/T-173 header tap-to-sync + ring)
+
+### Changes
+- User requests: (1) header sync button syncs immediately, no Settings trip; (2) circular animation on any sync, full round = done
+- T-172 (`9587937` part): tap runs immediate `syncNow()` with re-entrancy guard (guests keep deep link); service emits `moneyflows:sync-start/end` only around real network activity (idle/cooldown skips silent)
+- T-173: `SyncGlyph` states — cloud+dot idle, spinning ring during any sync incl. background auto-syncs, full-ring check flash 1.2s on clean end; dot refreshes on sync-end; both desktop+mobile instances; reduced-motion guard
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-174 tick badge + outer ring)
+
+### Changes
+- User refinements: (1) persistent tick when nothing left to sync; (2) tap-when-idle answers with the tick; (3) ring orbits OUTSIDE the cloud, not inside
+- T-174 (`a88994c`): synced idle = cloud + centered green tick badge (replaces corner dot); tap flashes completion even with zero network; spinner = centered cloud + rotating outer arc (r=10, transform-box fill-box); reduced-motion guard kept
+- Gates: typecheck PASS, scoped lint clean, build PASS
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-17 (T-175 spinner orbit fix)
+
+### Changes
+- User report: animation read as inner clutter, not an outer circle. Cause: r=10 ring overlapped the full-size cloud edges
+- T-175 (`a14a823`): cloud shrinks to 62% centered, arc rides r=10.5 fully outside; verified with screenshots 450ms apart showing the arc at different orbit positions (frame hashes differ)
+- Gates: typecheck PASS, scoped lint clean, build PASS (probe spec deleted after use)
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.
+
+## Session 2026-10-16 (app logo sizing)
+
+### Changes
+- User supplied `Logo_mockups/MoneyFlows Fintech Logo Showcase.png` (1254x1254 composite) + approved crop-hero-icon approach
+- Cropped top hero glass tile (413,63,430x430) and middle lockup band (200,530,850x215); resized via System.Drawing HighQualityBicubic
+- `public/`: `icon-512.png` + `icon-192.png` overwritten in place (padded 84% artwork, maskable-safe), new `apple-touch-icon.png` (180), `favicon-32x32.png` + `favicon-16x16.png` (tight crop), `logo-horizontal.png` (850x215, unwired asset for header/splash later)
+- `index.html`: favicon now PNG 32/16 (svg kept as fallback), apple-touch-icon points to new 180px PNG; `manifest.json` unchanged (paths still valid)
+- Gates: build PASS, new PNGs verified in `dist/`
+
+### Status
+- Uncommitted on current branch. Next: commit + continue per user call.
+
+## Session 2026-10-17 (T-176 legal pages)
+
+### Changes
+- User request for Google verification: in-app Privacy + Terms (T-176, `1a5b1bb` on `dev`)
+- Shared `LegalDoc` screen (glass panel, token-only CSS, ≤300 LOC) at guard-exempt `/privacy` + `/terms` (reviewers land without setup); About links; honest copy matching real behavior (local-first, drive.appdata-only, no analytics)
+- `SUPPORT_EMAIL` placeholder left for user to replace before submitting verification
+- Gates: typecheck PASS, scoped lint clean, build PASS, e2e 18 green
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply.

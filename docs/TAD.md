@@ -64,6 +64,8 @@ Single SQLite database via `sql.js` in-browser.
 
 Integrity digest: SHA-256 via `crypto.subtle`; on insecure origins a deterministic FNV fingerprint (`f:` prefix) keeps corruption detection working (non-cryptographic by design — plain http is outside the threat model).
 
+**Cloud sync sink (Phase 19, opt-in):** after a successful local `flush()`, `_maybeCloudSync` fire-and-forgets an upsert of `moneyflows.db` + `.sha256` sidecar to the user's Drive `appDataFolder` (own cooldown; hidden-tab bypasses it). Direction is decided by pure `decideSyncAction` over (localHash, remoteHash, lastSyncHash): clean+stale pulls, changed+untouched uploads, both-moved stashes the remote into the snapshot ring + flags conflict (user choice, never auto-overwrite). Boot-pull follows the OPFS-migration rule (import only when local is empty or clean-but-stale) under an 8s timeout. See `docs/plans/ONLINE_SYNC_PLAN.md` §3 for the 4 merge-blocking guards.
+
 ### 2.3 Core tables
 
 ```sql

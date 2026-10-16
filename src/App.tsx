@@ -4,6 +4,7 @@ import { Agentation } from 'agentation';
 import { Users, SquareStack, HandCoins } from 'lucide-react';
 import { Sidebar, BottomNav, Header, PageTransition, RippleGlow, SearchBar } from './presentation/components';
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
+import { CloudUpdatePrompt } from './presentation/components/CloudUpdatePrompt';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
 import { useReplay } from './presentation/hooks/useReplay';
@@ -25,6 +26,7 @@ const OtherLedgersIndex = lazy(() => import('./otherLedgers/presentation/screens
 const OtherLedgerDetail = lazy(() => import('./otherLedgers/presentation/screens/OtherLedgerDetail').then(m => ({ default: m.OtherLedgerDetail })));
 const MemberReportScreen = lazy(() => import('./reports/presentation/screens/MemberReportScreen').then(m => ({ default: m.MemberReportScreen })));
 const SetupWizard = lazy(() => import('./presentation/screens/SetupWizard').then(m => ({ default: m.SetupWizard })));
+const LegalDoc = lazy(() => import('./presentation/screens/LegalDoc').then(m => ({ default: m.LegalDoc })));
 const SettingsPage = lazy(() => import('./presentation/screens/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 function Svg({ d, children }: { d?: string; children?: JSX.Element }) {
@@ -79,6 +81,23 @@ function AppLayout() {
   useEffect(() => { fetchLedgers(); }, [fetchLedgers]);
 
   const [groupNameMap, setGroupNameMap] = useState<Record<string, string>>({});
+  /** Signed-in Google profile for the sidebar footer (T-158); null = guest. */
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [profileEmail, setProfileEmail] = useState<string | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  useEffect(() => {
+    const refreshProfile = () => {
+      getDatabase().getCloudStatus().then((s) => {
+        setProfileName(s.signedIn ? s.profileName : null);
+        setProfileEmail(s.signedIn ? s.email : null);
+        setProfilePhoto(s.signedIn ? s.profilePhoto : null);
+      }).catch(() => {});
+    };
+    refreshProfile();
+    // Instant sidebar update after Settings sign-in/disconnect (no route change).
+    window.addEventListener('moneyflows:cloud-status', refreshProfile);
+    return () => window.removeEventListener('moneyflows:cloud-status', refreshProfile);
+  }, [pathname]);
   useEffect(() => {
     getDatabase().getAccountGroupsWithMembers().then((groups) => {
       const map: Record<string, string> = {};
@@ -133,7 +152,13 @@ function AppLayout() {
   return (
     <div className={styles.layout}>
       <RippleGlow />
-      <Sidebar className={styles.sidebar} items={sidebarItems} footerLabel="Family" footerRole={`${members.length} members`} />
+      <Sidebar
+        className={styles.sidebar}
+        items={sidebarItems}
+        footerLabel={profileName ?? profileEmail ?? 'Family'}
+        footerRole={profileName ? (profileEmail ?? '') : `${members.length} members`}
+        footerPhoto={profilePhoto}
+      />
       <div className={`${styles.main} ${sidebarWide ? styles.mainWide : ''}`} id="app-main">
         <Header title={title} breadcrumb={breadcrumb} className="app-header" searchActive={searchOpen} onSearchToggle={toggleSearch} />
         {searchOpen && (
@@ -154,6 +179,7 @@ function AppLayout() {
       </div>
       <BottomNav items={bottomNavItems} />
       <ModalRenderer />
+      <CloudUpdatePrompt />
     </div>
   );
 }
@@ -183,6 +209,8 @@ export function App() {
       <Suspense fallback={<div className="skeleton skeleton-wizard" />}>
         <Routes>
           <Route path="/setup" element={<SetupWizard />} />
+          <Route path="/privacy" element={<LegalDoc kind="privacy" />} />
+          <Route path="/terms" element={<LegalDoc kind="terms" />} />
           <Route element={<SetupGuard><AppLayout /></SetupGuard>}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/member" element={<MemberList />} />

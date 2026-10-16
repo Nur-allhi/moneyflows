@@ -21,6 +21,18 @@ Single-device, offline-first, client-only app holding real family financial data
 
 **None by design.** Single-admin local app; device unlock = access. No passwords/tokens/sessions/secrets exist. Do not add any without a PRD change. Cloud sync, if approved, mandates auth + RLS → this doc gets v4.
 
+**Phase 19 update (Drive sync, on branch):** Google OAuth added solely as the sync
+identity — minimal scopes (`drive.appdata` + `openid email` + `profile`, the last
+only for the sidebar avatar/name; no Gmail/Contacts).
+Access token persists in same-origin IndexedDB alongside email/expiry (memory-first
+read; cleared on sign-out, never in localStorage, never logged) so sessions survive
+reloads. Renewal is silent (`prompt:'none'`, no UI) while the Google session lives —
+active users stay signed in for days; only explicit taps (Sign-in, Sync-now on a dead
+session) may show the Google popup. Background sync paths never trigger UI. `signOut()`
+revokes + clears; dead sessions surface via the storage-health row, never silently. The OAuth
+Client ID is a public identifier and ships in the frontend. RLS still applies if
+a multi-user backend (Path 2) is ever approved.
+
 ## 3. Data Guardrails
 
 1. **Soft delete everywhere** (`deleted_at`). Hard delete only via Recycle Bin purge or `purgeExpiredItems(30)`.

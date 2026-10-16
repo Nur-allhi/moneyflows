@@ -7,8 +7,11 @@ import type { AccountType } from '../../core/domain/Account';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
+import { googleAuth } from '../../infrastructure/database/GoogleAuth';
+import { GOOGLE_CLIENT_ID, isGoogleSyncConfigured } from '../constants/googleClient';
 import { useReplay } from '../hooks/useReplay';
 import { useSettingsStore } from '../stores/useSettingsStore';
+import { ProgressBar } from '../components/ProgressBar';
 import { ACCOUNT_TYPE_LABEL, ACCOUNT_TYPE_OPTIONS } from '../constants/labels';
 import { ledgerGradient } from '../constants/gradients';
 import styles from './SetupWizard.module.css';
@@ -25,6 +28,18 @@ export function SetupWizard() {
   const [accountDraft, setAccountDraft] = useState<{ memberIdx: number; name: string; type: AccountType; balance: string }>({ memberIdx: 0, name: '', type: 'bank', balance: '0' });
   const [accountsAdded, setAccountsAdded] = useState<{ name: string; type: AccountType; memberName: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  /** Staged sign-in progress (T-154) so slow networks never look dead. */
+  const [authStage, setAuthStage] = useState<'google' | 'syncing' | null>(null);
+  /** Modal pickers for the money step (T-155, DESIGN_IDENTITY §9). */
+  const [showTypePicker, setShowTypePicker] = useState(false);
+  const [showMemberPicker, setShowMemberPicker] = useState(false);
+  const [typeKey, replayType] = useReplay();
+  const [memberKey, replayMember] = useReplay();
+  const [pickKey, replayPick] = useReplay();
+  const [signInKey, replaySignIn] = useReplay();
+  const [guestKey, replayGuest] = useReplay();
   const [skipKey, replaySkip] = useReplay();
   const [startKey, replayStart] = useReplay();
   const [addMemberKey, replayAddMember] = useReplay();
@@ -35,10 +50,6 @@ export function SetupWizard() {
   const [cont2Key, replayCont2] = useReplay();
   const [back3Key, replayBack3] = useReplay();
   const [nextKey, replayNext] = useReplay();
-  const [emptyKey, replayEmpty] = useReplay();
-  const [sampleKey, replaySample] = useReplay();
-  const [back4Key, replayBack4] = useReplay();
-
   const finish = (goDashboard = true) => {
     updateSettings({ setupComplete: true });
     if (goDashboard) navigate('/', { replace: true });
@@ -46,6 +57,33 @@ export function SetupWizard() {
 
   const handleAddMemberRow = () => setMemberNames((prev) => [...prev, '']);
   const handleMemberChange = (idx: number, v: string) => setMemberNames((prev) => prev.map((n, i) => (i === idx ? v : n)));
+
+  /**
+   * Entry gate (T-153): sign in → shared reconcile. A downloaded cloud backup
+   * skips the wizard (data already present); anything else continues normally.
+   */
+  const handleSignIn = async () => {
+    setAuthBusy(true);
+    setAuthError(null);
+    setAuthStage('google');
+    try {
+      await googleAuth.signIn(GOOGLE_CLIENT_ID);
+      setAuthStage('syncing');
+      const result = await getDatabase().reconcileAfterSignIn();
+      if (result === 'downloaded') {
+        await fetchMembers();
+        await fetchAccounts();
+        finish();
+        return;
+      }
+      setStep(1);
+    } catch {
+      setAuthError('Sign-in failed — check your connection, or continue as guest.');
+    } finally {
+      setAuthBusy(false);
+      setAuthStage(null);
+    }
+  };
 
   const handleContinueMembers = async () => {
     setError(null);
@@ -80,22 +118,7 @@ export function SetupWizard() {
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
 
-  const handleLoadSample = async () => {
-    const db = getDatabase();
-    const m1 = new Member(uuidv4(), 'You', 'You');
-    const m2 = new Member(uuidv4(), 'Family', 'Fam');
-    await db.saveMember(m1);
-    await db.saveMember(m2);
-    const a1 = new Account(uuidv4(), m1.id, 'bKash', 'mobile_wallet', 5000);
-    const a2 = new Account(uuidv4(), m1.id, 'Cash', 'cash', 2000);
-    await db.saveAccount(a1);
-    await db.saveAccount(a2);
-    await fetchMembers();
-    await fetchAccounts();
-    finish();
-  };
-
-  const total = 5;
+  const total = 4;
   const progress = ((step + 1) / total) * 100;
 
   return (
@@ -122,7 +145,22 @@ export function SetupWizard() {
                 <span className={styles.illusCard}>📒 Ledger</span>
                 <span className={styles.illusCard}>🔒 Safe</span>
               </div>
-              <button className={`${styles.primary} ${startKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayStart(); setStep(1); }}><span className="anim-target" key={startKey}>Get Started</span></button>
+              {isGoogleSyncConfigured() ? (
+                <>
+                  <button className={`${styles.primary} ${signInKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySignIn(); void handleSignIn(); }} disabled={authBusy}><span className="anim-target" key={signInKey}>{authBusy ? (authStage === 'syncing' ? 'Completing sign-in…' : 'Opening Google…') : 'Sign in with Google'}</span></button>
+                  <button className={`${styles.ghost} ${guestKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayGuest(); setStep(1); }} disabled={authBusy}><span className="anim-target" key={guestKey}>Continue as guest</span></button>
+                  {authBusy && authStage && (
+                    <ProgressBar
+                      percent={authStage === 'google' ? 35 : 75}
+                      label={authStage === 'google' ? 'Opening Google…' : 'Syncing your data…'}
+                      sublabel="Stay on this screen — finishing up."
+                    />
+                  )}
+                  {authError && <div className={styles.error}>{authError}</div>}
+                </>
+              ) : (
+                <button className={`${styles.primary} ${startKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayStart(); setStep(1); }}><span className="anim-target" key={startKey}>Get Started</span></button>
+              )}
             </div>
           )}
 
@@ -152,13 +190,14 @@ export function SetupWizard() {
               <h2 className={styles.h2}>Where’s your money?</h2>
               <p className={styles.sub}>Add where your money lives. This is your starting point — every future move will be a transaction.</p>
               <div className={styles.grid2}>
-                <select className={styles.input} value={accountDraft.type} onChange={(e) => setAccountDraft((p) => ({ ...p, type: e.target.value as AccountType }))}>
-                  {ACCOUNT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  {ACCOUNT_TYPES.map((t) => !ACCOUNT_TYPE_OPTIONS.find((o) => o.value === t) ? <option key={t} value={t}>{ACCOUNT_TYPE_LABEL[t]}</option> : null)}
-                </select>
-                <select className={styles.input} value={accountDraft.memberIdx} onChange={(e) => setAccountDraft((p) => ({ ...p, memberIdx: Number(e.target.value) }))}>
-                  {memberNames.map((n, i) => n.trim() && <option key={i} value={i}>{n.trim()}</option>)}
-                </select>
+                <button type="button" className={`${styles.pickerTrigger} ${typeKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayType(); setShowTypePicker(true); }}>
+                  <span className={styles.pickerValue} key={typeKey}>{ACCOUNT_TYPE_LABEL[accountDraft.type] ?? accountDraft.type}</span>
+                  <span className={styles.pickerArrow}>▾</span>
+                </button>
+                <button type="button" className={`${styles.pickerTrigger} ${memberKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMember(); setShowMemberPicker(true); }}>
+                  <span className={styles.pickerValue} key={memberKey}>{memberNames[accountDraft.memberIdx]?.trim() || 'Select member'}</span>
+                  <span className={styles.pickerArrow}>▾</span>
+                </button>
               </div>
               <input className={styles.input} placeholder="Account name (e.g. bKash)" value={accountDraft.name} onChange={(e) => setAccountDraft((p) => ({ ...p, name: e.target.value }))} />
               <input className={styles.input} placeholder="Starting balance (optional)" inputMode="numeric" value={accountDraft.balance} onChange={(e) => setAccountDraft((p) => ({ ...p, balance: e.target.value.replace(/[^0-9]/g, '') }))} />
@@ -175,6 +214,48 @@ export function SetupWizard() {
                 <button className={`${styles.secondary} ${back2Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack2(); setStep(1); }}><span className="anim-target" key={back2Key}>Back</span></button>
                 <button className={`${styles.primary} ${cont2Key > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCont2(); setStep(3); }}><span className="anim-target" key={cont2Key}>Continue → See how it works</span></button>
               </div>
+              {showTypePicker && (
+                <div className={styles.pickerOverlay} onClick={() => setShowTypePicker(false)}>
+                  <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.pickerHeader}>
+                      <span className={styles.pickerTitle}>Account type</span>
+                      <button className={styles.pickerClose} onClick={() => setShowTypePicker(false)} aria-label="Close">✕</button>
+                    </div>
+                    <div className={styles.pickerList}>
+                      {ACCOUNT_TYPE_OPTIONS.map((o) => (
+                        <button key={o.value} className={`${styles.pickerItem} ${accountDraft.type === o.value ? styles.pickerItemActive : ''}`} onClick={() => { replayPick(); setAccountDraft((p) => ({ ...p, type: o.value as AccountType })); setShowTypePicker(false); }}>
+                          <span className={styles.pickerItemName} key={`${o.value}-${pickKey}`}>{o.label}</span>
+                        </button>
+                      ))}
+                      {ACCOUNT_TYPES.filter((t) => !ACCOUNT_TYPE_OPTIONS.find((o) => o.value === t)).map((t) => (
+                        <button key={t} className={`${styles.pickerItem} ${accountDraft.type === t ? styles.pickerItemActive : ''}`} onClick={() => { replayPick(); setAccountDraft((p) => ({ ...p, type: t })); setShowTypePicker(false); }}>
+                          <span className={styles.pickerItemName} key={`${t}-${pickKey}`}>{ACCOUNT_TYPE_LABEL[t]}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {showMemberPicker && (
+                <div className={styles.pickerOverlay} onClick={() => setShowMemberPicker(false)}>
+                  <div className={styles.pickerModal} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.pickerHeader}>
+                      <span className={styles.pickerTitle}>Owner</span>
+                      <button className={styles.pickerClose} onClick={() => setShowMemberPicker(false)} aria-label="Close">✕</button>
+                    </div>
+                    <div className={styles.pickerList}>
+                      {memberNames.map((n, i) => n.trim() && (
+                        <button key={i} className={`${styles.pickerItem} ${accountDraft.memberIdx === i ? styles.pickerItemActive : ''}`} onClick={() => { replayPick(); setAccountDraft((p) => ({ ...p, memberIdx: i })); setShowMemberPicker(false); }}>
+                          <span className={styles.pickerItemName} key={`${i}-${pickKey}`}>{n.trim()}</span>
+                        </button>
+                      ))}
+                      {!memberNames.some((n) => n.trim()) && (
+                        <div className={styles.pickerEmpty}>No members yet — add one on the previous step</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -193,21 +274,7 @@ export function SetupWizard() {
               <p className={styles.sub}>Tap any row to edit. Use search and filters on every ledger.</p>
               <div className={styles.actions}>
                 <button className={`${styles.secondary} ${back3Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack3(); setStep(2); }}><span className="anim-target" key={back3Key}>Back</span></button>
-                <button className={`${styles.primary} ${nextKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNext(); setStep(4); }}><span className="anim-target" key={nextKey}>Next</span></button>
-              </div>
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className={styles.step}>
-              <h2 className={styles.h2}>Try it</h2>
-              <p className={styles.sub}>Start empty or load a sample family to explore instantly. Sample data can be deleted from Recycle Bin anytime.</p>
-              <div className={styles.choices}>
-                <button className={`${styles.choice} ${emptyKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEmpty(); finish(); }}><span className="anim-target" key={emptyKey}><span className={styles.choiceTitle}>Start empty</span><span className={styles.choiceSub}>Recommended — your real data</span></span></button>
-                <button className={`${styles.choicePrimary} ${sampleKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySample(); void handleLoadSample(); }}><span className="anim-target" key={sampleKey}><span className={styles.choiceTitle}>Load sample family</span><span className={styles.choiceSub}>4 members · 6 accounts · 12 transactions</span></span></button>
-              </div>
-              <div className={styles.actions}>
-                <button className={`${styles.secondary} ${back4Key > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack4(); setStep(3); }}><span className="anim-target" key={back4Key}>Back</span></button>
+                <button className={`${styles.primary} ${nextKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNext(); finish(); }}><span className="anim-target" key={nextKey}>Finish → Dashboard</span></button>
               </div>
             </div>
           )}
