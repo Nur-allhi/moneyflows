@@ -1819,3 +1819,12 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - `master` at v1.17.1 (tag live). Next: user confirms production deploy, then verification submit.
+
+## Session 2026-10-17 (PWA icon set commit)
+
+### Changes
+- Committed the pending icon work on `dev` (`d3a186a`): detailed M-mark 192/512, apple-touch-icon, favicons 16/32, logo-horizontal + index.html wiring (favicons, apple-touch PNG). Squares are OAuth-logo-ready. `Logo_mockups/` source sheet left untracked as-is
+- Gates: build PASS (icon/link-only change)
+
+### Status
+- Committed on `dev`, unpushed. Next: push + reply (OAuth logo upload itself stays a console action).
