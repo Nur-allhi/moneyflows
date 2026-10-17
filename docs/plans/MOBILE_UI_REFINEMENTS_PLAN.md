@@ -40,6 +40,7 @@
 - Observed: ledger delete trash icon buttons (~30px) — on index cards (corner) and detail (floating circle); memory aid: UNGuideline `touch-target-size`.
 - Target: `OtherLedgersIndex.tsx`, `OtherLedgerDetail.tsx` (+ CSS).
 - Acceptance: all icon-only interactive elements ≥44×44 hit area (padding can extend beyond visual size).
+- Note: detail circle fixed via `.iconBtnMobile` (44×44); index-card corner trash later found still 28×28 during post-review — visual bumped to 32px with an invisible `::before` overlay (`inset: -7px`) extending the hit area to 46×46. Verified via scratch Playwright check (deleted after run).
 
 ### M-07 · Validation constraints leak into visible copy — **done** (`feature/mobile-refinements`)
 - Observed: "Ledger Name (3–50)" field label, "Description (1–200)" placeholder, and "Opening Balance" label not styled like sibling uppercase labels (STARTING DATE / MEMBER).

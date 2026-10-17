@@ -2053,3 +2053,11 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - **All 9 mobile refinements tickets COMPLETE (M-01..M-09)** on `feature/mobile-refinements` (9 commits, tip `8e332a5`, clean tree).
 - NEXT: user confirmation required to merge into `dev` (per 3.8/3.12). Then consider Unreleased CHANGELOG entries + version bump per docs/VERSIONING.md at merge time.
+
+## Session 2026-10-17 (post-review patch)
+### Changes
+- Post-review catch during 'is everything fixed?' check: M-06's index-card half was NOT satisfied — .cardDelete was still 28x28 while only the detail circle had been fixed in 1badf7a. Fixed: visual 32px + invisible ::before inset -7px = 46x46 hit area (UNGuideline touch-target-size 'padding may extend beyond visual'). Scratch Playwright check passed and deleted; nothing was touched in parallel-session files.
+### Skill(s) Used
+- ui-ux-pro-max (touch-target pattern)
+### Status
+- M-06 now fully satisfied; all 9 tickets genuinely done. Commit pending on eature/mobile-refinements; merge to dev still awaits explicit user approval.
