@@ -215,19 +215,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
-## BUG-38: `npm test` can never pass — vitest collects the Playwright specs
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: BUG-20 verification — running the unit-test gate before pushing `dev`)
-- **Location:** `package.json:12` (`"test": "vitest run"`) — no `vitest.config.*` / `test.include` exists
-- **Description:** `npx vitest run` reports `Test Files 21 failed | 13 passed (34)` with `Tests 113 passed (113)`: every file under `e2e/` (all 21 `*.spec.ts`) is collected by vitest and dies with "Playwright Test did not expect test() to be called here", so the process exits 1. The 113 real unit tests all pass. Every other documented command (`playwright test`, typecheck, lint) is clean, and pre-existing on HEAD — the failing list is exactly the e2e inventory, none of which this session touched. Expected: the unit gate exits 0 by itself (e.g. exclude `e2e/**` in a vitest config), so "unit tests green" is a real signal instead of a known-red command.
-- **Root Cause:** default vitest `include` (`**/*.{test,spec}.?(c|m)[jt]s?(x)`) matches the Playwright spec directory; nothing tells vitest to skip it.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
----
-
 ## BUG-39: Stale `search.smoke.spec.ts` makes the Playwright suite permanently red
 
 - **Status:** open
@@ -251,6 +238,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** diagnosed 2026-10-17 — not a separate defect: the same two faces of BUG-19. Those accounts carried a balance no transaction backed (the pre-BUG-19 wizard wrote the raw number onto the account row). Boot's `recalculateBalances()` recomputes every account balance from the transaction stream and rewrites unbacked rows to the replayed sum (0). The Linked Accounts modal re-reads those rows, while the dashboard metric renders the in-store value through `useAnimatedValue` — inside that window the same accounts read 0 in the modal and 28,000 on the dashboard. Every other balance writer was checked and cannot produce an unbacked balance: `AddAccountModal` and the fixed wizard write an `isOpeningBalance` income transaction, `EditAccountModal` cannot change a balance, `LoanService` creates counterparty accounts at 0.
 - **Fix Approach:** user-confirmed (Option A — close as resolved-by-BUG-19, add a regression guard; no production code change warranted for a symptom that no longer exists) — re-verified live on the reported data set (City Bank + Cash Wallet): dashboard, members list, profile hero, mobile modal and desktop dropdown all read the same per-account values before and after a reload; NEW Playwright regression test pins dashboard ↔ Linked Accounts parity across a reload.
 - **Resolved:** 2026-10-17 — resolved by `eff4d6c` (BUG-19 wizard fix) + regression test on `dev`; verified live (mobile modal + desktop dropdown + dashboard, before and after reload).
+
+---
+
+## BUG-38: `npm test` can never pass — vitest collects the Playwright specs
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: BUG-20 verification — running the unit-test gate before pushing `dev`)
+- **Location:** `package.json:12` (`"test": "vitest run"`) — no `vitest.config.*` / `test.include` existed
+- **Description:** `npx vitest run` reported `Test Files 21 failed | 13 passed (34)` with `Tests 113 passed (113)`: every file under `e2e/` (all 21 `*.spec.ts`) was collected by vitest and died with "Playwright Test did not expect test() to be called here", so the process exited 1. The 113 real unit tests all passed. Expected: the unit gate exits 0 by itself, so "unit tests green" is a real signal instead of a known-red command.
+- **Root Cause:** default vitest `include` (`**/*.{test,spec}.?(c|m)[jt]s?(x)`) matches the Playwright spec directory; nothing told vitest to skip it.
+- **Fix Approach:** user-confirmed (fix the verification gate before starting the calculation-audit work) — vitest `test.include` pinned to `src/**/*.{test,spec}.{ts,tsx}` in `vite.config.ts`, with a `/// <reference types="vitest/config" />` so Vite's `defineConfig` accepts the `test` key. A single config file was chosen deliberately over a separate `vitest.config.ts`: vitest would use the latter *instead of* `vite.config.ts`, silently dropping the React plugin, the `__APP_VERSION__`/`__GOOGLE_CLIENT_ID__` defines and the `@` alias for any unit test that later needs them. An `include` (allow-list) was preferred over `exclude: ['e2e/**']` so any future stray spec outside `src/` is skipped by default rather than silently collected.
+- **Resolved:** 2026-10-17 — on `fix/calculation-audit`; `npm test` now reports `Test Files 13 passed (13)`, `Tests 113 passed (113)`, exit 0. typecheck PASS, lint 0 PASS, build PASS. `detect_changes` risk low (0 changed symbols — config-only).
 
 ---
 

@@ -2009,3 +2009,20 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Branch `fix/calculation-audit` ready, pushed, in sync. Next: user picks the first finding and confirms its approach, plus the two standing decisions — overpayment rule (BUG-23) and whether to detect/repair already-damaged data (BUG-24). Recommended first = BUG-24 with BUG-31 riding along (same root cause)
+
+## Session 2026-10-17 (fix/calculation-audit — gate fixed, BUG-38 closed)
+
+### Changes
+- User decisions recorded for the calculation-audit workstream: BUG-23 overpayment -> **Option A** (refuse the excess and tell the user, record the rest separately); BUG-24 pre-existing damaged data -> **Option B** (detect + report only, never auto-repair financial records); fix the verification gate before touching calculation code
+- **BUG-38 fixed** (`vite.config.ts`): added `/// <reference types="vitest/config" />` + `test.include: ['src/**/*.{test,spec}.{ts,tsx}']`. `npm test` now reports `Test Files 13 passed (13)`, `Tests 113 passed (113)`, **exit 0** — previously 21 Playwright specs were collected and the process always exited 1
+- Design notes (both deliberate): a single config file beats a separate `vitest.config.ts`, because vitest would use the latter *instead of* `vite.config.ts` and silently drop the React plugin, the `__APP_VERSION__`/`__GOOGLE_CLIENT_ID__` defines and the `@` alias for any unit test that later needs them. An `include` allow-list beats `exclude: ['e2e/**']` because any future stray spec outside `src/` is then skipped by default rather than silently collected
+- Same-commit bookkeeping: `BUGS.md` BUG-38 -> fixed (moved below the open block, placed next to BUG-20 in the fixed history), `CHANGELOG.md` Unreleased/Fixed entry added. **No version bump** — developer-harness fix on a branch; the version bump belongs to the merge/release step (same precedent as BUG-19's "no version bump")
+- Gates: typecheck PASS, lint 0 PASS, `npm test` 113/113 exit 0, build PASS. `detect_changes` risk **LOW** (0 changed symbols, 1 file — config-only, so no production processes affected)
+- Deliberately NOT done: BUG-39 (Playwright suite permanently 30 passed / 1 failed). It is the same class of one-line gate fix, but it edits `e2e/` which the mobile UI workstream also touches — awaiting the user's go-ahead to avoid stepping on that branch
+
+### Skill(s) Used
+- code-reviewer
+
+### Status
+- BUG-38 closed on `fix/calculation-audit`. The unit gate is now a real signal, so every later fix on this branch can be verified against it
+- Next ticket: **BUG-24** (`updateTransaction` bypasses validation — the one finding that can corrupt stored balances) with **BUG-31** riding along (identical root cause: create vs edit amount rules), then **BUG-23** under the confirmed Option A rule
