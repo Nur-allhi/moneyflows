@@ -46,7 +46,7 @@
 - Target: `CreateLedgerModal.tsx`, `AddEntryModal.tsx`, `RenameLedgerModal.tsx` (inline `style={{}}` there also violates DESIGN_IDENTITY §2/§14 — fix while touching, per "touch when next edited" spirit since M-01..M-04 bring us there).
 - Acceptance: user-facing labels/placeholders carry guidance, not validation ranges; errors stay in validation surfaces; label casing consistent.
 
-### M-08 · Setup wizard — duplicated progress + dead space — **open** (low)
+### M-08 · Setup wizard — duplicated progress + dead space — **done** (`feature/mobile-refinements`)
 - Observed: dots row **and** a segmented progress bar stacked above the card; step-0 card sits ~200px below the top (poor vertical centering) with the dots row left-aligned.
 - Target: `SetupWizard.tsx` + `SetupWizard.module.css`.
 - Acceptance: exactly ONE progress indicator (keep the funded bar, drop dots or merge); card vertically centered on📱 at all four steps; dots+bar rows visually consistent left/right alignment.

@@ -138,15 +138,13 @@ export function SetupWizard() {
   return (
     <div className={styles.page}>
       <div className={styles.shell}>
+        {/* M-08: ONE progress indicator — the funded bar shares the top row with
+            Skip (the separate dots row is gone), so the stack collapses the
+            duplicated progress + dead space. */}
         <div className={styles.topBar}>
-          <div className={styles.dots}>
-            {Array.from({ length: total }).map((_, i) => (
-              <span key={i} className={`${styles.dot} ${i <= step ? styles.dotActive : ''}`} />
-            ))}
-          </div>
+          <div className={styles.progressWrap}><div className={styles.progressFill} style={{ '--fill-width': `${progress}%` } as React.CSSProperties} /></div>
           <button className={`${styles.skip} ${skipKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replaySkip(); finish(); }}><span className="anim-target" key={skipKey}>Skip → Dashboard</span></button>
         </div>
-        <div className={styles.progressWrap}><div className={styles.progressFill} style={{ width: `${progress}%` }} /></div>
 
         <div className={styles.panel}>
           {step === 0 && (
