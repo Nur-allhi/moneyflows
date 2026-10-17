@@ -6,6 +6,107 @@
 **Git state at time of report:** branch `dev`, HEAD `14105ee`
 **Findings register:** every finding below is logged in `docs/BUGS.md` as **BUG-21 … BUG-37**
 
+**Reading order:** §0 explains every finding in plain language for a non-technical reader. §1 onwards is the technical detail (file/line references, code snippets, evidence) for whoever does the fixing.
+
+---
+
+## 0. In plain language (read this first)
+
+### The big picture
+
+The app keeps two sets of records that must always agree:
+
+- **The receipt book** — every transaction entered (income, expense, transfer, loan).
+- **The wallet balances** — what each account currently holds.
+
+Every time something is added, edited, or deleted, both must be updated together. Almost everything below is a case where the two drifted apart, or where a number on screen is calculated from the wrong ingredients.
+
+**What was found: 17 issues.** 4 serious, 4 moderate, 9 minor. Only **one** of the 17 can quietly corrupt saved data — the rest are wrong numbers on screen: annoying, but not destructive.
+
+**How they were found:** by *reading the code*, not by clicking through the app. Before fixing the two most serious ones, they should be reproduced live to be certain.
+
+### The four serious issues
+
+**1. The Edit screen lets nonsense through** → BUG-24
+
+When a transaction is *created*, the app checks it carefully: the amount must be a real positive number, the description can't be empty, the date must be valid, money can't be sent to the same account it came from. When an existing transaction is **edited, none of those checks happen.**
+
+*What you'd notice:* clear the amount box on an edit and press Save → it saves as **0**. Type letters → a "not a number" value is stored. That broken value gets added into the account balance, and from then on **that account's balance is ruined permanently** — it survives reloads and spreads into totals, reports and the dashboard.
+
+*How bad:* the one real data-corruption risk. It takes a deliberate mistake (clearing the box, typing text), so it won't happen by accident — but when it does, a single wrong edit damages otherwise-fine data.
+
+*The fix:* make Edit go through the same checks as Create. No visible change when the app is used correctly.
+
+**2. Overpaying a loan quietly loses the extra money** → BUG-23
+
+Lend someone 10,000 and they repay 12,000: the app correctly marks the loan "fully settled", but **silently throws away the extra 2,000** in the loan record, while the money ledger records the full 12,000.
+
+*What you'd notice:* the loan screen says "fully repaid", but the loan report says more was recovered than was lent — the same loan tells two different stories. There is also **no warning** when overpaying; it is just accepted.
+
+*How bad:* nothing is corrupted, but the loan report can't be trusted whenever someone overpays.
+
+*The fix:* needs a **business decision** (see §0 "Decisions needed" below) — block it, warn and trim, or record the extra.
+
+**3. Monthly statements don't add up (for past months)** → BUG-22
+
+A statement must obey one rule: **opening + money in − money out = closing.** When a report is run for a period that has already passed, the *closing* figure is taken from today's live balance instead of the balance at the end of that period.
+
+*What you'd notice:* run a member report for, say, last March. The rows stop at March, but "Closing" includes everything that happened *after* March — so the arithmetic visibly doesn't balance, and the bottom line is wrong.
+
+*Why it went unnoticed:* the automated tests only cover reports ending at the most recent transaction — exactly the case where the wrong method accidentally gives the right answer.
+
+*The fix:* use the period-end balance as closing.
+
+**4. Dashboard trend arrows compare the wrong things** → BUG-21
+
+Each dashboard card (Cash in Hand, Total in Banks, Active Loans, Total Assets) shows a percentage labelled **"vs last month"**. The four cards don't use the same formula — two compare against *this month's* activity, two against *last month's* — and "Active Loans" subtracts income/expenses from a loan total, which are unrelated quantities.
+
+*What you'd notice:* the percentages look plausible but don't mean what the label says. If an account had a zero or negative baseline, the card silently shows **0.0%**, which reads as "no change" when it really means "couldn't be worked out".
+
+*The fix:* one definition applied to all four cards, labelled honestly.
+
+### The four moderate issues
+
+**5. Loans are counted as spending and income** → BUG-25 — Lending money out is counted as an *expense* and a repayment as *income*. But lending isn't spending: the money didn't leave the family, it changed form (cash → a debt owed to you). This distorts the monthly summary and feeds the trend arrows in issue 4. *You'd notice* monthly totals looking worse than reality in a month where money is lent out.
+
+**6. "Total Income" and "Total Expenses" aren't measuring the same things** → BUG-26 — Income counts *only* income transactions; expenses count expenses **plus** loan issuance and lending. The two numbers shown side by side on a member's page aren't a fair comparison. *You'd notice* a skewed member summary.
+
+**7. Loan repayment progress bar ignores finished loans** → BUG-27 — In a stack where one loan is fully paid off and another is new, the progress bar reports close to 0%, because it only measures loans still open. *You'd notice* a borrower who repaid most of their debt showing almost no progress.
+
+**8. Group PDF exports only the rows visible on screen** → BUG-28 — A group with 40 transactions exports a PDF containing **only the first 10**, silently. *You'd notice* a shared statement missing most of the history.
+
+### The nine minor issues
+
+| Plain language | Ref |
+|---|---|
+| **Recycle Bin "Total Amount" adds unlike things** — transaction amounts + account balances + ledger opening balances summed into a single figure, which is meaningless as a total (and puts a minus sign in front of positive balances). | BUG-29 |
+| **Deleted ledgers are labelled "Account", but the Accounts tab never shows them** — visible under "All Items", unreachable by tab. | BUG-30 |
+| **Decimals are blocked when creating but allowed when editing** — creating forces whole numbers, editing accepts `100.50`. | BUG-31 |
+| **A hidden balance bug** — viewing all accounts together (none specifically chosen) would show a wrong running balance. *Invisible today* because that column is hidden in that view, but the wrong calculation still runs underneath. | BUG-32 |
+| **Balance column isn't formatted** — shows `1234567.8912` instead of a grouped, readable number, unlike every other screen. | BUG-33 |
+| **A fully-paid loan can be labelled "on track"** — the wording means "repaying on schedule", but the app uses it for "finished". | BUG-34 |
+| **Technical: editing one ledger entry touches every entry in that ledger** — harmless today; creates churn that sync features may notice later. | BUG-35 |
+| **Unused leftover loan-creation code, with a trap** — one unused function, if ever switched on, would record a loan you *received* as one you *gave out* (reversed meaning). | BUG-36 |
+| **An unused summary function with wrong labels** — counts mobile-wallet and business balances as "active loans". Nothing uses it today; a loaded gun if something does. | BUG-37 |
+
+### Recommended order of work
+
+| Order | What | Why this order |
+|---|---|---|
+| 1 | **BUG-24** (edit validation) + **BUG-23** (overpayment) | The only two that affect *stored data* |
+| 2 | **BUG-22** (statement closing balance) | Wrong bottom lines on statements shown to people |
+| 3 | **BUG-21** + **BUG-25** (dashboard math) | Misleading trend numbers on the main screen |
+| 4 | **BUG-26**, **BUG-27**, **BUG-28** | Skewed summaries and incomplete PDFs |
+| 5 | The nine minor ones | Tidy-up; several fold into earlier fixes (BUG-31 is fixed by the same change as BUG-24) |
+
+### Decisions needed from the user
+
+Only three things require a judgement call rather than a technical choice:
+
+1. **Overpayment (BUG-23)** — block it, warn and trim, or record the extra? This is a business rule.
+2. **Data already damaged (BUG-24)** — if an edit already stored a broken amount, that damage is already in the database. Fix forwards only, or add a startup check that *detects and reports* suspect records, or detect **and** auto-repair by recalculating balances? Recommended: **detect and report first** — never silently rewrite financial records.
+3. **Scope of the first step** — suggested start: **BUG-24**, with BUG-31 riding along (same root cause).
+
 ---
 
 ## 1. Summary
