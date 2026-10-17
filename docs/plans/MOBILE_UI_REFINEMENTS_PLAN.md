@@ -41,7 +41,7 @@
 - Target: `OtherLedgersIndex.tsx`, `OtherLedgerDetail.tsx` (+ CSS).
 - Acceptance: all icon-only interactive elements ≥44×44 hit area (padding can extend beyond visual size).
 
-### M-07 · Validation constraints leak into visible copy — **open** (low, copy)
+### M-07 · Validation constraints leak into visible copy — **done** (`feature/mobile-refinements`)
 - Observed: "Ledger Name (3–50)" field label, "Description (1–200)" placeholder, and "Opening Balance" label not styled like sibling uppercase labels (STARTING DATE / MEMBER).
 - Target: `CreateLedgerModal.tsx`, `AddEntryModal.tsx`, `RenameLedgerModal.tsx` (inline `style={{}}` there also violates DESIGN_IDENTITY §2/§14 — fix while touching, per "touch when next edited" spirit since M-01..M-04 bring us there).
 - Acceptance: user-facing labels/placeholders carry guidance, not validation ranges; errors stay in validation surfaces; label casing consistent.

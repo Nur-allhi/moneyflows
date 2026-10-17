@@ -7,6 +7,7 @@ import { useAccountStore } from '../../../presentation/stores/useAccountStore';
 import { useReplay } from '../../../presentation/hooks/useReplay';
 import type { Member } from '../../../core/domain/Member';
 import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
+import otherStyles from './OtherLedgerModals.module.css';
 
 export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: boolean; onClose: () => void; onCreated?: () => void }) {
   const createLedger = useOtherLedgerStore((s) => s.createLedger);
@@ -82,18 +83,18 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
   };
 
   const form = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Ledger Name (3-50)</span>
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. House Rent" style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }} />
+    <div className={otherStyles.form}>
+      <label className={txStyles.fieldGroup}>
+        <span className={txStyles.fieldLabel}>Ledger Name</span>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. House Rent" className={txStyles.inputField} />
       </label>
       <div className={txStyles.fieldGroup}>
         <span className={txStyles.fieldLabel}>Starting Date</span>
         <DatePicker value={startingDate} onChange={setStartingDate} />
       </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => { replayMemberT(); setOwnerType('member'); }} className={memberTKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: ownerType === 'member' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: ownerType === 'member' ? 'var(--color-primary)' : 'var(--color-surface)', color: ownerType === 'member' ? 'white' : 'var(--color-text)' }}><span className="anim-target" key={memberTKey}>Member</span></button>
-        <button onClick={() => { replayExtT(); setOwnerType('external'); }} className={extTKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: ownerType === 'external' ? '1px solid var(--color-primary)' : '1px solid var(--color-border)', background: ownerType === 'external' ? 'var(--color-primary)' : 'var(--color-surface)', color: ownerType === 'external' ? 'white' : 'var(--color-text)' }}><span className="anim-target" key={extTKey}>Other person</span></button>
+      <div className={otherStyles.toggleGroup}>
+        <button onClick={() => { replayMemberT(); setOwnerType('member'); }} className={`${otherStyles.toggleBtn} ${ownerType === 'member' ? otherStyles.toggleOn : ''} ${memberTKey > 0 ? 'anim-pop' : ''}`}><span className="anim-target" key={memberTKey}>Member</span></button>
+        <button onClick={() => { replayExtT(); setOwnerType('external'); }} className={`${otherStyles.toggleBtn} ${ownerType === 'external' ? otherStyles.toggleOn : ''} ${extTKey > 0 ? 'anim-pop' : ''}`}><span className="anim-target" key={extTKey}>Other person</span></button>
       </div>
       {ownerType === 'member' ? (
         <div className={txStyles.fieldGroup}>
@@ -114,11 +115,11 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
           </button>
         </div>
       )}
-      <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Opening Balance</span>
-        <input type="number" value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value)} style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }} />
+      <label className={txStyles.fieldGroup}>
+        <span className={txStyles.fieldLabel}>Opening Balance</span>
+        <input type="number" value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value)} className={txStyles.inputField} />
       </label>
-      {error && <div style={{ color: 'var(--color-expense)', fontSize: 13 }}>{error}</div>}
+      {error && <div className={otherStyles.errorText}>{error}</div>}
 
       {showMemberPicker && (
         <div className={txStyles.pickerOverlay} onClick={() => setShowMemberPicker(false)}>
@@ -179,6 +180,6 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
     </div>
   );
 
-  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="New Ledger">{form}<div style={{ display: 'flex', gap: 8, marginTop: 12 }}><button onClick={() => { replayCancel(); onClose(); }} className={cancelKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text)' }}><span className="anim-target" key={cancelKey}>Cancel</span></button><button onClick={() => { replayCreate(); void handleSave(); }} className={createKey > 0 ? 'anim-pop' : ''} style={{ flex: 1, padding: 10, borderRadius: 9999, background: 'var(--color-primary)', color: 'var(--color-text-on-primary)', border: 'none' }}><span className="anim-target" key={createKey}>Create</span></button></div></BottomSheet>;
+  if (isMobile) return <BottomSheet isOpen={isOpen} onClose={onClose} title="New Ledger">{form}<div className={otherStyles.sheetActions}><button onClick={() => { replayCancel(); onClose(); }} className={`${otherStyles.sheetBtn} ${otherStyles.sheetBtnGhost} ${cancelKey > 0 ? 'anim-pop' : ''}`}><span className="anim-target" key={cancelKey}>Cancel</span></button><button onClick={() => { replayCreate(); void handleSave(); }} className={`${otherStyles.sheetBtn} ${otherStyles.sheetBtnPrimary} ${createKey > 0 ? 'anim-pop' : ''}`}><span className="anim-target" key={createKey}>Create</span></button></div></BottomSheet>;
   return <Modal isOpen={isOpen} onClose={onClose} title="New Ledger" onSave={handleSave} saveLabel="Create">{form}</Modal>;
 }
