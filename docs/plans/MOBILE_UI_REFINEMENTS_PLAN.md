@@ -11,7 +11,7 @@
 
 ## Refined work list (ranked)
 
-### M-01 · Other Ledgers index — broken mobile header map — **open** (high, visual)
+### M-01 · Other Ledgers index — broken mobile header map — **done** (`feature/mobile-refinements`)
 - Observed: "N ledgers" count label collides with the search field at 390px (overlaps its left border); `+ Entry` renders even with **zero ledgers** (dead CTA — there is nothing to add to); empty state is a single tiny left-aligned line ("No ledgers yet. Create your first register.") lost under two cramped right-aligned buttons.
 - Target: `src/otherLedgers/presentation/screens/OtherLedgersIndex.tsx` + its CSS module.
 - Acceptance: count label sits above the search row (stacked), no overlap at 320/360/390px; `+ Entry` hidden (or visually demoted) when `ledgers.length === 0`; empty state centered with a clear single primary CTA (`New Ledger`); tap targets ≥44px.

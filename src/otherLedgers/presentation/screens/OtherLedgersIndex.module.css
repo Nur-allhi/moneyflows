@@ -1,11 +1,13 @@
 .page { display: flex; flex-direction: column; gap: 12px; padding: 12px 0; }
-.topBar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.leftCount { font-size: var(--text-sm); color: var(--color-text-secondary); white-space: nowrap; }
-.rightControls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1; }
-.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: var(--color-text-on-primary); border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; }
+/* M-01: DOM order is [search, entry, new, count]. Desktop pulls the count to the
+   far left and lets the search take the slack — same visual result as the old
+   [count | rightControls] wrapper with one less nesting level. */
+.topBar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.leftCount { order: -1; font-size: var(--text-sm); color: var(--color-text-secondary); white-space: nowrap; align-self: center; }
+.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: var(--color-text-on-primary); border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; align-self: center; min-height: 36px; }
 .addBtn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
 .addBtn:active { transform: scale(0.98); }
-.searchWrap { width: 240px; max-width: 42vw; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; backdrop-filter: blur(20px); flex-shrink: 1; }
+.searchWrap { flex: 1; width: 240px; max-width: 42vw; margin-right: 16px; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; backdrop-filter: blur(20px); min-height: 44px; }
 .searchWrap input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--color-text); font-size: 14px; }
 .searchIcon { color: var(--color-text-secondary); display: flex; flex-shrink: 0; }
 .searchClear { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); display: flex; }
@@ -60,6 +62,13 @@
 .sectionName { font-size: var(--text-base); font-weight: 600; color: var(--color-text); line-height: 1.2; }
 .sectionMeta { font-size: var(--text-xs); color: var(--color-text-secondary); line-height: 1.2; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .empty { text-align: center; padding: 40px 16px; color: var(--color-text-secondary); font-size: var(--text-base); }
+/* M-01: composed empty state (no ledgers at all) — centered, one primary CTA. */
+.emptyState { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 64px 24px; }
+.emptyTitle { font-size: var(--text-lg, 18px); font-weight: 700; color: var(--color-text); }
+.emptyHint { font-size: var(--text-sm); color: var(--color-text-secondary); max-width: 320px; line-height: 1.5; }
+.emptyCta { margin-top: 12px; padding: 10px 20px; border-radius: 9999px; background: var(--color-primary); color: var(--color-text-on-primary); border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); min-height: 44px; }
+.emptyCta:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
+.emptyCta:active { transform: scale(0.98); }
 .pickerOverlay { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.55); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .pickerSheet { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; padding: 16px; width: 360px; max-width: 85vw; backdrop-filter: blur(24px); display: flex; flex-direction: column; gap: 8px; }
 .pickerTitle { font-weight: 700; color: var(--color-text); }
@@ -68,7 +77,9 @@
 .pickerItem:hover { border-color: var(--color-primary); }
 @media (max-width: 768px) {
   .grid { grid-template-columns: 1fr; }
-  .topBar { align-items: stretch; }
-  .rightControls { width: 100%; }
-  .searchWrap { flex: 1; width: auto; max-width: none; }
+  /* M-01: stacked head — search fills row 1 alone; row 2 = count left, CTAs right. */
+  .topBar { align-items: stretch; gap: 10px; }
+  .searchWrap { order: -2; flex: 0 0 100%; width: auto; max-width: none; margin-right: 0; }
+  .leftCount { margin-right: auto; }
+  .addBtn { align-self: center; }
 }
