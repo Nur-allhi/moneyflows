@@ -1897,3 +1897,25 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - BUG-18 fixed on `dev`, unpushed. Next: push + user retests; genuine two-device conflicts still ask as before.
+
+## Session 2026-10-17 (merge BUG-18 to master)
+
+### Changes
+- User-approved `dev → master` no-ff (`ce45235`): BUG-18 convergence guard (`a2fea0b`) + CHANGELOG Unreleased Fixed + BUGS.md fixed + session logs. No version bump/tag (release step pending user call)
+- Gates re-run on merge result: typecheck PASS, full lint 0 PASS, unit 113/113 PASS, build PASS; pushed `master` (`50910dc..ce45235`)
+- Back on clean `dev` (only untracked `Logo_mockups/` remains)
+
+### Status
+- `master` carries all three sync fixes (BUG-16 hang, BUG-17 hourly re-sign, BUG-18 false conflict). Next: deploy hosted app + user retests, then version-bump release when confirmed.
+
+## Session 2026-10-17 (header sync tap reopens sign-in popup)
+
+### Changes
+- `Header.openSyncSettings`: token-valid path unchanged (syncNow + flash); no-token path now runs `googleAuth.signIn` popup → `reconcileAfterSignIn` (reload on downloaded) → syncNow; cancel/dead popup leaves the warn dot. Unconfigured build still deep-links to Settings. User-requested UX, not a bug → no BUGS.md entry
+- Gates: typecheck PASS, full lint 0 PASS, unit 113/113 PASS, build PASS. Committed on `dev`, unpushed
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Next: push dev + user verifies popup-from-header when the ~1h session lapses.

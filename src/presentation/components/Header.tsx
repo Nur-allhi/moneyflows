@@ -4,6 +4,8 @@ import { DAYS, MONTHS } from '../constants/dates';
 import { useModalStore } from '../stores/useModalStore';
 import { useCloudIndicator } from '../hooks/useCloudIndicator';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
+import { googleAuth } from '../../infrastructure/database/GoogleAuth';
+import { GOOGLE_CLIENT_ID } from '../constants/googleClient';
 import { useReplay } from '../hooks/useReplay';
 import { useSearchStore } from '../stores/useSearchStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -174,15 +176,31 @@ export function Header({
         })
         .catch(() => {});
     };
-    getDatabase().syncNow()
-      .catch(() => {})
-      .finally(() => {
-        syncingRef.current = false;
-        setSyncBusy(false);
-        // Tap with nothing to sync runs no network (no end event) — flash
-        // the tick directly so the tap always answers (T-174).
-        flashDone();
-      });
+    // Expired/dead session (e.g. the ~1h token elapsed): answer the tap with
+    // the Google sign-in popup right here instead of failing toward Settings.
+    void (async () => {
+      const token = await googleAuth.getValidToken().catch(() => null);
+      if (token) {
+        await getDatabase().syncNow().catch(() => {});
+        return;
+      }
+      try {
+        await googleAuth.signIn(GOOGLE_CLIENT_ID);
+        const result = await getDatabase().reconcileAfterSignIn();
+        if (result === 'downloaded') {
+          window.location.reload();
+          return;
+        }
+      } catch {
+        // cancelled/dead popup — the warn dot carries the state
+        return;
+      }
+      await getDatabase().syncNow().catch(() => {});
+    })().finally(() => {
+      syncingRef.current = false;
+      setSyncBusy(false);
+      flashDone();
+    });
   }, [replaySync, navigate, syncState]);
   const toggleTheme = () => {
     replayTheme();
