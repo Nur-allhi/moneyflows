@@ -131,6 +131,13 @@
 .statTeal { color: var(--color-teal); }
 .statCoral { color: var(--color-coral); }
 
+/* M-05: metric value tones — zero is neutral, negative is danger. */
+.toneCash { color: var(--color-cash); }
+.tonePrimary { color: var(--color-primary); }
+.toneText { color: var(--color-text); }
+.toneZero { color: var(--color-text-secondary); }
+.toneNeg { color: var(--color-coral); }
+
 
 .content {
   display: grid;

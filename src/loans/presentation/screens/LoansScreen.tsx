@@ -205,7 +205,8 @@ export function LoansScreen() {
 
       <div className={styles.summaryCard}>
         <span className={styles.summaryLabel}>Total Outstanding</span>
-        <span className={styles.summaryValue}>{formatAmount(totals[filter], locale, currency)}</span>
+        {/* M-05: zero is neutral, not an alarm */}
+        <span className={`${styles.summaryValue} ${totals[filter] === 0 ? styles.summaryZero : ''}`}>{formatAmount(totals[filter], locale, currency)}</span>
       </div>
 
       {filteredStacks.length === 0 ? (

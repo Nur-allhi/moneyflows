@@ -279,6 +279,11 @@
     display: block;
     font: 700 var(--text-5xl) var(--font-body);
     font-variant-numeric: tabular-nums;
-    color: var(--color-coral);
+    color: var(--color-text);
+  }
+
+  /* M-05: zero outstanding is a clean state, not danger */
+  .summaryZero {
+    color: var(--color-text-secondary);
   }
 }

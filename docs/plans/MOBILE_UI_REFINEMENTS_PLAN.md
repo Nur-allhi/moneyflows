@@ -31,7 +31,7 @@
 - Target: `src/otherLedgers/presentation/screens/OtherLedgerDetail.tsx`.
 - Acceptance: empty state is a composed block (illustration/icon + hint + one primary "Add first entry" button); delete affordance lives with content rows (or a toolbar), not floating; ≥44px targets.
 
-### M-05 · Zero values rendered in danger red — **open** (medium, semantics)
+### M-05 · Zero values rendered in danger red — **done** (`feature/mobile-refinements`)
 - Observed: "TOTAL OUTSTANDING 0 BDT" in red on Loans; dashboard "TOTAL IN BANKS / ACTIVE LOANS" turn red when 0. Danger color is interpreted as an alarm, not a zero.
 - Target: `LoansScreen.tsx` summary tile + dashboard summary tiles color rules.
 - Acceptance: 0 balances/loans render in neutral (secondary) tone; danger red reserved for negative owed values; income/expense green/red (typed semantics) unchanged.
