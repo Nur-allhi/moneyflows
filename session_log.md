@@ -2038,3 +2038,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - M-01, M-02, M-04, M-06, M-07 done. Next: **M-03** (emoji-icon sweep across wizard/dashboard/ledger empty states, header bell) then **M-05** (zero values not danger red), **M-08** (wizard progress), **M-09** (verify-only LedgerSection badge).
+
+### Session 2026-10-17 15:00 (M-03/M-05/M-08/M-09 - closes Phase A)
+
+### Changes
+- **M-03 done** (`6a0a162`): ALL emoji UI icons replaced with the lucide-react set (same 1.8-stroke style as BottomNav). Scope: SetupWizard hero/feature icons, dashboard panel empty states (Coins/ClipboardList/CreditCard/Eye), loans + members + recycle screens (SearchX/HandCoins/TrashIcon/RefreshCw/AlertTriangle via new `presentation/components/StatusIcons.tsx`), header bell (BellIcon), error screens, main.tsx bootstrap fail screen, wizard low-balance warning. `TX_TYPE_ICON` emoji map deleted (sheet title now plain "Transaction Details"). Dashboard MonthSummary inline colors -> `.statTeal/.statCoral` classes; `+ Net` arrow -> ArrowUpRight SVG. `.empty-state-icon/.error-state-icon` now flex-sized (SVG-ready). Grep for emoji codepoints in src/presentation + src/otherLedgers + src/loans = 0 matches. 29 unit + full targeted e2e pass.
+- **M-05 done** (`b3c3337`): zero balances render NEUTRAL; danger red only for genuinely negative values. Dashboard MetricValue refactored to semantic tone classes (`.toneZero/.toneNeg/.toneCash/.tonePrimary/.toneText`) replacing hardcoded coral on "Total in Banks"/"Active Loans"; LoansScreen mobile "Total Outstanding" tile zero -> secondary (`.summaryZero`). Cash -6,000 stays red (correct - real deficit); income/expense category colors intentionally unchanged (typed semantics). Verified via scratch spec: zero tiles carry secondary color, negative keeps coral.
+- **M-08 done** (`f8e5a50`): setup wizard dots row DELETED (kept the funded bar); bar merged into the top row sharing space with "Skip -> Dashboard" (one progress indicator). Card now `justify-content: safe center` - vertically centered when it fits, top-aligned & scrollable on the tall "How it works" step (was clipping). Bar width via CSS var `--fill-width` (same pattern as ProgressBar). Skip button 44px min-height. Verified step 0-3 gaps ~= even on fitting steps, last card reachable on step 3.
+- **M-09 done** (`8e332a5`): verified "All Accounts 0" badge = `filteredTxs.length` (tx rows, by design) - contradiction with "Linked Accounts (3)" was a LABEL misread. Renamed badges to "{n} tx" (desktop ledger panel head + mobile toolbar) with tooltip "Transactions in this ledger view". New members with 0 txs now read "0 tx" unambiguously.
+
+### Gates
+typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every commit; detect_changes risk low-medium (M-03 spread, 0 affected processes). Full Playwright suite: 31 passed / 1 failed at workers=2 - the 1 failure is PRE-EXISTING BUG-39 (stale search.smoke asserting a `Search...` input the header search replaced; awaiting user decision, not touched). NOTE: at 6 workers the shared dev server flakes (03-accounts/15-cloud-sync dashboard boot timeouts) - e2e load finding, not regression.
+
+### Status
+- **All 9 mobile refinements tickets COMPLETE (M-01..M-09)** on `feature/mobile-refinements` (9 commits, tip `8e332a5`, clean tree).
+- NEXT: user confirmation required to merge into `dev` (per 3.8/3.12). Then consider Unreleased CHANGELOG entries + version bump per docs/VERSIONING.md at merge time.
