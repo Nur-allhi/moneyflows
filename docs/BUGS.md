@@ -48,17 +48,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
 
-## BUG-23: Loan overpayment is dropped from the loan record but booked in full as a repayment
-
-- **Status:** open
-- **Severity:** high
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/loans/application/LoanService.ts:104-127` (`recordRepayment`) + `src/loans/infrastructure/LoanDatabase.ts:168-190`
-- **Description:** `applied = Math.min(remaining, loan.outstanding)` clamps the amount applied per loan and the leftover `remaining` is silently discarded, but the created transaction still carries the full `params.amount`. The loan stack therefore reports 100% settled while the ledger records more repaid than was lent, and no warning is shown. `LoanService.generateReport` derives outstanding from the transaction stream and can go negative (asserted at `src/loans/application/__tests__/LoanService.generateReport.test.ts:49`, `-2000`) while the stack clamps at `Math.max(0, …)` — two surfaces disagreeing about the same loan. Expected: either reject/warn on overpayment, or record the excess explicitly so both views agree.
-- **Root Cause:** clamping was added to the loan rows without a matching rule for the transaction amount or user feedback.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
 ## BUG-25: Loan movements are counted as income and expenses, distorting every "net" figure
 
 - **Status:** open
@@ -123,6 +112,17 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Description:** Deleted `other_ledger` and `other_entry` items are rendered under **All Items** with the bank icon and the label "Account", but the **Accounts** tab filters strictly on `type === 'account'`, so those rows can never be reached by switching tabs — the tab is inconsistent with its own labelling. Expected: either surface the other-ledger kinds as their own tab/label, or include them in the Accounts tab.
 - **Root Cause:** tab predicates were not updated when `other_ledger`/`other_entry` were added to `DeletedItem['type']`.
 - **Fix Approach:** (pending user confirmation)
+- **Resolved:**
+
+## BUG-40: Editing a repayment upward silently clamps the loan instead of refusing (BUG-23's second door)
+
+- **Status:** open
+- **Severity:** medium
+- **Found:** 2026-10-17 (during: BUG-23 fix — tracing every write path that changes `loans.outstanding`)
+- **Location:** `src/loans/application/LoanService.ts:154-168` (`syncLoanTransaction`), reached from `src/presentation/modals/TransactionEditModal.tsx` when a `lend`/`repay` transaction is edited
+- **Description:** BUG-23's overpayment is now refused on the create path, but the **edit** path still holds the same silent clamp: `loan.outstanding -= diff` followed by `loan.outstanding = Math.max(0, loan.outstanding)`. Editing an existing repayment *upward* past what the loan still owes therefore raises the amount on the ledger while the loan record stops at zero — the same "ledger says more was repaid than the loan received" divergence, now reachable through an ordinary edit. It is not a one-line amount check either: a transaction stores a **single** `loanRef`, while one repayment may have paid down several loans (the deliberate spillover in `recordRepayment`), so there is no per-transaction allocation record to reverse or re-apply. Expected: an edit that cannot be absorbed is refused as clearly as BUG-23, which needs the allocation question answered first.
+- **Root Cause:** `syncLoanTransaction` applies a delta to the single linked loan and clamps, treating that loan as the only one the transaction could have touched.
+- **Fix Approach:** (pending user confirmation) — kept as its own decision so the allocation model (one `loanRef` per transaction vs a recorded split) can be settled on its own merits instead of being smuggled into a bug fix.
 - **Resolved:**
 
 ## BUG-32: Member ledger running balance is wrong when no account is selected (latent)
@@ -230,6 +230,8 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** user-confirmed (fix the verification gate before starting the calculation-audit work) — vitest `test.include` pinned to `src/**/*.{test,spec}.{ts,tsx}` in `vite.config.ts`, with a `/// <reference types="vitest/config" />` so Vite's `defineConfig` accepts the `test` key. A single config file was chosen deliberately over a separate `vitest.config.ts`: vitest would use the latter *instead of* `vite.config.ts`, silently dropping the React plugin, the `__APP_VERSION__`/`__GOOGLE_CLIENT_ID__` defines and the `@` alias for any unit test that later needs them. An `include` (allow-list) was preferred over `exclude: ['e2e/**']` so any future stray spec outside `src/` is skipped by default rather than silently collected.
 - **Resolved:** 2026-10-17 — on `fix/calculation-audit`; `npm test` now reports `Test Files 13 passed (13)`, `Tests 113 passed (113)`, exit 0. typecheck PASS, lint 0 PASS, build PASS. `detect_changes` risk low (0 changed symbols — config-only).
 
+---
+
 ## BUG-24: `updateTransaction` bypasses validation, so edits can corrupt account balances
 
 - **Status:** fixed
@@ -253,6 +255,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** two independent amount inputs (custom numpad vs shared `AmountInput`) with no shared sanitizer/validator.
 - **Fix Approach:** user-confirmed — folded into the BUG-24 fix rather than patched separately, because it is the same root cause. `sanitizeAmountInput` lives in the shared rules module and is now applied by *both* amount inputs: `AmountInput` in `src/presentation/components/FormField.tsx` (edit modal + Add Account initial balance) and `TransactionFormModal.handleAmountChange` (create). Both therefore accept digits plus at most one decimal separator and at most two decimals, and both are checked by the identical rule; `transactionForm/validation.ts` now delegates amount/description to the shared module and keeps only its own "Amount is required" wording for an empty box (so "required" still reads differently from "invalid"). `useSubmit` switched from `parseInt` to `parseAmountInput`, so two-decimal values survive a create instead of being truncated, and the create screen's grouped display preserves the decimals as typed instead of showing `100` for a typed `100.50`. Left explicitly unchanged: neither path enforces a maximum amount — no ceiling has ever existed in the app, so adding one is a product decision. Also unchanged (reported, not fixed): `TransactionEditModal.module.css` still contains pre-existing hardcoded hex fallbacks that predate this workstream.
 - **Resolved:** 2026-10-17 — same commit as BUG-24 on `fix/calculation-audit` (see above); covered by the same 17 new unit tests, which assert that sanitizing and validating are one implementation shared by both forms.
+
+---
+
+## BUG-23: Loan overpayment is dropped from the loan record but booked in full as a repayment
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/loans/application/LoanService.ts:104-127` (`recordRepayment`) + `src/loans/infrastructure/LoanDatabase.ts:168-190`
+- **Description:** `applied = Math.min(remaining, loan.outstanding)` clamps the amount applied per loan and the leftover `remaining` is silently discarded, but the created transaction still carries the full `params.amount`. The loan stack therefore reports 100% settled while the ledger records more repaid than was lent, and no warning is shown. `LoanService.generateReport` derives outstanding from the transaction stream and can go negative (asserted at `src/loans/application/__tests__/LoanService.generateReport.test.ts:49`, `-2000`) while the stack clamps at `Math.max(0, …)` — two surfaces disagreeing about the same loan. Expected: either reject/warn on overpayment, or record the excess explicitly so both views agree.
+- **Root Cause:** clamping was added to the loan rows without a matching rule for the transaction amount or user feedback.
+- **Fix Approach:** user-confirmed **Option A**, read as "refuse the excess and tell the user" (the other half of that wording — booking the remainder as its own transaction — is a prepayment *feature* with its own statement treatment, so it was not invented here). `LoanService.recordRepayment` now totals the active outstanding across the loans it could pay down and throws a new `OverpaymentError{attempted, maximum}` **before any write**, so a refused repayment leaves every loan untouched instead of half-applied. `OverpaymentError` (`src/loans/domain/errors.ts`, re-exported from the `src/loans` public API) carries numbers rather than a sentence because the service has no locale/currency; the create form formats it with the user's own settings (`Only … is still outstanding for this borrower — reduce the amount.`) in the loan tab's existing `catch`, which already kept the form open. The ceiling is the borrower's **total** active outstanding, not the targeted lender's, because spillover onto other lenders is deliberate and covered by an existing test. Not done here: the same silent clamp reachable by **editing** a repayment upward is logged as BUG-40.
+- **Resolved:** 2026-10-17 — on `fix/calculation-audit` (not merged yet). 4 new tests in `src/loans/application/__tests__/lenderRepayment.test.ts` (refuses above the total and writes nothing, reports the true ceiling while ignoring settled loans, still accepts paying off exactly everything, same guard on a targeted lender). `npm test` 14 files / 134 tests pass (was 130); typecheck PASS, lint 0 PASS, build PASS. `detect_changes` risk medium (changed symbol `recordRepayment`; affected processes `SettleLoanStack → LoanService`, `DeleteLoanStack → LoanService` — neighbouring paths surfaced by the class-level edit, not behaviour changes).
 
 ---
 

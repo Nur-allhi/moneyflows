@@ -8,6 +8,8 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useTagStore } from '../../stores/useTagStore';
 import { Transaction } from '../../../core/domain/Transaction';
 import { parseAmountInput } from '../../../core/domain/transactionRules';
+import { formatAmount } from '../../utils/format';
+import { OverpaymentError } from '../../../loans';
 import { validateForm, type ValidationErrors } from './validation';
 
 export function useTxSubmit(params: {
@@ -71,7 +73,19 @@ export function useTxSubmit(params: {
           });
         }
         await fetchAccounts(); await fetchLoanStacks();
-      } catch (e) { setErrors({ amount: (e as Error).message }); return; }
+      } catch (e) {
+        // An overpayment carries the numbers instead of a sentence, so it can be
+        // shown in the user's own locale and currency (BUG-23). The form stays
+        // open either way — a refused repayment must never look like a saved one.
+        if (e instanceof OverpaymentError) {
+          const { locale, currency } = useSettingsStore.getState().settings;
+          setErrors({
+            amount: `Only ${formatAmount(e.maximum, locale, currency)} is still outstanding for this borrower — reduce the amount.`,
+          });
+          return;
+        }
+        setErrors({ amount: (e as Error).message }); return;
+      }
       setTimeout(() => onClose(), 300); return;
     }
     let type: Transaction['type']; let src: string | undefined; let dst: string | undefined; let debtorId: string | undefined;

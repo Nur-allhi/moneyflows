@@ -4,6 +4,7 @@ import { Transaction } from '../../core/domain/Transaction';
 import { Account } from '../../core/domain/Account';
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
 import type { Loan, LoanStack, LoanReport, LoanReportFilter, LoanReportRow, LoanReportSummary } from '../domain/types';
+import { OverpaymentError } from '../domain/errors';
 import { LoanDatabase } from '../infrastructure/LoanDatabase';
 import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from './computeRunningBalances';
 import { SQLiteDatabaseService } from '../../infrastructure/database/SQLiteDatabaseService';
@@ -100,6 +101,17 @@ export class LoanService {
       ? [...byAge.filter((l) => l.lenderAccountId === params.lenderAccountId),
          ...byAge.filter((l) => l.lenderAccountId !== params.lenderAccountId)]
       : byAge;
+
+    // Refuse an overpayment before anything is written (BUG-23). The loop below
+    // clamps each loan at what it still owes, so anything above the total
+    // outstanding had nowhere to go — yet the transaction was still booked at
+    // the full amount, leaving the ledger claiming more repaid than the loan
+    // records ever received. Refusing is the whole repayment, not a partial one:
+    // a rejected save must leave every loan exactly as it was.
+    const totalOutstanding = activeLoans.reduce((sum, l) => sum + l.outstanding, 0);
+    if (params.amount > totalOutstanding) {
+      throw new OverpaymentError(params.amount, totalOutstanding);
+    }
 
     for (const loan of ordered) {
       if (remaining <= 0) break;

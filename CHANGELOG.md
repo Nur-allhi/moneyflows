@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tapping the header cloud button with an expired Google session now opens the sign-in popup directly instead of silently failing — Settings → Sync now is no longer the only way back in.
 
 ### Fixed
+- Recording a loan repayment bigger than the borrower still owes is now refused instead of quietly accepted: the form tells you how much is actually outstanding and stays open, so nothing is saved. Previously the extra was dropped from the loan record while the transaction was still written at the full amount, so the history claimed more had been repaid than was ever lent.
 - Editing a transaction can no longer save an invalid amount or an empty description. The Edit window now explains what is wrong with the field, stays open, and closes only once the change has really been saved. Previously a cleared or non-numeric amount could be written straight into the account's balance and quietly spoil every total that used that account.
 - Amounts accept up to two decimals (for example 100.50) when you add a transaction, not just whole numbers, and Add and Edit now accept exactly the same input. The two windows used to disagree about what an amount may contain, and decimals typed while adding were silently dropped.
 - The unit-test command (`npm test`) now exits clean on its own: it no longer picks up the browser end-to-end specs, which previously made the test gate report 21 spurious failures (developer-facing only — the 113 unit tests themselves were always passing).
