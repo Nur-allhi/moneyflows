@@ -26,6 +26,30 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-19: Setup Wizard starting balances silently erased on next reload
+
+- **Status:** fixed
+- **Severity:** critical
+- **Found:** 2026-10-17 (during: mobile UI audit — fresh guest profile, seeded accounts, reload)
+- **Location:** `src/presentation/screens/SetupWizard.tsx:103` (`handleAddAccount` — `new Account(..., Number(accountDraft.balance))`) + `src/infrastructure/database/computeBalances.ts` / `SQLiteDatabaseService.recalculateBalances` (T-171 boot pass)
+- **Description:** Wizard step 2 stores the "Starting balance" value directly on `accounts.balance` without creating an opening-balance transaction (the normal `AddAccountModal` flow, by contrast, saves the account with balance 0 and adds an `income` transaction tagged `isOpeningBalance: true`). On the next reload, boot's `recalculateBalances()` computes expected balances purely from the transaction stream (0 for a fresh account), sees 25,000 ≠ 0, and rewrites the row to 0. Observed: City Bank 25,000 + Cash Wallet 3,000 ("Total in Banks 28,000 BDT") → after one reload every surface (dashboard, member ledger, linked-accounts modal) reads 0 BDT. Expected: starting balances survive reload like normal-creation accounts. Severity = silent first-run data-wipe for every user who types a starting balance during setup.
+- **Root Cause:** wizard saves starting balance as a raw account row field; boot balance math only replays transactions and treats the field as stale.
+- **Fix Approach:** user-confirmed via deferred decision (user unresponsive; audit recommendation applied) — wizard `handleAddAccount` now saves the account with balance 0 and creates the `isOpeningBalance` income transaction exactly like `AddAccountModal`; boot replay then reproduces the balance, so nothing is rewritten. Live-verified: seeded 25,000 + 3,000 → reload → all surfaces still show 28,000 + both Opening Balance rows.
+- **Resolved:** 2026-10-17 — on `dev`; typecheck PASS, scoped lint clean, unit 113/113 PASS, build PASS.
+
+## BUG-20: Linked Accounts modal shows 0 BDT while dashboard shows the real total
+
+- **Status:** open
+- **Severity:** high
+- **Found:** 2026-10-17 (during: mobile UI audit — BEFORE the BUG-19 reload, Dashboard "Total in Banks" read 28,000 in the same session)
+- **Location:** `src/presentation/screens/memberProfile/AccountsSection.tsx` (Linked Accounts modal, route `/member/:id`)
+- **Description:** The Linked Accounts modal lists "City Bank — 0 BDT Available Balance" and "Cash Wallet — 0 BDT Available Balance" while the dashboard reports "Total in Banks 28,000 BDT" for the same two accounts in the same session. Expected: the modal shows each account's current balance. Note: BUG-19 zeroed these specific accounts after reload, so re-verify against a healthy account before diagnosing.
+- **Root Cause:** (unknown until diagnosed)
+- **Fix Approach:** (pending user confirmation)
+- **Resolved:
+
+---
+
 ## BUG-18: False sync conflict on a single device
 
 - **Status:** fixed
