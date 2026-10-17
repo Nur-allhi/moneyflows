@@ -2024,3 +2024,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - M-01, M-02 done. Next: **M-04 + M-06 + M-07** (Other Ledger detail orphaned buttons & trash touch targets & modal inline styles) per execution order, then M-03, M-05, M-08, M-09.
+
+## Session 2026-10-17 13:55
+
+### Changes
+- **M-02 done** (`1823e84`): mobile header shows SUBJECT NAME on all detail routes (last breadcrumb crumb; second-to-last for the depth-3 member-report route). Root cause was `.breadcrumb { display:none }` on mobile while the JSX rendered the hidden breadcrumb div. Long names ellipsize; desktop breadcrumb untouched. Verified by 5-pass scratch spec (ledger/member titles, 50-char ellipsis, desktop breadcrumb intact).
+- **M-04 + M-06 done** (`1badf7a`): OtherLedgerDetail mobile — orphaned floating buttons replaced by an anchored action bar between the hero card and the list (New Entry pill + rename + delete, right-aligned); delete-confirm sheet + mobile toolbar switched from inline styles to CSS module classes. **M-06**: icon buttons now 44x44; rename was previously hover-revealed (`opacity:0` = unreachable on touch) — now always visible on mobile. Composed empty state: icon + "No entries yet" + hint + primary "Add First Entry" CTA. Sentinel divs inline-style free.
+- **M-07 done** (`dd3bb38`): new shared `OtherLedgerModals.module.css` for Create/Rename/AddEntry modals — all inline `style={{}}` removed (~12 per modal); labels now use `txStyles.fieldLabel` uppercase casing ("Ledger Name", "Opening Balance", "Description", "Amount" — Amount/Description newly labeled); placeholders carry guidance, not ranges ("e.g. House Rent", "What was this for?", "0.00"); validation ranges still live in error surface; sheet footer + delete-confirm buttons token-classed, `#fff` literal replaced by `--color-text-on-primary`. Verified by scratch spec: create + add-entry flows work end-to-end with the new classes.
+- Gates each ticket: typecheck / scoped eslint --max-warnings 0 / vitest 113 / build PASS; detect_changes vs dev: low, no affected processes; §17 checked.
+
+### Skill(s) Used
+- senior-frontend; ui-ux conventions (tokens/labels); Playwright scratch-spec verification.
+
+### Status
+- M-01, M-02, M-04, M-06, M-07 done. Next: **M-03** (emoji-icon sweep across wizard/dashboard/ledger empty states, header bell) then **M-05** (zero values not danger red), **M-08** (wizard progress), **M-09** (verify-only LedgerSection badge).
