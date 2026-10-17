@@ -59,17 +59,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
 
-## BUG-24: `updateTransaction` bypasses validation, so edits can corrupt account balances
-
-- **Status:** open
-- **Severity:** high
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/infrastructure/database/SQLiteDatabaseService.ts:1274-1283` (`updateTransaction`) vs `:1267-1272` (`saveTransaction` → `validateTransaction` at :1213-1254); UI entry `src/presentation/modals/TransactionEditModal.tsx:61,85` + `src/presentation/components/FormField.tsx:80-87`
-- **Description:** The create path validates amount/description/date/accounts/source≠dest, but the update path never calls `validateTransaction`, and the edit modal posts `Number(amount)` from an unsanitized free-text input. Reachable through normal UI: blank amount → `0`, non-numeric → `NaN`, negative amounts, empty description, unparseable date, inactive accounts, and `source === dest`. `applyBalanceChange` (`:1305-1317`) then writes that delta straight into `accounts.balance`, so a single edit can permanently poison a balance (NaN/NULL survives the flush). Expected: edits enforce the same rules as creates.
-- **Root Cause:** validation lives in `saveTransaction` only; `updateTransaction` was written as a direct write path.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
 ## BUG-25: Loan movements are counted as income and expenses, distorting every "net" figure
 
 - **Status:** open
@@ -133,17 +122,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Location:** `src/presentation/screens/RecycleBin.tsx:38,46` (tab filters on `type === 'account'`) vs `:165-168` (labels/icon: `item.type === 'transaction' ? … : 'Account'`)
 - **Description:** Deleted `other_ledger` and `other_entry` items are rendered under **All Items** with the bank icon and the label "Account", but the **Accounts** tab filters strictly on `type === 'account'`, so those rows can never be reached by switching tabs — the tab is inconsistent with its own labelling. Expected: either surface the other-ledger kinds as their own tab/label, or include them in the Accounts tab.
 - **Root Cause:** tab predicates were not updated when `other_ledger`/`other_entry` were added to `DeletedItem['type']`.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
-## BUG-31: Amount entry rules differ between create and edit forms
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/presentation/modals/TransactionFormModal.tsx:171-174` (strips `[^0-9]`, `parseInt`) and `:119,125` vs `src/presentation/modals/TransactionEditModal.tsx:23,61,85` + `src/presentation/components/FormField.tsx:80-87` (`inputMode="decimal"`, no sanitizing)
-- **Description:** The create wizard accepts whole numbers only (all non-digits stripped, `parseInt`), while the edit modal accepts arbitrary free text and converts with `Number(amount)` — so a value that cannot be created can be produced by editing an existing transaction, and there is no maximum bound in either path. Expected: one shared amount rule for both forms.
-- **Root Cause:** two independent amount inputs (custom numpad vs shared `AmountInput`) with no shared sanitizer/validator.
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
 
@@ -251,6 +229,30 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** default vitest `include` (`**/*.{test,spec}.?(c|m)[jt]s?(x)`) matches the Playwright spec directory; nothing told vitest to skip it.
 - **Fix Approach:** user-confirmed (fix the verification gate before starting the calculation-audit work) — vitest `test.include` pinned to `src/**/*.{test,spec}.{ts,tsx}` in `vite.config.ts`, with a `/// <reference types="vitest/config" />` so Vite's `defineConfig` accepts the `test` key. A single config file was chosen deliberately over a separate `vitest.config.ts`: vitest would use the latter *instead of* `vite.config.ts`, silently dropping the React plugin, the `__APP_VERSION__`/`__GOOGLE_CLIENT_ID__` defines and the `@` alias for any unit test that later needs them. An `include` (allow-list) was preferred over `exclude: ['e2e/**']` so any future stray spec outside `src/` is skipped by default rather than silently collected.
 - **Resolved:** 2026-10-17 — on `fix/calculation-audit`; `npm test` now reports `Test Files 13 passed (13)`, `Tests 113 passed (113)`, exit 0. typecheck PASS, lint 0 PASS, build PASS. `detect_changes` risk low (0 changed symbols — config-only).
+
+## BUG-24: `updateTransaction` bypasses validation, so edits can corrupt account balances
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/infrastructure/database/SQLiteDatabaseService.ts:1274-1283` (`updateTransaction`) vs `:1267-1272` (`saveTransaction` → `validateTransaction` at :1213-1254); UI entry `src/presentation/modals/TransactionEditModal.tsx:61,85` + `src/presentation/components/FormField.tsx:80-87`
+- **Description:** The create path validates amount/description/date/accounts/source≠dest, but the update path never calls `validateTransaction`, and the edit modal posts `Number(amount)` from an unsanitized free-text input. Reachable through normal UI: blank amount → `0`, non-numeric → `NaN`, negative amounts, empty description, unparseable date, inactive accounts, and `source === dest`. `applyBalanceChange` (`:1305-1317`) then writes that delta straight into `accounts.balance`, so a single edit can permanently poison a balance (NaN/NULL survives the flush). Expected: edits enforce the same rules as creates.
+- **Root Cause:** validation lives in `saveTransaction` only; `updateTransaction` was written as a direct write path.
+- **Fix Approach:** user-confirmed (Option A1 + B1, chosen over A2/B2): one shared rules module — `src/core/domain/transactionRules.ts` (`validateTransactionFields`, `sanitizeAmountInput`, `parseAmountInput`) — is now the single source of truth used by the database guard, the edit modal and the create form. The edit modal validates *before* writing, shows each message against the offending field (reusing the existing `FormField` error slot, so no new error pattern or CSS), and stays open when a field fails. It also reads back the store's recorded error after the awaited save, because `useTransactionStore.updateTransaction` rolls back and logs instead of throwing — without that read-back a refused save still closed the modal. `SQLiteDatabaseService.updateTransaction` now calls `validateTransaction` before it touches any balance row, and the create form got the same read-back so a refused create no longer closes the form silently. A1 was preferred over A2 (make the store rethrow and handle it in every caller, incl. `TagLedgerScreen`) to keep the blast radius inside the two forms, with the database check left as the backstop for future callers. B1 was preferred over B2 (patch the missing check only) because the audit found three divergent copies of these rules. No maximum amount was introduced: the app has never enforced one, and inventing a ceiling is a product decision rather than a bug fix.
+- **Resolved:** 2026-10-17 — on `fix/calculation-audit` (not merged yet). New `src/core/domain/transactionRules.ts` plus 17 unit tests in `src/core/domain/__tests__/transactionRules.test.ts` (zero / NaN / negative / Infinity amounts, empty and over-length descriptions, unparseable dates, all-broken-fields-at-once, sanitizer edge cases). `npm test` now reports 14 files / 130 tests pass (was 113); typecheck PASS, lint 0 PASS, build PASS. `detect_changes` risk **medium** — 9 changed symbols, 7 files, all presentation entry points; the 4 affected processes are the `HandleSave → …` chains.
+
+---
+
+## BUG-31: Amount entry rules differ between create and edit forms
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/presentation/modals/TransactionFormModal.tsx:171-174` (strips `[^0-9]`, `parseInt`) and `:119,125` vs `src/presentation/modals/TransactionEditModal.tsx:23,61,85` + `src/presentation/components/FormField.tsx:80-87` (`inputMode="decimal"`, no sanitizing)
+- **Description:** The create wizard accepts whole numbers only (all non-digits stripped, `parseInt`), while the edit modal accepts arbitrary free text and converts with `Number(amount)` — so a value that cannot be created can be produced by editing an existing transaction, and there is no maximum bound in either path. Expected: one shared amount rule for both forms.
+- **Root Cause:** two independent amount inputs (custom numpad vs shared `AmountInput`) with no shared sanitizer/validator.
+- **Fix Approach:** user-confirmed — folded into the BUG-24 fix rather than patched separately, because it is the same root cause. `sanitizeAmountInput` lives in the shared rules module and is now applied by *both* amount inputs: `AmountInput` in `src/presentation/components/FormField.tsx` (edit modal + Add Account initial balance) and `TransactionFormModal.handleAmountChange` (create). Both therefore accept digits plus at most one decimal separator and at most two decimals, and both are checked by the identical rule; `transactionForm/validation.ts` now delegates amount/description to the shared module and keeps only its own "Amount is required" wording for an empty box (so "required" still reads differently from "invalid"). `useSubmit` switched from `parseInt` to `parseAmountInput`, so two-decimal values survive a create instead of being truncated, and the create screen's grouped display preserves the decimals as typed instead of showing `100` for a typed `100.50`. Left explicitly unchanged: neither path enforces a maximum amount — no ceiling has ever existed in the app, so adding one is a product decision. Also unchanged (reported, not fixed): `TransactionEditModal.module.css` still contains pre-existing hardcoded hex fallbacks that predate this workstream.
+- **Resolved:** 2026-10-17 — same commit as BUG-24 on `fix/calculation-audit` (see above); covered by the same 17 new unit tests, which assert that sanitizing and validating are one implementation shared by both forms.
 
 ---
 

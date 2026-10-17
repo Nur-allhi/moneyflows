@@ -2,6 +2,7 @@ import initSqlJs, { type Database as SqlJsDb } from 'sql.js';
 import { Member } from '../../core/domain/Member';
 import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
+import { validateTransactionFields } from '../../core/domain/transactionRules';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
 import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile, BootProgress, ConflictPreview } from '../../core/ports/IDatabaseService';
@@ -1211,14 +1212,16 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   private validateTransaction(tx: Transaction): void {
-    if (!tx.amount || !isFinite(tx.amount) || tx.amount <= 0) {
-      throw new Error('Amount must be a positive number');
-    }
-    const desc = (tx.description ?? '').trim();
-    if (desc.length < 1) throw new Error('Description is required');
-    if (desc.length > 200) throw new Error('Description must be 200 characters or less');
-
-    if (!tx.date || isNaN(Date.parse(tx.date))) throw new Error('Valid date is required');
+    // Field rules live in core/domain/transactionRules so the create path, the
+    // update path and both forms cannot drift apart again (BUG-24/BUG-31).
+    const issues = validateTransactionFields({
+      amount: tx.amount,
+      description: tx.description,
+      date: tx.date,
+    });
+    if (issues.amount) throw new Error(issues.amount);
+    if (issues.description) throw new Error(issues.description);
+    if (issues.date) throw new Error(issues.date);
 
     if (!tx.memberId) throw new Error('Member is required');
     const member = this.queryOne<Record<string, unknown>>('SELECT id FROM members WHERE id=$id AND deleted_at IS NULL', { $id: tx.memberId });
@@ -1272,6 +1275,10 @@ export class SQLiteDatabaseService implements IDatabaseService {
   }
 
   async updateTransaction(id: string, tx: Transaction): Promise<void> {
+    // Validate BEFORE touching any balance: the edit path used to write the
+    // change straight through, so a cleared/NaN/negative amount corrupted
+    // `accounts.balance` permanently (BUG-24).
+    this.validateTransaction(tx);
     const old = this.queryOne<Record<string, unknown>>('SELECT * FROM transactions WHERE id=$id', { $id: id });
     if (old) {
       const oldTx = rowToTransaction(old);

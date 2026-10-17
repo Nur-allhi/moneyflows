@@ -1,4 +1,5 @@
 import type { Account } from '../../../core/domain/Account';
+import { parseAmountInput, validateTransactionFields } from '../../../core/domain/transactionRules';
 
 export type ValidationErrors = Record<string, string>;
 
@@ -13,12 +14,19 @@ export function validateForm(
   selectedBorrowerId: string,
 ): ValidationErrors {
   const next: ValidationErrors = {};
-  const amountNum = parseInt(rawAmount, 10);
+  // Amount + description rules come from the same module the database guard and
+  // the edit form use, so the three can no longer drift apart (BUG-24/BUG-31).
+  // They live in one place only; this form just maps them onto field names. The
+  // `date` slot is not this function's concern (the DatePicker owns it), so it
+  // is passed empty and its issue ignored.
+  const shared = validateTransactionFields({
+    amount: parseAmountInput(rawAmount),
+    description,
+    date: '',
+  });
   if (!rawAmount || rawAmount.trim() === '') next.amount = 'Amount is required';
-  else if (isNaN(amountNum) || !isFinite(amountNum) || amountNum <= 0) next.amount = 'Amount must be a positive number';
-  const desc = description.trim();
-  if (desc.length < 1) next.description = 'Description is required';
-  else if (desc.length > 200) next.description = 'Description must be 200 characters or less';
+  else if (shared.amount) next.amount = shared.amount;
+  if (shared.description) next.description = shared.description;
   if (tab === 'loan') {
     if (loanAction === 'lend') {
       if (!source) next.source = 'Select a lender account';
