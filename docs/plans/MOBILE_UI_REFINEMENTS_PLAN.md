@@ -7,7 +7,7 @@
 ## Context bugs (tracked in `docs/BUGS.md`)
 
 - **BUG-19 — fixed** (`eff4d6c`): wizard starting balances wiped on reload; now recorded as `Opening Balance` transactions.
-- **BUG-20 — open**: Linked Accounts modal shows `0 BDT` for funded accounts; diagnose before touching that screen.
+- **BUG-20 — closed 2026-10-17 (resolved-by-BUG-19):** not reproducible on current code (dashboard/members list/profile hero/mobile modal/desktop dropdown all agree, before and after reload); regression guard in `e2e/flows/03-accounts.spec.ts`. No action needed from this plan.
 
 ## Refined work list (ranked)
 
