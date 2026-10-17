@@ -96,9 +96,9 @@ export function LedgerSection(props: Props) {
           <div className={styles.ledgerPanelHead}>
             <h3>
               {selectedAcct ? (
-                <>{selectedAcct.name} <span className={styles.ledgerBalance}>{formatAmountParts(selectedAcct.balance, locale, currency).amount} {currency}</span> <span className={styles.txCount}>{txCount}</span></>
+                <>{selectedAcct.name} <span className={styles.ledgerBalance}>{formatAmountParts(selectedAcct.balance, locale, currency).amount} {currency}</span> <span className={styles.txCount} title="Transactions in this ledger view">{txCount} tx</span></>
               ) : (
-                <>All Accounts Ledger <span className={styles.txCount}>{txCount}</span></>
+                <>All Accounts Ledger <span className={styles.txCount} title="Transactions in this ledger view">{txCount} tx</span></>
               )}
             </h3>
             <div className={styles.ledgerPanelFilter} ref={filterWrapRef}>
@@ -225,7 +225,7 @@ export function LedgerSection(props: Props) {
       <div ref={trayRef}>
         <div className={styles.ledgerToolbar}>
           <div className={styles.ledgerSectionTitle}>{selectedAcct ? selectedAcct.name : 'All Accounts'}</div>
-          <span className={styles.txCountBadge}>{filteredTxs.length}</span>
+          <span className={styles.txCountBadge} title="Transactions in this ledger view">{filteredTxs.length} tx</span>
           <div className={styles.ledgerActions}>
             {(ledgerTagOptions.length > 0 || tagFilter) && (
               <>

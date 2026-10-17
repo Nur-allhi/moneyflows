@@ -51,7 +51,7 @@
 - Target: `SetupWizard.tsx` + `SetupWizard.module.css`.
 - Acceptance: exactly ONE progress indicator (keep the funded bar, drop dots or merge); card vertically centered on📱 at all four steps; dots+bar rows visually consistent left/right alignment.
 
-### M-09 · Member profile — "All Accounts (0)" badge suspicious — **open** (verify first)
+### M-09 · Member profile — "All Accounts (0)" badge suspicious — **done** (`feature/mobile-refinements`)
 - Observed: ledger toolbar shows "All Accounts **0**" while "Linked Accounts **2**" in the same session. May be a count of shown/filtered rows by design — verify intent before changing anything.
 - Target: `src/presentation/screens/memberProfile/LedgerSection.tsx`.
 - Acceptance: badge shows a truthful count (accounts or visible rows); if by design, rename label so the two badges can't be misread as contradiction.
