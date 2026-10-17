@@ -2067,3 +2067,25 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - BUG-23 closed on `fix/calculation-audit`; BUG-40 recorded as its deliberate follow-up. Nothing merged; `dev` untouched.
 - Next ticket: **BUG-22** — member report "closing" prints the live balance (`MemberReportService.ts` ~`:155`, `closing: acct.balance`) instead of the balance at the end of the requested period. Worth noting for whoever picks it up: `MemberReportService.test.ts` only exercises ranges ending at the last transaction, which is exactly why the wrong method passes — so the fix needs a test that ends the range *before* the newest transaction.
 - Then: BUG-21/BUG-25 (dashboard) once the mobile workstream's M-05 lands, since `dashboard/sections.tsx` is the one real merge conflict between the two branches.
+
+## Session 2026-10-17 13:10 (fix/calculation-audit — BUG-22 fixed, GitNexus re-indexed)
+
+### Changes
+- **BUG-22 fixed.** `MemberReportService` set `closing: acct.balance` — the LIVE balance — regardless of the selected range, while `opening` is back-computed by unwinding all history and each row's running balance stops at the last in-period row. Any range ending before the newest transaction therefore printed a Closing that included later activity, and the statement's own arithmetic broke (Opening + Credit − Debit ≠ Closing), including the summary (which sums the section closings). `closing` is now the period-end `running` value; the two definitions coincide whenever the range reaches the last transaction, so unfiltered reports are unchanged.
+- The class doc comment that stated "live `account.balance` is the closing truth" was itself describing the bug — corrected, and the new line at the assignment explains why (`BUG-22`) so it does not get "fixed" back.
+- **Mutation-verified, deliberately:** reverting `closing: running` → `closing: acct.balance` makes the new test fail with `expected 1100 to be 1400` while the other 9 tests in the file stay green — precisely the blindness the finding described (the old suite only covered ranges ending at the final transaction). The new test ends the range on 2026-08-02 with a later 08-03 transfer present, and also asserts `closing = opening + totalCredit − totalDebit` for every section, so this class of error cannot come back silently.
+- Test title corrected: `'covers every account with closing pinned to live balance'` → `'…closing is the end-of-range balance (the live balance when unfiltered)'`. The assertions were already right; only the name was asserting the wrong rule.
+- **GitNexus index was stale and got in the way of the required impact analysis**: `impact` could not resolve `MemberReportService` at all (the index had 2,332 symbols from an older tree). Ran `node .gitnexus/run.cjs analyze` (27.8s) → 3,783 symbols / 8,522 edges / 300 flows. FTS/BM25 search stays disabled (LadybugDB extension unavailable offline) — affects only natural-language search, not impact/context.
+- Honest note on the tooling: after the re-index, `impact(generateReport, upstream)` reports **LOW / 0 direct callers / 0 processes**, but it does **not** resolve the chained `new MemberReportService(…).generateReport(…)` call — the real call site is `MemberReportScreen.tsx:86`. The blast radius was therefore established by reading the code: consumers of the value are `ReportSections.tsx:41`, `memberReportPdf.ts:111` and the summary stat at `MemberReportScreen.tsx:206` (the CSV exporter only carries it through a fixture). `detect_changes` risk **low**, 0 processes.
+- The re-index rewrote the auto-generated GitNexus block in `AGENTS.md` **and** `CLAUDE.md` (one line each: the symbol/relationship/flow counts). Committed separately as a chore so the bug fix stays focused — and because `AGENTS.md` §5 is where the parallel mobile workstream is most likely to conflict.
+- Same-commit bookkeeping: `BUGS.md` BUG-22 → **fixed** and moved to the top of the fixed history (severity high, next to BUG-20/BUG-24) with the approach and a Resolved line; `CHANGELOG.md` user-facing bullet. No version bump.
+- Gates: typecheck PASS, lint 0 PASS, `npm test` **14 files / 135 tests pass** (was 134), build PASS.
+- Third `BUGS.md` separator slip (same root cause as the earlier two: the insert helper puts the `---` before the new entry but not before the anchor). Caught by the verifier script and fixed; the verifier now reports 0 separator problems, 0 headings directly after a `---`, CRLF preserved, no BOM.
+
+### Skill(s) Used
+- code-reviewer, gitnexus (impact/context/detect_changes)
+
+### Status
+- BUG-22 closed on `fix/calculation-audit`. Nothing merged; `dev` untouched.
+- Next: **BUG-21 + BUG-25** (dashboard metric chips use two formulas under one label; loan movements counted as income/expense). These are parked until the mobile workstream's M-05 lands because `src/presentation/screens/dashboard/sections.tsx` is the single genuine merge conflict between the two branches — they touch the same file's label/colour rules.
+- Remaining open findings after this: BUG-21, BUG-25–BUG-30, BUG-32–BUG-37, BUG-39, BUG-40.

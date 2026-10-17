@@ -38,7 +38,7 @@ function makeService(txs: Transaction[] = ALL_TXS): MemberReportService {
 }
 
 describe('MemberReportService (T-132 accounts section)', () => {
-  it('covers every account with closing pinned to live balance', async () => {
+  it('covers every account; closing is the end-of-range balance (the live balance when unfiltered)', async () => {
     const report = await makeService().generateReport({ memberId: 'member-1' });
 
     expect(report.accounts.map((a) => a.accountName)).toEqual(['Cash', 'Bank']);
@@ -58,6 +58,33 @@ describe('MemberReportService (T-132 accounts section)', () => {
     expect(report.summary.closing).toBe(1400);
     expect(report.summary.transactionCount).toBe(4);
     expect(report.summary.accountCount).toBe(2);
+  });
+
+  it('closes at the period-end balance, not the live balance, when the range ends early (BUG-22)', async () => {
+    const report = await makeService().generateReport({
+      memberId: 'member-1',
+      endDate: '2026-08-02',
+    });
+
+    const cash = report.accounts[0]!;
+    const bank = report.accounts[1]!;
+    // Cash: +1000 (08-01) and -200 (08-02) fall inside the range, but the -300
+    // transfer on 08-03 is AFTER it, so the live balance of 1100 must not leak
+    // into the statement.
+    expect(cash.opening).toBe(600);
+    expect(cash.closing).toBe(1400);
+    expect(cash.rows.map((r) => r.id)).toEqual(['t1', 't2']);
+    // Bank only receives money on 08-03, so at 08-02 it still sits at opening.
+    expect(bank.opening).toBe(0);
+    expect(bank.closing).toBe(0);
+    expect(bank.rows).toEqual([]);
+    // The statement has to balance on its own terms, for every account.
+    for (const section of report.accounts) {
+      expect(section.closing).toBe(section.opening + section.totalCredit - section.totalDebit);
+    }
+    // ...and the summary must close at the same period end, not at today.
+    expect(report.summary.closing).toBe(1400);
+    expect(report.summary.transactionCount).toBe(2);
   });
 
   it('derives correct running balances when display is date-filtered (full-history rule)', async () => {

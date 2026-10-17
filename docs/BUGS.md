@@ -37,17 +37,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
 
-## BUG-22: Member report "closing" shows the live balance instead of the period-end balance
-
-- **Status:** open
-- **Severity:** high
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/reports/application/MemberReportService.ts:112-155` (`closing: acct.balance` at :155; `summaryClosing` at :163)
-- **Description:** `opening` is derived by unwinding ALL transactions (`impliedOpening = acct.balance - netFull`) while the per-row `running` balance stops at the last in-period row, yet `closing` is set to the live `acct.balance` regardless of the selected range. For any range that ends before the last transaction, Opening + Credit − Debit ≠ Closing, and the report summary inherits the same error. Expected: closing = period-end running balance, so the statement's own arithmetic balances.
-- **Root Cause:** `closing` was wired to the account row instead of to `running` at the end of the period; existing tests only cover ranges ending at the final transaction, where both definitions coincide.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
 ## BUG-25: Loan movements are counted as income and expenses, distorting every "net" figure
 
 - **Status:** open
@@ -203,6 +192,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** the smoke asserts pre-S-1 UI (inline dashboard search input) that the global-search feature replaced; only the sibling "ledger-scoped" smoke was made tolerant of the new UI.
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
+
+---
+
+## BUG-22: Member report "closing" shows the live balance instead of the period-end balance
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/reports/application/MemberReportService.ts:112-155` (`closing: acct.balance` at :155; `summaryClosing` at :163)
+- **Description:** `opening` is derived by unwinding ALL transactions (`impliedOpening = acct.balance - netFull`) while the per-row `running` balance stops at the last in-period row, yet `closing` is set to the live `acct.balance` regardless of the selected range. For any range that ends before the last transaction, Opening + Credit − Debit ≠ Closing, and the report summary inherits the same error. Expected: closing = period-end running balance, so the statement's own arithmetic balances.
+- **Root Cause:** `closing` was wired to the account row instead of to `running` at the end of the period; existing tests only cover ranges ending at the final transaction, where both definitions coincide.
+- **Fix Approach:** user-approved — make the statement's own arithmetic the rule. `closing` is now the **period-end running balance** (`running` after the last in-period row) instead of the live `acct.balance`. `opening` already back-computes from the live balance, which is what keeps the unfiltered case exact: when the range reaches the last transaction, the period-end balance and the live balance are the same number, so only ranges that end early change. `summaryClosing` inherits the fix automatically because it sums the section closings. The class doc comment that claimed "live `account.balance` is the closing truth" was corrected too — it described the bug rather than the rule.
+- **Resolved:** 2026-10-17 — on `fix/calculation-audit` (not merged yet). New regression test that ends the range **before** the newest transaction (the case the old suite never covered) plus a per-section invariant assertion (`closing = opening + totalCredit − totalDebit`). **Mutation-verified:** reverting `closing: running` back to `closing: acct.balance` fails the new test with `expected 1100 to be 1400` while the other 9 tests stay green — exactly the blindness that let the bug through. `npm test` 14 files / 135 tests pass; typecheck PASS, lint 0 PASS, build PASS. `impact` LOW (0 direct callers, 0 processes) — note the index does not resolve the chained `new MemberReportService(…).generateReport(…)` call, so the real call site is `MemberReportScreen.tsx:86`; the value's consumers are `ReportSections.tsx:41`, `memberReportPdf.ts:111` and the summary stat at `MemberReportScreen.tsx:206`. `detect_changes` risk low, 0 processes.
 
 ---
 
