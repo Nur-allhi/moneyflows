@@ -80,3 +80,75 @@ export function parseAmountInput(raw: string): number {
 function stripLeadingZeros(value: string): string {
   return value.replace(/^0+(?=\d)/, '');
 }
+
+/**
+ * Account-link rules: which side each type must name, and which combinations the
+ * write path refuses.
+ *
+ * BUG-41: extracted so the database guard and the read-only integrity scan call
+ * the *same* predicates — a scan with its own copy of these lists would be free
+ * to disagree with the rules it claims to check.
+ */
+const SOURCE_TYPES = new Set(['expense', 'transfer', 'loan_issue', 'loan_paidback', 'lend', 'repay']);
+const DEST_TYPES = new Set(['income', 'transfer', 'loan_repayment', 'loan_received', 'lend', 'repay']);
+
+export const SOURCE_ACCOUNT_REQUIRED = 'Source account is required';
+export const DEST_ACCOUNT_REQUIRED = 'Destination account is required';
+
+/** True when money must leave a named source account. */
+export function requiresSourceAccount(type: string): boolean {
+  return SOURCE_TYPES.has(type);
+}
+
+/** True when money must arrive in a named destination account. */
+export function requiresDestAccount(type: string): boolean {
+  return DEST_TYPES.has(type);
+}
+
+export interface TransactionLinkInput {
+  type: string;
+  sourceAccount?: string | null;
+  destAccount?: string | null;
+}
+
+export interface TransactionLinkIssues {
+  /** Present when the type must name a source account and none is set. */
+  source?: string;
+  /** Present when the type must name a destination account and none is set. */
+  destination?: string;
+  /** Present when one account sits on both sides of a type that forbids it. */
+  pairing?: string;
+}
+
+/**
+ * Message for a row naming the same account on both sides, else null. Mirrors the
+ * guard's per-type wording verbatim. Both sides must be set: for every type that
+ * reaches this check the guard has already required them, so a missing side is a
+ * different (earlier) issue rather than a pairing one.
+ */
+export function sameAccountIssue(
+  type: string,
+  sourceAccount?: string | null,
+  destAccount?: string | null,
+): string | null {
+  if (!sourceAccount || sourceAccount !== destAccount) return null;
+  if (type === 'transfer') return 'Source and destination must differ';
+  if (type === 'loan_issue') return 'Source and destination must differ for account-to-account loans';
+  if (type === 'loan_repayment') return 'Repayment source and destination must differ';
+  if (type === 'lend' || type === 'repay') return 'Source and destination must differ for lend/repay transactions';
+  return null;
+}
+
+/** Pure shared half of the guard — presence and pairing only, no database lookups. */
+export function validateTransactionLinks(input: TransactionLinkInput): TransactionLinkIssues {
+  const issues: TransactionLinkIssues = {};
+  if (requiresSourceAccount(input.type) && !input.sourceAccount) {
+    issues.source = SOURCE_ACCOUNT_REQUIRED;
+  }
+  if (requiresDestAccount(input.type) && !input.destAccount) {
+    issues.destination = DEST_ACCOUNT_REQUIRED;
+  }
+  const pairing = sameAccountIssue(input.type, input.sourceAccount, input.destAccount);
+  if (pairing) issues.pairing = pairing;
+  return issues;
+}

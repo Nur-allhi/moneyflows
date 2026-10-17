@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Settings → Backup & Storage now has a **Data Integrity** row that checks every saved transaction against the rules the app enforces today and tells you if any record needs attention (which record and why). It only reports — it never changes or repairs your data. Most databases will simply read "All N records check out".
 - Tapping the header cloud button with an expired Google session now opens the sign-in popup directly instead of silently failing — Settings → Sync now is no longer the only way back in.
 
 ### Fixed

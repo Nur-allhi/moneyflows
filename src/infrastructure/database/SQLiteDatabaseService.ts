@@ -2,7 +2,9 @@ import initSqlJs, { type Database as SqlJsDb } from 'sql.js';
 import { Member } from '../../core/domain/Member';
 import { Account } from '../../core/domain/Account';
 import { Transaction } from '../../core/domain/Transaction';
-import { validateTransactionFields } from '../../core/domain/transactionRules';
+import { validateTransactionFields, requiresSourceAccount, requiresDestAccount, sameAccountIssue, SOURCE_ACCOUNT_REQUIRED, DEST_ACCOUNT_REQUIRED } from '../../core/domain/transactionRules';
+import { scanTransactions } from '../../core/domain/transactionIntegrity';
+import type { IntegrityReport } from '../../core/domain/transactionIntegrity';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
 import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile, BootProgress, ConflictPreview } from '../../core/ports/IDatabaseService';
@@ -1227,33 +1229,24 @@ export class SQLiteDatabaseService implements IDatabaseService {
     const member = this.queryOne<Record<string, unknown>>('SELECT id FROM members WHERE id=$id AND deleted_at IS NULL', { $id: tx.memberId });
     if (!member) throw new Error('Member not found');
 
-    if (tx.type === 'expense' || tx.type === 'transfer' || tx.type === 'loan_issue' || tx.type === 'loan_paidback' || tx.type === 'lend' || tx.type === 'repay') {
-      if (!tx.sourceAccount) throw new Error('Source account is required');
+    if (requiresSourceAccount(tx.type)) {
+      if (!tx.sourceAccount) throw new Error(SOURCE_ACCOUNT_REQUIRED);
       const src = this.queryOne<Record<string, unknown>>('SELECT id,is_active,balance FROM accounts WHERE id=$id AND deleted_at IS NULL', { $id: tx.sourceAccount });
       if (!src) throw new Error('Source account not found');
       if ((src.is_active as number) !== 1) throw new Error('Source account is inactive');
     }
 
-    if (tx.type === 'income' || tx.type === 'transfer' || tx.type === 'loan_repayment' || tx.type === 'loan_received' || tx.type === 'lend' || tx.type === 'repay') {
-      if (!tx.destAccount) throw new Error('Destination account is required');
+    if (requiresDestAccount(tx.type)) {
+      if (!tx.destAccount) throw new Error(DEST_ACCOUNT_REQUIRED);
       const dst = this.queryOne<Record<string, unknown>>('SELECT id,is_active FROM accounts WHERE id=$id AND deleted_at IS NULL', { $id: tx.destAccount });
       if (!dst) throw new Error('Destination account not found');
       if ((dst.is_active as number) !== 1) throw new Error('Destination account is inactive');
     }
 
-    if (tx.type === 'transfer') {
-      if (tx.sourceAccount === tx.destAccount) throw new Error('Source and destination must differ');
-    }
-
-    if (tx.type === 'loan_issue' && tx.sourceAccount && tx.destAccount && tx.sourceAccount === tx.destAccount) {
-      throw new Error('Source and destination must differ for account-to-account loans');
-    }
-    if (tx.type === 'loan_repayment' && tx.sourceAccount && tx.destAccount && tx.sourceAccount === tx.destAccount) {
-      throw new Error('Repayment source and destination must differ');
-    }
-    if ((tx.type === 'lend' || tx.type === 'repay') && tx.sourceAccount && tx.destAccount && tx.sourceAccount === tx.destAccount) {
-      throw new Error('Source and destination must differ for lend/repay transactions');
-    }
+    // Pairing rules live in the shared module too, so the BUG-41 scan checks the
+    // same combinations with the same wording. Thrown last, as before.
+    const pairing = sameAccountIssue(tx.type, tx.sourceAccount, tx.destAccount);
+    if (pairing) throw new Error(pairing);
   }
 
   private saveTransactionToDb(tx: Transaction): void {
@@ -1510,5 +1503,25 @@ export class SQLiteDatabaseService implements IDatabaseService {
       });
     }
     await this.flush();
+  }
+
+  findInvalidTransactions(): Promise<IntegrityReport> {
+    // BUG-41: detect and report only — nothing in this method writes. Rows are
+    // read in the same replay order the balance pass uses (date, rowid) so the
+    // report reads top-down like the ledger. A non-numeric amount becomes NaN so
+    // a NULL/garbage column is reported instead of quietly reading as 0.
+    const rows = this.query<Record<string, unknown>>(
+      'SELECT id,type,amount,description,date,source_account,dest_account FROM transactions WHERE deleted_at IS NULL ORDER BY date,rowid',
+    );
+    const report = scanTransactions(rows.map((r) => ({
+      id: r.id as string,
+      type: r.type as string,
+      amount: typeof r.amount === 'number' ? r.amount : NaN,
+      description: (r.description as string | null) ?? '',
+      date: (r.date as string | null) ?? '',
+      sourceAccount: (r.source_account as string | null) ?? null,
+      destAccount: (r.dest_account as string | null) ?? null,
+    })));
+    return Promise.resolve(report);
   }
 }
