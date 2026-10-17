@@ -1962,5 +1962,5 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - code-reviewer, senior-backend, senior-frontend (static audit; no tooling/gates run — docs-only change)
 
 ### Status
-- 17 findings logged on `dev`, committed docs-only. NOT pushed — `dev` already carries 2 unpushed commits from the BUG-19 fix (`eff4d6c`, `14105ee`) and pushing would carry those along with this log
+- 17 findings logged on `dev`, pushed at user request — remote `dev` is at `b128400` (in sync). The push also carried the earlier unpushed BUG-19 fix (`eff4d6c`) + its session log (`14105ee`), confirmed with the user first
 - Next: user triages the report and picks a finding; recommended order = BUG-24 + BUG-23 (only data-corrupting pair), then BUG-22, then BUG-21/25. Each fix needs an approved approach before code is touched. Still open from the earlier audit: BUG-20 (linked-accounts modal balance)
