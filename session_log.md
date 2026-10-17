@@ -1994,3 +1994,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - On `dev`, awaiting push. BUG-20 = fixed (docs + regression test only, `src/` untouched). Next: user decision on BUG-38/BUG-39 one-line fixes (vitest `exclude: ['e2e/**']`; update/replace the stale search smoke), then the earlier audit order (BUG-24 + BUG-23 first).
+
+## Session 2026-10-17 (branch fix/calculation-audit for the calculation audit)
+
+### Changes
+- Created `fix/calculation-audit` off `dev` (`552c9aa`) in the main folder and pushed with upstream tracking. Safe to branch here because the mobile UI workstream already runs in its OWN worktree (`C:/Users/EftynurPc/.local/share/opencode/worktree/949b9e/mobile-refinements` -> `feature/mobile-refinements`), so the two sessions no longer share a working tree
+- Both workstreams share base `552c9aa`, so the later merges into `dev` align: calc branch carries the audit fixes, mobile branch carries M-01..M-09 (`docs/plans/MOBILE_UI_REFINEMENTS_PLAN.md`)
+- Merge-collision analysis between the two branches — real overlap is confined to dashboard/member-profile presentation files: `sections.tsx` (calc BUG-21 trend label vs mobile M-05 zero-red colour rules) and `Dashboard.tsx`/`LedgerSection.tsx` (mobile M-03/M-09). Zero overlap on the calc-branch files `SQLiteDatabaseService.ts`, `LoanService.ts`, `LoanDatabase.ts`, `MemberReportService.ts`, `OtherLedgerService.ts`, `useLoanStore.ts`, `TransactionEditModal.tsx`, `FormField.tsx`, `RecycleBin.tsx`, `GroupLedgerScreen.tsx`. Sequencing recommendation given to the user: do BUG-24 first (touches none of their files), defer the dashboard work (BUG-21/25) until after M-05 lands
+- `AGENTS.md` §5 deliberately NOT edited on this branch: the other workstream is actively editing that file and §5 is the likeliest conflict point. Handoff for this branch is recorded here instead
+- No production code changed yet on this branch
+
+### Skill(s) Used
+- none yet (branch setup only)
+
+### Status
+- Branch `fix/calculation-audit` ready, pushed, in sync. Next: user picks the first finding and confirms its approach, plus the two standing decisions — overpayment rule (BUG-23) and whether to detect/repair already-damaged data (BUG-24). Recommended first = BUG-24 with BUG-31 riding along (same root cause)
