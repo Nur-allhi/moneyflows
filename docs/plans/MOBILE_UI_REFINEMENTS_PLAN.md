@@ -16,7 +16,7 @@
 - Target: `src/otherLedgers/presentation/screens/OtherLedgersIndex.tsx` + its CSS module.
 - Acceptance: count label sits above the search row (stacked), no overlap at 320/360/390px; `+ Entry` hidden (or visually demoted) when `ledgers.length === 0`; empty state centered with a clear single primary CTA (`New Ledger`); tap targets ≥44px.
 
-### M-02 · Detail screens — header shows no page title — **open** (high, navigation)
+### M-02 · Detail screens — header shows no page title — **done** (`feature/mobile-refinements`)
 - Observed: member profile (`/member/:id`) and other-ledger detail (`/other-ledgers/:id`) render a back arrow + icon pills with an **empty header center**; list screens (Members, Loans, Settings, other-ledgers index) all show a title. You can't tell which member/ledger you're in from the header.
 - Target: header title/breadcrumb logic in `src/App.tsx` (title map built from route segments) and `src/presentation/components/Header.tsx` mobile rules.
 - Acceptance: every detail route shows its subject name (member/ledger/group/tag/loan) in the mobile header; long names ellipsize; no layout shift vs. list screens.

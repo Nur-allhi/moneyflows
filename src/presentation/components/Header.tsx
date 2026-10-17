@@ -102,6 +102,17 @@ export function Header({
   const [dropOpen, setDropOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const effectiveTheme = useEffectiveTheme();
+  /**
+   * M-02: mobile shows the subject name (member/ledger/group/tag/loan) as the
+   * header title. The breadcrumb is hidden on mobile, so instead of an empty
+   * center we surface the crumb that names the subject: for depth ≤ 2 the last
+   * crumb, deeper (e.g. /member/:id/report) the crumb before it.
+   */
+  const lastCrumb = breadcrumb ? breadcrumb[breadcrumb.length - 1] : undefined;
+  const crumbBefore = breadcrumb ? breadcrumb[breadcrumb.length - 2] : undefined;
+  const subjectTitle = breadcrumb
+    ? (breadcrumb.length > 2 ? crumbBefore?.label : lastCrumb?.label) ?? ''
+    : title;
   const [backKey, replayBack] = useReplay();
   const [addKey, replayAdd] = useReplay();
   const [searchKey, replaySearch] = useReplay();
@@ -237,7 +248,7 @@ export function Header({
                   <polyline points="12 19 5 12 12 5" />
                 </svg>
               </button>
-              {breadcrumb ? (
+              {!isMobile && breadcrumb ? (
                 <div className={styles.breadcrumb}>
                   {breadcrumb.map((item, i) => (
                     <span key={item.label}>
@@ -247,7 +258,7 @@ export function Header({
                   ))}
                 </div>
               ) : (
-                <span className={styles.title}>{title}</span>
+                <span className={styles.title}>{subjectTitle}</span>
               )}
             </>
           )

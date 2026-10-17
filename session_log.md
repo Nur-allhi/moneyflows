@@ -1994,3 +1994,19 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - On `dev`, awaiting push. BUG-20 = fixed (docs + regression test only, `src/` untouched). Next: user decision on BUG-38/BUG-39 one-line fixes (vitest `exclude: ['e2e/**']`; update/replace the stale search smoke), then the earlier audit order (BUG-24 + BUG-23 first).
+
+## Session 2026-10-17 12:30
+
+### Changes
+- Branch `feature/mobile-refinements` created off `dev` @ `552c9aa` in worktree `...\opencode\worktree\949b9e\mobile-refinements` (session moved here; main checkout untouched for parallel calc-audit session).
+- Worktree toolchain stood up: npm install, typecheck PASS, vitest 113/113, build PASS. Dev server runs on :3100 (worktree copy).
+- **M-01 complete** (`0e6987f`): Other Ledgers index mobile head restructured — search full-width row 1, row 2 = count left + CTAs right; `+ Entry` hidden when zero ledgers; composed centered empty state ("No ledgers yet" + single `+ New Ledger` CTA). CSS-module only + JSX restructure in `OtherLedgersIndex.tsx`; desktop visual order preserved via `order: -1` on count.
+- Verified via project Playwright runner (scratch spec, deleted after): empty-state geometry (count below search, left-aligned, no horizontal overflow) + populated row-2 geometry, screenshots checked at 390x844.
+- Gates: typecheck / eslint --max-warnings 0 / vitest 113 / vite build all PASS. detect_changes (moneyflows vs dev): 0 changed symbols, 0 affected processes, risk low. §17 checklist pass. Stale lockfile version-string noise from npm install reverted.
+- Plan doc: M-01 marked **done**.
+
+### Skill(s) Used
+- senior-frontend (screen/CSS work); Playwright project-runner pattern for verification.
+
+### Status
+- M-01 done. Next: **M-02** (Other Ledger detail header title in App.tsx routeTitles / Header) per execution order, then M-04+M-06+M-07 (detail screen touch zone), M-03, M-05, M-08, M-09.
