@@ -1929,3 +1929,18 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - `master` carries BUG-16/17/18 fixes + header sign-in. Next: deploy hosted app + user verifies, then version-bump release when confirmed.
+
+## Session 2026-10-17 (mobile UI audit + BUG-19 starting-balance wipe fix)
+
+### Changes
+- Mobile UI audit (Playwright, 390x844, fresh guest profile): wizard, dashboard, members, member detail + linked accounts, loans, other ledgers index/detail/entry sheets, settings, More sheet, light mode. Ranked refinement list delivered to user (Other Ledgers index layout mess #1; detail headers missing titles; emoji-as-icons; orphaned empty-state buttons; zero-in-danger-red; touch targets; validation-in-labels; duplicate wizard progress; suspicious All Accounts badge)
+- BUGS.md: logged BUG-19 (critical) + BUG-20 (high) from audit findings. BUG-19: wizard step 2 stored starting balance raw on accounts.balance — boot recalculateBalances (T-171 replay) zeroed it on reload; live-reproduced 28,000 -> 0. BUG-20: linked-accounts modal showed 0 BDT while dashboard showed 28,000 in same (pre-reload) session — diagnose later against healthy account
+- BUG-19 fixed (eff4d6c): SetupWizard.handleAddAccount now mirrors AddAccountModal — account saved with balance 0 + income 'Opening Balance' transaction tagged isOpeningBalance:true; live-verified vanish-then-fix (reload keeps 28,000 + both Opening Balance rows in Recent Transactions); detect_changes LOW (stale index, diff-verified confined to wizard)
+- Process notes: agentation extension overlay in the test browser intercepts the bottom-right More nav button on reload (removed DOM-side repeatedly; real-user app behavior unaffected) — worth a persistent extension-free e2e context later
+- Gates: typecheck PASS, eslint scoped clean, unit 113/113 (src), build PASS
+
+### Skill(s) Used
+- ui-ux-pro-max (audit), senior-frontend (fix)
+
+### Status
+- BUG-19 closed on `dev` (commit eff4d6c, pushed? NO — commit only, unpushed). Next: user decision on BUG-20 + mobile UI refinement list (starts with Other Ledgers index layout); then push.
