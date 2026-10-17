@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tapping the header cloud button with an expired Google session now opens the sign-in popup directly instead of silently failing — Settings → Sync now is no longer the only way back in.
 
 ### Fixed
-- Starting balances typed during setup no longer vanish on the next reload: the wizard now records them as an "Opening Balance" transaction the same way the normal Add Account flow does, so boot recalculation keeps them (they previously read 0 everywhere after one reload).
+- Starting balances typed during setup no longer vanish on the next reload: the wizard now records them as an "Opening Balance" transaction the same way the normal Add Account flow does, so boot recalculation keeps them (they previously read 0 everywhere after one reload — including the Linked Accounts list, which could show 0 BDT for accounts the dashboard counted as real money).
 - Google sign-in/sync can no longer hang forever when the popup closes without answering (unauthorized origin, blocker): every popup wait now times out (60s interactive, 10s silent, 15s script load) and Settings shows an actionable error instead of a stuck progress bar.
 - Google sessions stretch while the app is in use: the real token lifetime is honored and activity triggers a silent renewal before expiry, so Sync stops asking to sign in every hour; long-idle reopens still need one tap.
 - Identical device and cloud copies no longer raise a sync-conflict dialog (unconfirmed uploads used to triple-differ against a stale fingerprint): the fingerprint heals silently and a healed conflict dismisses its own dialog. Genuine both-sides changes still ask.

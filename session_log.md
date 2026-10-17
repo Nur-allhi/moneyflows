@@ -1974,3 +1974,23 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Committed `docs:` on `dev`. Next: BUG-20 diagnosis or first ticket M-01 on user call.
+
+## Session 2026-10-17 (BUG-20 diagnosed + closed as resolved-by-BUG-19, regression guard)
+
+### Changes
+- BUG-20 ("Linked Accounts modal shows 0 BDT while dashboard shows the real total") diagnosed live in the running app against the exact reported data set (member Imran: City Bank 25,000 + Cash Wallet 3,000 = 28,000). Dashboard "Total in Banks", dashboard member row, Members list, profile hero, mobile Linked Accounts modal (25,000 + 3,000) and desktop dropdown all read the same values — before AND after a full reload. **BUG-20 does not reproduce on current code.**
+- Root cause (no separate defect — a second face of BUG-19): those accounts held a balance no transaction backed (pre-fix wizard wrote the raw number onto the account row). Boot's `recalculateBalances()` (main.tsx:90) recomputes every balance from the transaction stream and rewrites unbacked rows to the replayed sum (0); the Linked Accounts modal re-reads those rows while the dashboard metric renders the in-store value through `useAnimatedValue` → "modal 0 / dashboard 28,000" inside that window. Verified every other balance writer cannot produce an unbacked balance: `AddAccountModal` + fixed wizard write an `isOpeningBalance` income tx, `EditAccountModal` cannot change a balance, `LoanService` creates counterparty accounts at 0
+- User-confirmed plan = Option A (close as resolved-by-BUG-19 + regression guard; no production change for a symptom that no longer exists). Option B (re-derive balances in `restoreAccount` and every account write) deferred — noted as better folded into BUG-24 work
+- `docs/BUGS.md`: BUG-20 moved out of the open block into fixed history (Status fixed, diagnosed root cause, fix approach, resolved-by `eff4d6c` + today's regression test)
+- NEW regression test in `e2e/flows/03-accounts.spec.ts` (mobile modal + desktop dropdown): asserts per-account card balances `{DBBL 70,000 · Cash -6,000 · bKash 0}`, profile Net Balance 64,000 and dashboard In-Banks 70,000 — mobile case repeats all of it after a reload, pinning BUG-19 + BUG-20. Values derived from `e2e/helpers/seed-tiny.ts` (balances rebuilt by replay)
+- Mutation-verified the guard bites: temporarily forced the modal to `formatAmount(0, …)` → the new mobile test failed with exactly the reported symptom (`DBBL "0 BDT"` vs expected `"70,000 BDT"`); mutation reverted, `git diff -- src` is empty
+- `CHANGELOG.md` [Unreleased] → Fixed: extended the existing BUG-19 bullet to name the Linked Accounts list reading 0 BDT (same user-visible fix; no version bump — docs/test only per `docs/VERSIONING.md` §2 rule 4)
+- TWO pre-existing harness defects found while running gates, logged (not fixed, per §3.11): **BUG-38** `npm test` can never pass — vitest collects all 21 `e2e/*.spec.ts` and exits 1 ("Playwright Test did not expect test() here") while the 113 real unit tests pass; **BUG-39** `e2e/search.smoke.spec.ts:13` waits for a dashboard `Search...` input that the global header search (`a641ba9`) replaced → `npx playwright test` is permanently 30/1 red on an untouched app
+- Gates: typecheck PASS, lint `--max-warnings 0` PASS (exit 0), unit 113/113 PASS (the 21 vitest "failed suites" are BUG-38, all Playwright files), Playwright 30 passed / 1 failed = BUG-39 only (my 4 tests in `03-accounts` green; e2e for the new spec run 3× including a negative mutation run)
+- Gotcha hit again: the long-lived dev server on :3000 served a **stale bundle** (Windows watcher missed an edit) — a mutation run silently tested old code. Fix used: kill the listener by port (`Get-NetTCPConnection -LocalPort 3000`) and let Playwright start a fresh server, verifying the served module with `Invoke-WebRequest` before trusting a run
+
+### Skill(s) Used
+- senior-frontend (diagnosis + regression test), code-reviewer (harness findings BUG-38/39)
+
+### Status
+- On `dev`, awaiting push. BUG-20 = fixed (docs + regression test only, `src/` untouched). Next: user decision on BUG-38/BUG-39 one-line fixes (vitest `exclude: ['e2e/**']`; update/replace the stale search smoke), then the earlier audit order (BUG-24 + BUG-23 first).

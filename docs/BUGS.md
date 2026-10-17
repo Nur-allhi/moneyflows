@@ -26,19 +26,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
-## BUG-20: Linked Accounts modal shows 0 BDT while dashboard shows the real total
-
-- **Status:** open
-- **Severity:** high
-- **Found:** 2026-10-17 (during: mobile UI audit — BEFORE the BUG-19 reload, Dashboard "Total in Banks" read 28,000 in the same session)
-- **Location:** `src/presentation/screens/memberProfile/AccountsSection.tsx` (Linked Accounts modal, route `/member/:id`)
-- **Description:** The Linked Accounts modal lists "City Bank — 0 BDT Available Balance" and "Cash Wallet — 0 BDT Available Balance" while the dashboard reports "Total in Banks 28,000 BDT" for the same two accounts in the same session. Expected: the modal shows each account's current balance. Note: BUG-19 zeroed these specific accounts after reload, so re-verify against a healthy account before diagnosing.
-- **Root Cause:** (unknown until diagnosed)
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
----
-
 ## BUG-21: Dashboard metric chips use two different formulas under one "vs last month" label
 
 - **Status:** open
@@ -225,6 +212,45 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** left over from the pre-unified-loan model where those account types stood in for loans.
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
+
+---
+
+## BUG-38: `npm test` can never pass — vitest collects the Playwright specs
+
+- **Status:** open
+- **Severity:** low
+- **Found:** 2026-10-17 (during: BUG-20 verification — running the unit-test gate before pushing `dev`)
+- **Location:** `package.json:12` (`"test": "vitest run"`) — no `vitest.config.*` / `test.include` exists
+- **Description:** `npx vitest run` reports `Test Files 21 failed | 13 passed (34)` with `Tests 113 passed (113)`: every file under `e2e/` (all 21 `*.spec.ts`) is collected by vitest and dies with "Playwright Test did not expect test() to be called here", so the process exits 1. The 113 real unit tests all pass. Every other documented command (`playwright test`, typecheck, lint) is clean, and pre-existing on HEAD — the failing list is exactly the e2e inventory, none of which this session touched. Expected: the unit gate exits 0 by itself (e.g. exclude `e2e/**` in a vitest config), so "unit tests green" is a real signal instead of a known-red command.
+- **Root Cause:** default vitest `include` (`**/*.{test,spec}.?(c|m)[jt]s?(x)`) matches the Playwright spec directory; nothing tells vitest to skip it.
+- **Fix Approach:** (pending user confirmation)
+- **Resolved:**
+
+---
+
+## BUG-39: Stale `search.smoke.spec.ts` makes the Playwright suite permanently red
+
+- **Status:** open
+- **Severity:** low
+- **Found:** 2026-10-17 (during: BUG-20 verification — full `npx playwright test` before pushing `dev`)
+- **Location:** `e2e/search.smoke.spec.ts:13-23` (`dashboard global finds across all txs (proves slice gap)`)
+- **Description:** The test waits for a dashboard search *input* `getByPlaceholder('Search...')` and times out: the dashboard no longer has one — global search moved to the header Search button + overlay (`a641ba9`, merged after the smoke was written on 2026-08-26). `npx playwright test` therefore ends 30 passed / 1 failed on an untouched app (this session changed no `src/` file). The file's own header comment says these smokes document the pre-S-1 gap and "should be updated to assert highlighting + all-transactions scope" after S-2/S-3 — that update never happened. Expected: the suite exits 0, so "playwright green" is a real signal.
+- **Root Cause:** the smoke asserts pre-S-1 UI (inline dashboard search input) that the global-search feature replaced; only the sibling "ledger-scoped" smoke was made tolerant of the new UI.
+- **Fix Approach:** (pending user confirmation)
+- **Resolved:**
+
+---
+
+## BUG-20: Linked Accounts modal shows 0 BDT while dashboard shows the real total
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-17 (during: mobile UI audit — BEFORE the BUG-19 reload, Dashboard "Total in Banks" read 28,000 in the same session)
+- **Location:** `src/presentation/screens/memberProfile/AccountsSection.tsx` (Linked Accounts modal, route `/member/:id`); same data also shown by `src/presentation/modals/SelectAccountModal.tsx` and the desktop dropdown
+- **Description:** The Linked Accounts modal lists "City Bank — 0 BDT Available Balance" and "Cash Wallet — 0 BDT Available Balance" while the dashboard reports "Total in Banks 28,000 BDT" for the same two accounts in the same session. Expected: the modal shows each account's current balance.
+- **Root Cause:** diagnosed 2026-10-17 — not a separate defect: the same two faces of BUG-19. Those accounts carried a balance no transaction backed (the pre-BUG-19 wizard wrote the raw number onto the account row). Boot's `recalculateBalances()` recomputes every account balance from the transaction stream and rewrites unbacked rows to the replayed sum (0). The Linked Accounts modal re-reads those rows, while the dashboard metric renders the in-store value through `useAnimatedValue` — inside that window the same accounts read 0 in the modal and 28,000 on the dashboard. Every other balance writer was checked and cannot produce an unbacked balance: `AddAccountModal` and the fixed wizard write an `isOpeningBalance` income transaction, `EditAccountModal` cannot change a balance, `LoanService` creates counterparty accounts at 0.
+- **Fix Approach:** user-confirmed (Option A — close as resolved-by-BUG-19, add a regression guard; no production code change warranted for a symptom that no longer exists) — re-verified live on the reported data set (City Bank + Cash Wallet): dashboard, members list, profile hero, mobile modal and desktop dropdown all read the same per-account values before and after a reload; NEW Playwright regression test pins dashboard ↔ Linked Accounts parity across a reload.
+- **Resolved:** 2026-10-17 — resolved by `eff4d6c` (BUG-19 wizard fix) + regression test on `dev`; verified live (mobile modal + desktop dropdown + dashboard, before and after reload).
 
 ---
 

@@ -238,6 +238,10 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 
+**BUG-20 (linked-accounts modal 0 BDT vs dashboard total):** closed 2026-10-17 as **resolved-by-BUG-19** — diagnosed live, not reproducible on current code (dashboard/members list/profile hero/mobile modal/desktop dropdown all agree, before and after reload). Regression guard added in `e2e/flows/03-accounts.spec.ts` (mutation-verified). No production code change, no version bump.
+
+**Two pre-existing harness defects logged this session (open, await user decision):** BUG-38 `npm test` can never pass (vitest collects all `e2e/*.spec.ts`; 113 real unit tests pass) and BUG-39 `e2e/search.smoke.spec.ts:13` asserts a dashboard `Search...` input the global header search replaced → Playwright is permanently 30 passed / 1 failed. Both are one-line fixes when approved.
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
