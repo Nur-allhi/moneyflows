@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LedgerTable, LedgerSearch } from '../../components';
 import type { LedgerRow } from '../../components';
+import { ClipboardList, Tag as TagIcon } from 'lucide-react';
 import { useModalStore } from '../../stores/useModalStore';
 import { useReplay } from '../../hooks/useReplay';
 import { useSettingsStore } from '../../stores/useSettingsStore';
@@ -229,7 +230,7 @@ export function LedgerSection(props: Props) {
             {(ledgerTagOptions.length > 0 || tagFilter) && (
               <>
                 <select className={styles.tagSelect} value={tagFilter} onChange={(e) => setTagFilter(e.target.value)} aria-label="Filter by tag"><option value="">All tags</option>{ledgerTagOptions.map((t) => <option key={t} value={t}>{t}</option>)}</select>
-                {tagFilter && <button className={`${styles.ledgerFilterBtn} ${tagViewKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayTagView(); navigate(`/tags/${encodeURIComponent(tagFilter)}`); }} title="View this tag across all members" aria-label="View tag family-wide"><span className="anim-target" key={tagViewKey}>{'\u{1F3E0}'}</span></button>}
+                {tagFilter && <button className={`${styles.ledgerFilterBtn} ${tagViewKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayTagView(); navigate(`/tags/${encodeURIComponent(tagFilter)}`); }} title="View this tag across all members" aria-label="View tag family-wide"><span className="anim-target" key={tagViewKey}><TagIcon size={14} strokeWidth={1.8} aria-hidden="true" /></span></button>}
               </>
             )}
             <button className={`${styles.ledgerFilterBtn} ${filtKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayFilt(); (trayRef.current?.querySelector(`.${styles.filterTray ?? 'filterTray'}`) as HTMLElement)?.classList.toggle(styles.filterTrayOpen ?? 'filterTrayOpen'); }} aria-label="Filter">
@@ -269,7 +270,7 @@ export function LedgerSection(props: Props) {
         </div>
       </div>
       {filteredTxs.length === 0 ? (
-        <div className="empty-state" style={{ padding: '24px 0' }}><div className="empty-state-icon">{'\u{1F4CB}'}</div><p className="empty-state-text">No transactions yet</p></div>
+        <div className="empty-state"><div className="empty-state-icon"><ClipboardList size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">No transactions yet</p></div>
       ) : (
         filteredTxs.map((tx) => {
           const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';

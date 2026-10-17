@@ -9,7 +9,7 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
 import { useReplay } from '../hooks/useReplay';
 import { formatAmount } from '../utils/format';
-import { TX_TYPE_ICON, displayTxType } from '../constants/labels';
+import { displayTxType } from '../constants/labels';
 import styles from './TransactionDetailModal.module.css';
 
 interface TransactionDetailModalProps {
@@ -201,7 +201,7 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
 
   if (isMobile) {
     return (
-      <BottomSheet isOpen onClose={onClose} title={`${TX_TYPE_ICON[transaction.type] ?? ''} Transaction Details`}>
+      <BottomSheet isOpen onClose={onClose} title="Transaction Details">
         {detailContent}
         <div className={styles.mobSheetFooter}>
           <button className={`${styles.mobSheetBtn} ${mLedgerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayMLedger(); handleOpenLedger(); }}>
@@ -231,7 +231,7 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
     <Modal
       isOpen
       onClose={onClose}
-      title={`${TX_TYPE_ICON[transaction.type] ?? ''} Transaction Details`}
+      title="Transaction Details"
       footer={
         <div className={styles.footer}>
           <button className={`${styles.ledgerBtn} ${ledgerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayLedger(); handleOpenLedger(); }} title="Open in Ledger">

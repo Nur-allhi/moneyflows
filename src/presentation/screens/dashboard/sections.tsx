@@ -1,3 +1,4 @@
+import { ArrowUpRight } from 'lucide-react';
 import { formatAmount } from '../../utils/format';
 import styles from '../Dashboard.module.css';
 import { ArrowUp, ArrowDown } from './icons';
@@ -47,12 +48,12 @@ export function MonthSummary({ thisMonthIncome, thisMonthExpenses, thisMonthNet,
   return (
     <>
       <div className={styles.monthSummary}>
-        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Income</span><span className={styles.monthStatValue} style={{ color: 'var(--color-teal)' }}>{formatAmount(thisMonthIncome, locale, currency)}</span></div>
+        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Income</span><span className={`${styles.monthStatValue} ${styles.statTeal}`}>{formatAmount(thisMonthIncome, locale, currency)}</span></div>
         <div className={styles.flowDivider} />
-        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Expenses</span><span className={styles.monthStatValue} style={{ color: 'var(--color-coral)' }}>{formatAmount(thisMonthExpenses, locale, currency)}</span></div>
-        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Net</span><span className={styles.monthStatValue} style={{ color: thisMonthNet >= 0 ? 'var(--color-teal)' : 'var(--color-coral)' }}>{thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)}</span></div>
+        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Expenses</span><span className={`${styles.monthStatValue} ${styles.statCoral}`}>{formatAmount(thisMonthExpenses, locale, currency)}</span></div>
+        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Net</span><span className={`${styles.monthStatValue} ${thisMonthNet >= 0 ? styles.statTeal : styles.statCoral}`}>{thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)}</span></div>
       </div>
-      <div className={styles.flowNet}>{'\u2197'} Net {thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)} this month</div>
+      <div className={styles.flowNet}><ArrowUpRight size={12} strokeWidth={1.8} aria-hidden="true" /> Net {thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)} this month</div>
     </>
   );
 }

@@ -11,6 +11,7 @@ import { useSearchStore } from '../stores/useSearchStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useEffectiveTheme } from '../hooks/useTheme';
 import { GlobalSearchResults } from './GlobalSearch';
+import { BellIcon } from './StatusIcons';
 import { useGlobalSearch, type GlobalSearchItem } from './useGlobalSearch';
 import styles from './Header.module.css';
 
@@ -405,7 +406,7 @@ export function Header({
           )}
         </div>
         <button className={`${styles.notifBtn} ${bellKey > 0 ? styles.bellRing : ''}`} onClick={replayBell} aria-label="Notifications">
-          {'\uD83D\uDD14'}
+          <BellIcon />
         </button>
         {syncState && (
           <button

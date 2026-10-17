@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
-import { RecycleRow, GlassPanel } from '../components';
+import { RecycleRow, GlassPanel, AlertIcon, TrashIcon } from '../components';
+import { RefreshCw, AlertTriangle, Landmark } from 'lucide-react';
 import { useRecycleStore } from '../stores/useRecycleStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
@@ -68,7 +69,7 @@ export function RecycleBin() {
       <div className={styles.recycle}>
         <GlassPanel padding="lg">
           <div className="error-state">
-            <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
+            <div className="error-state-icon"><AlertIcon /></div>
             <p className="error-state-text">Could not load recycle bin</p>
             <button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchDeleted(); }}><span className="anim-target" key={retryKey}>Retry</span></button>
           </div>
@@ -117,7 +118,7 @@ export function RecycleBin() {
           <span className={styles.statLabel}>Days Until Auto-Purge</span>
         </div>
         <div className={styles.actionBar}>
-          <button className={`${styles.pillBtn} ${refreshKey > 0 ? 'anim-spin' : ''}`} onClick={() => { replayRefresh(); fetchDeleted(); }}><span className="anim-target" key={refreshKey}>{'\u{1F504}'}</span> Refresh</button>
+          <button className={`${styles.pillBtn} ${refreshKey > 0 ? 'anim-spin' : ''}`} onClick={() => { replayRefresh(); fetchDeleted(); }}><span className="anim-target" key={refreshKey}><RefreshCw size={14} strokeWidth={1.8} aria-hidden="true" /></span> Refresh</button>
         </div>
       </div>
 
@@ -154,7 +155,7 @@ export function RecycleBin() {
         <div className={styles.listBody}>
           {filteredItems.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">{'\uD83D\uDDD1\uFE0F'}</div>
+              <div className="empty-state-icon"><TrashIcon /></div>
               <p className="empty-state-text">{effectiveSearch ? `No matches for "${effectiveSearch}"` : 'No deleted items'}</p>
             </div>
           ) : (
@@ -162,7 +163,7 @@ export function RecycleBin() {
               <RecycleRow
                 searchQuery={effectiveSearch}
                 key={item.id}
-                icon={item.type === 'transaction' ? '\u26A0' : '\u{1F3E6}'}
+                icon={item.type === 'transaction' ? <AlertTriangle size={14} strokeWidth={1.8} aria-hidden="true" /> : <Landmark size={14} strokeWidth={1.8} aria-hidden="true" />}
                 iconVariant={item.type === 'transaction' ? 'warning' : 'account'}
                 name={item.name}
                 meta={item.type === 'transaction' ? 'Transaction' : 'Account'}

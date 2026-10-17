@@ -5,7 +5,8 @@ import { useAccountStore } from '../../../presentation/stores/useAccountStore';
 import { useSettingsStore } from '../../../presentation/stores/useSettingsStore';
 import { useModalStore } from '../../../presentation/stores/useModalStore';
 import { formatAmount } from '../../../presentation/utils/format';
-import { GlassPanel } from '../../../presentation/components';
+import { GlassPanel, AlertIcon } from '../../../presentation/components';
+import { SearchX, HandCoins } from 'lucide-react';
 import { LoanCard } from '../components/LoanCard';
 import { LoanDetailView } from '../components/LoanDetailView';
 import { getDatabase } from '../../../infrastructure/database/getDatabase';
@@ -102,7 +103,7 @@ export function LoansScreen() {
       <div className={styles.container}>
         <GlassPanel padding="lg">
           <div className="error-state">
-            <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
+            <div className="error-state-icon"><AlertIcon /></div>
             <p className="error-state-text">Could not load loan data</p>
             <button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchLoanStacks(); }}><span className="anim-target" key={retryKey}>Retry</span></button>
           </div>
@@ -120,7 +121,7 @@ export function LoansScreen() {
       <div className={styles.container}>
         <GlassPanel padding="lg">
           <div className="empty-state">
-            <div className="empty-state-icon">{'\u{1F50D}'}</div>
+            <div className="empty-state-icon"><SearchX size={40} strokeWidth={1.8} aria-hidden="true" /></div>
             <p className="empty-state-text">Counterparty not found</p>
             <button className={`retry-btn ${viewAllKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayViewAll(); navigate('/loans'); }}><span className="anim-target" key={viewAllKey}>View all</span></button>
           </div>
@@ -210,7 +211,7 @@ export function LoansScreen() {
       {filteredStacks.length === 0 ? (
         <GlassPanel padding="lg">
           <div className="empty-state">
-            <div className="empty-state-icon">{'\u{1F4B5}'}</div>
+            <div className="empty-state-icon"><HandCoins size={40} strokeWidth={1.8} aria-hidden="true" /></div>
             <p className="empty-state-text">{mobileSearch ? `No loans match "${mobileSearch}"` : `No ${filter} loans`}</p>
           </div>
         </GlassPanel>

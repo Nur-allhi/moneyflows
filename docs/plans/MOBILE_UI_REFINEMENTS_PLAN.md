@@ -21,7 +21,7 @@
 - Target: header title/breadcrumb logic in `src/App.tsx` (title map built from route segments) and `src/presentation/components/Header.tsx` mobile rules.
 - Acceptance: every detail route shows its subject name (member/ledger/group/tag/loan) in the mobile header; long names ellipsize; no layout shift vs. list screens.
 
-### M-03 · Emoji used as UI icons — **open** (medium, design-identity violation)
+### M-03 · Emoji used as UI icons — **done** (`feature/mobile-refinements`)
 - Observed (violates DESIGN_IDENTITY §2 "no emoji icons"): wizard feature chips 💳 📒 🔒 and step cards 👥 etc.; dashboard/member/loans empty states 📋 💳 💵; other-ledger detail header "🔔"-labeled button; "↗ Net" glyph on dashboard.
 - Target: `SetupWizard.tsx`, `Dashboard.tsx`, `MemberProfile`/`LedgerSection`, `LoansScreen` empty states, `OtherLedgerDetail.tsx`, existing `labels.ts` icon maps → replace with inline SVG set (same stroke style as BottomNav icons, 24 viewBox, 1.8 stroke).
 - Acceptance: `grep` for emoji codepoints in `src/presentation/**` and `src/otherLedgers/**` returns zero UI matches; DESIGN_IDENTITY §17 pass.
