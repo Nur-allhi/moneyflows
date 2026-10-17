@@ -1919,3 +1919,13 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Next: push dev + user verifies popup-from-header when the ~1h session lapses.
+
+## Session 2026-10-17 (merge header sign-in feature to master)
+
+### Changes
+- User-approved `dev → master` no-ff (`a3bca5c`): header sign-in popup feature (`78e4d5c`) + CHANGELOG Unreleased Added + session log. No version bump/tag (release step pending user call)
+- Gates re-run on merge result: typecheck PASS, full lint 0 PASS, unit 113/113 PASS, build PASS; pushed `master` (`ce45235..a3bca5c`)
+- Back on clean `dev` (only untracked `Logo_mockups/` remains)
+
+### Status
+- `master` carries BUG-16/17/18 fixes + header sign-in. Next: deploy hosted app + user verifies, then version-bump release when confirmed.
