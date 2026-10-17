@@ -2089,3 +2089,20 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - BUG-22 closed on `fix/calculation-audit`. Nothing merged; `dev` untouched.
 - Next: **BUG-21 + BUG-25** (dashboard metric chips use two formulas under one label; loan movements counted as income/expense). These are parked until the mobile workstream's M-05 lands because `src/presentation/screens/dashboard/sections.tsx` is the single genuine merge conflict between the two branches — they touch the same file's label/colour rules.
 - Remaining open findings after this: BUG-21, BUG-25–BUG-30, BUG-32–BUG-37, BUG-39, BUG-40.
+
+## Session 2026-10-17 13:35 (fix/calculation-audit — BUG-41 logged: the missing half of the BUG-24 decision)
+
+### Changes
+- Answered the question "is everything from the audit fixed?" against the register rather than from memory: **4 of the 17 audit findings are fixed** (BUG-22, BUG-23, BUG-24, BUG-31); BUG-21 and BUG-25–BUG-37 remain open. BUG-38 (harness, fixed) and BUG-39/BUG-40 (found during this work) are outside the audit's 17.
+- While checking the audit's §0 "Decisions needed" list against what actually shipped, found an unbuilt commitment: the approved **Option B** for BUG-24 was *detect and report* already-damaged balances (plus the prevention half). Only prevention was built. Nothing in the app ever compares a stored `accounts.balance` against a balance recomputed from the transaction stream, so any balance poisoned *before* the fix stays wrong **and invisible** — "permanent" in the audit's words.
+- **BUG-41 logged** (open, medium, report-only candidate fix; `computeBalances` already recomputes and is unit-tested, Settings → Storage health is the natural surface). Per §3.11 this was logged as its own finding rather than left as unwritten follow-up. BUG-24's Resolved line gained a scope note so the fixed entry cannot be read as claiming the whole decision.
+- **Fourth `BUGS.md` incident, and the worst: my heading-anchored insertion *replaced* the `## BUG-32` heading instead of inserting before it**, orphaning BUG-32's bullets under BUG-41. Caught by reviewing the register (the id/status dump had no BUG-32) and repaired by restoring the exact original heading — verified byte-for-byte against `git show HEAD:docs/BUGS.md`. Net diff vs `HEAD` is now exactly the intended 12 additions / 1 replacement. Root cause: `edit` with the heading as the whole `oldString` **deletes** it; every previous insert had been done with a helper that re-emits the anchor. Lesson recorded: when inserting before an anchor line, the anchor must be part of `newString`.
+- Verified after repair: 0 fixed-block separator problems, 0 headings directly after `---`, BOM `35,32,77` (none), CRLF intact.
+
+### Skill(s) Used
+- code-reviewer, gitnexus (impact/detect_changes earlier in the session)
+
+### Status
+- Docs-only change; no source touched, so no gate re-run was needed beyond the register verification.
+- Still nothing merged. Next fix: **BUG-21 + BUG-25** (dashboard) when the mobile workstream's M-05 lands; then BUG-26…30, 32…37, 39, 40, 41.
+- Open question for the user: whether BUG-41 is worth building now (it is the only open finding that concerns data that is *already* wrong, rather than behaviour going forward).
