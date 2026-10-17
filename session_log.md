@@ -1964,3 +1964,12 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 ### Status
 - 17 findings logged on `dev`, pushed at user request — remote `dev` is at `b128400` (in sync). The push also carried the earlier unpushed BUG-19 fix (`eff4d6c`) + its session log (`14105ee`), confirmed with the user first
 - Next: user triages the report and picks a finding; recommended order = BUG-24 + BUG-23 (only data-corrupting pair), then BUG-22, then BUG-21/25. Each fix needs an approved approach before code is touched. Still open from the earlier audit: BUG-20 (linked-accounts modal balance)
+
+## Session 2026-10-17 (mobile audit list documented as plan)
+
+### Changes
+- NEW `docs/plans/MOBILE_UI_REFINEMENTS_PLAN.md` — M-01..M-09 tickets with observed-vs-acceptance criteria, fixes-first ordering, and BUG-19/BUG-20 cross-refs (audit findings are now in-repo, not chat-only)
+- No code touched in this step
+
+### Status
+- Committed `docs:` on `dev`. Next: BUG-20 diagnosis or first ticket M-01 on user call.
