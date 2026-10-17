@@ -2010,3 +2010,17 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - M-01 done. Next: **M-02** (Other Ledger detail header title in App.tsx routeTitles / Header) per execution order, then M-04+M-06+M-07 (detail screen touch zone), M-03, M-05, M-08, M-09.
+
+## Session 2026-10-17 13:05
+
+### Changes
+- **M-02 complete** (`1823e84`): detail routes (member/other-ledger/group/tag/loan + member report) now show the SUBJECT NAME in the mobile header instead of an empty center. Root cause: `.breadcrumb { display: none }` in the 768px media query + Header rendering the hidden breadcrumb div when a breadcrumb exists (only mobile branch). Fix: mobile branch always renders the title span fed from the breadcrumb (last crumb, or second-to-last for depth-3 member-report routes); ellipsis truncation added (.title nowrap/ellipsis + .left min-width 0); desktop breadcrumb unchanged.
+- Verified via scratch Playwright spec (deleted after): ledger detail + member detail titles, 50-char name ellipsizes without page overflow, desktop breadcrumb intact. All 5 pass at 390x844.
+- Gates: typecheck / eslint --max-warnings 0 / vitest 113 / build PASS. detect_changes: 1 touched symbol (Header, expected), 0 affected processes, risk low. Plan doc: M-02 done.
+- Note discovered while testing: CreateLedgerModal name validation = 3-50 chars (surfaced when a 67-char test name was rejected).
+
+### Skill(s) Used
+- senior-frontend (Header JSX/CSS), Playwright project-runner for verification.
+
+### Status
+- M-01, M-02 done. Next: **M-04 + M-06 + M-07** (Other Ledger detail orphaned buttons & trash touch targets & modal inline styles) per execution order, then M-03, M-05, M-08, M-09.

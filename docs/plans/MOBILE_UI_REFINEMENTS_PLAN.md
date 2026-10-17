@@ -26,7 +26,7 @@
 - Target: `SetupWizard.tsx`, `Dashboard.tsx`, `MemberProfile`/`LedgerSection`, `LoansScreen` empty states, `OtherLedgerDetail.tsx`, existing `labels.ts` icon maps → replace with inline SVG set (same stroke style as BottomNav icons, 24 viewBox, 1.8 stroke).
 - Acceptance: `grep` for emoji codepoints in `src/presentation/**` and `src/otherLedgers/**` returns zero UI matches; DESIGN_IDENTITY §17 pass.
 
-### M-04 · Other Ledger detail — orphaned empty-state buttons — **open** (medium)
+### M-04 · Other Ledger detail — orphaned empty-state buttons — **done** (`feature/mobile-refinements`)
 - Observed: with zero entries, a `+` FAB and a trash button float mid-screen, unanchored and disconnected from any row; hint text uncentered, huge dead space below the table header.
 - Target: `src/otherLedgers/presentation/screens/OtherLedgerDetail.tsx`.
 - Acceptance: empty state is a composed block (illustration/icon + hint + one primary "Add first entry" button); delete affordance lives with content rows (or a toolbar), not floating; ≥44px targets.
@@ -36,7 +36,7 @@
 - Target: `LoansScreen.tsx` summary tile + dashboard summary tiles color rules.
 - Acceptance: 0 balances/loans render in neutral (secondary) tone; danger red reserved for negative owed values; income/expense green/red (typed semantics) unchanged.
 
-### M-06 · Touch targets below 44px — **open** (medium, a11y)
+### M-06 · Touch targets below 44px — **done** (`feature/mobile-refinements`)
 - Observed: ledger delete trash icon buttons (~30px) — on index cards (corner) and detail (floating circle); memory aid: UNGuideline `touch-target-size`.
 - Target: `OtherLedgersIndex.tsx`, `OtherLedgerDetail.tsx` (+ CSS).
 - Acceptance: all icon-only interactive elements ≥44×44 hit area (padding can extend beyond visual size).
