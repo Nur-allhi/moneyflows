@@ -2329,5 +2329,5 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - **15 of the 17 audit findings are fixed** (BUG-47 closed since the last entry; BUG-40 and BUG-46 in the previous one). Still open from the audit: **BUG-21 + BUG-25** — the dashboard definition pair (chips computed two ways under one "vs last month" label; loan movements counted as both income and expense), which need one agreed formula before coding. The recommended definitions were put to the user with the question tool and came back unanswered, with the standing "judge and continue" instruction — so they are the next session's first task, and the recommendation is recorded in the register (`AGENTS.md` §5).
-- Branch `fix/calculation-audit` is 19 commits ahead of `dev`; **nothing merged**; `dev` still at `552c9aa`. A MINOR bump to 1.18.0 is still owed at merge.
+- Branch `fix/calculation-audit` is 20 commits ahead of `dev`; **nothing merged**; `dev` still at `552c9aa`. A MINOR bump to 1.18.0 is still owed at merge.
 - Open findings beyond the audit: BUG-39, BUG-42, BUG-43, BUG-44, BUG-45 (+ BUG-41 Scope B). Untracked `Logo_mockups/` still present.
