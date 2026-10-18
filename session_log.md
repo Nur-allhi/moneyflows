@@ -2306,7 +2306,7 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - gitnexus (impact on `recomputeBalances`/`validateTransaction`), code-reviewer
 
 ### Status
-- **All 17 audit findings are now fixed.** BUG-40 closed; BUG-46 (new, high) closed; BUG-47 logged as the deliberate follow-on decision.
+- **15 of the 17 audit findings are fixed** — BUG-40 closed (the last one worked), and BUG-46 (new, high) closed alongside it. The two audit findings still open are **BUG-21 + BUG-25** (the dashboard definition pair — chips computed two ways under one "vs last month" label, and loan movements counted as both income and expense), which need one agreed formula before any code changes. BUG-47 logged as the deliberate follow-on decision.
 - Branch `fix/calculation-audit` is 16 commits ahead of `dev` (`dev` still untouched at `552c9aa`); **nothing merged**. Contains a `feat:` commit, so a **MINOR bump to 1.18.0** is still owed at merge (intentionally not prepped here).
 - Still awaiting a user decision on: merge-into-`dev` approval, **BUG-47's allocation model**, BUG-39 (one-line e2e fix), BUG-42, BUG-43 (`.gitignore` `/dashboard`), BUG-44 (flakiness approach), BUG-45 (stale-flag definition), BUG-41 Scope B, BUG-21 + BUG-25 (dashboard definition call), the untracked `Logo_mockups/` PNG, the mislabelled second `## BUG-11` heading, and whether opening balances count as income app-wide.
 - Note for the next session: an async digest inside the storage init path (`readMain`) changes the init flow and made the app fall back to localStorage with an empty database — instrumentation there must stay synchronous.
