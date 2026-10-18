@@ -59,15 +59,15 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
 
-## BUG-28: Group ledger PDF exports only the currently visible page of rows
+## BUG-40: Editing a repayment upward silently clamps the loan instead of refusing (BUG-23's second door)
 
 - **Status:** open
 - **Severity:** medium
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/presentation/screens/GroupLedgerScreen.tsx:102-106` (`searchFilteredTxs = displayedTxs`, the `displayLimit` page slice) + `:235-316` (PDF build)
-- **Description:** The exported statement is built from `searchFilteredTxs`, which is the current `displayLimit` page slice (default 10 rows) rather than the full filtered set. Rows beyond the first page are silently omitted, and the exported opening/net figures are page-scoped. Expected: export the full filtered set. (The on-screen running balance for the slice is self-consistent — verified, not part of this bug.)
-- **Root Cause:** the PDF builder was pointed at the paginated view model instead of the full sorted set.
-- **Fix Approach:** (pending user confirmation)
+- **Found:** 2026-10-17 (during: BUG-23 fix — tracing every write path that changes `loans.outstanding`)
+- **Location:** `src/loans/application/LoanService.ts:154-168` (`syncLoanTransaction`), reached from `src/presentation/modals/TransactionEditModal.tsx` when a `lend`/`repay` transaction is edited
+- **Description:** BUG-23's overpayment is now refused on the create path, but the **edit** path still holds the same silent clamp: `loan.outstanding -= diff` followed by `loan.outstanding = Math.max(0, loan.outstanding)`. Editing an existing repayment *upward* past what the loan still owes therefore raises the amount on the ledger while the loan record stops at zero — the same "ledger says more was repaid than the loan received" divergence, now reachable through an ordinary edit. It is not a one-line amount check either: a transaction stores a **single** `loanRef`, while one repayment may have paid down several loans (the deliberate spillover in `recordRepayment`), so there is no per-transaction allocation record to reverse or re-apply. Expected: an edit that cannot be absorbed is refused as clearly as BUG-23, which needs the allocation question answered first.
+- **Root Cause:** `syncLoanTransaction` applies a delta to the single linked loan and clamps, treating that loan as the only one the transaction could have touched.
+- **Fix Approach:** (pending user confirmation) — kept as its own decision so the allocation model (one `loanRef` per transaction vs a recorded split) can be settled on its own merits instead of being smuggled into a bug fix.
 - **Resolved:**
 
 ## BUG-29: Recycle Bin "Total Amount" sums incomparable quantities
@@ -90,17 +90,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Description:** Deleted `other_ledger` and `other_entry` items are rendered under **All Items** with the bank icon and the label "Account", but the **Accounts** tab filters strictly on `type === 'account'`, so those rows can never be reached by switching tabs — the tab is inconsistent with its own labelling. Expected: either surface the other-ledger kinds as their own tab/label, or include them in the Accounts tab.
 - **Root Cause:** tab predicates were not updated when `other_ledger`/`other_entry` were added to `DeletedItem['type']`.
 - **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
-## BUG-40: Editing a repayment upward silently clamps the loan instead of refusing (BUG-23's second door)
-
-- **Status:** open
-- **Severity:** medium
-- **Found:** 2026-10-17 (during: BUG-23 fix — tracing every write path that changes `loans.outstanding`)
-- **Location:** `src/loans/application/LoanService.ts:154-168` (`syncLoanTransaction`), reached from `src/presentation/modals/TransactionEditModal.tsx` when a `lend`/`repay` transaction is edited
-- **Description:** BUG-23's overpayment is now refused on the create path, but the **edit** path still holds the same silent clamp: `loan.outstanding -= diff` followed by `loan.outstanding = Math.max(0, loan.outstanding)`. Editing an existing repayment *upward* past what the loan still owes therefore raises the amount on the ledger while the loan record stops at zero — the same "ledger says more was repaid than the loan received" divergence, now reachable through an ordinary edit. It is not a one-line amount check either: a transaction stores a **single** `loanRef`, while one repayment may have paid down several loans (the deliberate spillover in `recordRepayment`), so there is no per-transaction allocation record to reverse or re-apply. Expected: an edit that cannot be absorbed is refused as clearly as BUG-23, which needs the allocation question answered first.
-- **Root Cause:** `syncLoanTransaction` applies a delta to the single linked loan and clamps, treating that loan as the only one the transaction could have touched.
-- **Fix Approach:** (pending user confirmation) — kept as its own decision so the allocation model (one `loanRef` per transaction vs a recorded split) can be settled on its own merits instead of being smuggled into a bug fix.
 - **Resolved:**
 
 ## BUG-32: Member ledger running balance is wrong when no account is selected (latent)
@@ -181,6 +170,31 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** the smoke asserts pre-S-1 UI (inline dashboard search input) that the global-search feature replaced; only the sibling "ledger-scoped" smoke was made tolerant of the new UI.
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
+
+## BUG-42: Group ledger "Expense" tab counts lending on mobile but not on desktop
+
+- **Status:** open
+- **Severity:** low
+- **Found:** 2026-10-18 (during: BUG-28 fix — deciding which filtered set the group ledger PDF must export)
+- **Location:** `src/presentation/screens/GroupLedgerScreen.tsx` (`mobileFilteredTxs`: `expense → ['expense', 'lend', 'loan_issue']`) vs (`ledgerRows`: loan types classify as `type: 'loan'`, so the desktop Expense tab matches `expense` only)
+- **Description:** Both layouts offer the same five tabs (All / Income / Expense / Transfer / Loan), but the **Expense** tab selects different rows per layout: a `lend` or `loan_issue` transaction is listed under Expense on mobile and under Loan on desktop. The other four tabs agree (`income` = `income` on both, `transfer` likewise, `loan` = all six loan types on both). The tab set is presented as a shared filter, so the same tab showing two different row sets is a defect in one of them. Expected: one definition of each tab's row set, or a deliberate difference that is documented in the UI.
+- **Root Cause:** the mobile list was given its own inline type→tab map instead of reusing the desktop table's classification (the `isLoanType` helper that maps the six loan types to `loan`).
+- **Fix Approach:** (pending user confirmation) — needs a product call first: is lending money out an **expense** (cash left the account) or a **loan** (cash became a receivable)? Both readings are defensible and the app currently says "loan" on desktop and "expense" on mobile. It is also why the BUG-28 PDF fix deliberately preserved the export's existing type-tab behaviour instead of baking one map into a statement.
+- **Resolved:**
+
+---
+
+## BUG-28: Group ledger PDF exported only the currently visible page
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/presentation/screens/GroupLedgerScreen.tsx` (PDF builder; the `searchFilteredTxs = displayedTxs` alias is gone) + new shared `src/presentation/utils/runningBalance.ts`
+- **Description:** The exported statement was built from `searchFilteredTxs` — an alias for `displayedTxs`, the `displayLimit` page slice (default 10 rows) — so every row past the first page was silently omitted, and the statement's Opening Balance / Total Debit / Total Credit came from that same slice. On any group with more history than one page the PDF presented itself as the group's statement while showing a page of it, with an "opening balance" that was really the balance 10 rows back.
+- **Root Cause:** the PDF builder was pointed at the paginated view model instead of the full sorted set. The alias hid it: the name promised the full filtered set and delivered the page.
+- **Fix Approach:** (no user decision needed — the audit's "expected: export the full filtered set" is the only defensible behaviour) export `searchFilteredAll`, the full search-filtered ledger, and derive the opening balance from it; the on-screen table keeps its page-scoped walk, which the audit explicitly verified as internally consistent. Two `running` accumulators were the reason the two surfaces could disagree, so the walk is now one shared pure helper used by both. The export deliberately keeps ignoring the type tabs, because the tabs themselves disagree across layouts (BUG-42, open) and adding tab support now would bake an undecided rule into a statement. The statement stays chronological regardless of the on-screen sort, as before.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). `handleDownloadPdf` walks `searchFilteredAll` through new `withRunningBalances(items, deltaOf, endBalance)`; `ledgerRows` uses the same helper, so table and PDF can no longer drift; the misleading alias was deleted and its two remaining consumers now read `displayedTxs`, which is what they actually meant. The PDF also now reuses the component's `isGroupCredit`/`isGroupDebit` instead of its own private credit predicate. Evidence: 5 new unit tests (**158 total**, was 153) covering the whole-ledger walk, zero-delta (internal transfer) items, negative balances, the empty case, and the slice-vs-ledger property itself — the test that documents *why* the old code was wrong; **mutation-verified** — replacing `endBalance - net` with `endBalance` fails 3 of them, the first reading `expected [1850, 1850, 1650, 1700] to deeply equal [1000, 1000, 800, 850]`. Typecheck / lint / build PASS; full Playwright suite at its documented baseline (**30 passed / 1 failed** = BUG-39). That run also surfaced two load-dependent flakes (`03-accounts` mobile modal, `15-cloud-sync` sign-out) which pass in isolation in 27s and are unrelated to this change.
+- **Not covered:** the `handleDownloadPdf` → jsPDF wiring itself. The pure helper bounds the arithmetic, but no test asserts that the callback is fed the full set; driving it would mean intercepting a browser download, and extracting the PDF body for a unit test would duplicate its column layout.
 
 ---
 
