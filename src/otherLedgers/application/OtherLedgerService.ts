@@ -5,9 +5,6 @@ import type { OtherLedger, OtherLedgerEntry } from '../domain/types';
 function nowIso(): string {
   return new Date().toISOString();
 }
-function nowSql(): string {
-  return new Date().toISOString().replace('T', ' ').slice(0, 19);
-}
 
 export function sortOtherEntries(entries: OtherLedgerEntry[]): OtherLedgerEntry[] {
   return [...entries].sort((a, b) => {
@@ -164,13 +161,16 @@ export class OtherLedgerService {
     const ledger = await this.db.getOtherLedgerById(ledgerId);
     if (!ledger) return;
     const entries = await this.db.getOtherLedgerEntries(ledgerId);
-    const sorted = sortOtherEntries(entries);
-    let running = ledger.openingBalance;
-    for (const e of sorted) {
-      running += e.credit - e.debit;
-      const updated: OtherLedgerEntry = { ...e, balance: running, updatedAt: nowSql() };
-      // bypass validation flush via direct save
-      await this.db.saveOtherLedgerEntry(updated);
+    // Same rule the detail screen uses to display a balance, so the stored
+    // figure and the shown one cannot disagree.
+    const balances = computeOtherRunningBalances(entries, ledger.openingBalance);
+    for (const e of entries) {
+      const balance = balances.get(e.id);
+      // Only rows whose balance actually moved are written. Every entry used to
+      // be restamped on every add/edit/delete, so touching one row churned the
+      // whole ledger's updated_at for nothing (BUG-35).
+      if (balance === undefined || balance === e.balance) continue;
+      await this.db.saveOtherLedgerEntry({ ...e, balance, updatedAt: nowIso() });
     }
   }
 }

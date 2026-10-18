@@ -1,6 +1,7 @@
 import type { Database as SqlJsDb } from 'sql.js';
 import type { Loan, LoanItem, LoanStack, LenderBreakdown } from '../domain/types';
 import { getStackDisplayName } from '../domain/loanDisplay';
+import { loanItemStatus } from '../domain/loanStatus';
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -195,14 +196,7 @@ export class LoanDatabase {
     for (const l of loans) {
       const outstanding = Math.max(0, l.outstanding);
       const recovered = l.principal - outstanding;
-      let status: LoanItem['status'];
-      if (l.status === 'settled') {
-        status = 'settled';
-      } else if (outstanding <= 0) {
-        status = 'on_track';
-      } else {
-        status = 'active';
-      }
+      const status = loanItemStatus(l);
       const lenderAcct = accountMap.get(l.lenderAccountId);
       const fundingName = lenderAcct?.name as string ?? l.lenderAccountId;
       const item: LoanItem = {

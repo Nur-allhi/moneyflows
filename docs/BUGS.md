@@ -70,28 +70,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation — one line, and tracked files are unaffected either way) anchor it as `/dashboard`, which keeps ignoring the stale root dump and stops matching `src/presentation/screens/dashboard/`; verify with `git check-ignore -v src/presentation/screens/dashboard/newSection.tsx` (currently `.gitignore:42`, expected: no match). The alternative — deleting the rule — re-exposes the stale dump in every `git status`. **No `.gitignore` change was made when this was found.**
 - **Resolved:**
 
-## BUG-34: Loan status `on_track` actually means "fully repaid"
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/loans/infrastructure/LoanDatabase.ts:171-178` (`status = 'on_track'` when `outstanding <= 0` but the row's own status is not `settled`)
-- **Description:** A loan with zero outstanding but a stale `active` status is reported as `on_track`, a label that reads as "repayment proceeding on schedule" while it actually denotes a paid-off loan. Reachable if a loan row is left in an inconsistent state (e.g. an interrupted save), and the UI then shows a finished loan as on-track. Expected: status names match their meaning.
-- **Root Cause:** the display status was derived from outstanding alone with `settled` reserved for the stored flag.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
-## BUG-35: Other-ledger `recomputeBalances` rewrites `updated_at` on every entry
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/otherLedgers/application/OtherLedgerService.ts:163-171` (called from `addEntry` :140, `updateEntry` :151, `deleteEntry` :160)
-- **Description:** Every add/edit/delete of a single entry rewrites `balance` **and** `updatedAt` for all rows in the ledger, even when the balance is unchanged. Harmless to the arithmetic, but it is row churn across the whole ledger on each mutation, which any `updated_at`-keyed digest/sync/diff logic will observe.
-- **Root Cause:** the recompute loop unconditionally stamps `updated_at` instead of only when the balance actually changes (unlike `recalculateBalances`, which computes first and only writes differences).
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
 ## BUG-36: Unused loan-store methods, one with inverted semantics
 
 - **Status:** open
@@ -148,6 +126,43 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** not yet diagnosed. Candidates: the seed/setup step writing the DB while parallel workers boot, the app's own boot path (splash watchdog / OPFS init) being slower under N workers, or `03-accounts` selecting a control that only exists after a hover/animation settles. The failures are all "element not found/still loading", which points at timing rather than logic.
 - **Fix Approach:** (pending user confirmation) — options: (a) run the suite with `--workers=1` (or `fullyParallel: false`) and treat that as the real gate, documenting it; (b) give the three specs explicit readiness waits on an app-level "data loaded" signal instead of relying on the default timeout; (c) leave as is and keep re-running named failures. Leaning (b) then (a): a fixed gate is worth more than speed, but first the actual cause should be found rather than masked.
 - **Resolved:**
+
+## BUG-45: A fully repaid loan with a stale flag still counts as "active" in the Loans list
+
+- **Status:** open
+- **Severity:** low
+- **Found:** 2026-10-18 (during: BUG-34 fix — tracing who consumes `LoanItem.status`)
+- **Location:** `src/loans/infrastructure/LoanDatabase.ts` (`_getStackForBorrower`: the settled/active split tests the loan row's `status`, while the item's own derived status is computed beside it and consumed by nothing); consumed by `src/loans/presentation/screens/LoansScreen.tsx:72-87` (`!s.isSettled`) and `src/loans/presentation/components/LoanCard.tsx:37` (`activeCount`)
+- **Description:** A loan whose `outstanding` is 0 but whose row flag is still `active` — the state BUG-34's third status exists to describe — is counted in `activeCount`, pushed into `activeLoanItems`, and keeps `stack.isSettled` false. So a stack that is fully repaid in money terms still appears under the Loans **Active** filter, and its card reads "1 active" beside an outstanding of 0 BDT and a progress bar at 100% repaid. **Not reachable through the UI today:** every path that drives `outstanding` to 0 also flips the flag (`LoanService`: recordRepayment, `syncLoanTransaction`, `settleLoan`, `reverseRepayment`), and `createLoan` is only reachable with a positive amount. It is reachable from data written before those paths maintained the flag — which is exactly why the third state exists at all. Expected: one definition of "this loan is finished" used by both the split and the label, or an explicit statement that a stale flag still means active.
+- **Root Cause:** two sources of truth for the same question — the derived item status (unused) and the raw row flag (drives the split) — with nothing forcing them to agree.
+- **Fix Approach:** (pending user confirmation) — a definition call, not a mechanic: either treat `outstanding <= 0` as finished for the split too (so a stale flag can never show a repaid loan as active), or keep the flag authoritative and make the UI say what it means. Same family as BUG-25.
+- **Resolved:**
+
+---
+
+## BUG-34: Loan status `on_track` meant the opposite of what it sounded like
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/loans/infrastructure/LoanDatabase.ts` (`_getStackForBorrower`); the rule now lives in new `src/loans/domain/loanStatus.ts`
+- **Description:** A loan with zero outstanding whose own row flag was still `active` was reported as `on_track` — a name that reads as "repayment proceeding on schedule" while it means the exact opposite: the money is all back. Reachable only from data written before the repayment paths maintained the flag, so nothing on screen was wrong today (`LoanItem.status` has no consumer), but the value was a trap for the next reader and any future UI. Expected: a status name that matches its meaning.
+- **Root Cause:** the three display states were derived inline from `outstanding` with `settled` reserved for the stored flag, and the third one was named after a schedule rather than after the money.
+- **Fix Approach:** the derived state is now `LoanItemStatus = 'active' | 'repaid' | 'settled'` (`'repaid'` replaces `'on_track'`) and the rule moved into one documented pure function, `loanItemStatus(loan)`, used by the row builder — so the name and the meaning sit together. Chose the rename over deleting the field (the state is real information about data that predates the flag being maintained) and over mapping it to `'settled'` (that would have labelled a row `settled` while the same function's caller puts it in the *active* list — see BUG-45, logged rather than silently folded in).
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). Evidence: 4 new unit tests over the three inputs (settled flag wins; money still out → active; money all back → **repaid**, now also asserting the returned set never contains `on_track`); **mutation-verified** — mapping the zero-outstanding case back to `'active'` fails 2 of them. No consumer existed to update; typecheck / lint / build PASS.
+
+---
+
+## BUG-35: Other-ledger `recomputeBalances` rewrote every entry's `updated_at`
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/otherLedgers/application/OtherLedgerService.ts` (`recomputeBalances`, called from `addEntry`, `updateEntry`, `deleteEntry`)
+- **Description:** Every add/edit/delete of a single entry rewrote `balance` **and** `updatedAt` for **all** rows in the ledger, even the ones whose balance had not moved — row churn across the whole ledger on each mutation, which any `updated_at`-keyed digest/sync/diff logic would observe. It also wrote a **different timestamp format** from every other path in the file: `nowSql()` produced `YYYY-MM-DD HH:MM:SS` (space separated, no milliseconds) into a column the rest of the module fills with ISO `YYYY-MM-DDTHH:MM:SS.sssZ`. Not user-visible: the stored balance is never displayed (the detail screen and the PDF both recompute from the shared walk), which is why the audit rated it low.
+- **Root Cause:** the recompute loop rebuilt the walk by hand and stamped `updated_at` unconditionally, instead of computing first and writing only the rows that differ — the very rule `computeOtherRunningBalances` (used by `getEntries` to display balances) already implements.
+- **Fix Approach:** `recomputeBalances` now calls the same `computeOtherRunningBalances` walk the detail screen uses — so the stored figure and the shown figure come from one rule — and writes a row only when `balance` actually changed, with `nowIso()` like every other write path. The redundant inline walk and the now-unused `nowSql()` helper are gone.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). Evidence: 5 new unit tests over a fake DB asserting the number and identity of writes — a correct ledger is left completely alone (0 saves, timestamps intact), a stale middle row is the only row written, the write carries an ISO timestamp (guards the space-separated format), balances walk in **date** order not insertion order, and a second run is a no-op; **mutation-verified** — dropping the "balance unchanged" guard fails 3 of them. Live check (throwaway spec, deleted, never committed) drove the real write path against the real database: create ledger → debit 100 (`-100`) → credit 300 (`200`, first row still `-100`) → edit the first to 50 (the **second** row is the one rewritten, now `250`) → delete the second (`-50`) → reload persists `-50`. Typecheck / lint / build PASS; full Playwright at its documented baseline.
 
 ---
 
