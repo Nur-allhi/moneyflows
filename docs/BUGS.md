@@ -70,28 +70,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation — one line, and tracked files are unaffected either way) anchor it as `/dashboard`, which keeps ignoring the stale root dump and stops matching `src/presentation/screens/dashboard/`; verify with `git check-ignore -v src/presentation/screens/dashboard/newSection.tsx` (currently `.gitignore:42`, expected: no match). The alternative — deleting the rule — re-exposes the stale dump in every `git status`. **No `.gitignore` change was made when this was found.**
 - **Resolved:**
 
-## BUG-32: Member ledger running balance is wrong when no account is selected (latent)
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/presentation/screens/memberProfile/useMemberData.ts:84-99` (`isTxCredit`), duplicated in `src/presentation/screens/memberProfile/pdfExport.ts:14-18`
-- **Description:** For loan-like types the credit test is `tx.destAccount === selectedAccountId`. With `selectedAccountId === null` this is always false, so every transfer and loan is treated as a debit and an internal transfer subtracts both legs from the running balance. Currently latent because the balance column is only rendered when `showBalance = !!selectedAccountId` (`MemberProfile.tsx:27`), but the arithmetic still runs and the same predicate is shared by the PDF path. Expected: a credit/debit rule that does not depend on a selected account, or an explicit guard.
-- **Root Cause:** the sign rule was written for the single-account view and left unguarded for the all-accounts view.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
-## BUG-33: Member ledger balance column is rendered without locale formatting
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/presentation/screens/memberProfile/useMemberData.ts:99` (`balance: String(balance)`) rendered verbatim by `src/presentation/components/LedgerTable.tsx`
-- **Description:** The running balance is passed as a raw `String()`, so it bypasses `formatAmount()`/`useFormatNumber()` and shows without thousands grouping or locale digits — inconsistent with every other surface in the app, which also breaks the DESIGN_IDENTITY no-hardcoded-formatting rule.
-- **Root Cause:** the row model stores a pre-stringified balance instead of a number formatted at render time.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
 ## BUG-34: Loan status `on_track` actually means "fully repaid"
 
 - **Status:** open
@@ -159,6 +137,43 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** the mobile list was given its own inline type→tab map instead of reusing the desktop table's classification (the `isLoanType` helper that maps the six loan types to `loan`).
 - **Fix Approach:** (pending user confirmation) — needs a product call first: is lending money out an **expense** (cash left the account) or a **loan** (cash became a receivable)? Both readings are defensible and the app currently says "loan" on desktop and "expense" on mobile. It is also why the BUG-28 PDF fix deliberately preserved the export's existing type-tab behaviour instead of baking one map into a statement.
 - **Resolved:**
+
+## BUG-44: Full Playwright runs are flaky under parallel load
+
+- **Status:** open
+- **Severity:** low
+- **Found:** 2026-10-18 (during: BUG-29/BUG-30 and BUG-32/BUG-33 verification — observed across runs of `fix/calculation-audit`)
+- **Location:** harness — `e2e/flows/03-accounts.spec.ts:57` (mobile modal balances), `e2e/flows/03-accounts.spec.ts:102` (desktop linked-accounts dropdown), `e2e/flows/15-cloud-sync.spec.ts` (sign-out); `playwright.config.ts` worker count
+- **Description:** With no source change, `npx playwright test` reports 29/2, 28/3 and 30/1 across consecutive full runs on this machine. The failing specs are always from that same short list and always fail the same way — an element that should exist is "not found" (`DBBL — 70,000 BDT` card, `Net Balance`, the sign-out control) rather than a wrong value — and **each passes in isolation** (`npx playwright test e2e/flows/03-accounts.spec.ts` → 4 passed). Observed on this branch before the audit fixes too (BUG-28 run: `03-accounts` mobile modal + `15-cloud-sync`), so it is not caused by them. The practical damage is that a red full run cannot be trusted and every failure costs a re-run to interpret, and the documented baseline ("30 passed / 1 failed, BUG-39") is only reliable when the suite is run serially.
+- **Root Cause:** not yet diagnosed. Candidates: the seed/setup step writing the DB while parallel workers boot, the app's own boot path (splash watchdog / OPFS init) being slower under N workers, or `03-accounts` selecting a control that only exists after a hover/animation settles. The failures are all "element not found/still loading", which points at timing rather than logic.
+- **Fix Approach:** (pending user confirmation) — options: (a) run the suite with `--workers=1` (or `fullyParallel: false`) and treat that as the real gate, documenting it; (b) give the three specs explicit readiness waits on an app-level "data loaded" signal instead of relying on the default timeout; (c) leave as is and keep re-running named failures. Leaning (b) then (a): a fixed gate is worth more than speed, but first the actual cause should be found rather than masked.
+- **Resolved:**
+
+---
+
+## BUG-32: Member ledger running balance was wrong when no account was selected
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/presentation/screens/memberProfile/useMemberData.ts` (`isTxCredit` in `ledgerRows`), duplicated in `src/presentation/screens/memberProfile/pdfExport.ts`; both now use new `src/presentation/utils/memberLedger.ts`
+- **Description:** The credit test for loan-like types was `tx.destAccount === selectedAccountId`. Audit said this "is always false" with no account selected; tracing it, that is only true for rows whose `destAccount` is set — the rows with `destAccount === null` (`lend`, `loan_issue`, money genuinely leaving) matched `null === null` and were booked as a **credit**. So in the All Accounts member ledger a **repayment received** (`Rafiq Repay`, dest = a member account) appeared in the **Debit** column, a **loan issued** appeared in **Credit**, and a transfer between two of the member's own accounts was debited the amount, so the running balance drifted by twice every repaid loan. Less latent than the audit judged: the *balance* column is hidden without a selection, but the debit/credit columns are on screen, and the PDF reused the same predicate. Expected: a sign rule that does not depend on a selected account.
+- **Root Cause:** the sign rule was written for the single-account view and reused unguarded for the all-accounts view; it lived as a copy in each surface, so nothing forced them to agree.
+- **Fix Approach:** replaced the per-type test with one pure `memberLedgerDelta(tx, accountIds)` (new `src/presentation/utils/memberLedger.ts`): money arriving inside the *view* is positive, money leaving is negative, and a row with both legs inside the view nets to **zero**. The view is `{selectedAccountId}` when one account is selected, otherwise the member's accounts. The debit/credit cells come from the same delta via `ledgerAmountCells`, so a row's columns and its balance can never disagree again; a movement inside the view (delta 0) is shown in **both** columns, matching the convention the group ledger already uses for internal transfers. The PDF's three duplicated row-builders collapsed into one, and its balance anchoring (opening-balance row vs account balance) is unchanged — with an account selected the new rule reproduces the old one exactly, which is the view where `showBalance` is true.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). Evidence: 10 new unit tests (shared with BUG-33, **178 total**, was 168) covering both views, the internal-transfer case, an outside account, and the mixed-ledger running balance; **mutation-verified** — restoring the old rule (`tx.destAccount === (accountIds.size === 1 ? … : null)`) fails 4 of them with exactly the reported symptoms: `expected -300 to be +0` (internal transfer), `expected -200 to be 200` (repayment received), `expected -1500 to be 1200` (running balance). Live check (throwaway spec, deleted, never committed): in the seeded member's All Accounts ledger `Rafiq Repay Travel` now sits in the **Credit** column with 5,000, `Loan to Rafiq` stays a debit of 20,000, and the DBBL→Cash `ATM Cash` transfer appears in both columns. Typecheck / lint / build PASS; full Playwright at its documented baseline (30 passed / 1 failed = BUG-39).
+
+---
+
+## BUG-33: Member ledger balance column was rendered without locale formatting
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/presentation/screens/memberProfile/useMemberData.ts` (`balance: String(balance)`) rendered by `src/presentation/components/LedgerTable.tsx`
+- **Description:** The running balance was passed as a raw `String(balance)`, so it bypassed `formatAmount()` / `useFormatNumber()` and printed `70000BDT` instead of `70,000BDT` — no thousands grouping, no locale digits — while every other money cell on the same row (debit/credit) was formatted. The table appends the currency label itself, so the cell only needed the amount part.
+- **Root Cause:** the row model pre-stringified the balance instead of formatting a number at the boundary, so it silently opted out of the shared formatter.
+- **Fix Approach:** not a decision point — `formatAmountParts(balance, locale, currency).amount`, the same helper the debit and credit cells beside it already used. `LedgerRow.balance` stays a display string, which is what `LedgerTable` expects.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet), in the same commit as BUG-32 because both live in the same row builder and the same 10 tests. Live check (throwaway spec, deleted): with DBBL selected the last balance cell reads **"70,000BDT"**, and the test also asserts the unformatted `70000` does not appear. Typecheck / lint / build PASS; full Playwright at its documented baseline.
 
 ---
 

@@ -10,7 +10,10 @@ import { matchesTx } from '../../utils/search';
 import { formatAmountParts } from '../../utils/format';
 import { shortDate } from '../../constants/dates';
 import { sumIncomeExpense } from '../../../core/domain/transactionCategory';
+import { withRunningBalances } from '../../utils/runningBalance';
+import { ledgerAmountCells, memberLedgerDelta } from '../../utils/memberLedger';
 import type { LedgerRow } from '../../components';
+import type { Transaction } from '../../../core/domain/Transaction';
 
 export function useMemberData() {
   const { id: memberId } = useParams<{ id: string }>();
@@ -82,25 +85,43 @@ export function useMemberData() {
   }, [sortedTxs]);
 
   const ledgerRows: LedgerRow[] = useMemo(() => {
-    let bal = 0; const rows: LedgerRow[] = [];
-    const acctIds = new Set(memberAccounts.map((a) => a.id));
-    const loanLike = new Set(['transfer', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback', 'lend', 'repay']);
-    const isTxCredit = (tx: { type: string; sourceAccount?: string; destAccount?: string }) => {
-      if (loanLike.has(tx.type)) return tx.destAccount === selectedAccountId;
-      return tx.type === 'income';
-    };
-    const withBalance = sortedTxs.map((tx) => {
-      const isCredit = isTxCredit(tx);
-      const isRelevant = acctIds.has(tx.sourceAccount ?? '') || acctIds.has(tx.destAccount ?? '');
-      if (isRelevant) bal += isCredit ? tx.amount : -tx.amount;
-      return { tx, balance: bal };
-    });
-    for (const { tx, balance } of withBalance) {
+    // The view is one account when one is selected, otherwise every account the
+    // member holds — the second case used to treat every transfer and every
+    // received repayment as a debit because it compared against a null id
+    // (BUG-32).
+    const viewIds = selectedAccountId
+      ? new Set([selectedAccountId])
+      : new Set(memberAccounts.map((a) => a.id));
+    const deltaOf = (tx: Transaction) => memberLedgerDelta(tx, viewIds);
+
+    // Balances walk the member's whole history oldest→newest (the search box and
+    // filters only decide which rows are shown), so the balance after a row is
+    // the same figure wherever that row appears.
+    const walked = withRunningBalances(
+      sortedTxs,
+      deltaOf,
+      sortedTxs.reduce((sum, tx) => sum + deltaOf(tx), 0),
+    );
+
+    const rows: LedgerRow[] = [];
+    for (const { item: tx, balance } of walked) {
       if (!searchFilteredAll.includes(tx)) continue;
       const mappedType: LedgerRow['type'] = tx.type === 'income' ? 'income' : tx.type === 'expense' ? 'expense' : tx.type === 'transfer' ? 'transfer' : 'loan';
-      const isCredit = isTxCredit(tx);
+      const delta = deltaOf(tx);
       const fmt = formatAmountParts(tx.amount, locale, currency);
-      rows.push({ id: tx.id, date: shortDate(tx.date, locale), description: tx.description, balance: String(balance), currencyLabel: currency, type: mappedType, credit: isCredit ? fmt.amount : '', debit: !isCredit ? fmt.amount : '' } as unknown as LedgerRow);
+      const cells = ledgerAmountCells(delta, fmt.amount);
+      rows.push({
+        id: tx.id,
+        date: shortDate(tx.date, locale),
+        description: tx.description,
+        // Locale-formatted through the same helper as every other money cell —
+        // this used to be String(balance), printed raw (BUG-33).
+        balance: formatAmountParts(balance, locale, currency).amount,
+        currencyLabel: currency,
+        type: mappedType,
+        credit: cells.credit,
+        debit: cells.debit,
+      });
     }
     // Balances are computed walking oldest→newest; display order follows sortOrder.
     if (sortOrder === 'desc') rows.reverse();
