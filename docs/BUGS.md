@@ -70,28 +70,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation — one line, and tracked files are unaffected either way) anchor it as `/dashboard`, which keeps ignoring the stale root dump and stops matching `src/presentation/screens/dashboard/`; verify with `git check-ignore -v src/presentation/screens/dashboard/newSection.tsx` (currently `.gitignore:42`, expected: no match). The alternative — deleting the rule — re-exposes the stale dump in every `git status`. **No `.gitignore` change was made when this was found.**
 - **Resolved:**
 
-## BUG-29: Recycle Bin "Total Amount" sums incomparable quantities
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/infrastructure/database/SQLiteDatabaseService.ts:1415-1426` (`getDeletedItems` amount mapping) + `src/presentation/screens/RecycleBin.tsx:49-52,169`
-- **Description:** The headline figure adds transaction `amount`, account `balance`, `other_ledgers.opening_balance` and `other_ledger_entries.(debit+credit)` into one number — a transaction amount added to an account balance added to a ledger opening balance. The row renderer also prefixes every value with `-`, so a positive deleted account balance displays as a negative amount. Expected: totals per tab/kind, or no combined total for heterogeneous items.
-- **Root Cause:** each table exposes a different column as `amount` and the UI sums them all as if homogeneous.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
-## BUG-30: Recycle Bin shows other-ledger rows as "Account", but they never appear under the Accounts tab
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/presentation/screens/RecycleBin.tsx:38,46` (tab filters on `type === 'account'`) vs `:165-168` (labels/icon: `item.type === 'transaction' ? … : 'Account'`)
-- **Description:** Deleted `other_ledger` and `other_entry` items are rendered under **All Items** with the bank icon and the label "Account", but the **Accounts** tab filters strictly on `type === 'account'`, so those rows can never be reached by switching tabs — the tab is inconsistent with its own labelling. Expected: either surface the other-ledger kinds as their own tab/label, or include them in the Accounts tab.
-- **Root Cause:** tab predicates were not updated when `other_ledger`/`other_entry` were added to `DeletedItem['type']`.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
 ## BUG-32: Member ledger running balance is wrong when no account is selected (latent)
 
 - **Status:** open
@@ -181,6 +159,33 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** the mobile list was given its own inline type→tab map instead of reusing the desktop table's classification (the `isLoanType` helper that maps the six loan types to `loan`).
 - **Fix Approach:** (pending user confirmation) — needs a product call first: is lending money out an **expense** (cash left the account) or a **loan** (cash became a receivable)? Both readings are defensible and the app currently says "loan" on desktop and "expense" on mobile. It is also why the BUG-28 PDF fix deliberately preserved the export's existing type-tab behaviour instead of baking one map into a statement.
 - **Resolved:**
+
+---
+
+## BUG-29: Recycle Bin "Total Amount" summed incomparable quantities
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/presentation/screens/RecycleBin.tsx` (headline stat + row amount) + new `src/presentation/constants/recycleKinds.ts`
+- **Description:** The headline figure added transaction `amount`, account `balance`, `other_ledgers.opening_balance` and `other_ledger_entries.(debit+credit)` into one number — a flow added to a stock added to a ledger's opening balance — and every row prefixed its amount with `-`, so a positive deleted account balance of 70,000 rendered as **-70,000**. A deleted *income* transaction got the same treatment, even though its amount has no direction stored at all.
+- **Root Cause:** each table exposes a different column as `amount`, and the UI summed them as if homogeneous; the `-` prefix was a blanket "this came out of your money" marker applied to quantities where it is simply wrong.
+- **Fix Approach:** took the audit's first option — *"totals per tab/kind"* — and made the figure belong to one kind at a time: the stat now measures the **active tab** and names what it measures (Transactions → "Total Amount", Accounts → "Total Balances", Ledgers → "Total Value"). The one tab that mixes kinds by definition, **All Items**, shows how many kinds are in the bin ("Item Types") instead of a sum, which is the audit's second option for a heterogeneous set. The blanket `-` is gone: rows show the amount as a magnitude with the kind label beside it, because the sign was never derivable (transaction `amount` is `CHECK(amount > 0)`, so direction is not stored; an account balance is not a movement). Row colours were left alone — the audit did not raise them. The total follows the search box as well as the tab, so it always describes what is on screen.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). A throwaway spec — deleted, never committed — deleted the seeded DBBL account (balance 70,000) through the real UI and read the bin: the row showed **70,000 BDT** and `-70,000` was absent; the Accounts tab read "Total Balances" with 70,000; the Ledgers tab read "Total Value" over an empty list; All Items read "Item Types". Typecheck / lint / build PASS; full Playwright suite at its documented baseline (30 passed / 1 failed = BUG-39, after re-running `03-accounts`, which failed only under parallel load).
+- **Note for the next session:** that run also showed the delete handler is fire-and-forget (`void handleDelete()` in `EditAccountModal`), so a reload *immediately* after the click can outrun the write — a test artifact at human speed, not a user-facing race, but worth remembering when writing e2e around deletes: wait for the row to disappear before navigating.
+
+---
+
+## BUG-30: Recycle Bin listed other-ledger rows as "Account" but made them unreachable
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/presentation/screens/RecycleBin.tsx` (tab filter, tab counts, row label/icon) + new `src/presentation/constants/recycleKinds.ts`
+- **Description:** Deleted `other_ledger` (Ledger) and `other_entry` (Ledger Entry) rows were rendered under **All Items** with the bank icon and the label "Account", but the **Accounts** tab filtered strictly on `type === 'account'`, so those rows could never be reached by switching tabs — and two different kinds were both displayed as "Account". Reachable in practice: the Other Ledgers UI soft-deletes both ledgers and entries.
+- **Root Cause:** the tab predicate and the row labelling were written separately, and neither was updated when `other_ledger` / `other_entry` joined `DeletedItem['type']`.
+- **Fix Approach:** took the audit's first option — *"surface the other-ledger kinds as their own tab/label"*. Both the labelling and the tab filter now come from **one** map (`DELETED_KIND` in `src/presentation/constants/recycleKinds.ts`), so a kind cannot be described as one thing and be filed somewhere else; a fourth **Ledgers** tab covers both ledger kinds, and the tab counts use the same predicate as the list. Chose a separate tab over folding them into Accounts because a ledger is not an account and the row label has to say what the record actually is.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). Evidence: 5 new unit tests (**168 total**, was 163) on the shared map, including one that fails if two kinds ever share a row label and one that fails if a tab is a dead end; **mutation-verified** — relabelling `other_ledger` as "Account" (the reported symptom) fails the distinct-label test with `expected 3 to be 4`. Live check via the throwaway spec above: all four tabs render (All Items / Transactions / Accounts / Ledgers), the deleted account appears under Accounts, and the Ledgers tab reports its own total over an empty list.
 
 ---
 
