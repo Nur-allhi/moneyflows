@@ -9,6 +9,7 @@ import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import { matchesTx } from '../../utils/search';
 import { formatAmountParts } from '../../utils/format';
 import { shortDate } from '../../constants/dates';
+import { sumIncomeExpense } from '../../../core/domain/transactionCategory';
 import type { LedgerRow } from '../../components';
 
 export function useMemberData() {
@@ -54,8 +55,11 @@ export function useMemberData() {
     if (!selectedAccountId) return memberTxs;
     return memberTxs.filter((t) => t.sourceAccount === selectedAccountId || t.destAccount === selectedAccountId);
   }, [memberTxs, selectedAccountId]);
-  const totalIncome = useMemo(() => memberTxs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0), [memberTxs]);
-  const totalExpenses = useMemo(() => memberTxs.filter((t) => t.type === 'expense' || t.type === 'loan_issue' || t.type === 'lend').reduce((s, t) => s + t.amount, 0), [memberTxs]);
+  // Same classification the dashboard's Income / Expenses totals use, so the
+  // two surfaces cannot disagree about the same transactions (BUG-26).
+  const memberTotals = useMemo(() => sumIncomeExpense(memberTxs), [memberTxs]);
+  const totalIncome = memberTotals.income;
+  const totalExpenses = memberTotals.expense;
   const sortedTxs = useMemo(() => [...accountTxs].sort((a, b) => a.date.localeCompare(b.date)), [accountTxs]);
   const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
   const accountMapForSearch = useMemo(() => new Map(accounts.map((a) => [a.id, { name: a.name }])), [accounts]);

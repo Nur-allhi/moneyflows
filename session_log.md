@@ -2189,3 +2189,24 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Next: **BUG-26** (member profile Total Income vs Total Expenses are not comparable — `memberProfile/useMemberData.ts` + `ProfileHero.tsx`), then BUG-29/BUG-30 (Recycle Bin) and BUG-32…BUG-37. **BUG-21/BUG-25 are now unblocked** (M-05 landed) but need a definition decision before they can be coded.
 - Still awaiting a user decision on: merge-into-`dev` approval, BUG-39, the untracked `Logo_mockups/` PNG, BUG-41 Scope B, the mislabelled BUG-11 heading, and (new) BUG-42's lending-as-expense question.
 
+## Session 2026-10-18 13:40 (fix/calculation-audit — BUG-26 fixed)
+
+### Changes
+- **BUG-26 (member profile "Total Income" / "Total Expenses" are not comparable) fixed.** Two separate reducers with different filters: `totalIncome` counted only `type === 'income'`; `totalExpenses` counted `expense` **plus** `loan_issue` and `lend`, and `loan_paidback` was missing from both. Anyone who lent money out and got it back looked steadily poorer — income flat, expenses up by the whole loan.
+- **The fix is one definition rather than two kept in step.** The dashboard had *already* answered this question — its private `INCOME_TYPES` / `EXPENSE_TYPES` cover all eight non-transfer types symmetrically — but they lived as consts inside `useDashboardData.ts`, so the member profile wrote its own (`TagLedgerScreen` holds a third copy, `cloudDiff.ts` a fifth). New `src/core/domain/transactionCategory.ts` exports `INCOME_TX_TYPES` / `EXPENSE_TX_TYPES`, `isIncomeTx` / `isExpenseTx` and `sumIncomeExpense(txs) → { income, expense, net }`; the dashboard consumes it (values unchanged — its sets were copied verbatim) and the member hero takes both figures from one call.
+- **Deliberately not decided here:** loan principal stays on both sides of the classification (whether it belongs in these totals at all is the open **BUG-25**, and that decision now lands in exactly one file); account opening balances stay `income`, per the BUG-19 convention, because excluding them is an app-wide change (dashboard month summary included) rather than a member-profile one; `transfer` is documented as neither. All three recorded in the entry so the next session does not re-litigate them.
+- Impact analysis: each hook has exactly one consumer (`MemberProfile.tsx`, `Dashboard.tsx` — verified by grep, the locate-style check GitNexus returns empty for these hook symbols).
+- Verification: **5 new unit tests** (163 total, was 158), including an exhaustiveness test over all nine schema types (a new type that fits neither bucket fails the suite) and the loan-cycle case; **mutation-verified** — cutting `INCOME_TX_TYPES` back to `['income']` fails 3 of them, the loan-cycle one reading `expected { income: +0, expense: 1000 } …`. typecheck / lint / build PASS.
+- **Live verification (throwaway spec, deleted, never committed):** the seeded Admin member's hero now reads **Net Balance 64,000 · Total Income 1,12,000 · Total Expenses 48,000**; the old rules gave 1,07,000 / 48,000 — a 59,000 gap that did not match the 64,000 balance rendered beside it. The new pair reconciles exactly (income − expenses = the member's account balances, the seed's only transfer being internal). One locator lesson: the desktop hero is `profileHero` / `heroStats`, the mobile one `profileCard` — a locator borrowed from the mobile spec silently finds nothing on desktop, which is what the first failed run was.
+- Full Playwright suite back at its documented baseline exactly: **30 passed / 1 failed** (= BUG-39), with both known flakes green this run.
+- Bookkeeping in the same commit: `BUGS.md` BUG-26 → fixed (top of the fixed history, before BUG-28) with the three "not decided here" items spelled out; `CHANGELOG` `Fixed` bullet in user-facing wording; `AGENTS.md §5` audit paragraph refreshed.
+
+### Skill(s) Used
+- gitnexus (impact/scope), code-reviewer, senior-frontend
+
+### Status
+- BUG-26 closed. Nothing merged; `dev` still at `552c9aa`.
+- Audit scoreboard: **8 of 17** fixed (BUG-22, BUG-23, BUG-24, BUG-26, BUG-27, BUG-28, BUG-31, BUG-41), plus BUG-38 outside the audit; BUG-42 open as a new finding.
+- Next: **BUG-29 + BUG-30** (Recycle Bin — one wrong headline total, one tab/label mismatch; same file, so likely one commit), then BUG-32/BUG-33 (member ledger — `String(balance)` and the latent credit rule; same file, and now adjacent to the shared helper work), then BUG-34…BUG-37, BUG-40, and **BUG-21/BUG-25** (now unblocked, but they need a definition decision first).
+- Still awaiting a user decision on: merge-into-`dev` approval, BUG-39, the untracked `Logo_mockups/` PNG, BUG-41 Scope B, the mislabelled `BUGS.md:431` heading, BUG-42's lending-as-expense question, and now whether opening balances should count as income anywhere (currently they do, app-wide).
+

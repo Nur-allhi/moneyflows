@@ -48,17 +48,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
 
-## BUG-26: Member profile "Total Income" and "Total Expenses" are not comparable
-
-- **Status:** open
-- **Severity:** medium
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/presentation/screens/memberProfile/useMemberData.ts:57-58` (rendered by `ProfileHero.tsx:70-71`)
-- **Description:** `totalIncome` counts only `type === 'income'` (which also includes opening-balance transactions), while `totalExpenses` counts `expense` **plus** `loan_issue` and `lend`. Nothing is counted on the income side for `repay`/`loan_repayment`/`loan_received`. The two hero stats are presented side by side as if they were the same scope. Expected: symmetric, explicitly-defined buckets.
-- **Root Cause:** the two reducers were written independently with different type filters.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
 ## BUG-40: Editing a repayment upward silently clamps the loan instead of refusing (BUG-23's second door)
 
 - **Status:** open
@@ -181,6 +170,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** the mobile list was given its own inline type→tab map instead of reusing the desktop table's classification (the `isLoanType` helper that maps the six loan types to `loan`).
 - **Fix Approach:** (pending user confirmation) — needs a product call first: is lending money out an **expense** (cash left the account) or a **loan** (cash became a receivable)? Both readings are defensible and the app currently says "loan" on desktop and "expense" on mobile. It is also why the BUG-28 PDF fix deliberately preserved the export's existing type-tab behaviour instead of baking one map into a statement.
 - **Resolved:**
+
+---
+
+## BUG-26: Member profile "Total Income" and "Total Expenses" were not comparable
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/presentation/screens/memberProfile/useMemberData.ts` (`totalIncome` / `totalExpenses`, rendered by `ProfileHero.tsx`) + `src/presentation/screens/dashboard/useDashboardData.ts` (its private `INCOME_TYPES` / `EXPENSE_TYPES` are gone) + new shared `src/core/domain/transactionCategory.ts`
+- **Description:** The two hero stats were built by two separate reducers with different filters: `totalIncome` counted only `type === 'income'`, while `totalExpenses` counted `expense` **plus** `loan_issue` and `lend`. Nothing was counted on the income side for `repay` / `loan_repayment` / `loan_received`, and `loan_paidback` was missing from the expense side. A member who lent money out and got it back therefore looked steadily poorer — income unchanged, expenses up by the whole loan. The two figures sit side by side under one hero, so they read as the same scope.
+- **Root Cause:** the two reducers were written independently with different type filters. The dashboard had already settled the question (its `INCOME_TYPES` / `EXPENSE_TYPES` are symmetric and cover all eight non-transfer types), but that classification lived as a private const inside `useDashboardData.ts`, so the member profile grew its own — a fourth copy of the same idea (`TagLedgerScreen` holds a third, `cloudDiff.ts` a fifth, differently-scoped). Nothing forced them to agree.
+- **Fix Approach:** taken from the audit's own expectation — *"symmetric, explicitly-defined buckets"* — and implemented as **one** definition rather than two that have to be kept in step: new `src/core/domain/transactionCategory.ts` exports `INCOME_TX_TYPES` / `EXPENSE_TX_TYPES`, `isIncomeTx` / `isExpenseTx` and `sumIncomeExpense(txs) → { income, expense, net }`. The dashboard now consumes it (behaviour unchanged — its sets were copied verbatim) and the member profile computes both hero figures from one call, so the surfaces cannot disagree about the same transactions again. `transfer` is documented as belonging to neither set. Loan principal stays on **both** sides, deliberately: whether it belongs in these totals *at all* is the separate, still-open BUG-25, and that decision now lands in exactly one file. Account opening balances are `income` transactions by construction (BUG-19 records them that way), so they count as income here — excluding them would be an app-wide change (dashboard month summary included), not a member-profile one, so it was not smuggled in.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). Evidence: 5 new unit tests (**163 total**, was 158) pinning the classification — including an exhaustiveness test over all nine schema types that fails if a type is ever neither income nor expense, and the loan-cycle case (`lend 1000` + `repay 1000` → income 1000, expense 1000, net 0); **mutation-verified** — reducing `INCOME_TX_TYPES` to `['income']` (the old member-profile rule) fails 3 of them, the loan-cycle one reading `expected { income: +0, expense: 1000 } to deeply equal { income: 1000, expense: 1000, net: 0 }`. Typecheck / lint / build PASS; full Playwright suite back at its documented baseline (**30 passed / 1 failed** = BUG-39). A throwaway spec — deleted, never committed — drove the real seeded database end to end: the Admin member's hero now reads **Net Balance 64,000 · Total Income 1,12,000 · Total Expenses 48,000**, where the old rules produced 1,07,000 / 48,000 (a 59,000 gap that did not match the 64,000 balance rendered beside it); the new pair reconciles exactly (income − expenses = 64,000 = the member's account balances, because the seed's only transfer is internal). Recorded mid-verification: the desktop hero class is `profileHero` / `heroStats`, the mobile one `profileCard` — a locator copied from the mobile spec finds nothing on desktop.
 
 ---
 

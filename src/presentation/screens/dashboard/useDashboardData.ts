@@ -7,9 +7,7 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useSearchStore } from '../../stores/useSearchStore';
 import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import { matchesTx, matchesAccount } from '../../utils/search';
-
-const INCOME_TYPES = new Set(['income', 'loan_repayment', 'repay', 'loan_received']);
-const EXPENSE_TYPES = new Set(['expense', 'loan_issue', 'lend', 'loan_paidback']);
+import { sumIncomeExpense } from '../../../core/domain/transactionCategory';
 
 export function useDashboardData() {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
@@ -37,14 +35,11 @@ export function useDashboardData() {
   const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
   const thisMonthTxs = useMemo(() => transactions.filter((tx) => tx.date.startsWith(thisMonth)), [transactions, thisMonth]);
   const lastMonthTxs = useMemo(() => transactions.filter((tx) => tx.date.startsWith(lastMonth)), [transactions, lastMonth]);
-  const thisMonthIncome = useMemo(() => thisMonthTxs.filter((tx) => INCOME_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0), [thisMonthTxs]);
-  const thisMonthExpenses = useMemo(() => thisMonthTxs.filter((tx) => EXPENSE_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0), [thisMonthTxs]);
-  const thisMonthNet = thisMonthIncome - thisMonthExpenses;
-  const lastMonthNet = useMemo(() => {
-    const inc = lastMonthTxs.filter((tx) => INCOME_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
-    const exp = lastMonthTxs.filter((tx) => EXPENSE_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
-    return inc - exp;
-  }, [lastMonthTxs]);
+  const thisMonthTotals = useMemo(() => sumIncomeExpense(thisMonthTxs), [thisMonthTxs]);
+  const thisMonthIncome = thisMonthTotals.income;
+  const thisMonthExpenses = thisMonthTotals.expense;
+  const thisMonthNet = thisMonthTotals.net;
+  const lastMonthNet = useMemo(() => sumIncomeExpense(lastMonthTxs).net, [lastMonthTxs]);
   const prevAssets = totalAssets - thisMonthNet; const prevCash = cashInHand - thisMonthNet; const prevBanks = totalInBanks - lastMonthNet; const prevLoans = activeLoansOutstanding - lastMonthNet;
   const assetsChange = prevAssets > 0 ? ((totalAssets - prevAssets) / prevAssets) * 100 : 0;
   const cashChange = prevCash > 0 ? ((cashInHand - prevCash) / prevCash) * 100 : 0;
