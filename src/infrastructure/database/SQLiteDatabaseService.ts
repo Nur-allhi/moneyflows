@@ -7,7 +7,7 @@ import { scanTransactions } from '../../core/domain/transactionIntegrity';
 import type { IntegrityReport } from '../../core/domain/transactionIntegrity';
 import { AccountGroup } from '../../core/domain/AccountGroup';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
-import type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile, BootProgress, ConflictPreview } from '../../core/ports/IDatabaseService';
+import type { IDatabaseService, TransactionFilter, DeletedItem, GroupBalance, SnapshotInfo, StorageHealth, CloudStatus, CloudReconcile, BootProgress, ConflictPreview } from '../../core/ports/IDatabaseService';
 import { STORAGE_KEY, EXPORT_FILENAME_PREFIX, MAX_SNAPSHOTS, SNAPSHOT_COOLDOWN_MS, SNAPSHOT_PREFIX, FOLDER_SYNC_COOLDOWN_MS, CLOUD_SYNC_COOLDOWN_MS, CLOUD_BOOT_TIMEOUT_MS, CLOUD_BOOT_SKIP_MS } from '../../presentation/constants/config';
 import { folderSync } from './FolderSync';
 import { googleAuth } from './GoogleAuth';
@@ -1451,14 +1451,6 @@ export class SQLiteDatabaseService implements IDatabaseService {
     this.markDirty();
     await this.flush();
     return count;
-  }
-
-  async getFamilySummary(): Promise<FamilySummary> {
-    const r = this.queryOne<{ assets: number; cash: number; loans: number }>(
-      "SELECT COALESCE(SUM(CASE WHEN type IN ('bank','savings') THEN balance ELSE 0 END),0) as assets, COALESCE(SUM(CASE WHEN type='cash' THEN balance ELSE 0 END),0) as cash, COALESCE(SUM(CASE WHEN type IN ('mobile_wallet','business') THEN balance ELSE 0 END),0) as loans FROM accounts WHERE deleted_at IS NULL",
-    );
-    const total = (r?.assets ?? 0) + (r?.cash ?? 0) + (r?.loans ?? 0);
-    return { totalAssets: total, cashInHand: r?.cash ?? 0, activeLoans: r?.loans ?? 0, netWorth: total };
   }
 
   getMemberBalance(memberId: string): Promise<number> {

@@ -25,13 +25,6 @@ export interface DeletedItem {
   deletedAt: string;
 }
 
-export interface FamilySummary {
-  totalAssets: number;
-  cashInHand: number;
-  activeLoans: number;
-  netWorth: number;
-}
-
 export interface GroupBalance {
   groupName: string;
   totalBalance: number;
@@ -179,7 +172,6 @@ export interface IDatabaseService {
   /** What-changed data for the update prompt (T-170): verified download, no import, no state change. */
   getUpdatePreview(): Promise<ConflictPreview | null>;
 
-  getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;
   getAccountGroupBalances(): Promise<GroupBalance[]>;
 

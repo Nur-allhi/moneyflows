@@ -70,27 +70,31 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation — one line, and tracked files are unaffected either way) anchor it as `/dashboard`, which keeps ignoring the stale root dump and stops matching `src/presentation/screens/dashboard/`; verify with `git check-ignore -v src/presentation/screens/dashboard/newSection.tsx` (currently `.gitignore:42`, expected: no match). The alternative — deleting the rule — re-exposes the stale dump in every `git status`. **No `.gitignore` change was made when this was found.**
 - **Resolved:**
 
+---
+
 ## BUG-36: Unused loan-store methods, one with inverted semantics
 
-- **Status:** open
+- **Status:** fixed
 - **Severity:** low
 - **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/loans/presentation/stores/useLoanStore.ts:41-43` (interface) and `:195-259` (`createGivenLoan`, `createReceivedLoan`, `recordPayback`)
-- **Description:** These three store methods have no UI caller. `createReceivedLoan` is a line-for-line copy of `createGivenLoan` (identical `lenderAccountId: params.sourceAccount` / `borrowerAccountId: params.destAccount` mapping, itself missing the `throw err` that `createGivenLoan` has), so if it were ever wired up, a loan you *received* would be recorded as a loan you *gave out* — an inverted balance effect. Expected: dead code removed, or semantics corrected and covered by a test before use.
+- **Location:** `src/loans/presentation/stores/useLoanStore.ts` (interface + implementations of `createGivenLoan`, `createReceivedLoan`, `recordPayback`) — removed
+- **Description:** These three store methods had no UI caller. `createReceivedLoan` was a line-for-line copy of `createGivenLoan` (identical `lenderAccountId: params.sourceAccount` / `borrowerAccountId: params.destAccount` mapping, even keeping `createGivenLoan`'s `throw err`), so had it ever been wired up, a loan you *received* would have been recorded as a loan you *gave out* — an inverted balance effect. Expected: dead code removed, or semantics corrected and covered by a test before use.
 - **Root Cause:** backwards-compatibility shims added for the pre-T-054 store were never deleted after the unified loan system shipped.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
+- **Fix Approach:** deleted (the audit's first option). These were re-implementations of flows the unified `LoanService` already owns and the UI already uses — `createLoan` via `TransactionFormModal`/`useSubmit`, and `recordRepayment` (which `recordPayback` merely delegated to) — so nothing was lost and no wrong-semantics code remains for a future caller to pick up. Chosen over correcting the mapping because keeping a second, untested path to the same operation is what let the two diverge in the first place.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). `impact` on each method returned **0 upstream callers**; repo-wide grep found references only in the audit and BUGS.md. Typecheck / lint / build PASS, 187 unit tests pass, and the loan specs (`05-other-ledgers`, `06-loans`, `14-loan-rename`) plus `01-dashboard` pass live (6 passed).
 
-## BUG-37: `getFamilySummary` mislabels account types as loans and is unused
+---
 
-- **Status:** open
+## BUG-37: `getFamilySummary` mislabelled account types as loans and was unused
+
+- **Status:** fixed
 - **Severity:** low
 - **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/infrastructure/database/SQLiteDatabaseService.ts:1456-1462` (port: `src/core/ports/IDatabaseService.ts:181`)
-- **Description:** The summary sums `mobile_wallet` and `business` balances into the `activeLoans` field, ignores the real loan stacks entirely, and excludes `counterparty` accounts from every bucket while `totalAssets`/`netWorth` are built from the same partial set. No UI consumer today (the dashboard uses `loanStacks`), so nothing visibly breaks — but the port is public and any future caller receives wrong figures. Expected: either correct semantics or removal.
-- **Root Cause:** left over from the pre-unified-loan model where those account types stood in for loans.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
+- **Location:** `src/infrastructure/database/SQLiteDatabaseService.ts` (implementation), `src/core/ports/IDatabaseService.ts` (port method + `FamilySummary` interface), `src/core/ports/index.ts` (re-export) — removed
+- **Description:** The summary summed `mobile_wallet` and `business` balances into the `activeLoans` field, ignored the real loan stacks entirely, and excluded `counterparty` accounts from every bucket while `totalAssets`/`netWorth` were built from that same partial set. No UI consumer (the dashboard computes its metrics from `loanStacks`), so nothing visibly broke — but the port is public, so any future caller would have received wrong figures under a label that said "loans".
+- **Root Cause:** left over from the pre-unified-loan model, where those account types stood in for loans.
+- **Fix Approach:** deleted (removal rather than repair). A "family summary" that is correct would have to be rebuilt on the same metrics the dashboard already exposes, and the audit's complaint is that this one answers a different question under the same names; keeping a corrected-but-untested second implementation of the dashboard's maths is the pattern that produced BUG-26 and BUG-28. Removed from the port, the implementation, the `FamilySummary` interface, the `core/ports` re-export and `docs/TAD.md`'s port inventory, so no half-documented surface remains.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). `impact` showed one implementer and no callers; repo-wide grep found references only in the audit, BUGS.md and the TAD line that has now been updated. Typecheck / lint / build PASS, 187 unit tests pass, dashboard + loans + other-ledger specs pass live.
 
 ---
 

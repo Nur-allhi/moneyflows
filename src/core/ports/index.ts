@@ -1,1 +1,1 @@
-export type { IDatabaseService, TransactionFilter, DeletedItem, FamilySummary, GroupBalance } from './IDatabaseService';
+export type { IDatabaseService, TransactionFilter, DeletedItem, GroupBalance } from './IDatabaseService';
