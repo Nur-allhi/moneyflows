@@ -5,6 +5,8 @@ import { Account } from '../../core/domain/Account';
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
 import type { Loan, LoanStack, LoanReport, LoanReportFilter, LoanReportRow, LoanReportSummary } from '../domain/types';
 import { OverpaymentError, RepaymentEditError } from '../domain/errors';
+import { recordAllocations } from '../domain/repaymentAllocations';
+import type { LoanAllocation } from '../domain/repaymentAllocations';
 import { repaymentEditViolation } from '../domain/repaymentEdit';
 import { LoanDatabase } from '../infrastructure/LoanDatabase';
 import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from './computeRunningBalances';
@@ -117,6 +119,7 @@ export class LoanService {
       throw new OverpaymentError(params.amount, totalOutstanding);
     }
 
+    const allocations: LoanAllocation[] = [];
     for (const loan of ordered) {
       if (remaining <= 0) break;
       if (loan.outstanding <= 0) continue;
@@ -124,6 +127,7 @@ export class LoanService {
       const applied = Math.min(remaining, loan.outstanding);
       loan.outstanding -= applied;
       remaining -= applied;
+      allocations.push({ loanId: loan.id, amount: applied });
 
       if (loan.outstanding <= 0) {
         loan.outstanding = 0;
@@ -133,10 +137,17 @@ export class LoanService {
       await this.loanDb.saveLoan(loan);
     }
 
+    // The split is recorded on the transaction, so an edit later knows exactly
+    // what to reverse (BUG-47). When one loan absorbed the whole repayment that
+    // is also a real link, recorded the way `createLoan` records it — the detail
+    // view and `deleteLoan` read `loanRef`. A split has no single loan to point
+    // at, so it carries only the split.
+    const soleLoanId = allocations.length === 1 ? allocations[0]!.loanId : undefined;
+
     const tx = new Transaction(
       uuidv4(), 'repay', params.description, params.amount,
       params.memberId, dateTime, params.borrowerAccountId, dst,
-      undefined, undefined, {}, nowStr, nowStr,
+      undefined, soleLoanId, recordAllocations(undefined, allocations), nowStr, nowStr,
     );
 
     await this.db.saveTransaction(tx);
@@ -168,21 +179,64 @@ export class LoanService {
   }
 
   /**
-   * Refuses an edit to a repayment that its linked loan cannot absorb, without
+   * Refuses an edit to a repayment that its loans cannot absorb, without
    * touching anything. The edit modal calls this *before* saving the
    * transaction, because the transaction write and the loan sync are separate
    * steps: checking afterwards would leave the edited amount on the ledger with
    * the loan record clamped, which is BUG-40.
+   *
+   * Two shapes, because a repayment comes in two shapes (BUG-47):
+   *
+   * - a repayment that recorded its split can be reversed exactly, so a cut
+   *   always fits and a raise is limited by what the borrower's loans still owe
+   *   between them;
+   * - one with only a `loanRef` (legacy rows, written before the split was
+   *   recorded) can only be judged against that single loan, and the rule is the
+   *   conservative one in `repaymentEditViolation`.
    */
-  async assertRepaymentEditAllowed(loanRef: string | undefined, oldAmount: number, newAmount: number): Promise<void> {
-    if (!loanRef || oldAmount === newAmount) return;
+  async assertRepaymentEditAllowed(
+    loanRef: string | undefined,
+    oldAmount: number,
+    newAmount: number,
+    allocations: LoanAllocation[] = [],
+  ): Promise<void> {
+    if (oldAmount === newAmount) return;
+
+    if (allocations.length > 0) {
+      if (newAmount < oldAmount) return;
+      const borrowerAccountId = await this.borrowerOfAllocations(allocations);
+      if (!borrowerAccountId) return;
+      const loans = await this.loanDb.getLoansByBorrower(borrowerAccountId);
+      const room = loans
+        .filter((l) => !l.deletedAt)
+        .reduce((sum, l) => sum + Math.max(0, l.outstanding), 0);
+      if (newAmount - oldAmount > room) {
+        throw new RepaymentEditError({ direction: 'increase', room, limit: oldAmount + room, scope: 'loans' });
+      }
+      return;
+    }
+
+    if (!loanRef) return;
     const loan = await this.loanDb.getLoanById(loanRef);
     if (!loan) return;
     const violation = repaymentEditViolation(loan, oldAmount, newAmount);
     if (violation) throw new RepaymentEditError(violation);
   }
 
-  async syncLoanTransaction(loanRef: string | undefined, oldAmount: number, newAmount: number, txType: string): Promise<void> {
+  async syncLoanTransaction(
+    loanRef: string | undefined,
+    oldAmount: number,
+    newAmount: number,
+    txType: string,
+    allocations: LoanAllocation[] = [],
+  ): Promise<void> {
+    // A repayment that recorded its split is reversed and re-applied loan by
+    // loan (BUG-47) — that is the whole reason the split is recorded. There is
+    // no delta to apply, and `loanRef` is only set when one loan took it all.
+    if (txType === 'repay' && allocations.length > 0) {
+      await this.reapplyRepayment(allocations, newAmount);
+      return;
+    }
     if (!loanRef) return;
     const loan = await this.loanDb.getLoanById(loanRef);
     if (!loan) return;
@@ -201,6 +255,85 @@ export class LoanService {
     loan.status = loan.outstanding <= 0 ? 'settled' : 'active';
     loan.updatedAt = new Date().toISOString();
     await this.loanDb.saveLoan(loan);
+  }
+
+  /** The borrower a recorded split belongs to: any of its loans knows. */
+  private async borrowerOfAllocations(allocations: LoanAllocation[]): Promise<string | undefined> {
+    for (const allocation of allocations) {
+      const loan = await this.loanDb.getLoanById(allocation.loanId);
+      if (loan) return loan.borrowerAccountId;
+    }
+    return undefined;
+  }
+
+  /**
+   * Reverse a recorded split and apply an edited amount in its place (BUG-47).
+   *
+   * The reversal is exact — every loan gets back precisely what this repayment
+   * took from it — which is why a cut can always be honoured: it can never give
+   * back more than was taken. The new amount is then walked over the same loans,
+   * in the order the split recorded, so a smaller repayment pays the same loans
+   * first instead of rearranging them; a raise past what the split held continues
+   * with the borrower's remaining loans, oldest first, exactly as
+   * `recordRepayment` allocates. Only rows whose figures actually move are
+   * written, timestamped like every other write (BUG-35).
+   */
+  private async reapplyRepayment(allocations: LoanAllocation[], newAmount: number): Promise<void> {
+    const touched = new Map<string, Loan>();
+    const before = new Map<string, { outstanding: number; status: Loan['status'] }>();
+
+    for (const allocation of allocations) {
+      const loan = await this.loanDb.getLoanById(allocation.loanId);
+      if (!loan || loan.deletedAt) continue; // gone: there is nothing to give back to
+      if (!touched.has(loan.id)) before.set(loan.id, { outstanding: loan.outstanding, status: loan.status });
+      loan.outstanding = Math.min(loan.principal, loan.outstanding + allocation.amount);
+      touched.set(loan.id, loan);
+    }
+
+    let remaining = newAmount;
+    const apply = (loan: Loan) => {
+      if (remaining <= 0) return;
+      const applied = Math.min(remaining, loan.outstanding);
+      loan.outstanding -= applied;
+      remaining -= applied;
+    };
+
+    for (const allocation of allocations) {
+      const loan = touched.get(allocation.loanId);
+      if (loan) apply(loan);
+    }
+
+    if (remaining > 0) {
+      const borrowerAccountId = await this.borrowerOfAllocations(allocations);
+      if (borrowerAccountId) {
+        const rest = (await this.loanDb.getLoansByBorrower(borrowerAccountId))
+          .filter((l) => !l.deletedAt && !touched.has(l.id) && l.outstanding > 0)
+          .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+        for (const loan of rest) {
+          before.set(loan.id, { outstanding: loan.outstanding, status: loan.status });
+          apply(loan);
+          touched.set(loan.id, loan);
+        }
+      }
+      // Nothing left to apply to can only mean the edit was checked against a
+      // smaller room than this — refuse rather than book a figure the loans
+      // cannot carry (BUG-40/BUG-23's rule, applied to the split).
+      if (remaining > 0) {
+        throw new RepaymentEditError({ direction: 'increase', room: newAmount - remaining, limit: newAmount - remaining, scope: 'loans' });
+      }
+    }
+
+    const now = new Date().toISOString();
+    for (const loan of touched.values()) {
+      const outstanding = Math.max(0, loan.outstanding);
+      const status: Loan['status'] = outstanding <= 0 ? 'settled' : 'active';
+      const was = before.get(loan.id);
+      if (was && was.outstanding === outstanding && was.status === status) continue;
+      loan.outstanding = outstanding;
+      loan.status = status;
+      loan.updatedAt = now;
+      await this.loanDb.saveLoan(loan);
+    }
   }
 
   async settleLoan(loanId: string): Promise<void> {

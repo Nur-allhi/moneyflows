@@ -45,16 +45,20 @@ export class RepaymentEditError extends Error {
   readonly room: number;
   /** The highest (increase) or lowest (decrease) amount the edit may be set to. */
   readonly limit: number;
+  /** Whether `room` covers one loan or the borrower's loans as a whole (BUG-47). */
+  readonly scope: 'loan' | 'loans';
 
-  constructor(params: { direction: 'increase' | 'decrease'; room: number; limit: number }) {
+  constructor(params: { direction: 'increase' | 'decrease'; room: number; limit: number; scope?: 'loan' | 'loans' }) {
+    const subject = params.scope === 'loans' ? 'these loans' : 'this loan';
     super(
       params.direction === 'increase'
-        ? `Repayment cannot be raised: ${params.room} is all this loan still owes`
-        : `Repayment cannot be lowered: only ${params.room} of this loan has been repaid`,
+        ? `Repayment cannot be raised: ${params.room} is all ${subject} still owes`
+        : `Repayment cannot be lowered: only ${params.room} of ${subject} has been repaid`,
     );
     this.name = 'RepaymentEditError';
     this.direction = params.direction;
     this.room = params.room;
     this.limit = params.limit;
+    this.scope = params.scope ?? 'loan';
   }
 }

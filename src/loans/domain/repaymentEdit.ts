@@ -27,6 +27,12 @@ export interface RepaymentEditViolation {
   room: number;
   /** The highest (increase) or lowest (decrease) amount this edit may be set to. */
   limit: number;
+  /**
+   * What `room` covers: one loan (the linked one — the only case the pure rule
+   * below can judge) or the borrower's loans as a whole (a repayment that
+   * recorded its split, BUG-47). Affects the wording of the message only.
+   */
+  scope?: 'loan' | 'loans';
 }
 
 export function repaymentEditViolation(

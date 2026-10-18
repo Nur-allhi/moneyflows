@@ -14,6 +14,7 @@ import { useReplay } from '../hooks/useReplay';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
 import { RepaymentEditError } from '../../loans/domain/errors';
+import { readAllocations } from '../../loans/domain/repaymentAllocations';
 import styles from './TransactionEditModal.module.css';
 
 interface TransactionEditModalProps {
@@ -84,21 +85,24 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
       sourceAccount, destAccount, transaction.debtorId, transaction.loanRef,
       metadata, transaction.createdAt,
     );
-    // An edit to a repayment can be refused by its loan (BUG-40). The linked
-    // loan may not have room for a raise, and may not have repaid enough for a
-    // cut — and it is the *only* loan we can reason about, because a repayment
-    // records one `loanRef` and nothing about how the money was split. This runs
-    // BEFORE the transaction is written: the save and the loan sync are separate
-    // steps, so checking afterwards would leave the new amount on the ledger
-    // with the loan record clamped, which is the bug this guards.
-    if (transaction.loanRef && transaction.type === 'repay' && amountNum !== transaction.amount) {
+    // An edit to a repayment can be refused by the loans it pays (BUG-40). What
+    // can be checked depends on what the repayment recorded: one that stored its
+    // split can be reversed exactly (BUG-47), one with only a `loanRef` can only
+    // be judged against that single loan. This runs BEFORE the transaction is
+    // written: the save and the loan sync are separate steps, so checking
+    // afterwards would leave the new amount on the ledger with the loan record
+    // clamped, which is the bug this guards.
+    const allocations = readAllocations(transaction.metadata);
+    const paysLoans = transaction.type === 'repay' && (!!transaction.loanRef || allocations.length > 0);
+    if (paysLoans && amountNum !== transaction.amount) {
       try {
         const { LoanService } = await import('../../loans/application/LoanService');
-        await new LoanService(getDatabase()).assertRepaymentEditAllowed(transaction.loanRef, transaction.amount, amountNum);
+        await new LoanService(getDatabase())
+          .assertRepaymentEditAllowed(transaction.loanRef, transaction.amount, amountNum, allocations);
       } catch (e) {
         const { locale, currency } = useSettingsStore.getState().settings;
         setFormError(e instanceof RepaymentEditError
-          ? `Only ${formatAmount(e.room, locale, currency)} is still owed on this loan — the repayment can be raised to at most ${formatAmount(e.limit, locale, currency)}.`
+          ? `Only ${formatAmount(e.room, locale, currency)} is still owed ${e.scope === 'loans' ? 'across these loans' : 'on this loan'} — the repayment can be raised to at most ${formatAmount(e.limit, locale, currency)}.`
           : (e as Error).message);
         return;
       }
@@ -112,11 +116,14 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
       return;
     }
     if (tagName.trim()) useTagStore.getState().addTag(tagName.trim());
-    if (transaction.loanRef && (transaction.type === 'lend' || transaction.type === 'repay')) {
+    const touchesLoans = transaction.type === 'lend'
+      ? !!transaction.loanRef
+      : transaction.type === 'repay' && (!!transaction.loanRef || allocations.length > 0);
+    if (touchesLoans) {
       try {
         const { LoanService } = await import('../../loans/application/LoanService');
         const service = new LoanService(getDatabase());
-        await service.syncLoanTransaction(transaction.loanRef, transaction.amount, amountNum, transaction.type);
+        await service.syncLoanTransaction(transaction.loanRef, transaction.amount, amountNum, transaction.type, allocations);
       } catch { /* best-effort */ }
     }
     onClose();
