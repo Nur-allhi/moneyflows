@@ -2140,3 +2140,27 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - BUG-41 closed (Scope A). Nothing merged; `dev` untouched.
 - Audit scoreboard now: fixed = BUG-22, BUG-23, BUG-24, BUG-31, BUG-41 → **5 of 17** (plus BUG-38 outside the audit). Still open: BUG-21, BUG-25…BUG-30, BUG-32…BUG-37, BUG-39, BUG-40, and BUG-41 Scope B.
 - Next: **BUG-21 + BUG-25** (dashboard) when the mobile workstream's M-05 lands; then the moderate tier (BUG-26/27/28).
+
+## Session 2026-10-18 12:20 (fix/calculation-audit — BUG-27 fixed)
+
+### Changes
+- Session start: read `session_log.md` + `AGENTS.md §5`. State: branch at `b299432`, `dev` untouched at `552c9aa`, mobile workstream mid-batch at **M-06** → **M-05 has not landed**, so BUG-21/BUG-25 stay parked.
+- The user left "what's next?" to my judgement again. **Merging into `dev` requires explicit approval (§3.12) and an automated non-response is not approval**, so the branch stays parked and I took the highest-value unblocked finding instead: **BUG-27**.
+- **BUG-27 (loan stack progress and total recovered ignore settled loans) fixed.** New pure exported `stackTotals(loans)` in `src/loans/infrastructure/LoanDatabase.ts` computes `totalAmount` / `totalRecovered` / `progressPercent` over **every** loan, settled included; `_getStackForBorrower` now sources both aggregate fields from it. The active/settled split still drives the list, the counts, `isSettled` and `totalOutstanding` — and `totalOutstanding` needed no change at all, because `LoanService` only marks a loan settled once `outstanding` hits 0 and clamps `outstanding <= principal`; recovery therefore stays inside 0–100% and no clamp is needed.
+- Took the audit's option (a) — *"progress/recovered reflect the whole stack"* — over (b) *"or be labelled active-only"*: relabelling would leave the same card showing an active-only percentage next to a lifetime amount, which is precisely the incoherence the finding describes. Recorded in the entry.
+- **One UI follow-through**, flagged as the only visible change beyond the number itself: `LoanCard` and `LoanDetailView` dropped their `activeCount > 0` guard, so a fully settled stack now reads **100%** instead of a dash, and the card agrees with the detail bar.
+- Impact analysis: `_getStackForBorrower` **LOW** (3 impacted, 0 processes) — no warning needed.
+- Verification: **8 new unit tests** (153 total, was 145); **mutation-verified** by restoring the active-only scope → 5 of them fail, the first with `expected 1000 to be 2000` (the repaid loan's principal vanishing — the exact reported symptom). typecheck / lint / build PASS. Full Playwright suite at its documented baseline (**30 passed / 1 failed** = BUG-39, unchanged).
+- Throwaway spec (deleted, never committed) seeded a real database with one settled loan (1,000 / 0) and one fresh one (1,000 / 1,000): the Loans screen rendered **"1 active • 1 settled • 50% repaid"** where it previously showed 0%.
+- **Self-inflicted lesson, recorded because it cost a cycle:** the first version of that throwaway assertion required `getByText('0% repaid')` to match **0** elements, and it failed against perfectly correct code — because `'0% repaid'` is a **substring of `'50% repaid'`**. The fix came from dumping the actual DOM (one visible element containing "repaid"), not from guessing, after which the assertion was anchored (`/^0% repaid$/`). Rule going forward: **negative text assertions must be anchored.**
+- Bookkeeping in the same commit: `BUGS.md` BUG-27 → fixed (open block 15 → 14 entries; moved to the top of the fixed history, before BUG-41; verifier reports 0 separator problems); a `CHANGELOG` `Fixed` bullet; and **`AGENTS.md §5` corrected** — it still claimed BUG-38 was open (fixed at `1ee794d` on this very branch), and the §5 audit-workstream paragraph is now current (6 of 17 fixed, `dev` untouched, MINOR bump due at merge).
+
+### Skill(s) Used
+- gitnexus (impact), code-reviewer, senior-backend, senior-frontend
+
+### Status
+- BUG-27 closed. Nothing merged; `dev` still at `552c9aa`.
+- Audit scoreboard: **6 of 17** fixed (BUG-22, BUG-23, BUG-24, BUG-27, BUG-31, BUG-41), plus BUG-38 outside the audit.
+- Next: **BUG-28** (Group ledger PDF exports only the current page — `GroupLedgerScreen.tsx`, no collision with the mobile files), then **BUG-26** (member profile Total Income vs Total Expenses — same folder as their `LedgerSection.tsx` work, so slightly riskier). BUG-21/BUG-25 remain blocked on M-05.
+- Still awaiting a user decision on: merge-into-`dev` approval, BUG-39, the untracked `Logo_mockups/` PNG, and BUG-41 Scope B.
+

@@ -44,6 +44,33 @@ export function buildLenderBreakdown(loans: Loan[]): LenderBreakdown[] {
   return [...byLender.values()].sort((a, b) => b.outstanding - a.outstanding);
 }
 
+/**
+ * Lifetime totals for one borrower's stack — **every** loan, settled or not.
+ *
+ * BUG-27: these used to be computed over the active loans only, so a borrower who
+ * had fully repaid an older loan and then taken a new one showed ~0% progress next
+ * to the money left on the new loan. Progress has to read as
+ * (repaid / ever borrowed); that also keeps it consistent with `totalOutstanding`,
+ * which is the money left: remaining + repaid = lent. Pure for unit testing.
+ */
+export function stackTotals(loans: Loan[]): {
+  totalAmount: number;
+  totalRecovered: number;
+  progressPercent: number;
+} {
+  let totalAmount = 0;
+  let totalRecovered = 0;
+  for (const l of loans) {
+    totalAmount += l.principal;
+    totalRecovered += l.principal - Math.max(0, l.outstanding);
+  }
+  return {
+    totalAmount,
+    totalRecovered,
+    progressPercent: totalAmount > 0 ? Math.round((totalRecovered / totalAmount) * 100) : 0,
+  };
+}
+
 export class LoanDatabase {
   private db: SqlJsDb;
 
@@ -190,16 +217,16 @@ export class LoanDatabase {
       }
     }
 
-    const totalActiveAmount = activeLoanItems.reduce((s, i) => s + i.amount, 0);
-    const totalActiveRecovered = activeLoanItems.reduce((s, i) => s + i.recovered, 0);
+    // Stack-wide (settled loans included) — see stackTotals (BUG-27).
+    const totals = stackTotals(loans);
     const isSettled = loans.length > 0 && loans.every((l) => l.status === 'settled');
 
     return {
       debtorId: borrowerId,
       debtorName: name,
       totalOutstanding,
-      totalRecovered: totalActiveRecovered,
-      progressPercent: totalActiveAmount > 0 ? Math.round((totalActiveRecovered / totalActiveAmount) * 100) : 0,
+      totalRecovered: totals.totalRecovered,
+      progressPercent: totals.progressPercent,
       settledCount: settledLoans.length,
       activeCount: activeLoanItems.length,
       loans: [...activeLoanItems, ...settledLoans],

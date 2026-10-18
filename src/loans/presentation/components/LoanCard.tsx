@@ -35,7 +35,7 @@ export function LoanCard({ stack, locale, currency, onClick, searchQuery = '' }:
       <span className="anim-target" key={`${cardKey}-meta`}>
       <div className={styles.meta}>
         <span>{stack.activeCount > 0 ? `${stack.activeCount} active` : ''}{stack.settledCount > 0 ? `${stack.activeCount > 0 ? ' \u2022 ' : ''}${stack.settledCount} settled` : ''}{stack.activeCount === 0 && stack.settledCount === 0 ? '0 loans' : ''}</span>
-        <span>{stack.activeCount > 0 ? `${stack.progressPercent}% repaid` : '\u2014'}</span>
+        <span>{`${stack.progressPercent}% repaid`}</span>
       </div>
       </span>
     </button>

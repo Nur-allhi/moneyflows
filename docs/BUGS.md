@@ -59,17 +59,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
 
-## BUG-27: Loan stack repayment progress and total recovered exclude settled loans
-
-- **Status:** open
-- **Severity:** medium
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/loans/infrastructure/LoanDatabase.ts:164-202` (`_getStackForBorrower`: settled loans are split out before `totalActiveAmount`/`totalActiveRecovered` are computed)
-- **Description:** Settled loans are pushed into `settledLoans` and excluded from `totalActiveAmount` and `totalActiveRecovered`, so `progressPercent` (`:202`) and `totalRecovered` (`:201`) describe only the loans still open. A stack with one loan fully repaid and one freshly issued reports ~0% progress and understates money actually recovered. Expected: progress/recovered reflect the whole stack (or be labelled as active-only).
-- **Root Cause:** the settled/active split was introduced for the loan list and reused as the scope for the aggregate figures.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
 ## BUG-28: Group ledger PDF exports only the currently visible page of rows
 
 - **Status:** open
@@ -192,6 +181,20 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** the smoke asserts pre-S-1 UI (inline dashboard search input) that the global-search feature replaced; only the sibling "ledger-scoped" smoke was made tolerant of the new UI.
 - **Fix Approach:** (pending user confirmation)
 - **Resolved:**
+
+---
+
+## BUG-27: Loan stack repayment progress and total recovered exclude settled loans
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/loans/infrastructure/LoanDatabase.ts` (`_getStackForBorrower`; new pure `stackTotals`)
+- **Description:** Settled loans were pushed into `settledLoans` and excluded from the aggregate figures, so `totalRecovered` and `progressPercent` described only the loans still open. A borrower who had fully repaid an earlier loan and then taken a new one saw "0% repaid" next to money that had genuinely been paid back, and the recovered total understated what had come in. The stack's own figures did not add up: `totalOutstanding` is the money *left*, so on a card showing 1,000 remaining after 1,000 had been repaid, "0% repaid" contradicted the amount beside it — remaining + repaid = lent.
+- **Root Cause:** the settled/active split was introduced for the loan list (which genuinely wants the two groups) and then reused as the scope for the aggregate figures, where lifetime semantics were needed.
+- **Fix Approach:** taken from the audit's expected behaviour — *"progress/recovered reflect the whole stack"* — chosen over the audit's alternative of relabelling them active-only. Relabelling would have left the two figures on the same card on different scopes (an active-only percentage next to a lifetime amount), which is what made the card read as wrong in the first place.
+- **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). New pure exported `stackTotals(loans)` computes `totalAmount` / `totalRecovered` / `progressPercent` over **every** loan in the stack, settled included; `_getStackForBorrower` derives its two aggregate fields from it. The active/settled split still drives the list, `activeCount`, `settledCount`, `isSettled` and `totalOutstanding` (unaffected anyway — `LoanService` only marks a loan settled once `outstanding` hits 0, and clamps `outstanding <= principal`, so recovered stays within 0..100% and no clamp is needed). One UI follow-through, flagged as the only visible change beyond the number: `LoanCard` and `LoanDetailView` no longer hide the percentage behind an `activeCount > 0` guard, so a fully settled stack reads **100%** instead of a dash, and the card and the detail bar finally state the same figure. Evidence: **8 new unit tests** (153 total, was 145) covering the mixed settled+active case, all-settled, nothing-repaid, partial repayments across loans, rounding and the empty stack; **mutation-verified** — restoring the active-only scope fails 5 of them, the first with `expected 1000 to be 2000` (the repaid loan's principal vanishing, exactly the reported symptom). Typecheck / lint / build PASS; full Playwright suite at its documented baseline (**30 passed / 1 failed** = BUG-39). A throwaway spec, deleted and never committed, seeded a real database with one settled (1,000 / 0) and one fresh loan (1,000 / 1,000) and the Loans screen rendered **"1 active • 1 settled • 50% repaid"** where it previously showed 0%. Note for whoever picks this up: `totalRecovered` still has no UI consumer (grepped) — it was fixed because it is part of the `LoanStack` contract, not because anything renders it.
+- **Lesson (recorded because it cost a cycle):** the first version of the throwaway assertion used `getByText('0% repaid')`, which **substring-matches "50% repaid"** and failed against perfectly correct code. Negative text assertions must be anchored (`/^0% repaid$/`). The DOM snapshot, not guesswork, is what showed the app was right.
 
 ---
 

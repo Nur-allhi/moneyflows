@@ -363,9 +363,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         <ProgressBar
           percent={stack.progressPercent}
           label="Repayment Progress"
-          sublabel={stack.activeCount > 0
-            ? `${stack.progressPercent}% repaid - ${formatAmount(stack.totalOutstanding, locale, currency)} remaining`
-            : `${formatAmount(stack.totalOutstanding, locale, currency)} remaining`}
+          sublabel={`${stack.progressPercent}% repaid - ${formatAmount(stack.totalOutstanding, locale, currency)} remaining`}
         />
         {lenderRows.length >= 2 && (
           <div className={styles.lenderBreakdown} onClick={() => setBreakdownOpen((v) => !v)}>
