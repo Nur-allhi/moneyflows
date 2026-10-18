@@ -59,6 +59,17 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Fix Approach:** (pending user confirmation) — kept as its own decision so the allocation model (one `loanRef` per transaction vs a recorded split) can be settled on its own merits instead of being smuggled into a bug fix.
 - **Resolved:**
 
+## BUG-43: Bare `dashboard` gitignore pattern silently ignores the dashboard source folder
+
+- **Status:** open
+- **Severity:** medium
+- **Found:** 2026-10-18 (during: the BUG-26 commit — `git add` reported `src/presentation/screens/dashboard` as an ignored path)
+- **Location:** `.gitignore:42` (`dashboard`, added with the T-085 debug-artifact pass) vs `src/presentation/screens/dashboard/`
+- **Description:** The rule is a bare pattern, so it matches **any** path component named `dashboard` — not only the untracked 7,200-byte Playwright aria-snapshot dump in the repo root (`dashboard`, last written 2026-07-15) that it was written for. `git check-ignore -v src/presentation/screens/dashboard/newSection.tsx` resolves to `.gitignore:42`, so **a new file added to the dashboard screens folder is silently ignored**: it never appears in `git status`, `git add -A <that folder>` errors instead of staging, and nothing warns at commit time — the file is simply left out. Already-tracked files there (`useDashboardData.ts`, `sections.tsx`, …) are unaffected, which is why this went unnoticed for months. It is a live hazard for the parallel mobile workstream, which edits `dashboard/sections.tsx` and may add files beside it. Expected: debug artifacts stay ignored; source files are never ignored by accident.
+- **Root Cause:** a bare filename pattern instead of a root-anchored path, added without noticing that a source directory shares the name.
+- **Fix Approach:** (pending user confirmation — one line, and tracked files are unaffected either way) anchor it as `/dashboard`, which keeps ignoring the stale root dump and stops matching `src/presentation/screens/dashboard/`; verify with `git check-ignore -v src/presentation/screens/dashboard/newSection.tsx` (currently `.gitignore:42`, expected: no match). The alternative — deleting the rule — re-exposes the stale dump in every `git status`. **No `.gitignore` change was made when this was found.**
+- **Resolved:**
+
 ## BUG-29: Recycle Bin "Total Amount" sums incomparable quantities
 
 - **Status:** open
