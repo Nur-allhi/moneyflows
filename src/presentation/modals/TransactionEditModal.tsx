@@ -11,6 +11,9 @@ import {
   type TransactionFieldIssues,
 } from '../../core/domain/transactionRules';
 import { useReplay } from '../hooks/useReplay';
+import { useSettingsStore } from '../stores/useSettingsStore';
+import { formatAmount } from '../utils/format';
+import { RepaymentEditError } from '../../loans/domain/errors';
 import styles from './TransactionEditModal.module.css';
 
 interface TransactionEditModalProps {
@@ -81,6 +84,25 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
       sourceAccount, destAccount, transaction.debtorId, transaction.loanRef,
       metadata, transaction.createdAt,
     );
+    // An edit to a repayment can be refused by its loan (BUG-40). The linked
+    // loan may not have room for a raise, and may not have repaid enough for a
+    // cut — and it is the *only* loan we can reason about, because a repayment
+    // records one `loanRef` and nothing about how the money was split. This runs
+    // BEFORE the transaction is written: the save and the loan sync are separate
+    // steps, so checking afterwards would leave the new amount on the ledger
+    // with the loan record clamped, which is the bug this guards.
+    if (transaction.loanRef && transaction.type === 'repay' && amountNum !== transaction.amount) {
+      try {
+        const { LoanService } = await import('../../loans/application/LoanService');
+        await new LoanService(getDatabase()).assertRepaymentEditAllowed(transaction.loanRef, transaction.amount, amountNum);
+      } catch (e) {
+        const { locale, currency } = useSettingsStore.getState().settings;
+        setFormError(e instanceof RepaymentEditError
+          ? `Only ${formatAmount(e.room, locale, currency)} is still owed on this loan — the repayment can be raised to at most ${formatAmount(e.limit, locale, currency)}.`
+          : (e as Error).message);
+        return;
+      }
+    }
     await updateTransaction(transaction.id, updated);
     // The store rolls back and records the reason rather than throwing, so read
     // it back — otherwise a save the database refused still closes the modal.

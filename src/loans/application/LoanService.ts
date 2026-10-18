@@ -4,7 +4,8 @@ import { Transaction } from '../../core/domain/Transaction';
 import { Account } from '../../core/domain/Account';
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
 import type { Loan, LoanStack, LoanReport, LoanReportFilter, LoanReportRow, LoanReportSummary } from '../domain/types';
-import { OverpaymentError } from '../domain/errors';
+import { OverpaymentError, RepaymentEditError } from '../domain/errors';
+import { repaymentEditViolation } from '../domain/repaymentEdit';
 import { LoanDatabase } from '../infrastructure/LoanDatabase';
 import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from './computeRunningBalances';
 import { SQLiteDatabaseService } from '../../infrastructure/database/SQLiteDatabaseService';
@@ -18,7 +19,10 @@ export class LoanService {
     if (db instanceof SQLiteDatabaseService) {
       const raw = db.getSqlJsDb();
       if (!raw) throw new Error('Database not initialized');
-      this.loanDb = new LoanDatabase(raw as SqlJsDb);
+      // The loan tables are written straight into the raw database, so the
+      // service that owns persistence has to be told, or the write is never
+      // flushed (BUG-46).
+      this.loanDb = new LoanDatabase(raw as SqlJsDb, () => db.markDirty());
     } else {
       throw new Error('LoanService requires SQLiteDatabaseService');
     }
@@ -163,6 +167,21 @@ export class LoanService {
     return { accountId: account.id };
   }
 
+  /**
+   * Refuses an edit to a repayment that its linked loan cannot absorb, without
+   * touching anything. The edit modal calls this *before* saving the
+   * transaction, because the transaction write and the loan sync are separate
+   * steps: checking afterwards would leave the edited amount on the ledger with
+   * the loan record clamped, which is BUG-40.
+   */
+  async assertRepaymentEditAllowed(loanRef: string | undefined, oldAmount: number, newAmount: number): Promise<void> {
+    if (!loanRef || oldAmount === newAmount) return;
+    const loan = await this.loanDb.getLoanById(loanRef);
+    if (!loan) return;
+    const violation = repaymentEditViolation(loan, oldAmount, newAmount);
+    if (violation) throw new RepaymentEditError(violation);
+  }
+
   async syncLoanTransaction(loanRef: string | undefined, oldAmount: number, newAmount: number, txType: string): Promise<void> {
     if (!loanRef) return;
     const loan = await this.loanDb.getLoanById(loanRef);
@@ -172,6 +191,10 @@ export class LoanService {
       loan.principal += diff;
       loan.outstanding += diff;
     } else if (txType === 'repay') {
+      // Refuse rather than clamp: an edit the linked loan cannot absorb would
+      // otherwise move the ledger and leave the loan record behind (BUG-40).
+      const violation = repaymentEditViolation(loan, oldAmount, newAmount);
+      if (violation) throw new RepaymentEditError(violation);
       loan.outstanding -= diff;
     }
     loan.outstanding = Math.max(0, loan.outstanding);

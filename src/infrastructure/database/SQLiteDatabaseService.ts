@@ -381,16 +381,35 @@ export class SQLiteDatabaseService implements IDatabaseService {
     this.db.run('CREATE INDEX IF NOT EXISTS idx_other_entries_deleted ON other_ledger_entries(deleted_at)');
   }
 
-  /** Marks pending changes; a microtask-coalesced write follows (see plan §3). */
-  private markDirty(): void {
+  /**
+   * Marks pending changes; a microtask-coalesced write follows (see plan §3).
+   *
+   * Public because a module that writes through `getSqlJsDb()` is writing to this
+   * database behind this service's back, and the flush lifecycle is driven by
+   * this flag: `flush()` exports the database and clears `dirty`, and the
+   * lifecycle flush only runs while `dirty` is set. A raw write that never calls
+   * this can therefore be discarded on the next reload (BUG-46). Every module
+   * holding a raw handle must call it after each write.
+   */
+  markDirty(): void {
     this.dirty = true;
     this._scheduleFlush();
   }
 
+  /**
+   * Marks pending changes and coalesces them into one write. The scheduled
+   * flush is cleared as it starts, so a write that lands while the flush is in
+   * flight schedules a follow-up rather than being dropped — before, the flag
+   * was never reset, which silently disabled this whole path after the first
+   * scheduled flush of a page load (BUG-46).
+   */
   private _scheduleFlush(): void {
     if (this.flushScheduled) return;
     this.flushScheduled = true;
-    queueMicrotask(() => { void this.flush().catch(() => {}); });
+    queueMicrotask(() => {
+      this.flushScheduled = false;
+      void this.flush().catch(() => {});
+    });
   }
 
   /** Writes the current database state through the storage adapter. Throws on real failures. */

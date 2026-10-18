@@ -24,3 +24,37 @@ export class OverpaymentError extends Error {
     this.maximum = maximum;
   }
 }
+
+/**
+ * Thrown when an edit to a repayment cannot be applied to its linked loan
+ * (BUG-40) — the edit counterpart of `OverpaymentError`.
+ *
+ * A repayment stores one `loanRef` and no record of how the money was split
+ * across loans, so an edit can only ever be applied to the linked loan, and only
+ * within what that loan can absorb. The old code applied the delta and clamped,
+ * so editing a repayment upward past what the loan still owed raised the amount
+ * on the ledger while the loan stopped at zero — the same divergence BUG-23
+ * fixed on the create side, reached through an ordinary edit instead.
+ *
+ * Like `OverpaymentError` it carries numbers rather than a sentence (no locale
+ * or currency in the domain layer); the caller formats the message.
+ */
+export class RepaymentEditError extends Error {
+  readonly direction: 'increase' | 'decrease';
+  /** What the linked loan could absorb in that direction. */
+  readonly room: number;
+  /** The highest (increase) or lowest (decrease) amount the edit may be set to. */
+  readonly limit: number;
+
+  constructor(params: { direction: 'increase' | 'decrease'; room: number; limit: number }) {
+    super(
+      params.direction === 'increase'
+        ? `Repayment cannot be raised: ${params.room} is all this loan still owes`
+        : `Repayment cannot be lowered: only ${params.room} of this loan has been repaid`,
+    );
+    this.name = 'RepaymentEditError';
+    this.direction = params.direction;
+    this.room = params.room;
+    this.limit = params.limit;
+  }
+}

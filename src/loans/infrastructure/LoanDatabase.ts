@@ -74,13 +74,23 @@ export function stackTotals(loans: Loan[]): {
 
 export class LoanDatabase {
   private db: SqlJsDb;
+  private onWrite?: () => void;
 
-  constructor(db: SqlJsDb) {
+  /**
+   * `onWrite` is called after every write, and exists because these statements go
+   * straight into the raw sql.js database: the owning service only persists what
+   * it knows is dirty, so a loan write that does not announce itself can be
+   * discarded on reload (BUG-46). `LoanService` wires it to
+   * `SQLiteDatabaseService.markDirty()`.
+   */
+  constructor(db: SqlJsDb, onWrite?: () => void) {
     this.db = db;
+    this.onWrite = onWrite;
   }
 
   private run(sql: string, params?: Record<string, string | number | null>): void {
     this.db.run(sql, params as Parameters<SqlJsDb['run']>[1]);
+    this.onWrite?.();
   }
 
   private query<T>(sql: string, params?: Record<string, string | number | null>): T[] {
