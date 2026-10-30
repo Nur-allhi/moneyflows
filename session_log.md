@@ -1919,3 +1919,78 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - Next: push dev + user verifies popup-from-header when the ~1h session lapses.
+
+## Session 2026-10-17 (merge header sign-in feature to master)
+
+### Changes
+- User-approved `dev → master` no-ff (`a3bca5c`): header sign-in popup feature (`78e4d5c`) + CHANGELOG Unreleased Added + session log. No version bump/tag (release step pending user call)
+- Gates re-run on merge result: typecheck PASS, full lint 0 PASS, unit 113/113 PASS, build PASS; pushed `master` (`ce45235..a3bca5c`)
+- Back on clean `dev` (only untracked `Logo_mockups/` remains)
+
+### Status
+- `master` carries BUG-16/17/18 fixes + header sign-in. Next: deploy hosted app + user verifies, then version-bump release when confirmed.
+
+## Session 2026-10-17 (mobile UI audit + BUG-19 starting-balance wipe fix)
+
+### Changes
+- Mobile UI audit (Playwright, 390x844, fresh guest profile): wizard, dashboard, members, member detail + linked accounts, loans, other ledgers index/detail/entry sheets, settings, More sheet, light mode. Ranked refinement list delivered to user (Other Ledgers index layout mess #1; detail headers missing titles; emoji-as-icons; orphaned empty-state buttons; zero-in-danger-red; touch targets; validation-in-labels; duplicate wizard progress; suspicious All Accounts badge)
+- BUGS.md: logged BUG-19 (critical) + BUG-20 (high) from audit findings. BUG-19: wizard step 2 stored starting balance raw on accounts.balance — boot recalculateBalances (T-171 replay) zeroed it on reload; live-reproduced 28,000 -> 0. BUG-20: linked-accounts modal showed 0 BDT while dashboard showed 28,000 in same (pre-reload) session — diagnose later against healthy account
+- BUG-19 fixed (eff4d6c): SetupWizard.handleAddAccount now mirrors AddAccountModal — account saved with balance 0 + income 'Opening Balance' transaction tagged isOpeningBalance:true; live-verified vanish-then-fix (reload keeps 28,000 + both Opening Balance rows in Recent Transactions); detect_changes LOW (stale index, diff-verified confined to wizard)
+- Process notes: agentation extension overlay in the test browser intercepts the bottom-right More nav button on reload (removed DOM-side repeatedly; real-user app behavior unaffected) — worth a persistent extension-free e2e context later
+- Gates: typecheck PASS, eslint scoped clean, unit 113/113 (src), build PASS
+
+### Skill(s) Used
+- ui-ux-pro-max (audit), senior-frontend (fix)
+
+### Status
+- BUG-19 closed on `dev` (commit eff4d6c, pushed? NO — commit only, unpushed). Next: user decision on BUG-20 + mobile UI refinement list (starts with Other Ledgers index layout); then push.
+
+## Session 2026-10-17 (calculation-logic audit — BUG-21..BUG-37 logged)
+
+### Changes
+- Full read-only calculation/logic audit across every module (balance engine, loans, other ledgers, reports, dashboard, member profile/ledger, groups, recycle bin, write paths). Deliverable was an audit report for the user to triage — NO code changed in this session
+- 17 findings logged in `docs/BUGS.md` as BUG-21..BUG-37 (status `open`, no fix approach — each awaits user confirmation per AGENTS.md §3.10). New IDs allocated after BUG-20; entries inserted above the fixed history, ordered severity high → medium → low then found-date
+- HIGH (4): BUG-21 dashboard metric chips use two different formulas behind one "vs last month" label (`prevAssets/prevCash` use `thisMonthNet`, `prevBanks/prevLoans` use `lastMonthNet`; `loansChange` subtracts a flow from a stock; `prevX > 0` fallback silently reports 0.0%). BUG-22 member report `closing: acct.balance` is the live balance while `opening` unwinds ALL transactions → Opening + Credit − Debit ≠ Closing for ranges ending before the last transaction (existing tests only cover ranges ending at the last tx). BUG-23 `recordRepayment` clamps loan `outstanding` at 0 and silently discards the overpayment remainder while booking the full amount as a `repay` tx → stack says settled, report can go negative (test asserts −2000). BUG-24 `updateTransaction` never calls `validateTransaction` and the edit modal posts `Number(amount)` from an unsanitized input → blank=0 / non-numeric=NaN / negative / empty description / source===dest all pass, then `applyBalanceChange` writes the bad delta straight into `accounts.balance` (permanent corruption, NaN survives flush)
+- MEDIUM (4): BUG-25 loan principal movements (`lend`/`loan_issue`/`repay`/`loan_repayment`/…) counted as income/expense, feeding every "net" figure. BUG-26 profile Total Income (`income` only, includes opening balances) vs Total Expenses (`expense`+`loan_issue`+`lend`) not comparable. BUG-27 loan stack `progressPercent`/`totalRecovered` exclude settled loans. BUG-28 group ledger PDF exports only the `displayLimit` page slice
+- LOW (9): BUG-29 Recycle Bin "Total Amount" sums transaction amounts + account balances + ledger opening balances + entry debit+credit (and prefixes every row with "−"). BUG-30 other_ledger/other_entry rows labelled "Account" but unreachable via the Accounts tab. BUG-31 amount rules differ between create (digits-only `parseInt`) and edit (`inputMode="decimal"`, unsanitized). BUG-32 member ledger running balance wrong when no account is selected (latent — `showBalance = !!selectedAccountId` hides it). BUG-33 member ledger balance rendered as raw `String(balance)`, bypassing `formatAmount()`. BUG-34 `on_track` loan status actually means fully repaid. BUG-35 other-ledger `recomputeBalances` rewrites `updated_at` on every entry of the ledger per mutation. BUG-36 unused `createGivenLoan`/`createReceivedLoan`/`recordPayback` (`createReceivedLoan` duplicates given-loan mapping → inverted if ever wired). BUG-37 `getFamilySummary` sums `mobile_wallet`+`business` as `activeLoans`, ignores loan stacks, excludes counterparty accounts; unused by UI
+- Verified NOT defects (recorded so a future session does not re-litigate): group ledger per-row running balance is slice-consistent (`netChange` over the same rows); `OtherLedgerDetail` balances read from sorted stored values; `computeBalances.ts` mirrors `applyBalanceChange`/`recalculateBalances` correctly
+- Test-coverage gaps noted for later: no test asserts update-path validation (BUG-24), overpayment behaviour (BUG-23), dashboard trend math (BUG-21/25), or a report range ending before the last transaction (BUG-22)
+- Audit report saved to `docs/audit/CALCULATION_LOGIC_AUDIT_2026-10-17.md` (user-requested): summary table, 17 findings grouped by module with BUG-ID cross-refs to BUGS.md, verified-non-defects, test-coverage gaps, recommended priority. House naming matches `docs/audit/PII_NAMES_AUDIT_2026-08-24.md`
+- Report gained a §0 plain-language section (user-requested, "so that I can understand easily"): big picture (receipt book vs wallet balances), the 4 serious + 4 moderate issues explained with concrete scenarios, the 9 minor ones as a table, recommended work order, and the 3 decisions that need the user (overpayment rule, whether to repair already-damaged data, first-step scope). Each plain item carries its BUG-ID so it maps to the technical section
+- No fixes applied by design — user asked for the report first ("then I will decide about the findings"). Logging proceeded under AGENTS.md §3.11 (log before anything else) while fixes stay blocked on §3.10 confirmation
+
+### Skill(s) Used
+- code-reviewer, senior-backend, senior-frontend (static audit; no tooling/gates run — docs-only change)
+
+### Status
+- 17 findings logged on `dev`, pushed at user request — remote `dev` is at `b128400` (in sync). The push also carried the earlier unpushed BUG-19 fix (`eff4d6c`) + its session log (`14105ee`), confirmed with the user first
+- Next: user triages the report and picks a finding; recommended order = BUG-24 + BUG-23 (only data-corrupting pair), then BUG-22, then BUG-21/25. Each fix needs an approved approach before code is touched. Still open from the earlier audit: BUG-20 (linked-accounts modal balance)
+
+## Session 2026-10-17 (mobile audit list documented as plan)
+
+### Changes
+- NEW `docs/plans/MOBILE_UI_REFINEMENTS_PLAN.md` — M-01..M-09 tickets with observed-vs-acceptance criteria, fixes-first ordering, and BUG-19/BUG-20 cross-refs (audit findings are now in-repo, not chat-only)
+- No code touched in this step
+
+### Status
+- Committed `docs:` on `dev`. Next: BUG-20 diagnosis or first ticket M-01 on user call.
+
+## Session 2026-10-17 (BUG-20 diagnosed + closed as resolved-by-BUG-19, regression guard)
+
+### Changes
+- BUG-20 ("Linked Accounts modal shows 0 BDT while dashboard shows the real total") diagnosed live in the running app against the exact reported data set (member Imran: City Bank 25,000 + Cash Wallet 3,000 = 28,000). Dashboard "Total in Banks", dashboard member row, Members list, profile hero, mobile Linked Accounts modal (25,000 + 3,000) and desktop dropdown all read the same values — before AND after a full reload. **BUG-20 does not reproduce on current code.**
+- Root cause (no separate defect — a second face of BUG-19): those accounts held a balance no transaction backed (pre-fix wizard wrote the raw number onto the account row). Boot's `recalculateBalances()` (main.tsx:90) recomputes every balance from the transaction stream and rewrites unbacked rows to the replayed sum (0); the Linked Accounts modal re-reads those rows while the dashboard metric renders the in-store value through `useAnimatedValue` → "modal 0 / dashboard 28,000" inside that window. Verified every other balance writer cannot produce an unbacked balance: `AddAccountModal` + fixed wizard write an `isOpeningBalance` income tx, `EditAccountModal` cannot change a balance, `LoanService` creates counterparty accounts at 0
+- User-confirmed plan = Option A (close as resolved-by-BUG-19 + regression guard; no production change for a symptom that no longer exists). Option B (re-derive balances in `restoreAccount` and every account write) deferred — noted as better folded into BUG-24 work
+- `docs/BUGS.md`: BUG-20 moved out of the open block into fixed history (Status fixed, diagnosed root cause, fix approach, resolved-by `eff4d6c` + today's regression test)
+- NEW regression test in `e2e/flows/03-accounts.spec.ts` (mobile modal + desktop dropdown): asserts per-account card balances `{DBBL 70,000 · Cash -6,000 · bKash 0}`, profile Net Balance 64,000 and dashboard In-Banks 70,000 — mobile case repeats all of it after a reload, pinning BUG-19 + BUG-20. Values derived from `e2e/helpers/seed-tiny.ts` (balances rebuilt by replay)
+- Mutation-verified the guard bites: temporarily forced the modal to `formatAmount(0, …)` → the new mobile test failed with exactly the reported symptom (`DBBL "0 BDT"` vs expected `"70,000 BDT"`); mutation reverted, `git diff -- src` is empty
+- `CHANGELOG.md` [Unreleased] → Fixed: extended the existing BUG-19 bullet to name the Linked Accounts list reading 0 BDT (same user-visible fix; no version bump — docs/test only per `docs/VERSIONING.md` §2 rule 4)
+- TWO pre-existing harness defects found while running gates, logged (not fixed, per §3.11): **BUG-38** `npm test` can never pass — vitest collects all 21 `e2e/*.spec.ts` and exits 1 ("Playwright Test did not expect test() here") while the 113 real unit tests pass; **BUG-39** `e2e/search.smoke.spec.ts:13` waits for a dashboard `Search...` input that the global header search (`a641ba9`) replaced → `npx playwright test` is permanently 30/1 red on an untouched app
+- Gates: typecheck PASS, lint `--max-warnings 0` PASS (exit 0), unit 113/113 PASS (the 21 vitest "failed suites" are BUG-38, all Playwright files), Playwright 30 passed / 1 failed = BUG-39 only (my 4 tests in `03-accounts` green; e2e for the new spec run 3× including a negative mutation run)
+- Gotcha hit again: the long-lived dev server on :3000 served a **stale bundle** (Windows watcher missed an edit) — a mutation run silently tested old code. Fix used: kill the listener by port (`Get-NetTCPConnection -LocalPort 3000`) and let Playwright start a fresh server, verifying the served module with `Invoke-WebRequest` before trusting a run
+
+### Skill(s) Used
+- senior-frontend (diagnosis + regression test), code-reviewer (harness findings BUG-38/39)
+
+### Status
+- On `dev`, awaiting push. BUG-20 = fixed (docs + regression test only, `src/` untouched). Next: user decision on BUG-38/BUG-39 one-line fixes (vitest `exclude: ['e2e/**']`; update/replace the stale search smoke), then the earlier audit order (BUG-24 + BUG-23 first).

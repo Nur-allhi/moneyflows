@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { Member } from '../../core/domain/Member';
 import { Account } from '../../core/domain/Account';
+import { Transaction } from '../../core/domain/Transaction';
 import type { AccountType } from '../../core/domain/Account';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { useMemberStore } from '../stores/useMemberStore';
@@ -110,8 +111,20 @@ export function SetupWizard() {
       const members = await db.getMembers();
       const member = members.find((m) => m.name === memberName) ?? members[0];
       if (!member) { setError('Create a member first'); return; }
-      const acc = new Account(uuidv4(), member.id, accountDraft.name.trim(), accountDraft.type, Number(accountDraft.balance) || 0);
+      // BUG-19: starting balance rides as an `isOpeningBalance` income
+      // transaction (mirrors AddAccountModal). Storing it as a raw balance on
+      // the account row gets wiped by the boot recalculateBalances() pass,
+      // which replays transactions only.
+      const acc = new Account(uuidv4(), member.id, accountDraft.name.trim(), accountDraft.type, 0);
       await db.saveAccount(acc);
+      const starting = Number(accountDraft.balance) || 0;
+      if (starting > 0) {
+        await db.saveTransaction(new Transaction(
+          uuidv4(), 'income', 'Opening Balance', starting,
+          member.id, new Date().toISOString().slice(0, 10), undefined, acc.id, undefined, undefined,
+          { isOpeningBalance: true },
+        ));
+      }
       setAccountsAdded((prev) => [...prev, { name: acc.name, type: acc.type, memberName: member.name }]);
       setAccountDraft({ memberIdx: 0, name: '', type: 'bank', balance: '0' });
       await fetchAccounts();
