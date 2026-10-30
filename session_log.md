@@ -1,4 +1,4 @@
-﻿# MoneyFlows — Session Log
+# MoneyFlows — Session Log
 
 Archived first 1000 lines to docs/audit/session_log.archive.md on 2026-08-27 — recent tail below.
 
@@ -2060,4 +2060,10 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Skill(s) Used
 - ui-ux-pro-max (touch-target pattern)
 ### Status
-- M-06 now fully satisfied; all 9 tickets genuinely done. Commit pending on eature/mobile-refinements; merge to dev still awaits explicit user approval.
+- M-06 now fully satisfied; all 9 tickets genuinely done. Commit pending on `feature/mobile-refinements`; merge to dev still awaits explicit user approval.
+
+## Session 2026-10-18
+### Changes
+- Pushed `feature/mobile-refinements` (tip ef8a19b) to remote with upstream tracking; branch was previously local-only. No merge performed.
+### Status
+- Branch is on remote at origin/feature/mobile-refinements. Merge to dev still awaits explicit user approval per 3.8/3.12.
