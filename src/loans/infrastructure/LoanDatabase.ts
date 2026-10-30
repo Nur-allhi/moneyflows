@@ -1,7 +1,7 @@
 import type { Database as SqlJsDb } from 'sql.js';
 import type { Loan, LoanItem, LoanStack, LenderBreakdown } from '../domain/types';
 import { getStackDisplayName } from '../domain/loanDisplay';
-import { loanItemStatus } from '../domain/loanStatus';
+import { loanItemStatus, splitStack, stackIsSettled } from '../domain/loanStatus';
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -199,41 +199,34 @@ export class LoanDatabase {
       allAcctIds.add(l.borrowerAccountId);
     }
 
-    const settledLoans: LoanItem[] = [];
-    const activeLoanItems: LoanItem[] = [];
-    let totalOutstanding = 0;
-
-    for (const l of loans) {
+    // BUG-45: the split asks "is anything still owed?" (loanStatus), not the raw
+    // flag — one definition for the count, the filters and the label.
+    const split = splitStack(loans, (l): LoanItem => {
       const outstanding = Math.max(0, l.outstanding);
-      const recovered = l.principal - outstanding;
-      const status = loanItemStatus(l);
       const lenderAcct = accountMap.get(l.lenderAccountId);
-      const fundingName = lenderAcct?.name as string ?? l.lenderAccountId;
-      const item: LoanItem = {
-        id: l.id, fundingSource: fundingName,
-        amount: l.principal, recovered, status, date: l.createdAt,
+      return {
+        id: l.id,
+        fundingSource: lenderAcct?.name as string ?? l.lenderAccountId,
+        amount: l.principal,
+        recovered: l.principal - outstanding,
+        status: loanItemStatus(l),
+        date: l.createdAt,
       };
-      if (l.status === 'settled') {
-        settledLoans.push(item);
-      } else {
-        activeLoanItems.push(item);
-        totalOutstanding += outstanding;
-      }
-    }
+    });
 
     // Stack-wide (settled loans included) — see stackTotals (BUG-27).
     const totals = stackTotals(loans);
-    const isSettled = loans.length > 0 && loans.every((l) => l.status === 'settled');
+    const isSettled = stackIsSettled(loans);
 
     return {
       debtorId: borrowerId,
       debtorName: name,
-      totalOutstanding,
+      totalOutstanding: split.totalOutstanding,
       totalRecovered: totals.totalRecovered,
       progressPercent: totals.progressPercent,
-      settledCount: settledLoans.length,
-      activeCount: activeLoanItems.length,
-      loans: [...activeLoanItems, ...settledLoans],
+      settledCount: split.finished.length,
+      activeCount: split.running.length,
+      loans: [...split.running, ...split.finished],
       lenderBreakdown: buildLenderBreakdown(loans),
       stackType,
       isSettled,

@@ -13,6 +13,7 @@ import { Highlight } from '../utils/highlight';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { matchesTx } from '../utils/search';
 import { withRunningBalances } from '../utils/runningBalance';
+import { matchesLedgerTab, type LedgerTab } from '../constants/ledgerTabs';
 import styles from './GroupLedgerScreen.module.css';
 
 const TX_TABS = [
@@ -125,11 +126,8 @@ export function GroupLedgerScreen() {
 
   const mobileFilteredTxs = useMemo(() => {
     let txs = [...displayedTxs];
-    if (typeFilter !== 'all') {
-      const map: Record<string, string[]> = { income: ['income'], expense: ['expense', 'lend', 'loan_issue'], transfer: ['transfer'], loan: ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'] };
-      const allowed = map[typeFilter] ?? [];
-      txs = txs.filter((tx) => allowed.includes(tx.type));
-    }
+    // BUG-42: the same tab rule the desktop table uses — one definition, not one per layout.
+    if (typeFilter !== 'all') txs = txs.filter((tx) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
     return txs.sort((a, b) => (sortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
   }, [displayedTxs, typeFilter, sortOrder]);
 
@@ -189,7 +187,15 @@ export function GroupLedgerScreen() {
 
     const isLoanType = (t: string) => ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'].includes(t);
 
-    const allRows = balanceRows.map(({ item: tx, balance }) => {
+    // BUG-42: the tab decides which rows are listed, through the shared rule; the
+    // row's `type` below is only how it is painted. Filtering here (before the
+    // balance walk's output is mapped) keeps the running balances computed over
+    // the whole ledger, which is what the column means.
+    const shownRows = typeFilter === 'all'
+      ? balanceRows
+      : balanceRows.filter(({ item: tx }) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
+
+    const allRows = shownRows.map(({ item: tx, balance }) => {
       const credit = isGroupCredit(tx) && !isGroupDebit(tx);
       const debit = isGroupDebit(tx) && !isGroupCredit(tx);
       const internal = isGroupDebit(tx) && isGroupCredit(tx);
@@ -208,12 +214,7 @@ export function GroupLedgerScreen() {
     });
 
     const result = sortOrder === 'desc' ? allRows.reverse() : allRows;
-
-    if (typeFilter === 'all') return result;
-    return result.filter((r) => {
-      if (typeFilter === 'loan') return r.type === 'loan';
-      return r.type === typeFilter;
-    });
+    return result;
   }, [displayedTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay, sortOrder]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
@@ -318,10 +319,9 @@ export function GroupLedgerScreen() {
 
   if (loading) return <div className={styles.loading}>Loading...</div>;
 
-  const typeRows = typeFilter === 'all' ? displayedTxs : displayedTxs.filter((tx) => {
-    if (typeFilter === 'loan') return ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'].includes(tx.type);
-    return tx.type === typeFilter;
-  });
+  const typeRows = typeFilter === 'all'
+    ? displayedTxs
+    : displayedTxs.filter((tx) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
 
   return (
     <div className={styles.container}>

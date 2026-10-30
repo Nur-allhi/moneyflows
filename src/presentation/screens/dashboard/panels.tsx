@@ -58,7 +58,7 @@ export function RecentTxsPanel({ filteredRecentTxs, remaining, onLoadMore, searc
 export function ActiveLoansPanel({ filteredActiveLoanStacks, searchQuery, locale, currency, navigate }: any) {
   if (filteredActiveLoanStacks.length === 0) return <div className="empty-state" style={{ padding: '24px 0' }}><div className="empty-state-icon">{'\u{1F4B3}'}</div><p className="empty-state-text">{searchQuery ? `No loans match "${searchQuery}"` : 'No active loans'}</p></div>;
   return <>{filteredActiveLoanStacks.map((stack: any) => {
-    const total = stack.totalOutstanding + stack.totalRecovered; const pct = total > 0 ? (stack.totalRecovered / total) * 100 : 0; const isSettled = stack.loans.every((l: any) => l.status === 'settled');
+    const total = stack.totalOutstanding + stack.totalRecovered; const pct = total > 0 ? (stack.totalRecovered / total) * 100 : 0; const isSettled = stack.isSettled ?? stack.loans.every((l: any) => l.status !== 'active');
     return (
       <div key={stack.debtorId} className={styles.loanRow} onClick={() => navigate(`/loans/${stack.debtorId}`)}>
         <div className={styles.loanTop}><span className={styles.loanDebtor}><span className={styles.loanDebtorName}><Highlight text={stack.debtorName} query={searchQuery} /></span><span className={styles.loanBadges}>{isSettled && <span className={`${styles.badge} ${styles.badgeSettled}`}>Settled</span>}{!isSettled && stack.settledCount > 0 && <span className={`${styles.badge} ${styles.badgePartial}`}>Partial</span>}</span></span><span className={styles.loanAmount}>{Intl.NumberFormat(locale).format(stack.totalOutstanding)}<span className={styles.loanCurrency}>{currency}</span></span></div>

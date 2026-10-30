@@ -52,52 +52,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
-## BUG-39: Stale `search.smoke.spec.ts` makes the Playwright suite permanently red
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-17 (during: BUG-20 verification — full `npx playwright test` before pushing `dev`)
-- **Location:** `e2e/search.smoke.spec.ts:13-23` (`dashboard global finds across all txs (proves slice gap)`)
-- **Description:** The test waits for a dashboard search *input* `getByPlaceholder('Search...')` and times out: the dashboard no longer has one — global search moved to the header Search button + overlay (`a641ba9`, merged after the smoke was written on 2026-08-26). `npx playwright test` therefore ends 30 passed / 1 failed on an untouched app (this session changed no `src/` file). The file's own header comment says these smokes document the pre-S-1 gap and "should be updated to assert highlighting + all-transactions scope" after S-2/S-3 — that update never happened. Expected: the suite exits 0, so "playwright green" is a real signal.
-- **Root Cause:** the smoke asserts pre-S-1 UI (inline dashboard search input) that the global-search feature replaced; only the sibling "ledger-scoped" smoke was made tolerant of the new UI.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
-## BUG-42: Group ledger "Expense" tab counts lending on mobile but not on desktop
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-18 (during: BUG-28 fix — deciding which filtered set the group ledger PDF must export)
-- **Location:** `src/presentation/screens/GroupLedgerScreen.tsx` (`mobileFilteredTxs`: `expense → ['expense', 'lend', 'loan_issue']`) vs (`ledgerRows`: loan types classify as `type: 'loan'`, so the desktop Expense tab matches `expense` only)
-- **Description:** Both layouts offer the same five tabs (All / Income / Expense / Transfer / Loan), but the **Expense** tab selects different rows per layout: a `lend` or `loan_issue` transaction is listed under Expense on mobile and under Loan on desktop. The other four tabs agree (`income` = `income` on both, `transfer` likewise, `loan` = all six loan types on both). The tab set is presented as a shared filter, so the same tab showing two different row sets is a defect in one of them. Expected: one definition of each tab's row set, or a deliberate difference that is documented in the UI.
-- **Root Cause:** the mobile list was given its own inline type→tab map instead of reusing the desktop table's classification (the `isLoanType` helper that maps the six loan types to `loan`).
-- **Fix Approach:** (pending user confirmation) — needs a product call first: is lending money out an **expense** (cash left the account) or a **loan** (cash became a receivable)? Both readings are defensible and the app currently says "loan" on desktop and "expense" on mobile. It is also why the BUG-28 PDF fix deliberately preserved the export's existing type-tab behaviour instead of baking one map into a statement.
-- **Resolved:**
-
-## BUG-44: Full Playwright runs are flaky under parallel load
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-18 (during: BUG-29/BUG-30 and BUG-32/BUG-33 verification — observed across runs of `fix/calculation-audit`)
-- **Location:** harness — `e2e/flows/03-accounts.spec.ts:57` (mobile modal balances), `e2e/flows/03-accounts.spec.ts:102` (desktop linked-accounts dropdown), `e2e/flows/15-cloud-sync.spec.ts` (sign-out); `playwright.config.ts` worker count
-- **Description:** With no source change, `npx playwright test` reports 29/2, 28/3 and 30/1 across consecutive full runs on this machine. The failing specs are always from that same short list and always fail the same way — an element that should exist is "not found" (`DBBL — 70,000 BDT` card, `Net Balance`, the sign-out control) rather than a wrong value — and **each passes in isolation** (`npx playwright test e2e/flows/03-accounts.spec.ts` → 4 passed). Observed on this branch before the audit fixes too (BUG-28 run: `03-accounts` mobile modal + `15-cloud-sync`), so it is not caused by them. The practical damage is that a red full run cannot be trusted and every failure costs a re-run to interpret, and the documented baseline ("30 passed / 1 failed, BUG-39") is only reliable when the suite is run serially.
-- **Root Cause:** not yet diagnosed. Candidates: the seed/setup step writing the DB while parallel workers boot, the app's own boot path (splash watchdog / OPFS init) being slower under N workers, or `03-accounts` selecting a control that only exists after a hover/animation settles. The failures are all "element not found/still loading", which points at timing rather than logic.
-- **Fix Approach:** (pending user confirmation) — options: (a) run the suite with `--workers=1` (or `fullyParallel: false`) and treat that as the real gate, documenting it; (b) give the three specs explicit readiness waits on an app-level "data loaded" signal instead of relying on the default timeout; (c) leave as is and keep re-running named failures. Leaning (b) then (a): a fixed gate is worth more than speed, but first the actual cause should be found rather than masked.
-- **Resolved:**
-
-## BUG-45: A fully repaid loan with a stale flag still counts as "active" in the Loans list
-
-- **Status:** open
-- **Severity:** low
-- **Found:** 2026-10-18 (during: BUG-34 fix — tracing who consumes `LoanItem.status`)
-- **Location:** `src/loans/infrastructure/LoanDatabase.ts` (`_getStackForBorrower`: the settled/active split tests the loan row's `status`, while the item's own derived status is computed beside it and consumed by nothing); consumed by `src/loans/presentation/screens/LoansScreen.tsx:72-87` (`!s.isSettled`) and `src/loans/presentation/components/LoanCard.tsx:37` (`activeCount`)
-- **Description:** A loan whose `outstanding` is 0 but whose row flag is still `active` — the state BUG-34's third status exists to describe — is counted in `activeCount`, pushed into `activeLoanItems`, and keeps `stack.isSettled` false. So a stack that is fully repaid in money terms still appears under the Loans **Active** filter, and its card reads "1 active" beside an outstanding of 0 BDT and a progress bar at 100% repaid. **Not reachable through the UI today:** every path that drives `outstanding` to 0 also flips the flag (`LoanService`: recordRepayment, `syncLoanTransaction`, `settleLoan`, `reverseRepayment`), and `createLoan` is only reachable with a positive amount. It is reachable from data written before those paths maintained the flag — which is exactly why the third state exists at all. Expected: one definition of "this loan is finished" used by both the split and the label, or an explicit statement that a stale flag still means active.
-- **Root Cause:** two sources of truth for the same question — the derived item status (unused) and the raw row flag (drives the split) — with nothing forcing them to agree.
-- **Fix Approach:** (pending user confirmation) — a definition call, not a mechanic: either treat `outstanding <= 0` as finished for the split too (so a stale flag can never show a repaid loan as active), or keep the flag authoritative and make the UI say what it means. Same family as BUG-25.
-- **Resolved:**
-
----
-
 ## BUG-34: Loan status `on_track` meant the opposite of what it sounded like
 
 - **Status:** fixed
@@ -231,7 +185,7 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** the BUG-24 fix was scoped to the write path and the detection half was left as follow-up instead of being logged; the boot replay does detect balance-level divergence but repairs silently, and it structurally cannot see damage stored inside a transaction row.
 - **Fix Approach:** user-approved (**Scope A**, report-only; recommended over Scope B, which is kept open below) — a read-only validity scan over stored transactions that reuses the write path's own rules, surfaced in Settings. Never writes: Option B's rule.
 - **Resolved:** 2026-10-17 — on `fix/calculation-audit` (not merged yet). New `src/core/domain/transactionIntegrity.ts` (`scanTransactions`) calls the same `validateTransactionFields`/`validateTransactionLinks` the guard uses; the account-link type sets and pairing messages were extracted into `transactionRules.ts` so the scan cannot drift from the write path it checks. `IDatabaseService.findInvalidTransactions()` (implemented at the end of `SQLiteDatabaseService`, reusing the replay's column set and ordering, never writing) feeds a new **Data Integrity** row in Settings → Backup & Storage, wired through `useBackupState` with the scan's failure caught so a broken scan can never take the backup card down. Evidence: 10 new pure unit tests (**145 total**, was 135); typecheck / lint / build PASS; the full Playwright suite at its documented baseline (**30 passed / 1 failed** = BUG-39, unchanged); and a throwaway spec — deleted, never committed — drove the real database end to end: healthy seed → *"All 12 records check out"*; seed damaged three ways (nulled source account, emptied description, unparseable date) → *"3 of 12 records need attention"* with each reason listed. That same spec re-verified **BUG-24 live after this refactor**: clearing the amount in the edit modal still shows "Amount must be a positive number" and keeps the modal open. `impact(validateTransaction)` came back **HIGH** (2 direct callers, 4 processes) — the guard's control flow, throw order and messages were kept identical and only its duplicated type lists and message strings were swapped for the shared helpers; `detect_changes` **high**, boot and write processes in scope.
-- **Still open as Scope B:** make the boot replay *report* what it is about to correct instead of correcting silently. Separate decision — it touches load-bearing boot code (`SetupWizard`, BUG-19) and on its own finds nothing the scan would not.
+- **Scope B — declined 2026-10-30 (closed, not doing it).** It would make the boot replay *report* what it is about to correct instead of correcting silently. Reasons: (1) it finds nothing the Data Integrity row above does not already report; (2) it edits load-bearing boot code that the setup wizard depends on — the area that produced BUG-19; (3) nothing about it is user-visible. Revisit only if the silent repair ever surprises someone in real use.
 
 ---
 
@@ -621,3 +575,56 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** a bare filename pattern instead of a root-anchored path, added without noticing that a source directory shared the name.
 - **Fix Approach:** as recorded — anchor it: `dashboard` → `/dashboard`. The root artifact stays ignored, the source folder is no longer matched.
 - **Resolved:** 2026-10-30 on `fix/calculation-audit` (not merged yet). Verified both ways: `git check-ignore -v dashboard` still reports `.gitignore:42:/dashboard` for the root file, and `git status` now lists `src/presentation/screens/dashboard/metricTrend.ts` and its `__tests__/` as untracked instead of hiding them. No tracked file changed behaviour.
+
+
+---
+
+## BUG-39: Stale `search.smoke.spec.ts` made the Playwright suite permanently red
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-17 (during: BUG-20 verification — full `npx playwright test` before pushing `dev`)
+- **Location:** `e2e/search.smoke.spec.ts` (the stale case at `:13-23`)
+- **Description:** The test waited for a dashboard search *input* (`getByPlaceholder('Search...')`) and timed out: the dashboard no longer has one — global search moved to the header Search button + overlay (`a641ba9`, merged after the smoke was written on 2026-08-26). `npx playwright test` therefore ended 30 passed / 1 failed on an untouched app, so "the suite is red" carried no information.
+- **Root Cause:** the smoke asserted pre-S-1 UI that the global-search feature replaced; only the sibling "ledger-scoped" smoke was made tolerant of the new UI.
+- **Fix Approach:** as recommended — assert the UI that exists now. The file's own header comment had said it should be updated to assert highlighting + all-transactions scope after S-2/S-3, so the rewritten case makes that point directly: typing in the header search must open the results list and find a description (`Groceries`) that the dashboard's recent slice cannot show.
+- **Resolved:** 2026-10-30 on `beta_v2.0`. The suite now ends **31 passed / 0 failed** (was 30/1) in a full serial run, which is the first time the documented baseline has actually been green. The second case (ledger-scoped search) was left as-is — it was already tolerant and still passes.
+
+---
+
+## BUG-42: Group ledger "Expense" tab counted lending on mobile but not on desktop
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-18 (during: BUG-28 fix — deciding which filtered set the group ledger PDF must export)
+- **Location:** new `src/presentation/constants/ledgerTabs.ts` (`matchesLedgerTab`); used by `src/presentation/screens/GroupLedgerScreen.tsx` (phone list, desktop table and the PDF's row set)
+- **Description:** Both layouts offered the same five tabs (All / Income / Expense / Transfer / Loan), but the **Expense** tab selected different rows per layout: a `lend` or `loan_issue` transaction was listed under Expense on mobile and under Loan on desktop. The other four tabs agreed. The tab set is presented as one shared filter, so the same tab showing two different row sets was a defect in one of them.
+- **Root Cause:** the mobile list was given its own inline type→tab map instead of reusing the desktop table's classification — two private answers to one question.
+- **Fix Approach:** user-approved direction (matching the BUG-25 product call) — **lending counts as an expense**, so the phone's reading was right and the desktop was brought to it. One shared `matchesLedgerTab(type, tab)` now answers for the phone list, the desktop table *and* the PDF, built on the existing classification so it cannot drift: `income`/`expense` tabs use `INCOME_TX_TYPES`/`EXPENSE_TX_TYPES` (BUG-25 — loan movements count as income/expense), `loan` uses the six loan types, `transfer` is its own tab. A loan movement therefore appears on its own Loan tab *and* on the income/expense side it belongs to: two views, not competing definitions. On the desktop the tab filter now runs on the transaction type before the rows are mapped, so the running-balance column is still computed over the whole ledger (what the column means) and only the *listing* is filtered.
+- **Resolved:** 2026-10-30 on `beta_v2.0`. Evidence: new `ledgerTabs.test.ts` (5 tests) covering lending on Expense, repayments on Income, all six loan types on Loan, plain types staying put, transfers being neither income nor expense, and unknown tabs matching nothing — **mutation-verified** (reverting the Expense branch to `type === 'expense'` fails the lending test). Full Playwright suite green (31 passed).
+
+---
+
+## BUG-44: Full Playwright runs were flaky under parallel load
+
+- **Status:** fixed (gate made trustworthy; root cause still undiagnosed and recorded)
+- **Severity:** low
+- **Found:** 2026-10-18 (during: BUG-29/BUG-30 and BUG-32/BUG-33 verification — observed across runs of `fix/calculation-audit`)
+- **Location:** `playwright.config.ts` (`fullyParallel`, `workers`); previously flaking at `e2e/flows/03-accounts.spec.ts:57` and `:102`, `e2e/flows/15-cloud-sync.spec.ts`
+- **Description:** With no source change, full runs reported 29/2, 28/3 and 30/1 on this machine. The failing specs always came from the same short list and always failed the same way — an element that should exist was "not found" rather than wrong — and each passed in isolation. The damage was that a red full run could not be trusted, so every failure cost a re-run to interpret, and the documented baseline ("30 passed / 1 failed = BUG-39") was only reproducible serially.
+- **Root Cause:** not diagnosed, deliberately. Candidates recorded: the seed/setup step writing the DB while parallel workers boot, the app's own boot path (splash watchdog / OPFS init) being slower under N workers, or a spec selecting a control that only exists after a hover/animation settles. Every symptom is "not found / still loading", which points at timing rather than logic.
+- **Fix Approach:** user-approved option (a) first — run the suite on one worker and treat that as the real gate, documented, rather than masking the cause with retries. `fullyParallel: false` + `workers: 1`; CI keeps its 2 retries because a slow shared runner is a different problem. Option (b) — explicit app-level "data loaded" readiness waits — stays the follow-up once the cause is found.
+- **Resolved:** 2026-10-30 on `beta_v2.0`. Evidence: a full run on one worker is **31 passed / 0 failed in 1.9 min**, reproduced with the BUG-39 fix in place. Cost: wall-clock time (about 2 minutes). The honest limit: this restores a trustworthy pass/fail signal, it does not explain *why* parallel runs flaked.
+
+---
+
+## BUG-45: A fully repaid loan with a stale flag still counted as "active" in the Loans list
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-18 (during: BUG-34 fix — tracing who consumes `LoanItem.status`)
+- **Location:** `src/loans/domain/loanStatus.ts` (new `isLoanRunning`, `splitStack`, `stackIsSettled`); `src/loans/infrastructure/LoanDatabase.ts` (`_getStackForBorrower` split + `isSettled`); `src/presentation/screens/dashboard/panels.tsx` (Settled/Partial badge)
+- **Description:** A loan whose `outstanding` was 0 but whose row flag was still `active` — the state BUG-34's third status exists to describe — was counted in `activeCount`, pushed into `activeLoanItems`, and kept `stack.isSettled` false. A stack fully repaid in money terms still appeared under the Loans **Active** filter, its card reading "1 active" beside an outstanding of 0 BDT and a 100% progress bar. Not reachable through the UI (every path that drives `outstanding` to 0 also flips the flag); reachable from data written before those paths maintained the flag — which is why the third state exists at all.
+- **Root Cause:** two sources of truth for one question — the derived item status (computed, consumed by nothing) and the raw row flag (which drove the split) — with nothing forcing them to agree. A third copy of the same question lived in the dashboard panel's badge, which re-derived "settled" from the row flags itself.
+- **Fix Approach:** user-approved definition — **"nothing left to pay" wins**, the flag can only describe a loan, never outvote its money. One place now answers: `isLoanRunning` (built on the existing `loanItemStatus`), `splitStack` for the running/finished split and the outstanding total, `stackIsSettled` for the stack verdict. `_getStackForBorrower` uses all three, so `activeCount`, `settledCount`, `totalOutstanding`, the `loans` order and `isSettled` all agree; the dashboard panel badge now reads the stack's own `isSettled` instead of re-deriving it.
+- **Resolved:** 2026-10-30 on `beta_v2.0`. Evidence: 3 new tests in `loanStatus.test.ts` — a stale-flag/zero-outstanding loan counts as finished with nothing owed; a mixed stack splits correctly and totals only what is owed; a stack is settled only when every loan is finished (and an empty stack is not settled). **Mutation-verified** (restoring `loan.status === 'active'` fails all 3). Full Playwright suite green (31 passed); typecheck / lint / 235 unit tests pass.
