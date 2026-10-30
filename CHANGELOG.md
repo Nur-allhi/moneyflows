@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.3] - 2026-10-30
+
 ### Added
 - Tapping the header cloud button with an expired Google session now opens the sign-in popup directly instead of silently failing — Settings → Sync now is no longer the only way back in.
 

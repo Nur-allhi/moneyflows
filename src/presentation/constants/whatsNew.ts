@@ -7,6 +7,16 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.17.3',
+    items: [
+      'Sign in again from the header cloud button when your Google session expires, without opening Settings.',
+      'Starting balances you type during setup now stay after a reload.',
+      'Google sign-in and sync no longer hang when the popup is closed — they time out with a clear message.',
+      'Google sessions now extend while you use the app, so sync keeps working through a long session.',
+      'Identical phone and cloud copies no longer show a conflict warning.',
+    ],
+  },
+  {
     version: '1.17.2',
     items: [
       'Sharper app icons across phones, browsers and install prompts.',
