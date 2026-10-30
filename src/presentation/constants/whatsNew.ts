@@ -7,6 +7,17 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.18.0',
+    items: [
+      'The four dashboard cards now compare each figure with where it stood at the end of last month, so a bill paid from a bank no longer changes the Cash in Hand trend.',
+      'Editing a loan repayment now moves the loans it paid — and you can no longer edit it above what is still owed.',
+      'Changes you make to a loan are saved straight away, so they no longer disappear after a reload.',
+      'The Recycle Bin shows truthful totals and labels every item, including deleted ledgers.',
+      'Member ledgers, group PDF exports and member reports show the right figures: repayments no longer appear as money out, exports include every row, and a report closes where you ask it to.',
+      'Settings → Backup & Storage has a new Data Integrity check that reports problems and never changes your data.',
+    ],
+  },
+  {
     version: '1.17.3',
     items: [
       'Sign in again from the header cloud button when your Google session expires, without opening Settings.',
