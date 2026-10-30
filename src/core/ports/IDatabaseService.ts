@@ -2,6 +2,7 @@ import type { Member } from '../domain/Member';
 import type { Account } from '../domain/Account';
 import type { Transaction } from '../domain/Transaction';
 import type { AccountGroup } from '../domain/AccountGroup';
+import type { IntegrityReport } from '../domain/transactionIntegrity';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
 
 export interface TransactionFilter {
@@ -22,13 +23,6 @@ export interface DeletedItem {
   name: string;
   amount?: number;
   deletedAt: string;
-}
-
-export interface FamilySummary {
-  totalAssets: number;
-  cashInHand: number;
-  activeLoans: number;
-  netWorth: number;
 }
 
 export interface GroupBalance {
@@ -178,7 +172,6 @@ export interface IDatabaseService {
   /** What-changed data for the update prompt (T-170): verified download, no import, no state change. */
   getUpdatePreview(): Promise<ConflictPreview | null>;
 
-  getFamilySummary(): Promise<FamilySummary>;
   getMemberBalance(memberId: string): Promise<number>;
   getAccountGroupBalances(): Promise<GroupBalance[]>;
 
@@ -188,4 +181,11 @@ export interface IDatabaseService {
   importFromBytes(data: Uint8Array): Promise<void>;
 
   recalculateBalances(): Promise<void>;
+
+  /**
+   * BUG-41: read-only scan of stored transactions against the rules the write
+   * path enforces today. Detects and reports only — it must never write, so no
+   * financial record is silently rewritten by looking at it.
+   */
+  findInvalidTransactions(): Promise<IntegrityReport>;
 }

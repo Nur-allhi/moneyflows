@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ReactNode } from 'react';
+import { sanitizeAmountInput } from '../../core/domain/transactionRules';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import styles from './FormField.module.css';
 
@@ -83,7 +84,7 @@ export function AmountInput({ label, value, onChange, placeholder = '0.00', erro
           inputMode="decimal"
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onChange?.(e.target.value)}
+          onChange={(e) => onChange?.(sanitizeAmountInput(e.target.value))}
         />
       </div>
     </FormField>

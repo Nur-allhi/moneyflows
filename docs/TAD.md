@@ -132,7 +132,7 @@ Not in SQLite — `AppSettings` persists to `localStorage` via `useSettingsStore
 
 | Contract | Key methods |
 |----------|-------------|
-| `IDatabaseService` (port) | CRUD + softDelete/restore/purge per entity · `purgeExpiredItems(days)` · `getSnapshots(): Promise<SnapshotInfo[]>` · `restoreSnapshot(i)` · `restoreNewestSnapshot()` · `resetStorage()` · `getStorageHealth()` · `importFromBytes(data)` · `getFamilySummary/getMemberBalance/getAccountGroupBalances` · `exportToFile/importFromFile/recalculateBalances` |
+| `IDatabaseService` (port) | CRUD + softDelete/restore/purge per entity · `purgeExpiredItems(days)` · `getSnapshots(): Promise<SnapshotInfo[]>` · `restoreSnapshot(i)` · `restoreNewestSnapshot()` · `resetStorage()` · `getStorageHealth()` · `importFromBytes(data)` · `getMemberBalance/getAccountGroupBalances` · `exportToFile/importFromFile/recalculateBalances` |
 | `LoanService` | createLoan, recordMovement, syncLoanTransaction(old→new on edit), generateReport(filter) — runningBalance from FULL history via shared util |
 | Storage internals | `computeRunningBalances/sortLoanTransactions` (loans/application), `withStorageLock` (Web Locks single-writer guard) |
 | Zustand stores | `useTransactionStore`, `useLoanStore`, `useSettingsStore`, `useModalStore`; lazy modal registry |

@@ -46,3 +46,12 @@
   color: var(--color-text, #f1f5f9);
   font-size: 14px;
 }
+
+/* Reason a save was refused by the database (BUG-24). Tokens mirror the shared
+   FormField `.error` rule so field and form messages read identically. */
+.formError {
+  display: block;
+  font-size: 11px;
+  color: var(--color-expense);
+  margin-top: 8px;
+}

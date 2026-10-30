@@ -3,6 +3,7 @@ import type { Account } from '../../../core/domain/Account';
 import type { Member } from '../../../core/domain/Member';
 import { shortDate } from '../../constants/dates';
 import { formatAmount } from '../../utils/format';
+import { ledgerAmountCells, memberLedgerDelta } from '../../utils/memberLedger';
 
 export async function downloadMemberPdf(params: {
   member: Member | null; selectedAcct: Account | undefined; selectedAccountId: string | null; memberAccounts: Account[];
@@ -11,35 +12,37 @@ export async function downloadMemberPdf(params: {
   const { member, selectedAcct, selectedAccountId, memberAccounts, sortedTxs, ledgerFilter, ledgerQuery, locale, currency, showBalance } = params;
   const { default: jsPDF } = await import('jspdf');
   const { default: autoTable } = await import('jspdf-autotable');
-  const isTxCredit = (tx: Transaction) => {
-    const loanLike = ['transfer', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback', 'lend', 'repay'];
-    if ((loanLike as readonly string[]).includes(tx.type)) return tx.destAccount === selectedAccountId;
-    return tx.type === 'income';
-  };
-  const pdfRows: { date: string; type: string; description: string; debit: string; credit: string; balance: string }[] = [];
-  if (!showBalance) {
-    for (const tx of sortedTxs) {
-      const credit = isTxCredit(tx);
-      pdfRows.push({ date: shortDate(tx.date, locale), type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), description: tx.description, debit: credit ? '' : formatAmount(tx.amount, locale, currency), credit: credit ? formatAmount(tx.amount, locale, currency) : '', balance: '' });
-    }
-  } else {
+  // The view is one account when one is selected, otherwise every account the
+  // member holds. One delta per row feeds both the debit/credit cells and the
+  // running balance, so they cannot disagree — and it is correct for the
+  // "All Accounts" view, where the old `destAccount === selectedAccountId` test
+  // was always false and booked every transfer and every received repayment as
+  // a debit (BUG-32).
+  const viewIds = new Set(selectedAccountId ? [selectedAccountId] : memberAccounts.map((a) => a.id));
+  const deltaOf = (tx: Transaction) => memberLedgerDelta(tx, viewIds);
+  const titleOf = (tx: Transaction) => tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // Balances walk oldest→newest and are anchored to the account's real balance
+  // unless an opening-balance row already carries it. `showBalance` is only ever
+  // true with an account selected, so this is the same sequence as before.
+  const balances: number[] = [];
+  if (showBalance) {
     const hasOpeningTx = sortedTxs.some((tx) => tx.type === 'income' && tx.destAccount === selectedAccountId && (tx.metadata as Record<string, unknown>)?.isOpeningBalance === true);
-    if (hasOpeningTx) {
-      let running = 0;
-      for (const tx of sortedTxs) {
-        const credit = isTxCredit(tx); if (credit) running += tx.amount; else running -= tx.amount;
-        pdfRows.push({ date: shortDate(tx.date, locale), type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), description: tx.description, debit: credit ? '' : formatAmount(tx.amount, locale, currency), credit: credit ? formatAmount(tx.amount, locale, currency) : '', balance: formatAmount(running, locale, currency) });
-      }
-    } else {
-      const accountBalance = selectedAcct?.balance ?? 0;
-      const netChange = sortedTxs.reduce((sum, tx) => isTxCredit(tx) ? sum + tx.amount : sum - tx.amount, 0);
-      let running = accountBalance - netChange;
-      for (const tx of sortedTxs) {
-        const credit = isTxCredit(tx); if (credit) running += tx.amount; else running -= tx.amount;
-        pdfRows.push({ date: shortDate(tx.date, locale), type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), description: tx.description, debit: credit ? '' : formatAmount(tx.amount, locale, currency), credit: credit ? formatAmount(tx.amount, locale, currency) : '', balance: formatAmount(running, locale, currency) });
-      }
-    }
+    let running = hasOpeningTx ? 0 : (selectedAcct?.balance ?? 0) - sortedTxs.reduce((sum, tx) => sum + deltaOf(tx), 0);
+    for (const tx of sortedTxs) { running += deltaOf(tx); balances.push(running); }
   }
+
+  const pdfRows: { date: string; type: string; description: string; debit: string; credit: string; balance: string }[] = sortedTxs.map((tx, i) => {
+    const cells = ledgerAmountCells(deltaOf(tx), formatAmount(tx.amount, locale, currency));
+    return {
+      date: shortDate(tx.date, locale),
+      type: titleOf(tx),
+      description: tx.description,
+      debit: cells.debit,
+      credit: cells.credit,
+      balance: showBalance ? formatAmount(balances[i] ?? 0, locale, currency) : '',
+    };
+  });
   let filteredPdfRows = ledgerFilter === 'all' ? pdfRows : pdfRows.filter((r) => {
     const typeKey = r.type.toLowerCase().replace(/\s+/g, '_');
     return typeKey === ledgerFilter || (ledgerFilter === 'income' && typeKey === 'opening_balance') || (ledgerFilter === 'loan' && (typeKey === 'loan_issue' || typeKey === 'loan_repayment' || typeKey === 'lend' || typeKey === 'repay'));
@@ -58,11 +61,11 @@ export async function downloadMemberPdf(params: {
     return true;
   };
   let totalDebit = 0; let totalCredit = 0;
-  for (const tx of sortedTxs) { if (!pdfTxFilter(tx)) continue; if (isTxCredit(tx)) totalCredit += tx.amount; else totalDebit += tx.amount; }
+  for (const tx of sortedTxs) { if (!pdfTxFilter(tx)) continue; const delta = deltaOf(tx); if (delta > 0) totalCredit += delta; else if (delta < 0) totalDebit += -delta; }
   const openingBal = showBalance ? (() => {
     const acct = memberAccounts.find((a) => a.id === selectedAccountId);
     if (!acct) return 0;
-    const netCh = sortedTxs.reduce((s, tx) => { if (!pdfTxFilter(tx)) return s; return s + (isTxCredit(tx) ? tx.amount : -tx.amount); }, 0);
+    const netCh = sortedTxs.reduce((s, tx) => { if (!pdfTxFilter(tx)) return s; return s + deltaOf(tx); }, 0);
     return acct.balance - netCh;
   })() : 0;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.text('Transaction Report', pageW / 2, 20, { align: 'center' });

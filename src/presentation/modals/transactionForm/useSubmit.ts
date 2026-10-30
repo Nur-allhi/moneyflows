@@ -7,6 +7,9 @@ import { useLoanStore } from '../../stores/useLoanStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useTagStore } from '../../stores/useTagStore';
 import { Transaction } from '../../../core/domain/Transaction';
+import { parseAmountInput } from '../../../core/domain/transactionRules';
+import { formatAmount } from '../../utils/format';
+import { OverpaymentError } from '../../../loans';
 import { validateForm, type ValidationErrors } from './validation';
 
 export function useTxSubmit(params: {
@@ -48,7 +51,7 @@ export function useTxSubmit(params: {
   const submitLockRef = useRef(false);
 
   const runSubmit = async () => {
-    const amount = parseInt(rawAmount, 10);
+    const amount = parseAmountInput(rawAmount);
     const primaryMemberId = useSettingsStore.getState().settings.primaryMemberId;
     const txMemberId = (primaryMemberId && members.find((m) => m.id === primaryMemberId && !m.isExternal)?.id)
       ?? members.find((m) => !m.isExternal)?.id ?? members[0]?.id ?? '';
@@ -70,7 +73,19 @@ export function useTxSubmit(params: {
           });
         }
         await fetchAccounts(); await fetchLoanStacks();
-      } catch (e) { setErrors({ amount: (e as Error).message }); return; }
+      } catch (e) {
+        // An overpayment carries the numbers instead of a sentence, so it can be
+        // shown in the user's own locale and currency (BUG-23). The form stays
+        // open either way — a refused repayment must never look like a saved one.
+        if (e instanceof OverpaymentError) {
+          const { locale, currency } = useSettingsStore.getState().settings;
+          setErrors({
+            amount: `Only ${formatAmount(e.maximum, locale, currency)} is still outstanding for this borrower — reduce the amount.`,
+          });
+          return;
+        }
+        setErrors({ amount: (e as Error).message }); return;
+      }
       setTimeout(() => onClose(), 300); return;
     }
     let type: Transaction['type']; let src: string | undefined; let dst: string | undefined; let debtorId: string | undefined;
@@ -84,7 +99,12 @@ export function useTxSubmit(params: {
     const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
     const cleanDesc = description.trim(); const capitalizedDesc = cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1);
     const tx = new Transaction(uuidv4(), type, capitalizedDesc, amount, txMemberId, dateTime, src, dst, debtorId, undefined, tagName.trim() ? { tags: [tagName.trim()] } : {});
-    await addTransaction(tx); await fetchAccounts();
+    await addTransaction(tx);
+    // addTransaction rolls back and records the reason instead of throwing, so
+    // read it back — otherwise the form closes on a save the database refused
+    // and the reason is never seen (BUG-24).
+    if (useTransactionStore.getState().error) return;
+    await fetchAccounts();
     if (tagName.trim()) useTagStore.getState().addTag(tagName.trim());
     onClose();
   };
