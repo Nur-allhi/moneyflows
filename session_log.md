@@ -2373,3 +2373,24 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - Still open in the register (unchanged, each awaits a user call): **BUG-39** (one-line `e2e/search.smoke.spec.ts:13` fix), **BUG-42** (group ledger Expense tab, mobile vs desktop), **BUG-44** (Playwright parallel-load flakiness), **BUG-45** (stale `active` loan flag definition), plus **BUG-41 Scope B**.
 - Note for next session: `dev` and `master` do not contain the audit fixes. Any 2.0 work that must reach users goes through `beta_v2.0`; if the audit should also land on `dev`, that is a separate merge the user has not asked for.
 - Untracked `Logo_mockups/` PNG still present.
+
+## Session 2026-10-30 (v1.18.1 on `beta_v2.0` — last four open bugs closed)
+
+### Changes
+- **BUG-42 — group ledger "Expense" tab differed between phone and desktop (fixed).** Both layouts offered the same five tabs but answered with their own private type→tab map: `lend`/`loan_issue` sat under **Expense** on mobile and under **Loan** on desktop. Fix follows the BUG-25 product call (lending counts as an expense), so the desktop was brought to the phone, and there is now **one** answer: new `src/presentation/constants/ledgerTabs.ts` (`matchesLedgerTab`) built on the existing `INCOME_TX_TYPES`/`EXPENSE_TX_TYPES`/`LOAN_TX_TYPES`, consumed by the phone list, the desktop table **and** the PDF row set (`GroupLedgerScreen.tsx`, 4 call sites → 1 rule). Desktop now filters on transaction type *before* mapping rows, so the running-balance column is still computed over the whole ledger.
+- **BUG-45 — a fully repaid loan with a stale flag still counted as "active" (fixed).** `_getStackForBorrower` split on the row's raw `status` while the derived `loanItemStatus` was computed beside it and used by nothing; a third copy of the same question lived in the dashboard panel's Settled/Partial badge. One definition now: `loanStatus.ts` gained `isLoanRunning` / `splitStack` / `stackIsSettled` ("nothing left to pay wins; the flag may describe a loan but never outvote its money"), used for `activeCount`, `settledCount`, `totalOutstanding`, `loans` order and `isSettled`, and the panel badge reads `stack.isSettled` instead of re-deriving it.
+- **BUG-39 — stale `e2e/search.smoke.spec.ts` (fixed).** The case asserted a dashboard `Search...` input the header global search replaced, so the suite was permanently 30/1. Rewritten to assert the current UI and to make the same point properly: typing in the header search opens the results listbox and finds a description (`Groceries`) beyond the dashboard's recent slice.
+- **BUG-44 — flaky full Playwright runs (gate fixed).** User-approved option (a): `playwright.config.ts` now runs `fullyParallel: false` / `workers: 1`, documented in-file with the symptom history and the still-open root-cause candidates. Option (b) (explicit data-loaded readiness waits) remains the follow-up once the cause is known.
+- **BUG-41 Scope B — declined** (recorded in `docs/BUGS.md`): it reports nothing the Data Integrity scan does not, and it edits boot code the setup wizard depends on (the BUG-19 area).
+- **Verification.** New tests: `ledgerTabs.test.ts` (5) + 3 stack-split tests in `loanStatus.test.ts` → **235 unit tests** (was 227). Both logic fixes were **mutation-verified** (reverting the Expense branch fails the lending test; restoring `status === 'active'` fails all 3 split tests). Gates: typecheck, lint `--max-warnings 0`, 235 tests, build — all clean. **Full Playwright suite: 31 passed / 0 failed in ~1.9 min**, the first genuinely green baseline (dev server warmed first; cold start still times out `auth.setup`).
+- **Release:** PATCH → **1.18.1**, per `docs/VERSIONING.md` §2 rule 3 (fixes only). Three files in one commit: `package.json`, `whatsNew.ts` (2 plain-language bullets), `CHANGELOG.md` (`[1.18.1] - 2026-10-30`, one Fixed bullet per fix, including the harness line).
+- **Register is now empty.** `docs/BUGS.md` open section removed (all four moved to fixed with Root Cause / Fix Approach / Resolved evidence); scan confirms **0 open, 43 fixed, 2 wontfix (BUG-25, BUG-41 Scope B)**.
+
+### Skill(s) Used
+- gitnexus (impact on `_getStackForBorrower` → LOW, 3 upstream, 0 processes; the other symbols are not in the index, call sites verified by grep), code-reviewer, senior-frontend
+
+### Status
+- `beta_v2.0` = **v1.18.1**, pushed. `master`/`dev` remain at v1.17.3 and do **not** contain the audit; nothing was merged to either.
+- **No open bugs.** The calculation-logic audit is closed end to end: 16 of 17 findings fixed, BUG-25 closed by product decision, plus follow-ons BUG-40/46/47, and BUG-39/42/44/45 now fixed.
+- Next work: **Other Ledgers V2** (dual-post toggle, `docs/plans/OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when the user says "next update"; the Google Drive sync line still lives on `google_signin_backup`.
+- Untracked `Logo_mockups/` PNG still present.

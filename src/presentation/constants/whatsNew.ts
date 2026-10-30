@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.18.1',
+    items: [
+      'The group ledger\'s Expense tab now shows lending on desktop the same way it does on your phone.',
+      'A loan with nothing left to pay no longer shows up as active in the Loans list.',
+    ],
+  },
+  {
     version: '1.18.0',
     items: [
       'The four dashboard cards now compare each figure with where it stood at the end of last month, so a bill paid from a bank no longer changes the Cash in Hand trend.',

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.18.1] - 2026-10-30
+
+### Fixed
+- The group ledger's **Expense** tab now lists lending on desktop exactly as it does on your phone. The two layouts used different rules for the same tab, so a loan you gave out sat under **Expense** on one and under **Loan** on the other; lending now counts as an expense, the same way it already counts in your Income/Expense totals.
+- A loan with nothing left to pay no longer appears as **active**. The Loans list, its "N active" count and the dashboard's Settled/Partial badge all go by the outstanding amount now, so an older record whose flag was never flipped can no longer contradict "0 BDT remaining, 100% repaid".
+- The browser test suite now runs one test at a time and its one stale search test checks the current UI, so a red run means something actually broke instead of needing a re-run to interpret.
+
 ## [1.18.0] - 2026-10-30
 
 ### Added
