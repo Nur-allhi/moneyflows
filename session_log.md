@@ -2350,6 +2350,6 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 
 ### Status
 - **The audit is complete**: 16 of the 17 findings fixed (BUG-21 was the last), and BUG-25 closed by an explicit product decision. Follow-ons fixed along the way: BUG-40, BUG-46, BUG-47.
-- Branch `fix/calculation-audit` is now 22 commits ahead of `dev`; **nothing merged**; `dev` still at `552c9aa`. Still owed at merge: **MINOR bump to 1.18.0** (four files per `docs/VERSIONING.md`), deliberately not prepped here.
+- Branch `fix/calculation-audit` is ahead of `dev` (`git rev-list --count dev..HEAD`); **nothing merged**; `dev` still at `552c9aa`. Still owed at merge: **MINOR bump to 1.18.0** (four files per `docs/VERSIONING.md`), deliberately not prepped here.
 - Open findings left in the register (all outside the audit, each awaiting a user call): **BUG-39** (one-line e2e fix), **BUG-42** (group ledger Expense tab, mobile vs desktop), **BUG-43** (`.gitignore` `/dashboard`, one-line fix not applied), **BUG-44** (Playwright flakiness approach), **BUG-45** (stale loan flag definition), plus **BUG-41 Scope B**.
 - Untracked `Logo_mockups/` PNG still present.
