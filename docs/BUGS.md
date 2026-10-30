@@ -26,41 +26,6 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
-## BUG-21: Dashboard metric chips use two different formulas under one "vs last month" label
-
-- **Status:** open
-- **Severity:** high
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/presentation/screens/dashboard/useDashboardData.ts:42-52` + `src/presentation/screens/dashboard/sections.tsx:23,28,33,41`
-- **Description:** The four metric cards compute their trend from inconsistent inputs: `prevAssets = totalAssets - thisMonthNet` and `prevCash = cashInHand - thisMonthNet` (this month's net), but `prevBanks = totalInBanks - lastMonthNet` and `prevLoans = activeLoansOutstanding - lastMonthNet` (last month's net). All four chips read "vs last month". `loansChange` subtracts an income/expense net from a loan stock (outstanding), which is not a comparable quantity. `thisMonthNet`/`lastMonthNet` are family-wide yet applied to single buckets, so an expense paid from a bank account also moves the Cash-in-Hand baseline it never touched. Expected: one agreed definition (period + numerator + baseline) applied to all four cards and labelled to match.
-- **Root Cause:** two formulas evolved side by side; assets/cash were moved to month-to-date while banks/loans kept last month's net, and the shared label was never updated.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
-## BUG-25: Loan movements are counted as income and expenses, distorting every "net" figure
-
-- **Status:** open
-- **Severity:** medium
-- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
-- **Location:** `src/presentation/screens/dashboard/useDashboardData.ts:11-12` (`INCOME_TYPES` / `EXPENSE_TYPES`)
-- **Description:** `INCOME_TYPES` includes `loan_repayment`, `repay`, `loan_received` and `EXPENSE_TYPES` includes `loan_issue`, `lend`, `loan_paidback`. Lending money out is an asset conversion (cash → receivable) rather than an expense, and a repayment is not income. These sets feed `thisMonthNet`/`lastMonthNet`, the Month Summary panel, and (via BUG-21) every dashboard trend chip. Expected: loan principal movements excluded from income/expense, or reported as their own category.
-- **Root Cause:** type sets were built from transaction type lists without separating principal movements from real income/expense.
-- **Fix Approach:** (pending user confirmation)
-- **Resolved:**
-
-## BUG-43: Bare `dashboard` gitignore pattern silently ignores the dashboard source folder
-
-- **Status:** open
-- **Severity:** medium
-- **Found:** 2026-10-18 (during: the BUG-26 commit — `git add` reported `src/presentation/screens/dashboard` as an ignored path)
-- **Location:** `.gitignore:42` (`dashboard`, added with the T-085 debug-artifact pass) vs `src/presentation/screens/dashboard/`
-- **Description:** The rule is a bare pattern, so it matches **any** path component named `dashboard` — not only the untracked 7,200-byte Playwright aria-snapshot dump in the repo root (`dashboard`, last written 2026-07-15) that it was written for. `git check-ignore -v src/presentation/screens/dashboard/newSection.tsx` resolves to `.gitignore:42`, so **a new file added to the dashboard screens folder is silently ignored**: it never appears in `git status`, `git add -A <that folder>` errors instead of staging, and nothing warns at commit time — the file is simply left out. Already-tracked files there (`useDashboardData.ts`, `sections.tsx`, …) are unaffected, which is why this went unnoticed for months. It is a live hazard for the parallel mobile workstream, which edits `dashboard/sections.tsx` and may add files beside it. Expected: debug artifacts stay ignored; source files are never ignored by accident.
-- **Root Cause:** a bare filename pattern instead of a root-anchored path, added without noticing that a source directory shares the name.
-- **Fix Approach:** (pending user confirmation — one line, and tracked files are unaffected either way) anchor it as `/dashboard`, which keeps ignoring the stale root dump and stops matching `src/presentation/screens/dashboard/`; verify with `git check-ignore -v src/presentation/screens/dashboard/newSection.tsx` (currently `.gitignore:42`, expected: no match). The alternative — deleting the rule — re-exposes the stale dump in every `git status`. **No `.gitignore` change was made when this was found.**
-- **Resolved:**
-
----
-
 ## BUG-36: Unused loan-store methods, one with inverted semantics
 
 - **Status:** fixed
@@ -619,3 +584,40 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** the allocation was transient. A repayment can touch several loans at once and the transaction model records one optional `loanRef`, so the only truth about the split existed in the loop that applied it.
 - **Fix Approach:** record the split where the money went — `metadata.allocations: [{ loanId, amount }, …]` on the repayment transaction, in the order it was applied (the `metadata` column already existed, so no migration, and the same shape serves the Other Ledgers V2 dual-post). An edit now has something exact to reverse: `reapplyRepayment` gives every recorded loan back precisely what this repayment took, then walks the new amount over the **same loans in the same order**, so a smaller repayment pays the same loans first instead of rearranging them, and a raise continues with the borrower's remaining loans oldest-first exactly as `recordRepayment` allocates. `assertRepaymentEditAllowed` judges the two shapes it can see: a recorded split can be reversed, so a cut always fits and a raise is limited by what the borrower's loans still owe between them (message scoped "across these loans"); a bare legacy `loanRef` keeps the conservative single-loan rule from BUG-40. When one loan absorbed the whole repayment it is also stamped as `loanRef`, the way `createLoan` does, so the detail view and `deleteLoan` keep working. Only rows whose figures actually move are written, with the same timestamp as every other write (BUG-35).
 - **Resolved:** 2026-10-18 on `fix/calculation-audit` (not merged yet). Evidence: 11 new unit tests — reading/recording a split (well-formed, order preserved, malformed entries ignored, other metadata keys kept), recording from `recordRepayment` (spillover records the split and no single reference; a single-loan repayment records both), and the edit path (a cut revives the settled loan and re-pays in the recorded order; a raise re-applies over the same loans; an unchanged amount writes nothing; a since-deleted loan is skipped without losing the rest; the raise ceiling is refused with `scope: 'loans'` and its boundary allowed; the sync refuses too, without persisting the reversal). **Mutation-verified twice** — ignoring the recorded split in the sync fails 4 tests, and not recording it in `recordRepayment` fails 2. Typecheck / lint (`--max-warnings 0`) pass; **217 unit tests** (was 206). The existing loan/ledger specs (`05-other-ledgers`, `06-loans`, `14-loan-rename`) still pass (4 passed). Known limitation, deliberate: `deleteLoan` still removes only transactions carrying `loanRef`, so a loan deleted while a *split* repayment paid part of it leaves that repayment's share allocated to it — the split has no dialog of its own yet, and reversing one of several loans is a design call rather than a repair. **Not yet run live: the edit flow through the UI (wizard repayment → edit → loans move) — the wiring is typechecked and unit-covered, but this is the one verification still outstanding for BUG-47.**
+
+---
+
+## BUG-21: Dashboard metric chips used two different formulas under one "vs last month" label
+
+- **Status:** fixed
+- **Severity:** high
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/presentation/screens/dashboard/useDashboardData.ts` (the four trend formulas), `src/presentation/screens/dashboard/sections.tsx` (four duplicated trend lines), new `src/presentation/screens/dashboard/metricTrend.ts` + new `src/core/domain/balanceEffect.ts`; `src/infrastructure/database/computeBalances.ts` now delegates to the shared rule
+- **Description:** The four metric cards computed their trend from inconsistent inputs: `prevAssets = totalAssets - thisMonthNet` and `prevCash = cashInHand - thisMonthNet` (this month's net), but `prevBanks = totalInBanks - lastMonthNet` and `prevLoans = activeLoansOutstanding - lastMonthNet` (last month's net). All four chips read "vs last month". `loansChange` subtracted an income/expense net from a loan stock, which is not a comparable quantity, and `thisMonthNet`/`lastMonthNet` are family-wide yet were applied to single buckets — so an expense paid from a bank account also moved the Cash-in-Hand baseline the money never touched.
+- **Root Cause:** two formulas evolved side by side (assets/cash moved to month-to-date, banks/loans kept last month's net) and the shared label was never updated; each chip had its own inline copy of the trend markup, so nothing forced them to agree.
+- **Fix Approach:** one agreed definition, applied to all four: **each metric is compared with its own value at the end of last month** — its current value minus the movement of *its own* accounts since then (and, for the loans chip, of the loans stock itself: `lend` in, `repay` out). The per-transaction sign rule moved into `src/core/domain/balanceEffect.ts` (`balanceEffects`, `loanStockDelta`) so the dashboard trends and the boot balance reconciliation (`computeBalances`, which now delegates to it) cannot drift apart; `metricTrend.ts` does the arithmetic. A percentage of a zero-or-negative baseline is not readable, so those chips show the change in currency instead of a nonsense figure. The four duplicated trend spans became one `TrendLine` component, which is what keeps the shared wording true.
+- **Resolved:** 2026-10-30 on `fix/calculation-audit` (not merged yet). Evidence: 10 new unit tests — the trend arithmetic including the currency fallback for a base of zero or below, `accountMovement` for every balance-effect shape (income, expense, transfer, lend, repay, unattributable types, accounts outside the set), `loanMovement`, and the regression itself: a 5,000 expense paid from the bank leaves Cash-in-Hand's baseline at 10,000 with a zero delta while the bank's baseline moves to 25,000 with −5,000. **Mutation-verified** (dropping the account-set filter fails 3 tests, including the regression). `impact` on `computeBalances` reported **LOW** risk (one direct caller, `recalculateBalances`). Live: a throwaway Playwright spec (deleted, never committed) opened the seeded dashboard and read the four cards — `Cash in Hand −6,000 BDT | 0 BDT vs last month`, `Total in Banks 70,000 BDT | 0.0% vs last month`, `Active Loans 0 BDT | 0 BDT vs last month`, `Total Assets 64,000 BDT | 0.0% vs last month` — no `NaN`/`undefined`, and the negative-cash card correctly took the currency fallback. Typecheck / lint (`--max-warnings 0`) / build pass; **227 unit tests** (was 217).
+
+---
+
+## BUG-25: Loan movements are counted as income and expenses in every "net" figure
+
+- **Status:** wontfix (product decision, 2026-10-30)
+- **Severity:** medium
+- **Found:** 2026-10-17 (during: calculation-logic audit of all modules)
+- **Location:** `src/core/domain/transactionCategory.ts` (`INCOME_TX_TYPES` / `EXPENSE_TX_TYPES`), consumed by `src/presentation/screens/dashboard/useDashboardData.ts` (`sumIncomeExpense`)
+- **Description:** `INCOME_TX_TYPES` includes `loan_repayment`, `repay`, `loan_received` and `EXPENSE_TX_TYPES` includes `loan_issue`, `lend`, `loan_paidback`. Lending money out is an asset conversion (cash → receivable) rather than an expense, and a repayment is not income, so loan principal moves every "net" figure — the Month Summary panel and the dashboard's income/expense totals.
+- **Root Cause:** the type sets were built from transaction type lists without separating principal movements from real income/expense.
+- **Fix Approach:** the audit offered three options — exclude loan principal from income/expense entirely (treat it as a transfer), count it but report it as its own category, or leave it as is. **Decision (2026-10-30): keep counting loan movements as income and expense for now** — the current behaviour is accepted, and the two live definitions stay as they are. No code change; `transactionCategory.ts` remains the single place a future change of mind lands.
+- **Resolved:** closed by decision, not by code. Note what this decision does and does not settle: BUG-21 is fixed independently, so the dashboard metric chips no longer derive their baselines from these totals — the income/expense classification now only feeds the Month Summary panel and the plain income/expense sums, which is exactly the surface the decision accepts.
+
+## BUG-43: Bare `dashboard` gitignore pattern silently ignored the dashboard source folder
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-10-18 (during: the BUG-26 commit — `git add` reported `src/presentation/screens/dashboard` as ignored)
+- **Location:** `.gitignore:42` (`dashboard`, added with the T-085 debug-artifact pass)
+- **Description:** The rule was a bare pattern, so it matched **any** path component named `dashboard` — not only the debug artifact at the repo root, but also `src/presentation/screens/dashboard/`. Tracked files kept working (git ignores the rule for paths it already tracks), which is what made it silent: every *new* file in that folder was dropped without a word. It finally bit for real on 2026-10-30 — the BUG-21 fix added `dashboard/metricTrend.ts` and its test, and neither showed up as untracked.
+- **Root Cause:** a bare filename pattern instead of a root-anchored path, added without noticing that a source directory shared the name.
+- **Fix Approach:** as recorded — anchor it: `dashboard` → `/dashboard`. The root artifact stays ignored, the source folder is no longer matched.
+- **Resolved:** 2026-10-30 on `fix/calculation-audit` (not merged yet). Verified both ways: `git check-ignore -v dashboard` still reports `.gitignore:42:/dashboard` for the root file, and `git status` now lists `src/presentation/screens/dashboard/metricTrend.ts` and its `__tests__/` as untracked instead of hiding them. No tracked file changed behaviour.

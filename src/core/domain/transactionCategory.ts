@@ -8,9 +8,14 @@ import type { Transaction, TransactionType } from './Transaction';
  * lent out has left your accounts and money repaid has come back, and counting
  * only one side made a member look steadily poorer for every loan they made and
  * recovered (BUG-26: the member profile counted `lend`/`loan_issue` as expenses
- * but nothing on the income side). Whether loan principal belongs in these
- * totals at all is the open question in BUG-25 — when that is answered, this
- * module is the single place the decision lands.
+ * but nothing on the income side).
+ *
+ * BUG-25 asked whether loan principal belongs in these totals at all. Decided
+ * 2026-10-30: it stays — loan movements keep counting as income and expense.
+ * This module remains the single place that decision lands, so changing it later
+ * is a one-file change. Either way the dashboard metric trends no longer depend
+ * on these totals (BUG-21 compares each metric with its own past value), so they
+ * feed the Month Summary panel and plain income/expense sums only.
  *
  * Account opening balances are `income` transactions by construction (the setup
  * wizard records them as such, BUG-19), so they count as income here.

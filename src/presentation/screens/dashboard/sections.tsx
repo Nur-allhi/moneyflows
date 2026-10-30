@@ -1,6 +1,7 @@
 import { formatAmount } from '../../utils/format';
 import styles from '../Dashboard.module.css';
 import { ArrowUp, ArrowDown } from './icons';
+import type { MetricTrend } from './metricTrend';
 
 function MetricValue({ value, color, locale, currency }: { value: number; color: string; locale: string; currency: string }) {
   const finalStr = formatAmount(value, locale, currency);
@@ -12,25 +13,43 @@ function MetricValue({ value, color, locale, currency }: { value: number; color:
   );
 }
 
-export function MetricCards({ assetsChange, cashChange, banksChange, loansChange, locale, currency, animTotalAssets, animCashInHand, animTotalInBanks, animActiveLoans, totalAssetsIncludeLoans, animLoansAdded }: {
-  assetsChange: number; cashChange: number; banksChange: number; loansChange: number; locale: string; currency: string; animTotalAssets: number; animCashInHand: number; animTotalInBanks: number; animActiveLoans: number; totalAssetsIncludeLoans: boolean; animLoansAdded: number;
+/**
+ * One "vs last month" line for every card (BUG-21). The wording is shared
+ * because the definition now is: each card against its own value at the end of
+ * last month. When a percentage of that baseline would be meaningless (a base of
+ * zero or less), the change is shown in currency instead of a nonsense figure.
+ */
+function TrendLine({ trend, locale, currency }: { trend: MetricTrend; locale: string; currency: string }) {
+  const up = trend.delta >= 0;
+  const text = trend.percent === null
+    ? `${formatAmount(Math.abs(trend.delta), locale, currency)} vs last month`
+    : `${Math.abs(trend.percent).toFixed(1)}% vs last month`;
+  return (
+    <span className={`${styles.metricChange} ${up ? styles.up : styles.down}`}>
+      {up ? <ArrowUp /> : <ArrowDown />}{text}
+    </span>
+  );
+}
+
+export function MetricCards({ cashTrend, banksTrend, loansTrend, assetsTrend, locale, currency, animTotalAssets, animCashInHand, animTotalInBanks, animActiveLoans, totalAssetsIncludeLoans, animLoansAdded }: {
+  cashTrend: MetricTrend; banksTrend: MetricTrend; loansTrend: MetricTrend; assetsTrend: MetricTrend; locale: string; currency: string; animTotalAssets: number; animCashInHand: number; animTotalInBanks: number; animActiveLoans: number; totalAssetsIncludeLoans: boolean; animLoansAdded: number;
 }) {
   return (
     <div className={styles.metrics}>
       <div className={`${styles.metricCard} ${styles.glowGold}`}>
         <span className={styles.metricLabel}>Cash in Hand</span>
         <MetricValue value={animCashInHand} color="var(--color-cash)" locale={locale} currency={currency} />
-        <span className={`${styles.metricChange} ${cashChange >= 0 ? styles.up : styles.down}`}>{cashChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(cashChange).toFixed(1)}% vs last month</span>
+        <TrendLine trend={cashTrend} locale={locale} currency={currency} />
       </div>
       <div className={`${styles.metricCard} ${styles.glowCoral}`}>
         <span className={styles.metricLabel}>Total in Banks</span>
         <MetricValue value={animTotalInBanks} color="var(--color-coral)" locale={locale} currency={currency} />
-        <span className={`${styles.metricChange} ${banksChange >= 0 ? styles.up : styles.down}`}>{banksChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(banksChange).toFixed(1)}% vs last month</span>
+        <TrendLine trend={banksTrend} locale={locale} currency={currency} />
       </div>
       <div className={`${styles.metricCard} ${styles.glowCoral}`}>
         <span className={styles.metricLabel}>Active Loans</span>
         <MetricValue value={animActiveLoans} color="var(--color-coral)" locale={locale} currency={currency} />
-        <span className={`${styles.metricChange} ${loansChange >= 0 ? styles.up : styles.down}`}>{loansChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(loansChange).toFixed(1)}% vs last month</span>
+        <TrendLine trend={loansTrend} locale={locale} currency={currency} />
       </div>
       <div className={`${styles.metricCard} ${styles.glowViolet}`}>
         <span className={styles.metricLabel}>Total Assets</span>
@@ -38,7 +57,7 @@ export function MetricCards({ assetsChange, cashChange, banksChange, loansChange
         {totalAssetsIncludeLoans && animLoansAdded > 0 && (
           <span className={styles.metricSubtitle}>+ Active Loans {formatAmount(animLoansAdded, locale, currency)}</span>
         )}
-        <span className={`${styles.metricChange} ${assetsChange >= 0 ? styles.up : styles.down}`}>{assetsChange >= 0 ? <ArrowUp /> : <ArrowDown />}{Math.abs(assetsChange).toFixed(1)}% vs last month</span>
+        <TrendLine trend={assetsTrend} locale={locale} currency={currency} />
       </div>
     </div>
   );
