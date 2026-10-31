@@ -1,4 +1,4 @@
-﻿# MoneyFlows — Session Log
+# MoneyFlows — Session Log
 
 Archived first 1000 lines to docs/audit/session_log.archive.md on 2026-08-27 — recent tail below.
 
@@ -2394,3 +2394,75 @@ ode .gitnexus/run.cjs analyze refreshed — 2332 nodes / 5065 edges / 192 flows.
 - **No open bugs.** The calculation-logic audit is closed end to end: 16 of 17 findings fixed, BUG-25 closed by product decision, plus follow-ons BUG-40/46/47, and BUG-39/42/44/45 now fixed.
 - Next work: **Other Ledgers V2** (dual-post toggle, `docs/plans/OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when the user says "next update"; the Google Drive sync line still lives on `google_signin_backup`.
 - Untracked `Logo_mockups/` PNG still present.
+## Session 2026-10-17 12:30
+
+### Changes
+- Branch `feature/mobile-refinements` created off `dev` @ `552c9aa` in worktree `...\opencode\worktree\949b9e\mobile-refinements` (session moved here; main checkout untouched for parallel calc-audit session).
+- Worktree toolchain stood up: npm install, typecheck PASS, vitest 113/113, build PASS. Dev server runs on :3100 (worktree copy).
+- **M-01 complete** (`0e6987f`): Other Ledgers index mobile head restructured — search full-width row 1, row 2 = count left + CTAs right; `+ Entry` hidden when zero ledgers; composed centered empty state ("No ledgers yet" + single `+ New Ledger` CTA). CSS-module only + JSX restructure in `OtherLedgersIndex.tsx`; desktop visual order preserved via `order: -1` on count.
+- Verified via project Playwright runner (scratch spec, deleted after): empty-state geometry (count below search, left-aligned, no horizontal overflow) + populated row-2 geometry, screenshots checked at 390x844.
+- Gates: typecheck / eslint --max-warnings 0 / vitest 113 / vite build all PASS. detect_changes (moneyflows vs dev): 0 changed symbols, 0 affected processes, risk low. §17 checklist pass. Stale lockfile version-string noise from npm install reverted.
+- Plan doc: M-01 marked **done**.
+
+### Skill(s) Used
+- senior-frontend (screen/CSS work); Playwright project-runner pattern for verification.
+
+### Status
+- M-01 done. Next: **M-02** (Other Ledger detail header title in App.tsx routeTitles / Header) per execution order, then M-04+M-06+M-07 (detail screen touch zone), M-03, M-05, M-08, M-09.
+
+## Session 2026-10-17 13:05
+
+### Changes
+- **M-02 complete** (`1823e84`): detail routes (member/other-ledger/group/tag/loan + member report) now show the SUBJECT NAME in the mobile header instead of an empty center. Root cause: `.breadcrumb { display: none }` in the 768px media query + Header rendering the hidden breadcrumb div when a breadcrumb exists (only mobile branch). Fix: mobile branch always renders the title span fed from the breadcrumb (last crumb, or second-to-last for depth-3 member-report routes); ellipsis truncation added (.title nowrap/ellipsis + .left min-width 0); desktop breadcrumb unchanged.
+- Verified via scratch Playwright spec (deleted after): ledger detail + member detail titles, 50-char name ellipsizes without page overflow, desktop breadcrumb intact. All 5 pass at 390x844.
+- Gates: typecheck / eslint --max-warnings 0 / vitest 113 / build PASS. detect_changes: 1 touched symbol (Header, expected), 0 affected processes, risk low. Plan doc: M-02 done.
+- Note discovered while testing: CreateLedgerModal name validation = 3-50 chars (surfaced when a 67-char test name was rejected).
+
+### Skill(s) Used
+- senior-frontend (Header JSX/CSS), Playwright project-runner for verification.
+
+### Status
+- M-01, M-02 done. Next: **M-04 + M-06 + M-07** (Other Ledger detail orphaned buttons & trash touch targets & modal inline styles) per execution order, then M-03, M-05, M-08, M-09.
+
+## Session 2026-10-17 13:55
+
+### Changes
+- **M-02 done** (`1823e84`): mobile header shows SUBJECT NAME on all detail routes (last breadcrumb crumb; second-to-last for the depth-3 member-report route). Root cause was `.breadcrumb { display:none }` on mobile while the JSX rendered the hidden breadcrumb div. Long names ellipsize; desktop breadcrumb untouched. Verified by 5-pass scratch spec (ledger/member titles, 50-char ellipsis, desktop breadcrumb intact).
+- **M-04 + M-06 done** (`1badf7a`): OtherLedgerDetail mobile — orphaned floating buttons replaced by an anchored action bar between the hero card and the list (New Entry pill + rename + delete, right-aligned); delete-confirm sheet + mobile toolbar switched from inline styles to CSS module classes. **M-06**: icon buttons now 44x44; rename was previously hover-revealed (`opacity:0` = unreachable on touch) — now always visible on mobile. Composed empty state: icon + "No entries yet" + hint + primary "Add First Entry" CTA. Sentinel divs inline-style free.
+- **M-07 done** (`dd3bb38`): new shared `OtherLedgerModals.module.css` for Create/Rename/AddEntry modals — all inline `style={{}}` removed (~12 per modal); labels now use `txStyles.fieldLabel` uppercase casing ("Ledger Name", "Opening Balance", "Description", "Amount" — Amount/Description newly labeled); placeholders carry guidance, not ranges ("e.g. House Rent", "What was this for?", "0.00"); validation ranges still live in error surface; sheet footer + delete-confirm buttons token-classed, `#fff` literal replaced by `--color-text-on-primary`. Verified by scratch spec: create + add-entry flows work end-to-end with the new classes.
+- Gates each ticket: typecheck / scoped eslint --max-warnings 0 / vitest 113 / build PASS; detect_changes vs dev: low, no affected processes; §17 checked.
+
+### Skill(s) Used
+- senior-frontend; ui-ux conventions (tokens/labels); Playwright scratch-spec verification.
+
+### Status
+- M-01, M-02, M-04, M-06, M-07 done. Next: **M-03** (emoji-icon sweep across wizard/dashboard/ledger empty states, header bell) then **M-05** (zero values not danger red), **M-08** (wizard progress), **M-09** (verify-only LedgerSection badge).
+
+### Session 2026-10-17 15:00 (M-03/M-05/M-08/M-09 - closes Phase A)
+
+### Changes
+- **M-03 done** (`6a0a162`): ALL emoji UI icons replaced with the lucide-react set (same 1.8-stroke style as BottomNav). Scope: SetupWizard hero/feature icons, dashboard panel empty states (Coins/ClipboardList/CreditCard/Eye), loans + members + recycle screens (SearchX/HandCoins/TrashIcon/RefreshCw/AlertTriangle via new `presentation/components/StatusIcons.tsx`), header bell (BellIcon), error screens, main.tsx bootstrap fail screen, wizard low-balance warning. `TX_TYPE_ICON` emoji map deleted (sheet title now plain "Transaction Details"). Dashboard MonthSummary inline colors -> `.statTeal/.statCoral` classes; `+ Net` arrow -> ArrowUpRight SVG. `.empty-state-icon/.error-state-icon` now flex-sized (SVG-ready). Grep for emoji codepoints in src/presentation + src/otherLedgers + src/loans = 0 matches. 29 unit + full targeted e2e pass.
+- **M-05 done** (`b3c3337`): zero balances render NEUTRAL; danger red only for genuinely negative values. Dashboard MetricValue refactored to semantic tone classes (`.toneZero/.toneNeg/.toneCash/.tonePrimary/.toneText`) replacing hardcoded coral on "Total in Banks"/"Active Loans"; LoansScreen mobile "Total Outstanding" tile zero -> secondary (`.summaryZero`). Cash -6,000 stays red (correct - real deficit); income/expense category colors intentionally unchanged (typed semantics). Verified via scratch spec: zero tiles carry secondary color, negative keeps coral.
+- **M-08 done** (`f8e5a50`): setup wizard dots row DELETED (kept the funded bar); bar merged into the top row sharing space with "Skip -> Dashboard" (one progress indicator). Card now `justify-content: safe center` - vertically centered when it fits, top-aligned & scrollable on the tall "How it works" step (was clipping). Bar width via CSS var `--fill-width` (same pattern as ProgressBar). Skip button 44px min-height. Verified step 0-3 gaps ~= even on fitting steps, last card reachable on step 3.
+- **M-09 done** (`8e332a5`): verified "All Accounts 0" badge = `filteredTxs.length` (tx rows, by design) - contradiction with "Linked Accounts (3)" was a LABEL misread. Renamed badges to "{n} tx" (desktop ledger panel head + mobile toolbar) with tooltip "Transactions in this ledger view". New members with 0 txs now read "0 tx" unambiguously.
+
+### Gates
+typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every commit; detect_changes risk low-medium (M-03 spread, 0 affected processes). Full Playwright suite: 31 passed / 1 failed at workers=2 - the 1 failure is PRE-EXISTING BUG-39 (stale search.smoke asserting a `Search...` input the header search replaced; awaiting user decision, not touched). NOTE: at 6 workers the shared dev server flakes (03-accounts/15-cloud-sync dashboard boot timeouts) - e2e load finding, not regression.
+
+### Status
+- **All 9 mobile refinements tickets COMPLETE (M-01..M-09)** on `feature/mobile-refinements` (9 commits, tip `8e332a5`, clean tree).
+- NEXT: user confirmation required to merge into `dev` (per 3.8/3.12). Then consider Unreleased CHANGELOG entries + version bump per docs/VERSIONING.md at merge time.
+
+## Session 2026-10-17 (post-review patch)
+### Changes
+- Post-review catch during 'is everything fixed?' check: M-06's index-card half was NOT satisfied — .cardDelete was still 28x28 while only the detail circle had been fixed in 1badf7a. Fixed: visual 32px + invisible ::before inset -7px = 46x46 hit area (UNGuideline touch-target-size 'padding may extend beyond visual'). Scratch Playwright check passed and deleted; nothing was touched in parallel-session files.
+### Skill(s) Used
+- ui-ux-pro-max (touch-target pattern)
+### Status
+- M-06 now fully satisfied; all 9 tickets genuinely done. Commit pending on `feature/mobile-refinements`; merge to dev still awaits explicit user approval.
+
+## Session 2026-10-18
+### Changes
+- Pushed `feature/mobile-refinements` (tip ef8a19b) to remote with upstream tracking; branch was previously local-only. No merge performed.
+### Status
+- Branch is on remote at origin/feature/mobile-refinements. Merge to dev still awaits explicit user approval per 3.8/3.12.

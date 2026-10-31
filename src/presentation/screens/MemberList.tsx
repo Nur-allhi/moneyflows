@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { Avatar, Modal, FormInput } from '../components';
+import { Avatar, Modal, FormInput, AlertIcon } from '../components';
+import { SearchX } from 'lucide-react';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useReplay } from '../hooks/useReplay';
@@ -62,7 +63,7 @@ export function MemberList() {
     return (
       <div className={styles.page}>
         <div className="error-state">
-          <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
+          <div className="error-state-icon"><AlertIcon /></div>
           <p className="error-state-text">{error}</p>
           <button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchMembers(); fetchAccounts(); }}><span className="anim-target" key={retryKey}>Retry</span></button>
         </div>
@@ -116,7 +117,7 @@ export function MemberList() {
         {filteredMembers.length === 0 ? (
           familyMembers.length > 0 && (
             <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '40px 0' }}>
-              <div className="empty-state-icon">{'\u{1F50D}'}</div>
+              <div className="empty-state-icon"><SearchX size={40} strokeWidth={1.8} aria-hidden="true" /></div>
               <p className="empty-state-text">No members match your search</p>
             </div>
           )

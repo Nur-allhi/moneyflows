@@ -1,14 +1,31 @@
+import { ArrowUpRight } from 'lucide-react';
 import { formatAmount } from '../../utils/format';
 import styles from '../Dashboard.module.css';
 import { ArrowUp, ArrowDown } from './icons';
 import type { MetricTrend } from './metricTrend';
 
-function MetricValue({ value, color, locale, currency }: { value: number; color: string; locale: string; currency: string }) {
+/**
+ * M-05: metric values are semantic, not decorative — zero renders neutral,
+ * negative renders danger, positive renders the metric's own tone. Replaces
+ * the inline `color` styles; classes live in Dashboard.module.css.
+ */
+const TONE_CLASS: Record<string, string> = {
+  cash: 'toneCash',
+  primary: 'tonePrimary',
+  text: 'toneText',
+};
+
+function MetricValue({ value, base, locale, currency }: { value: number; base: 'cash' | 'primary' | 'text'; locale: string; currency: string }) {
   const finalStr = formatAmount(value, locale, currency);
+  const toneClass = value === 0
+    ? styles.toneZero
+    : value < 0
+      ? styles.toneNeg
+      : styles[TONE_CLASS[base] ?? 'toneText'];
   return (
-    <span className={styles.metricValueWrap} style={{ color }}>
+    <span className={`${styles.metricValueWrap} ${toneClass}`}>
       <span className={styles.metricValueFinal} aria-hidden="true">{finalStr}</span>
-      <span className={styles.metricValue} style={{ color }}>{finalStr}</span>
+      <span className={styles.metricValue}>{finalStr}</span>
     </span>
   );
 }
@@ -38,22 +55,22 @@ export function MetricCards({ cashTrend, banksTrend, loansTrend, assetsTrend, lo
     <div className={styles.metrics}>
       <div className={`${styles.metricCard} ${styles.glowGold}`}>
         <span className={styles.metricLabel}>Cash in Hand</span>
-        <MetricValue value={animCashInHand} color="var(--color-cash)" locale={locale} currency={currency} />
+        <MetricValue value={animCashInHand} base="cash" locale={locale} currency={currency} />
         <TrendLine trend={cashTrend} locale={locale} currency={currency} />
       </div>
       <div className={`${styles.metricCard} ${styles.glowCoral}`}>
         <span className={styles.metricLabel}>Total in Banks</span>
-        <MetricValue value={animTotalInBanks} color="var(--color-coral)" locale={locale} currency={currency} />
+        <MetricValue value={animTotalInBanks} base="text" locale={locale} currency={currency} />
         <TrendLine trend={banksTrend} locale={locale} currency={currency} />
       </div>
       <div className={`${styles.metricCard} ${styles.glowCoral}`}>
         <span className={styles.metricLabel}>Active Loans</span>
-        <MetricValue value={animActiveLoans} color="var(--color-coral)" locale={locale} currency={currency} />
+        <MetricValue value={animActiveLoans} base="text" locale={locale} currency={currency} />
         <TrendLine trend={loansTrend} locale={locale} currency={currency} />
       </div>
       <div className={`${styles.metricCard} ${styles.glowViolet}`}>
         <span className={styles.metricLabel}>Total Assets</span>
-        <MetricValue value={animTotalAssets} color="var(--color-primary)" locale={locale} currency={currency} />
+        <MetricValue value={animTotalAssets} base="primary" locale={locale} currency={currency} />
         {totalAssetsIncludeLoans && animLoansAdded > 0 && (
           <span className={styles.metricSubtitle}>+ Active Loans {formatAmount(animLoansAdded, locale, currency)}</span>
         )}
@@ -66,12 +83,12 @@ export function MonthSummary({ thisMonthIncome, thisMonthExpenses, thisMonthNet,
   return (
     <>
       <div className={styles.monthSummary}>
-        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Income</span><span className={styles.monthStatValue} style={{ color: 'var(--color-teal)' }}>{formatAmount(thisMonthIncome, locale, currency)}</span></div>
+        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Income</span><span className={`${styles.monthStatValue} ${styles.statTeal}`}>{formatAmount(thisMonthIncome, locale, currency)}</span></div>
         <div className={styles.flowDivider} />
-        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Expenses</span><span className={styles.monthStatValue} style={{ color: 'var(--color-coral)' }}>{formatAmount(thisMonthExpenses, locale, currency)}</span></div>
-        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Net</span><span className={styles.monthStatValue} style={{ color: thisMonthNet >= 0 ? 'var(--color-teal)' : 'var(--color-coral)' }}>{thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)}</span></div>
+        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Expenses</span><span className={`${styles.monthStatValue} ${styles.statCoral}`}>{formatAmount(thisMonthExpenses, locale, currency)}</span></div>
+        <div className={styles.monthStat}><span className={styles.monthStatLabel}>Net</span><span className={`${styles.monthStatValue} ${thisMonthNet >= 0 ? styles.statTeal : styles.statCoral}`}>{thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)}</span></div>
       </div>
-      <div className={styles.flowNet}>{'\u2197'} Net {thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)} this month</div>
+      <div className={styles.flowNet}><ArrowUpRight size={12} strokeWidth={1.8} aria-hidden="true" /> Net {thisMonthNet >= 0 ? '+' : ''}{formatAmount(thisMonthNet, locale, currency)} this month</div>
     </>
   );
 }

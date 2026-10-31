@@ -1,4 +1,5 @@
 import { DatePicker } from '../../../components/ui/date-picker';
+import { AlertTriangle } from 'lucide-react';
 import { FormTextarea } from '../../components';
 import { useReplay } from '../../hooks/useReplay';
 import styles from '../TransactionFormModal.module.css';
@@ -82,7 +83,7 @@ export function FormFields(props: Props & {
       {errors.amount && <span className={styles.errorText}>{errors.amount}</span>}
       {insufficientWarning && (
         <div className={styles.insufficientWarning}>
-          <span className={styles.warningIcon}>{'\u26A0'}</span>
+          <span className={styles.warningIcon}><AlertTriangle size={14} strokeWidth={1.8} aria-hidden="true" /></span>
           <div className={styles.warningBody}>
             <span className={styles.warningTitle}>Low balance</span>
             <span className={styles.warningText}>Only {formatAmount(insufficientWarning.available, locale, currency)} available. Account will go negative by {formatAmount(insufficientWarning.deficit, locale, currency)} if you proceed.</span>

@@ -22,5 +22,6 @@ export { SearchBar } from './SearchBar';
 export { MobileLedger } from './MobileLedger';
 export { GlobalSearchResults } from './GlobalSearch';
 export { useGlobalSearch } from './useGlobalSearch';
+export * from './StatusIcons';
 export type { GlobalSearchItem, GlobalSearchSection } from './useGlobalSearch';
 

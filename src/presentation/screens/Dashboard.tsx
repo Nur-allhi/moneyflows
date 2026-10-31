@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import { FAB } from '../components';
+import { AlertIcon } from '../components';
 import { useAnimatedValue } from '../hooks';
 import { useReplay } from '../hooks/useReplay';
 import { useAccountStore } from '../stores/useAccountStore';
@@ -48,7 +50,7 @@ export function Dashboard() {
   const filteredActiveLoanStacks = (activeLoanStacks as any[]).filter(() => true);
   const searchQuery = (d as any).rawQuery ?? '';
   if (loading) return <div className={styles.dashboard}><div className="skeleton skeleton-wizard" style={{ height: 64, borderRadius: 12 }} /><div className={styles.metrics}>{[1, 2, 3].map((i) => <div key={i} className="skeleton skeleton-metric" />)}</div><div className="skeleton skeleton-row" style={{ height: 56, borderRadius: 12 }} /><div className={styles.content}><div className="skeleton skeleton-card" style={{ height: 300 }} /><div className="skeleton skeleton-card" style={{ height: 300 }} /></div></div>;
-  if (error) return <div className={styles.dashboard}><div className={`${styles.panel} ${styles.monthSummary}`}><div className="error-state"><div className="error-state-icon">{'\u26A0\uFE0F'}</div><p className="error-state-text">Could not load dashboard data</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchAccounts(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div></div></div>;
+  if (error) return <div className={styles.dashboard}><div className={`${styles.panel} ${styles.monthSummary}`}><div className="error-state"><div className="error-state-icon"><AlertIcon /></div><p className="error-state-text">Could not load dashboard data</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchAccounts(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div></div></div>;
   return (
     <div className={styles.dashboard}>
       {showMetrics && <MetricCards assetsTrend={assetsTrend} cashTrend={cashTrend} banksTrend={banksTrend} loansTrend={loansTrend} locale={locale} currency={currency} animTotalAssets={animTotalAssets} animCashInHand={animCashInHand} animTotalInBanks={animTotalInBanks} animActiveLoans={animActiveLoans} totalAssetsIncludeLoans={totalAssetsIncludeLoans} animLoansAdded={animLoansAdded} />}
@@ -61,7 +63,7 @@ export function Dashboard() {
         {showWhere && <div className={styles.panel}><div className={styles.panelHeader}><h2>Where Your Money Is</h2></div><WhereMoneyIsPanel filteredAccountsByMember={filteredAccountsByMember} memberById={memberById} internalMembers={internalMembers} expandedMembers={expandedMembers} closingMembers={closingMembers} toggleMember={toggleMember} memberTotalBalance={memberTotalBalance} searchQuery={searchQuery} locale={locale} currency={currency} /></div>}
         {showRecent && <div className={styles.panel}><div className={styles.panelHeader}><h2>Recent Transactions</h2></div><div className={styles.txList}><RecentTxsPanel filteredRecentTxs={visibleRecentTxs} remaining={recentRemaining} onLoadMore={showMoreRecent} searchQuery={searchQuery} locale={locale} currency={currency} /></div></div>}
         {showLoans && <div className={styles.panel}><div className={styles.panelHeader}><h2>Active Loans</h2></div><div className={styles.loanList}><ActiveLoansPanel filteredActiveLoanStacks={filteredActiveLoanStacks} searchQuery={searchQuery} locale={locale} currency={currency} navigate={navigate} /></div></div>}
-        {visibleCount === 0 && <div className={styles.panel}><div className="empty-state" style={{ padding: '40px 20px' }}><div className="empty-state-icon">⚙️</div><p className="empty-state-text">All sections hidden — enable them in Settings → Dashboard.</p></div></div>}
+        {visibleCount === 0 && <div className={styles.panel}><div className="empty-state"><div className="empty-state-icon"><Settings size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">All sections hidden — enable them in Settings → Dashboard.</p></div></div>}
       </div>
       <FAB />
     </div>

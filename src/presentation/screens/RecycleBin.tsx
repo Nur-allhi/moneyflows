@@ -1,5 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
-import { RecycleRow, GlassPanel } from '../components';
+import { useEffect, useState, useMemo, type ReactNode } from 'react';
+import { RecycleRow, GlassPanel, AlertIcon, TrashIcon } from '../components';
+import { RefreshCw, AlertTriangle, Landmark, NotebookText, ClipboardList } from 'lucide-react';
 import { useRecycleStore } from '../stores/useRecycleStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
@@ -17,6 +18,17 @@ function timeAgo(iso: string): string {
   if (hours > 0) return `${hours}h ago`;
   return 'just now';
 }
+
+/**
+ * M-03: per-kind lucide glyphs (the audit's DELETED_KIND map carries the
+ * label/tab/variant; only the emoji `icon` field there is superseded here).
+ */
+const KIND_ICON: Record<string, ReactNode> = {
+  transaction: <AlertTriangle size={14} strokeWidth={1.8} aria-hidden="true" />,
+  account: <Landmark size={14} strokeWidth={1.8} aria-hidden="true" />,
+  other_ledger: <NotebookText size={14} strokeWidth={1.8} aria-hidden="true" />,
+  other_entry: <ClipboardList size={14} strokeWidth={1.8} aria-hidden="true" />,
+};
 
 export function RecycleBin() {
   const { deletedItems, loading, error, fetchDeleted, restore, purge } = useRecycleStore();
@@ -71,7 +83,7 @@ export function RecycleBin() {
       <div className={styles.recycle}>
         <GlassPanel padding="lg">
           <div className="error-state">
-            <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
+            <div className="error-state-icon"><AlertIcon /></div>
             <p className="error-state-text">Could not load recycle bin</p>
             <button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchDeleted(); }}><span className="anim-target" key={retryKey}>Retry</span></button>
           </div>
@@ -122,7 +134,7 @@ export function RecycleBin() {
           <span className={styles.statLabel}>Days Until Auto-Purge</span>
         </div>
         <div className={styles.actionBar}>
-          <button className={`${styles.pillBtn} ${refreshKey > 0 ? 'anim-spin' : ''}`} onClick={() => { replayRefresh(); fetchDeleted(); }}><span className="anim-target" key={refreshKey}>{'\u{1F504}'}</span> Refresh</button>
+          <button className={`${styles.pillBtn} ${refreshKey > 0 ? 'anim-spin' : ''}`} onClick={() => { replayRefresh(); fetchDeleted(); }}><span className="anim-target" key={refreshKey}><RefreshCw size={14} strokeWidth={1.8} aria-hidden="true" /></span> Refresh</button>
         </div>
       </div>
 
@@ -158,7 +170,7 @@ export function RecycleBin() {
         <div className={styles.listBody}>
           {filteredItems.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">{'\uD83D\uDDD1\uFE0F'}</div>
+              <div className="empty-state-icon"><TrashIcon /></div>
               <p className="empty-state-text">{effectiveSearch ? `No matches for "${effectiveSearch}"` : 'No deleted items'}</p>
             </div>
           ) : (
@@ -166,7 +178,7 @@ export function RecycleBin() {
               <RecycleRow
                 searchQuery={effectiveSearch}
                 key={item.id}
-                icon={DELETED_KIND[item.type].icon}
+                icon={KIND_ICON[item.type]}
                 iconVariant={DELETED_KIND[item.type].iconVariant}
                 name={item.name}
                 meta={DELETED_KIND[item.type].label}

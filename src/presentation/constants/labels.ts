@@ -45,18 +45,6 @@ export const ACCOUNT_TYPE_OPTIONS: { value: AccountType; label: string }[] = [
   { value: 'business', label: 'Business' },
 ];
 
-export const TX_TYPE_ICON: Record<TransactionType, string> = {
-  income: '\u{1F4B5}',
-  expense: '\u{1F4B8}',
-  transfer: '\u{1F91D}',
-  loan_issue: '\u{1F4B8}',
-  loan_repayment: '\u{1F4B5}',
-  loan_received: '\u{1F4B5}',
-  loan_paidback: '\u{1F4B8}',
-  lend: '\u{1F4B8}',
-  repay: '\u{1F4B5}',
-};
-
 export function displayType(type: string): string {
   return ACCOUNT_TYPE_LABEL[type as AccountType] ?? type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }

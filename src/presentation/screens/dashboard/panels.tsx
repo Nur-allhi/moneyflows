@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Coins, ClipboardList, CreditCard } from 'lucide-react';
 import { useModalStore } from '../../stores/useModalStore';
 import { useReplay } from '../../hooks/useReplay';
 import { formatAmount, formatAmountParts } from '../../utils/format';
@@ -10,7 +11,7 @@ import { TYPE_ICON_MAP } from './icons';
 
 export function WhereMoneyIsPanel({ filteredAccountsByMember, memberById, internalMembers, expandedMembers, closingMembers, toggleMember, memberTotalBalance, searchQuery, locale, currency }: any) {
   const MEMBER_GRADIENTS = ['linear-gradient(135deg, #6c5ce7, #a29bfe)', 'linear-gradient(135deg, #00b894, #55efc4)', 'linear-gradient(135deg, #fd79a8, #e84393)', 'linear-gradient(135deg, #0984e3, #74b9ff)', 'linear-gradient(135deg, #fdcb6e, #f39c12)', 'linear-gradient(135deg, #e17055, #d63031)'];
-  if (filteredAccountsByMember.size === 0) return <div className="empty-state" style={{ padding: '24px 20px' }}><div className="empty-state-icon">{'\u{1F4B0}'}</div><p className="empty-state-text">{searchQuery ? `No accounts match "${searchQuery}"` : 'No accounts yet'}</p></div>;
+  if (filteredAccountsByMember.size === 0) return <div className="empty-state"><div className="empty-state-icon"><Coins size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">{searchQuery ? `No accounts match "${searchQuery}"` : 'No accounts yet'}</p></div>;
   return <>{[...filteredAccountsByMember.entries()].map(([mid, accts]: any) => {
     const member = memberById[mid] ?? memberById.__unassigned__;
     const memberIdx = member ? internalMembers.indexOf(member) : -1;
@@ -40,7 +41,7 @@ export function WhereMoneyIsPanel({ filteredAccountsByMember, memberById, intern
 }
 export function RecentTxsPanel({ filteredRecentTxs, remaining, onLoadMore, searchQuery, locale, currency }: any) {
   const [loadMoreKey, replayLoadMore] = useReplay();
-  if (filteredRecentTxs.length === 0) return <div className="empty-state" style={{ padding: '24px 20px' }}><div className="empty-state-icon">{'\u{1F4CB}'}</div><p className="empty-state-text">{searchQuery ? `No matches for "${searchQuery}"` : 'No transactions yet'}</p></div>;
+  if (filteredRecentTxs.length === 0) return <div className="empty-state"><div className="empty-state-icon"><ClipboardList size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">{searchQuery ? `No matches for "${searchQuery}"` : 'No transactions yet'}</p></div>;
   return <>{filteredRecentTxs.map((tx: any) => {
     const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
     return (
@@ -56,7 +57,7 @@ export function RecentTxsPanel({ filteredRecentTxs, remaining, onLoadMore, searc
   </>;
 }
 export function ActiveLoansPanel({ filteredActiveLoanStacks, searchQuery, locale, currency, navigate }: any) {
-  if (filteredActiveLoanStacks.length === 0) return <div className="empty-state" style={{ padding: '24px 0' }}><div className="empty-state-icon">{'\u{1F4B3}'}</div><p className="empty-state-text">{searchQuery ? `No loans match "${searchQuery}"` : 'No active loans'}</p></div>;
+  if (filteredActiveLoanStacks.length === 0) return <div className="empty-state"><div className="empty-state-icon"><CreditCard size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">{searchQuery ? `No loans match "${searchQuery}"` : 'No active loans'}</p></div>;
   return <>{filteredActiveLoanStacks.map((stack: any) => {
     const total = stack.totalOutstanding + stack.totalRecovered; const pct = total > 0 ? (stack.totalRecovered / total) * 100 : 0; const isSettled = stack.isSettled ?? stack.loans.every((l: any) => l.status !== 'active');
     return (

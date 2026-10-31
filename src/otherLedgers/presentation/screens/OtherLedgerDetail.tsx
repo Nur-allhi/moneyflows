@@ -151,6 +151,26 @@ export function OtherLedgerDetail() {
         </div>
       ) : null}
 
+      {isDesktop ? null : (
+        /* M-04/M-06: anchored action bar — between the hero card and the list,
+           right-aligned; never floats mid-screen. Icon buttons are 44x44 touch
+           targets and rename is always visible (it was hover-revealed before). */
+        <div className={styles.mobileToolbar}>
+          <button className={styles.mobileAddBtn} onClick={() => setShowAdd(true)} aria-label="New entry"><span className={styles.mobileAddIcon}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="14" height="14"><path d="M8 3v10M3 8h10" /></svg></span>New Entry</button>
+          <button className={styles.iconBtnMobile} onClick={() => setShowRename(true)} aria-label="Rename ledger" title="Rename ledger">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
+          </button>
+          <button
+            className={`${styles.iconBtnMobile} ${styles.iconBtnDanger}`}
+            aria-label="Delete ledger"
+            onClick={() => setShowDeleteLedgerConfirm(true)}
+            title="Delete ledger"
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
+          </button>
+        </div>
+      )}
+
       {!isDesktop ? (
         <MobileLedger
           title={ledger.name}
@@ -161,8 +181,22 @@ export function OtherLedgerDetail() {
           searchQuery={ledgerQuery}
           onSearchChange={setLedgerQuery}
           onDownloadPdf={downloadPdf}
-          sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
-          empty={mobileFiltered.length === 0 ? <div className={styles.empty}>{ledgerQuery ? `No matches for "${ledgerQuery}"` : 'No entries yet — tap + to add first row.'}</div> : undefined}
+          sentinel={<div ref={sentinelRef} className={styles.sentinel} />}
+          empty={mobileFiltered.length === 0 ? (
+            ledgerQuery ? (
+              <div className={styles.empty}>{`No matches for "${ledgerQuery}"`}</div>
+            ) : (
+              /* M-04: composed empty state — icon + hint + one primary CTA. */
+              <div className={styles.emptyState}>
+                <span className={styles.emptyIcon}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="22" height="22"><path d="M9 3h6a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M10 7h4M10 11h4M10 15h4" /></svg>
+                </span>
+                <span className={styles.emptyTitle}>No entries yet</span>
+                <span className={styles.emptyHint}>Add the first row to this register — debit on the left, credit on the right.</span>
+                <button className={styles.emptyCta} onClick={() => setShowAdd(true)}>Add First Entry</button>
+              </div>
+            )
+          ) : undefined}
           sortOrder={sortOrder}
           onSortChange={setSortOrder}
         >
@@ -190,8 +224,7 @@ export function OtherLedgerDetail() {
             );
           })}
         </MobileLedger>
-      ) : (
-        <>
+      ) : (        <>
           <div className={styles.header}>
             <div className={styles.titleBlock}>
               <div className={styles.titleRow}>
@@ -269,42 +302,18 @@ export function OtherLedgerDetail() {
             showBalance
             desktop
             onRowClick={handleRowClick}
-            sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
+            sentinel={<div ref={sentinelRef} className={styles.sentinel} />}
             searchQuery={ledgerQuery}
           />
 
-          {filteredForEmpty.length === 0 && <div className={styles.empty}>{ledgerQuery ? `No matches for "${ledgerQuery}"` : 'No entries yet — tap + to add first row.'}</div>}
+          {filteredForEmpty.length === 0 && <div className={styles.empty}>{ledgerQuery ? `No matches for "${ledgerQuery}"` : 'No entries yet.'}</div>}
         </>
-      )}
-
-      {isDesktop ? null : (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, padding: '12px 0' }}>
-          <button className={styles.addBtn} onClick={() => setShowAdd(true)} aria-label="New entry">
-            <span className={styles.addBtnIcon}>
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="14" height="14"><path d="M8 3v10M3 8h10" /></svg>
-            </span>
-            <span className={styles.addBtnLabel}>New Entry</span>
-          </button>
-          <button className={styles.renameBtn} onClick={() => setShowRename(true)} aria-label="Rename ledger" title="Rename ledger" style={{ width: 36, height: 36 }}>
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
-          </button>
-          <button
-            className={styles.deleteBtn}
-            aria-label="Delete ledger"
-            onClick={() => setShowDeleteLedgerConfirm(true)}
-            style={{ width: 36, height: 36 }}
-            title="Delete ledger"
-          >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
-          </button>
-        </div>
       )}
 
       {showAdd && id && <AddEntryModal isOpen ledgerId={id} onClose={() => setShowAdd(false)} />}
       {editId && id && <AddEntryModal isOpen ledgerId={id} entryId={editId} onClose={() => setEditId(null)} />}
       {showRename && ledger && <RenameLedgerModal isOpen ledger={ledger} onClose={() => setShowRename(false)} />}
       {showDeleteLedgerConfirm && ledger && id && (() => {
-        const descStyle: React.CSSProperties = { textAlign: 'center', fontSize: '14px', color: 'var(--color-text-secondary)', margin: '12px 0' };
         const handleDelete = async () => {
           await deleteLedger(id);
           setShowDeleteLedgerConfirm(false);
@@ -312,14 +321,14 @@ export function OtherLedgerDetail() {
         };
         return isDesktop ? (
           <Modal isOpen onClose={() => setShowDeleteLedgerConfirm(false)} title="Delete Ledger" saveLabel="Delete" onSave={handleDelete}>
-            <p style={descStyle}>Are you sure you want to delete “{ledger.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
+            <p className={styles.sheetDesc}>Are you sure you want to delete “{ledger.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
           </Modal>
         ) : (
           <BottomSheet isOpen onClose={() => setShowDeleteLedgerConfirm(false)} title="Delete Ledger">
-            <p style={descStyle}>Are you sure you want to delete “{ledger.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
-            <div style={{ display: 'flex', gap: 10, padding: '8px 0 4px' }}>
-              <button onClick={() => setShowDeleteLedgerConfirm(false)} style={{ flex: 1, padding: 14, border: '1px solid var(--color-border)', borderRadius: 12, background: 'var(--color-surface)', color: 'var(--color-text)', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleDelete} style={{ flex: 1, padding: 14, border: 'none', borderRadius: 12, background: 'var(--color-coral)', color: '#fff', font: '500 14px var(--font-display)', cursor: 'pointer' }}>Delete</button>
+            <p className={styles.sheetDesc}>Are you sure you want to delete “{ledger.name}”? It will be moved to the Recycle Bin and can be restored within 30 days.</p>
+            <div className={styles.sheetBtnRow}>
+              <button onClick={() => setShowDeleteLedgerConfirm(false)} className={styles.sheetCancel}>Cancel</button>
+              <button onClick={handleDelete} className={styles.sheetDelete}>Delete</button>
             </div>
           </BottomSheet>
         );
