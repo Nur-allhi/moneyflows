@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [1.18.2] - 2026-10-31
+
+### Fixed
+- Every screen now shows its own title in the mobile app bar (was blank or lost context on detail routes), and long titles trim neatly instead of pushing the header's buttons out.
+- The Other Ledgers index header no longer misaligns on phones, and its "New Ledger" button works again on mobile.
+- Other-ledger detail no longer leaves stranded rename/delete buttons on an empty list — an empty ledger now explains itself and offers one clear "Add First Entry" action.
+- Ledger rename, delete and add buttons are now easy to tap on touch screens (44px targets) instead of missing half your taps.
+- Zero amounts no longer show in danger red — red is reserved for money you owe; the setup guide also drops its duplicated progress bar and dead space.
+- Setting up no longer buries the progress in dots: a single funded bar with a Skip shortcut sits at the top of the guide.
+
+### Changed
+- Emoji are replaced everywhere with the app's own icon set (dashboard rows, recycle bin, ledger cards) for consistent rendering across devices.
+- Ledger and entry forms no longer show validation limits in their labels — limits only surface when you actually type too much.
+- Remaining-ledger entry count badge now reads "N tx" with a tooltip instead of being mistaken for an account count.
+
 ## [1.18.1] - 2026-10-30
 
 ### Fixed
