@@ -232,6 +232,8 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131). Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
 
+**Phase 14: Mobile Screen Refinements (M-01..M-09)** — merged into `beta_v2.0` as `2ae487d` and released there as **v1.18.2** (PATCH bump `83d1dfe`, 2026-10-31). All 9 mobile-representation tickets from `docs/plans/MOBILE_UI_REFINEMENTS_PLAN.md` complete; branch `feature/mobile-refinements` kept on remote.
+
 **Phase 16: Theme (Light/Dark) + Accent Color (A1+B1)** — **merged to `dev`** (+ Phase 17 background presets, BUG-4/BUG-5 fixed, + Phase 18 type overhaul: Manrope + Inter-tnum + Anek Bangla self-hosted). Branch `feature/theme-accent` kept (next: TBD).
 
 **Phase 19 safety:** Google Drive sync workstream (T-145..T-153 + plan) lives on long-lived branch `google_signin_backup` (= `dev` + `feature/online-sync-drive` merge `881b249`, pushed). `master` carries releases only and is now at **v1.17.3** (`d4936f6`), without sync. Next sync work merges `dev → google_signin_backup` on user call; current work continues on `beta_v2.0` (below).
