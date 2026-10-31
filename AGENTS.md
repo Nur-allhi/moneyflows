@@ -232,7 +232,7 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131). Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
 
-**Phase 14: Mobile Screen Refinements (M-01..M-09)** — merged into `beta_v2.0` as `2ae487d` and released there as **v1.18.2** (PATCH bump `83d1dfe`, 2026-10-31). All 9 mobile-representation tickets from `docs/plans/MOBILE_UI_REFINEMENTS_PLAN.md` complete; branch `feature/mobile-refinements` kept on remote.
+**Phase 14: Mobile Screen Refinements (M-01..M-09)** — merged into `beta_v2.0` as `2ae487d` and released there as **v2.0.0** (renamed from the interim 1.18.2 PATCH at the user's call; atomic bump `83d1dfe` + rename commit, 2026-10-31). `beta_v2.0` line now numbers **all future updates from 2.0.x**. All 9 mobile-representation tickets from `docs/plans/MOBILE_UI_REFINEMENTS_PLAN.md` complete; branch `feature/mobile-refinements` kept on remote.
 
 **Phase 16: Theme (Light/Dark) + Accent Color (A1+B1)** — **merged to `dev`** (+ Phase 17 background presets, BUG-4/BUG-5 fixed, + Phase 18 type overhaul: Manrope + Inter-tnum + Anek Bangla self-hosted). Branch `feature/theme-accent` kept (next: TBD).
 

@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
-## [1.18.2] - 2026-10-31
+## [2.0.0] - 2026-10-31
+
+> **Why the number jumped:** the mobile-refinement batch and the calculation audit together mark a new app generation, so this line starts at **2.0.0**. There is **no migration** — databases, settings and backups from any 1.x version open unchanged.
 
 ### Fixed
 - Every screen now shows its own title in the mobile app bar (was blank or lost context on detail routes), and long titles trim neatly instead of pushing the header's buttons out.

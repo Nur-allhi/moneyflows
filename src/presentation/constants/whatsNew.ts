@@ -7,8 +7,10 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
-    version: '1.18.2',
+    version: '2.0.0',
     items: [
+      'Welcome to MoneyFlows 2.0 — the new app generation: a polished phone experience and fully-audited money math.',
+      'Your data, settings and backups stay exactly as they were — nothing to do on your side.',
       'The app now works properly on phones: every screen has a working title, icon buttons are easy to tap, and a first-time guide renders cleanly.',
       'Zero amounts no longer flash red — money is only red when you actually owe it.',
       'Emoji are out everywhere — all status and row icons are now crisp app glyphs.',
