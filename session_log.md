@@ -2067,3 +2067,8 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Pushed `feature/mobile-refinements` (tip ef8a19b) to remote with upstream tracking; branch was previously local-only. No merge performed.
 ### Status
 - Branch is on remote at origin/feature/mobile-refinements. Merge to dev still awaits explicit user approval per 3.8/3.12.
+## Session 2026-10-31 (dev gets the beta line)
+### Changes
+- On user call, bolted beta_v2.0 into dev: merged beta (ada6677, v2.0.0) into dev as 63582c9, verified beta<->dev diff empty, typecheck + vitest 235/235, pushed origin/dev. main checkout bookkeeping: AGENTS.md branch map + session log (d9a5114).
+### Status
+- dev = beta_v2.0 = v2.0.0 (audit + M-01..M-09), user testing phase. This worktree back on feature/mobile-refinements (kept). master untouched at 1.17.3.
