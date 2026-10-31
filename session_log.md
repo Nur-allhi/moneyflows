@@ -2481,3 +2481,8 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Gates: typecheck + build green. Pushed origin/beta_v2.0.
 ### Status
 - beta_v2.0 = v2.0.0 (M-01..M-09 mobile refinements + BUG-21..47 audit), tip c50fa8e. master stays on 1.17.x stable. Next: Other Ledgers V2 when user says "next update".
+## Session 2026-10-31 (beta -> dev merge)
+### Changes
+- Merged beta_v2.0 (ada6677, v2.0.0) into dev with --no-ff as 63582c9 on the user call to test the app. Post-merge diff beta<->dev is empty (content-identical); typecheck + vitest 235/235 green. Pushed origin/dev (16b5306 -> 63582c9). AGENTS.md branch map updated.
+### Status
+- dev and beta_v2.0 now the same code (v2.0.0). master stays v1.17.3 stable, untouched. User testing on dev; next work (Other Ledgers V2) continues on beta_v2.0 unless user says otherwise.
