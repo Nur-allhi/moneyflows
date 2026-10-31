@@ -8,6 +8,7 @@ import { useBackupState } from './useBackupState';
 import { RestorePoints } from './RestorePoints';
 import { FolderBackup } from './FolderBackup';
 import { EngineHealth } from './EngineHealth';
+import { IntegrityRow } from './IntegrityRow';
 import { ImportExportRow } from './ImportExportRow';
 import type { Cx } from './cx';
 
@@ -102,6 +103,8 @@ export function BackupCard({ cx, defaultOpen = false, forceOpenSync = false }: B
         <CloudSyncSection forceOpen={forceOpenSync} />
         <div className={cx.sectionTitle}>Engine Health</div>
         <EngineHealth cx={cx} storageHealth={backup.storageHealth} />
+        <div className={cx.sectionTitle}>Data Integrity</div>
+        <IntegrityRow cx={cx} report={backup.integrity} />
         <div className={cx.sectionTitle}>Import / Export</div>
         <ImportExportRow cx={cx} onExport={backup.handleExportDb} onImport={handleImport} importDisabled={importing} />
       </SettingsDisclosure>

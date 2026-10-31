@@ -1,4 +1,6 @@
 import { useReplay } from '../../hooks/useReplay';
+import { AlertIcon } from '../../components';
+import { Coins } from 'lucide-react';
 import styles from '../TransactionFormModal.module.css';
 
 export function EmptyAccountsState({ onClose }: { onClose: () => void }) {
@@ -11,7 +13,7 @@ export function EmptyAccountsState({ onClose }: { onClose: () => void }) {
           <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
             <div className={styles.handle} />
             <div className={styles.header}><h2>New Transaction</h2><button className={`${styles.closeBtn} ${closeKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClose(); onClose(); }} aria-label="Close"><span className="anim-target" key={closeKey}>&times;</span></button></div>
-            <div className="empty-state"><div className="empty-state-icon">{'\u{1F4B0}'}</div><p className="empty-state-text">No accounts available</p><button className={`retry-btn ${backKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayBack(); onClose(); }}><span className="anim-target" key={backKey}>Go Back</span></button></div>
+            <div className="empty-state"><div className="empty-state-icon"><Coins size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">No accounts available</p><button className={`retry-btn ${backKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayBack(); onClose(); }}><span className="anim-target" key={backKey}>Go Back</span></button></div>
           </div>
         </div>
       </div>
@@ -19,7 +21,7 @@ export function EmptyAccountsState({ onClose }: { onClose: () => void }) {
         <div className={styles.desktopOverlay} onClick={onClose} />
         <div className={styles.desktopModal}>
           <div className={styles.modalHeader}><h2>New Transaction</h2><button className={`${styles.closeBtn} ${closeKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClose(); onClose(); }} aria-label="Close"><span className="anim-target" key={closeKey}>&times;</span></button></div>
-          <div className="empty-state"><div className="empty-state-icon">{'\u{1F4B0}'}</div><p className="empty-state-text">No accounts available</p><button className={`retry-btn ${backKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayBack(); onClose(); }}><span className="anim-target" key={backKey}>Go Back</span></button></div>
+          <div className="empty-state"><div className="empty-state-icon"><Coins size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">No accounts available</p><button className={`retry-btn ${backKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayBack(); onClose(); }}><span className="anim-target" key={backKey}>Go Back</span></button></div>
         </div>
       </div>
     </>
@@ -34,12 +36,12 @@ export function ErrorState({ error, onRetry, onClose }: { error: string; onRetry
         <div className={styles.wizard} onClick={onClose}>
           <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
             <div className={styles.handle} /><div className={styles.header}><h2>New Transaction</h2><button className={`${styles.closeBtn} ${closeKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClose(); onClose(); }} aria-label="Close"><span className="anim-target" key={closeKey}>&times;</span></button></div>
-            <div className="error-state"><div className="error-state-icon">{'\u26A0\uFE0F'}</div><p className="error-state-text">{error}</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); onRetry(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div>
+            <div className="error-state"><div className="error-state-icon"><AlertIcon /></div><p className="error-state-text">{error}</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); onRetry(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div>
           </div>
         </div>
       </div>
       <div className={styles.desktopLayout}>
-        <div className={styles.desktopOverlay} onClick={onClose} /><div className={styles.desktopModal}><div className={styles.modalHeader}><h2>New Transaction</h2><button className={`${styles.closeBtn} ${closeKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClose(); onClose(); }} aria-label="Close"><span className="anim-target" key={closeKey}>&times;</span></button></div><div className="error-state"><div className="error-state-icon">{'\u26A0\uFE0F'}</div><p className="error-state-text">{error}</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); onRetry(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div></div>
+        <div className={styles.desktopOverlay} onClick={onClose} /><div className={styles.desktopModal}><div className={styles.modalHeader}><h2>New Transaction</h2><button className={`${styles.closeBtn} ${closeKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClose(); onClose(); }} aria-label="Close"><span className="anim-target" key={closeKey}>&times;</span></button></div><div className="error-state"><div className="error-state-icon"><AlertIcon /></div><p className="error-state-text">{error}</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); onRetry(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div></div>
       </div>
     </>
   );

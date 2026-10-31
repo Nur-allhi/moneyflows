@@ -1,9 +1,12 @@
-import { useEffect, useState, useMemo } from 'react';
-import { RecycleRow, GlassPanel } from '../components';
+import { useEffect, useState, useMemo, type ReactNode } from 'react';
+import { RecycleRow, GlassPanel, AlertIcon, TrashIcon } from '../components';
+import { RefreshCw, AlertTriangle, Landmark, NotebookText, ClipboardList } from 'lucide-react';
 import { useRecycleStore } from '../stores/useRecycleStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { formatAmount } from '../utils/format';
 import { useReplay } from '../hooks/useReplay';
+import { DELETED_KIND, RECYCLE_TABS, RECYCLE_TAB_LABEL, RECYCLE_TAB_TOTAL_LABEL } from '../constants/recycleKinds';
+import type { RecycleTab } from '../constants/recycleKinds';
 import styles from './RecycleBin.module.css';
 
 function timeAgo(iso: string): string {
@@ -15,6 +18,17 @@ function timeAgo(iso: string): string {
   if (hours > 0) return `${hours}h ago`;
   return 'just now';
 }
+
+/**
+ * M-03: per-kind lucide glyphs (the audit's DELETED_KIND map carries the
+ * label/tab/variant; only the emoji `icon` field there is superseded here).
+ */
+const KIND_ICON: Record<string, ReactNode> = {
+  transaction: <AlertTriangle size={14} strokeWidth={1.8} aria-hidden="true" />,
+  account: <Landmark size={14} strokeWidth={1.8} aria-hidden="true" />,
+  other_ledger: <NotebookText size={14} strokeWidth={1.8} aria-hidden="true" />,
+  other_entry: <ClipboardList size={14} strokeWidth={1.8} aria-hidden="true" />,
+};
 
 export function RecycleBin() {
   const { deletedItems, loading, error, fetchDeleted, restore, purge } = useRecycleStore();
@@ -30,26 +44,27 @@ export function RecycleBin() {
     fetchDeleted();
   }, [fetchDeleted]);
 
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<RecycleTab>('all');
 
   const effectiveSearch = mobileSearch.trim();
   const filteredItems = useMemo(() => {
-    const byTab = activeTab === 'all' ? deletedItems
-      : deletedItems.filter((item) => activeTab === 'transactions' ? item.type === 'transaction' : item.type === 'account');
+    const byTab = activeTab === 'all' ? deletedItems : deletedItems.filter((item) => DELETED_KIND[item.type].tab === activeTab);
     return effectiveSearch
       ? byTab.filter((item) => item.name.toLowerCase().includes(effectiveSearch.toLowerCase()))
       : byTab;
   }, [deletedItems, activeTab, effectiveSearch]);
 
-  const tabCount = (key: string) => {
+  const tabCount = (key: RecycleTab) => {
     if (key === 'all') return deletedItems.length;
-    return deletedItems.filter((i) => key === 'transactions' ? i.type === 'transaction' : i.type === 'account').length;
+    return deletedItems.filter((i) => DELETED_KIND[i.type].tab === key).length;
   };
 
-  const totalAmount = useMemo(
-    () => deletedItems.reduce((s, item) => s + (item.amount ?? 0), 0),
-    [deletedItems],
+  /** Sum inside the active tab only — one kind, so the figure means something. */
+  const tabTotal = useMemo(
+    () => filteredItems.reduce((s, item) => s + (item.amount ?? 0), 0),
+    [filteredItems],
   );
+  const kindsInBin = useMemo(() => new Set(deletedItems.map((i) => i.type)).size, [deletedItems]);
 
   if (loading) {
     return (
@@ -68,7 +83,7 @@ export function RecycleBin() {
       <div className={styles.recycle}>
         <GlassPanel padding="lg">
           <div className="error-state">
-            <div className="error-state-icon">{'\u26A0\uFE0F'}</div>
+            <div className="error-state-icon"><AlertIcon /></div>
             <p className="error-state-text">Could not load recycle bin</p>
             <button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchDeleted(); }}><span className="anim-target" key={retryKey}>Retry</span></button>
           </div>
@@ -109,22 +124,23 @@ export function RecycleBin() {
           <span className={styles.statLabel}>Deleted Items</span>
         </div>
         <div className={styles.statItem}>
-          <span className={`${styles.statNum} ${styles.statExpense}`}>{formatAmount(totalAmount, locale, currency)}</span>
-          <span className={styles.statLabel}>Total Amount</span>
+          <span className={`${styles.statNum} ${activeTab === 'all' ? '' : styles.statExpense}`}>
+            {activeTab === 'all' ? kindsInBin : formatAmount(tabTotal, locale, currency)}
+          </span>
+          <span className={styles.statLabel}>{activeTab === 'all' ? 'Item Types' : RECYCLE_TAB_TOTAL_LABEL[activeTab]}</span>
         </div>
         <div className={styles.statItem}>
           <span className={`${styles.statNum} ${styles.statIncome}`}>30</span>
           <span className={styles.statLabel}>Days Until Auto-Purge</span>
         </div>
         <div className={styles.actionBar}>
-          <button className={`${styles.pillBtn} ${refreshKey > 0 ? 'anim-spin' : ''}`} onClick={() => { replayRefresh(); fetchDeleted(); }}><span className="anim-target" key={refreshKey}>{'\u{1F504}'}</span> Refresh</button>
+          <button className={`${styles.pillBtn} ${refreshKey > 0 ? 'anim-spin' : ''}`} onClick={() => { replayRefresh(); fetchDeleted(); }}><span className="anim-target" key={refreshKey}><RefreshCw size={14} strokeWidth={1.8} aria-hidden="true" /></span> Refresh</button>
         </div>
       </div>
 
       <div className={styles.listPanel}>
         <div className={styles.tabBar}>
-          {['all', 'transactions', 'accounts'].map((key) => {
-            const labels: Record<string, string> = { all: 'All Items', transactions: 'Transactions', accounts: 'Accounts' };
+          {RECYCLE_TABS.map((key) => {
             const isActive = activeTab === key;
             return (
               <button
@@ -133,7 +149,7 @@ export function RecycleBin() {
                 onClick={() => { replayTab(); setTabPicked(key); setActiveTab(key); }}
               >
                 <span className="anim-target" key={`${key}-${tabPicked === key ? tabKey : 0}`}>
-                {labels[key] ?? key}
+                {RECYCLE_TAB_LABEL[key]}
                 <span className={`${styles.tabBadge} ${isActive ? styles.tabBadgeActive : ''}`}>
                   {tabCount(key)}
                 </span>
@@ -154,7 +170,7 @@ export function RecycleBin() {
         <div className={styles.listBody}>
           {filteredItems.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">{'\uD83D\uDDD1\uFE0F'}</div>
+              <div className="empty-state-icon"><TrashIcon /></div>
               <p className="empty-state-text">{effectiveSearch ? `No matches for "${effectiveSearch}"` : 'No deleted items'}</p>
             </div>
           ) : (
@@ -162,11 +178,11 @@ export function RecycleBin() {
               <RecycleRow
                 searchQuery={effectiveSearch}
                 key={item.id}
-                icon={item.type === 'transaction' ? '\u26A0' : '\u{1F3E6}'}
-                iconVariant={item.type === 'transaction' ? 'warning' : 'account'}
+                icon={KIND_ICON[item.type]}
+                iconVariant={DELETED_KIND[item.type].iconVariant}
                 name={item.name}
-                meta={item.type === 'transaction' ? 'Transaction' : 'Account'}
-                amount={item.amount != null ? `-${formatAmount(item.amount, locale, currency)}` : '\u2014'}
+                meta={DELETED_KIND[item.type].label}
+                amount={item.amount != null ? formatAmount(item.amount, locale, currency) : '\u2014'}
                 amountColor={item.amount != null ? 'var(--color-expense)' : 'var(--color-text-secondary)'}
                 date={timeAgo(item.deletedAt)}
                 onRestore={() => restore(item.id, item.type)}

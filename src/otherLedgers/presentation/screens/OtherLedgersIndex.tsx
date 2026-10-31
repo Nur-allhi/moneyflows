@@ -93,25 +93,35 @@ export function OtherLedgersIndex() {
 
   return (
     <div className={styles.page}>
+      {/* M-01: search full-width first on mobile; count + CTAs on one lower row. */}
       <div className={styles.topBar}>
-        <span className={styles.leftCount}>{filtered.length} ledger{filtered.length !== 1 ? 's' : ''}</span>
-        <div className={styles.rightControls}>
-          <div className={styles.searchWrap}>
-            <span className={styles.searchIcon}>
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                <circle cx="7" cy="7" r="5.5" /><path d="M11 11l3.5 3.5" />
-              </svg>
-            </span>
-            <input placeholder="Search ledgers..." value={search} onChange={(e) => setSearch(e.target.value)} />
-            {search && <button className={`${styles.searchClear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); setSearch(''); }} aria-label="Clear"><svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>}
-          </div>
-          <button className={`${styles.addBtn} ${entryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEntry(); setShowEntryPicker(true); }} title="Add entry"><span className="anim-target" key={entryKey}>+ Entry</span></button>
-          <button className={`${styles.addBtn} ${newLedgerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNewLedger(); setShowCreate(true); }}><span className="anim-target" key={newLedgerKey}>+ New Ledger</span></button>
+        <div className={styles.searchWrap}>
+          <span className={styles.searchIcon}>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+              <circle cx="7" cy="7" r="5.5" /><path d="M11 11l3.5 3.5" />
+            </svg>
+          </span>
+          <input placeholder="Search ledgers..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          {search && <button className={`${styles.searchClear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); setSearch(''); }} aria-label="Clear"><svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>}
         </div>
+        {ledgers.length > 0 && (
+          <button className={`${styles.addBtn} ${entryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEntry(); setShowEntryPicker(true); }} title="Add entry"><span className="anim-target" key={entryKey}>+ Entry</span></button>
+        )}
+        <button className={`${styles.addBtn} ${newLedgerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNewLedger(); setShowCreate(true); }}><span className="anim-target" key={newLedgerKey}>+ New Ledger</span></button>
+        <span className={styles.leftCount}>{filtered.length} ledger{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
       {filtered.length === 0 ? (
-        <div className={styles.empty}>{search ? `No matches for "${search}"` : 'No ledgers yet. Create your first register.'}</div>
+        search ? (
+          <div className={styles.empty}>No matches for &quot;{search}&quot;</div>
+        ) : (
+          /* M-01: composed empty state — centered, one primary CTA. */
+          <div className={styles.emptyState}>
+            <div className={styles.emptyTitle}>No ledgers yet</div>
+            <div className={styles.emptyHint}>Create your first register to track money outside the app.</div>
+            <button className={`${styles.emptyCta} ${newLedgerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayNewLedger(); setShowCreate(true); }}><span className="anim-target" key={newLedgerKey}>+ New Ledger</span></button>
+          </div>
+        )
       ) : (
         <div className={styles.grouped}>
           {grouped.map((group) => (

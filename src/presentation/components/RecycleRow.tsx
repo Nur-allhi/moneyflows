@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Highlight } from '../utils/highlight';
 import { useReplay } from '../hooks/useReplay';
+import { TrashIcon } from './StatusIcons';
 import styles from './RecycleRow.module.css';
 
 type IconVariant = 'warning' | 'account';
@@ -53,7 +54,7 @@ export function RecycleRow({
           <span className="anim-target" key={restoreKey}>{'\u21A9'}</span>
         </button>
         <button className={`${styles.actionBtn} ${styles.delete} ${deleteKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayDelete(); onDelete?.(); }} title="Delete permanently" aria-label="Delete permanently">
-          <span className="anim-target" key={deleteKey}>{'\uD83D\uDDD1\uFE0F'}</span>
+          <span className="anim-target" key={deleteKey}><TrashIcon /></span>
         </button>
       </div>
     </div>

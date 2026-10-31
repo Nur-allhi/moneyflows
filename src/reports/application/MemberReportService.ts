@@ -36,8 +36,11 @@ function expandMonth(filter: MemberReportFilter): { start?: string; end?: string
  * Single source of truth for member-wise balances (T-132, accounts only).
  * Running balances are ALWAYS derived from FULL history; date filters only
  * choose which rows are displayed — same rule as LoanService.generateReport.
- * Live `account.balance` is the closing truth; opening is back-computed so
- * reports stay correct with or without an explicit opening-balance tx.
+ * Live `account.balance` anchors the arithmetic: an account's opening is
+ * back-computed from it, so reports stay correct with or without an explicit
+ * opening-balance tx. Closing is the **period-end running balance**, not the
+ * live balance — the two only coincide when the range reaches the last
+ * transaction (BUG-22).
  */
 export class MemberReportService {
   constructor(private db: IDatabaseService) {}
@@ -152,7 +155,13 @@ export class MemberReportService {
         opening: running - (totalCredit - totalDebit),
         totalDebit,
         totalCredit,
-        closing: acct.balance,
+        // Balances as of the END OF THE RANGE, i.e. after the last in-period
+        // row. This used to be the live `acct.balance`, which silently pulled
+        // post-period activity into the statement and broke its own arithmetic
+        // (Opening + Credit − Debit ≠ Closing) for any range ending early
+        // (BUG-22). Unfiltered ranges reach the last transaction, where the
+        // period-end balance and the live balance are the same number.
+        closing: running,
         rows,
       });
     }

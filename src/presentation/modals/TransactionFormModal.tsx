@@ -9,6 +9,7 @@ import { useTagStore } from '../stores/useTagStore';
 import { formatAmount } from '../utils/format';
 
 import type { Account } from '../../core/domain/Account';
+import { parseAmountInput, sanitizeAmountInput } from '../../core/domain/transactionRules';
 import type { ValidationErrors } from './transactionForm/validation';
 import { FormFields } from './transactionForm/formFields';
 import { SourceDestinationPickers, BorrowerPicker, LenderPicker } from './transactionForm/pickers';
@@ -116,13 +117,20 @@ export function TransactionFormModal({
     return memberName ? `${a.name} \u2014 ${memberName}` : a.name;
   }, [accounts, memberLookup]);
 
-  const displayAmount = rawAmount ? Intl.NumberFormat(locale).format(parseInt(rawAmount, 10)) : '';
+  // Grouping for readability while preserving any decimals the user typed:
+  // formatting the parsed number alone turned "100.50" into "100" on screen.
+  const displayAmount = useMemo(() => {
+    if (!rawAmount) return '';
+    const [whole, decimals] = rawAmount.split('.');
+    const grouped = Intl.NumberFormat(locale).format(Number(whole || '0'));
+    return decimals === undefined ? grouped : `${grouped}.${decimals}`;
+  }, [rawAmount, locale]);
 
   const insufficientWarning = useMemo(() => {
     if (tab === 'income') return null;
     const accountId = (tab === 'loan' && loanAction === 'repay') ? selectedBorrowerId : source;
     if (!accountId) return null;
-    const amt = parseInt(rawAmount, 10);
+    const amt = parseAmountInput(rawAmount);
     if (isNaN(amt) || amt <= 0) return null;
     const acct = accounts.find((a) => a.id === accountId);
     if (!acct || amt <= acct.balance) return null;
@@ -169,8 +177,9 @@ export function TransactionFormModal({
   }, []);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const cleaned = e.target.value.replace(/[^0-9]/g, '');
-    setRawAmount(cleaned);
+    // Shared with the edit form so both accept the same characters (BUG-31).
+    setRawAmount(sanitizeAmountInput(e.target.value));
+    clearError('amount');
   };
 
   const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

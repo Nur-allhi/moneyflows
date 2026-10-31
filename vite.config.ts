@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -24,6 +25,13 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       open: false,
+    },
+    test: {
+      // Unit tests live in `src/`. Vitest's default `include` also matches
+      // `e2e/*.spec.ts`, which are Playwright specs — each one aborts with
+      // "Playwright Test did not expect test() to be called here", so the
+      // unit gate could never exit 0 (BUG-38).
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
     },
   };
 });

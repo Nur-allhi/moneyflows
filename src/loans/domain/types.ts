@@ -1,5 +1,13 @@
 export type LoanStatus = 'active' | 'settled';
 
+/**
+ * How one loan inside a stack is described — see `loanItemStatus()`.
+ *
+ * `repaid` is not a typo for "on schedule": it means the money is all back
+ * while the loan's own flag was never flipped to `settled`.
+ */
+export type LoanItemStatus = 'active' | 'repaid' | 'settled';
+
 export interface LoanReportFilter {
   borrowerAccountId?: string;
   startDate?: string;
@@ -55,7 +63,7 @@ export interface LoanItem {
   fundingSource: string;
   amount: number;
   recovered: number;
-  status: 'active' | 'on_track' | 'settled';
+  status: LoanItemStatus;
   date: string;
 }
 

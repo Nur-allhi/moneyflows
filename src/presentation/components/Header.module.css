@@ -603,8 +603,20 @@
     position: relative;
   }
 
-  .breadcrumb {
-    display: none;
+  /* M-02: mobile shows the subject as the header title; ellipsize long names
+     before the right-side pills start squeezing. */
+  .left {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .title {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

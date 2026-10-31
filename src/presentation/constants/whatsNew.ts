@@ -7,6 +7,35 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.0.0',
+    items: [
+      'Welcome to MoneyFlows 2.0 — the new app generation: a polished phone experience and fully-audited money math.',
+      'Your data, settings and backups stay exactly as they were — nothing to do on your side.',
+      'The app now works properly on phones: every screen has a working title, icon buttons are easy to tap, and a first-time guide renders cleanly.',
+      'Zero amounts no longer flash red — money is only red when you actually owe it.',
+      'Emoji are out everywhere — all status and row icons are now crisp app glyphs.',
+      'Ledger forms no longer nag you with size limits; limits only appear if you type too much.',
+    ],
+  },
+  {
+    version: '1.18.1',
+    items: [
+      'The group ledger\'s Expense tab now shows lending on desktop the same way it does on your phone.',
+      'A loan with nothing left to pay no longer shows up as active in the Loans list.',
+    ],
+  },
+  {
+    version: '1.18.0',
+    items: [
+      'The four dashboard cards now compare each figure with where it stood at the end of last month, so a bill paid from a bank no longer changes the Cash in Hand trend.',
+      'Editing a loan repayment now moves the loans it paid — and you can no longer edit it above what is still owed.',
+      'Changes you make to a loan are saved straight away, so they no longer disappear after a reload.',
+      'The Recycle Bin shows truthful totals and labels every item, including deleted ledgers.',
+      'Member ledgers, group PDF exports and member reports show the right figures: repayments no longer appear as money out, exports include every row, and a report closes where you ask it to.',
+      'Settings → Backup & Storage has a new Data Integrity check that reports problems and never changes your data.',
+    ],
+  },
+  {
     version: '1.17.3',
     items: [
       'Sign in again from the header cloud button when your Google session expires, without opening Settings.',
