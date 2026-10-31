@@ -85,11 +85,6 @@
   flex-wrap: wrap;
 }
 
-.filterRow > :first-child {
-  flex: 1 1 240px;
-  min-width: 0;
-}
-
 .sortPills {
   display: inline-flex;
   gap: 6px;

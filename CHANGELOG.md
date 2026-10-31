@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Placeholder
+### Fixed
+- Tags → Open ledger: the search box no longer rests as a squashed oval — it rests as a small circle and expands on hover, same as on every other ledger page.
 
 ## [2.0.0] - 2026-10-31
 
