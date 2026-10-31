@@ -2466,3 +2466,12 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Pushed `feature/mobile-refinements` (tip ef8a19b) to remote with upstream tracking; branch was previously local-only. No merge performed.
 ### Status
 - Branch is on remote at origin/feature/mobile-refinements. Merge to dev still awaits explicit user approval per 3.8/3.12.
+## Session 2026-10-31
+### Changes
+- Merged feature/mobile-refinements (34fe858, M-01..M-09) into beta_v2.0 with --no-ff as 2ae487d. Conflicts resolved: dashboard/sections.tsx (M-05 tone-based MetricValue + audit TrendLine combined), RecycleBin.tsx (per-kind lucide KIND_ICON map replaces DELETED_KIND emoji icons, audit tab structure kept), session_log.md (both blocks kept).
+- Version bump 1.18.1 -> 1.18.2 PATCH per docs/VERSIONING.md sec.2 table (UI fixes) in atomic commit 83d1dfe: package.json + whatsNew.ts + CHANGELOG [1.18.2]. Chosen PATCH after user gave no reply to the 2.0.0 question; flagged as user-overridable.
+- Gates on beta after merge: typecheck, scoped eslint --max-warnings 0, vitest 235/235, build - all green. Pushed origin/beta_v2.0.
+### Skill(s) Used
+- ui-ux-pro-max (conflict resolutions for icon/tone patterns)
+### Status
+- beta_v2.0 at 83d1dfe = dev-line mobile refinements + audit fixes, v1.18.2. master untouched. Next: Other Ledgers V2 when user says "next update".
