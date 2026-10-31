@@ -2486,3 +2486,11 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Merged beta_v2.0 (ada6677, v2.0.0) into dev with --no-ff as 63582c9 on the user call to test the app. Post-merge diff beta<->dev is empty (content-identical); typecheck + vitest 235/235 green. Pushed origin/dev (16b5306 -> 63582c9). AGENTS.md branch map updated.
 ### Status
 - dev and beta_v2.0 now the same code (v2.0.0). master stays v1.17.3 stable, untouched. User testing on dev; next work (Other Ledgers V2) continues on beta_v2.0 unless user says otherwise.
+## Session 2026-10-31 (BUG-48)
+### Changes
+- BUG-48 fixed (user-approved Option A): deleted the legacy `.filterRow > :first-child { flex: 1 1 240px }` from TagLedgerScreen.module.css; LedgerSearch now rests as its designed 30x30 circle on /tags and expands on hover like every other page. Same-commit updates: BUGS.md (fixed + resolved) + CHANGELOG Unreleased Fixed. Commit 040f4b8 on beta_v2.0, pushed. Scratch Playwright verified idle=30x30 circle / hover=180 capsule (deleted after run). Gates: typecheck / scoped lint / vitest 235 / build / detect_changes (1 CSS file, 0 processes) all green. NOTE: e2e seed-first-boot races its 15s expect at ~13s on this machine (BUG-44 family, pre-existing on cold dev compiles) - do the seed inline in future scratch specs.
+- Investigated with live dev server + MCP browser: app boots fine, splash typed wordmark ~10-13s, What's New v2.0.0 dialog appears once.
+### Skill(s) Used
+- ui-ux-pro-max (component geometry diagnosis)
+### Status
+- BUG-48 closed. Next: user continues UI review on beta_v2.0 / dev; Other Ledgers V2 on "next update".
