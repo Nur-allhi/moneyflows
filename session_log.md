@@ -2475,3 +2475,9 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - ui-ux-pro-max (conflict resolutions for icon/tone patterns)
 ### Status
 - beta_v2.0 at 83d1dfe = dev-line mobile refinements + audit fixes, v1.18.2. master untouched. Next: Other Ledgers V2 when user says "next update".
+## Session 2026-10-31 (v2.0 stamp)
+### Changes
+- Per user decision, beta_v2.0 line renumbered: the interim 1.18.2 release is retitled as v2.0.0 (same content, no second stacked release). Atomic commit c50fa8e: package.json, whatsNew.ts (2.0.0 entry + "nothing to do on your side" caveat), CHANGELOG [2.0.0] with no-migration note, AGENTS.md sec.5. All future updates on beta_v2.0 now number from 2.0.x.
+- Gates: typecheck + build green. Pushed origin/beta_v2.0.
+### Status
+- beta_v2.0 = v2.0.0 (M-01..M-09 mobile refinements + BUG-21..47 audit), tip c50fa8e. master stays on 1.17.x stable. Next: Other Ledgers V2 when user says "next update".
