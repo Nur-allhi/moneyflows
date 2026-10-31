@@ -2494,3 +2494,8 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - ui-ux-pro-max (component geometry diagnosis)
 ### Status
 - BUG-48 closed. Next: user continues UI review on beta_v2.0 / dev; Other Ledgers V2 on "next update".
+## Session 2026-10-31 (v2.0.1 release to dev)
+### Changes
+- Bumped 2.0.0 -> 2.0.1 PATCH (BUG-48 tags search shape) on beta_v2.0 as d115b33: package.json + whatsNew 2.0.1 entry + CHANGELOG [2.0.1]. Gates incl. full Playwright 31/0 green. Merged beta -> dev as c3d1550 (content-identical, user-approved), pushed both. AGENTS.md branch map updated.
+### Status
+- beta_v2.0 = dev = v2.0.1. master untouched at 1.17.3. Next: user testing; Other Ledgers V2 on "next update".
