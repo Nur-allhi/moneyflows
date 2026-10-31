@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.0.1',
+    items: [
+      'Small polish fix: the Tags page search box keeps its proper rounded shape at rest and expands on hover — same as on every other ledger page.',
+    ],
+  },
+  {
     version: '2.0.0',
     items: [
       'Welcome to MoneyFlows 2.0 — the new app generation: a polished phone experience and fully-audited money math.',
