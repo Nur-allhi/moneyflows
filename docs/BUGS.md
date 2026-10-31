@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-48: Tags page — idle LedgerSearch renders as an oval
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-10-31 (during: user manual UI review of the Tags page)
+- **Location:** `src/presentation/screens/TagLedgerScreen.module.css` (`.filterRow > :first-child`) vs `src/presentation/components/LedgerSearch.module.css` (`.wrap`)
+- **Description:** On `/tags`, the ledger search sits as a squashed **oval** when the mouse is elsewhere; hovering expands it to a proper capsule, then idle again = oval. Expected: the idle state is a **30×30 circle** (its designed collapsed pill), everywhere else (member profile, loans detail, group ledger, other-ledger detail: all other `LedgerSearch` users) shows a circle.
+- **Root Cause:** LedgerSearch's idle style is `width: 30px; height: 30px; border-radius: 50%` with a hover→180px expansion. The Tags screen's legacy flex rule `.filterRow > :first-child { flex: 1 1 240px; min-width: 0 }` was written for the old always-visible input and now forces LedgerSearch's base size to 240px (flex-basis beats width), so the idle geometry is 240×30 with `border-radius: 50%` — mathematically an ellipse, exactly the observed oval. Hover switches the component to `border-radius: 999px`, which is why it looks right only while hovered.
+- **Fix Approach:** Option A (user-approved): delete the obsolete stretch rule so LedgerSearch runs its own idle-circle/expand-on-hover behavior app-wide.
+- **Resolved:** 2026-10-31 on `beta_v2.0`. Measured via scratch Playwright: idle = exactly 30×30 with a clean circle radius (was 240×30 = ellipse), hover → 180×30 capsule; typecheck / scoped lint / vitest 235 / build green; `detect_changes` 1 changed file, 0 affected processes, risk low.
+
+---
+
 ## BUG-36: Unused loan-store methods, one with inverted semantics
 
 - **Status:** fixed

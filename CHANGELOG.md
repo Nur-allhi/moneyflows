@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [2.0.1] - 2026-10-31
+
+### Fixed
+- Tags → Open ledger: the search box no longer rests as a squashed oval — it rests as a small circle and expands on hover, same as on every other ledger page. (BUG-48)
+
 ## [2.0.0] - 2026-10-31
 
 > **Why the number jumped:** the mobile-refinement batch and the calculation audit together mark a new app generation, so this line starts at **2.0.0**. There is **no migration** — databases, settings and backups from any 1.x version open unchanged.
