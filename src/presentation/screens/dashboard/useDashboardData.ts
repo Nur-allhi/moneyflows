@@ -7,9 +7,8 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useSearchStore } from '../../stores/useSearchStore';
 import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import { matchesTx, matchesAccount } from '../../utils/search';
-
-const INCOME_TYPES = new Set(['income', 'loan_repayment', 'repay', 'loan_received']);
-const EXPENSE_TYPES = new Set(['expense', 'loan_issue', 'lend', 'loan_paidback']);
+import { sumIncomeExpense } from '../../../core/domain/transactionCategory';
+import { accountMovement, loanMovement, metricTrend } from './metricTrend';
 
 export function useDashboardData() {
   const { accounts, loading: acctLoading, error: acctError, fetchAccounts } = useAccountStore();
@@ -37,19 +36,26 @@ export function useDashboardData() {
   const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
   const thisMonthTxs = useMemo(() => transactions.filter((tx) => tx.date.startsWith(thisMonth)), [transactions, thisMonth]);
   const lastMonthTxs = useMemo(() => transactions.filter((tx) => tx.date.startsWith(lastMonth)), [transactions, lastMonth]);
-  const thisMonthIncome = useMemo(() => thisMonthTxs.filter((tx) => INCOME_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0), [thisMonthTxs]);
-  const thisMonthExpenses = useMemo(() => thisMonthTxs.filter((tx) => EXPENSE_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0), [thisMonthTxs]);
-  const thisMonthNet = thisMonthIncome - thisMonthExpenses;
-  const lastMonthNet = useMemo(() => {
-    const inc = lastMonthTxs.filter((tx) => INCOME_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
-    const exp = lastMonthTxs.filter((tx) => EXPENSE_TYPES.has(tx.type)).reduce((s, tx) => s + tx.amount, 0);
-    return inc - exp;
-  }, [lastMonthTxs]);
-  const prevAssets = totalAssets - thisMonthNet; const prevCash = cashInHand - thisMonthNet; const prevBanks = totalInBanks - lastMonthNet; const prevLoans = activeLoansOutstanding - lastMonthNet;
-  const assetsChange = prevAssets > 0 ? ((totalAssets - prevAssets) / prevAssets) * 100 : 0;
-  const cashChange = prevCash > 0 ? ((cashInHand - prevCash) / prevCash) * 100 : 0;
-  const banksChange = prevBanks > 0 ? ((totalInBanks - prevBanks) / prevBanks) * 100 : 0;
-  const loansChange = prevLoans > 0 ? ((activeLoansOutstanding - prevLoans) / prevLoans) * 100 : 0;
+  const thisMonthTotals = useMemo(() => sumIncomeExpense(thisMonthTxs), [thisMonthTxs]);
+  const thisMonthIncome = thisMonthTotals.income;
+  const thisMonthExpenses = thisMonthTotals.expense;
+  const thisMonthNet = thisMonthTotals.net;
+  const lastMonthNet = useMemo(() => sumIncomeExpense(lastMonthTxs).net, [lastMonthTxs]);
+  // BUG-21: one definition behind all four chips — each metric against its own
+  // value at the end of last month (current value minus the movement of its own
+  // accounts, or for loans of its own stock). Never a family-wide income/expense
+  // net, which used to shift baselines the metric never touched.
+  const cashAccountIds = useMemo(() => new Set(accounts.filter((a) => a.type === 'cash' || a.type === 'mobile_wallet').map((a) => a.id)), [accounts]);
+  const bankAccountIds = useMemo(() => new Set(accounts.filter((a) => a.type === 'bank' || a.type === 'savings' || a.type === 'business').map((a) => a.id)), [accounts]);
+  const assetAccountIds = useMemo(() => new Set(accounts.filter((a) => a.type !== 'counterparty').map((a) => a.id)), [accounts]);
+  const loansMoved = useMemo(() => loanMovement(thisMonthTxs), [thisMonthTxs]);
+  const cashTrend = useMemo(() => metricTrend(cashInHand, accountMovement(thisMonthTxs, cashAccountIds)), [cashInHand, thisMonthTxs, cashAccountIds]);
+  const banksTrend = useMemo(() => metricTrend(totalInBanks, accountMovement(thisMonthTxs, bankAccountIds)), [totalInBanks, thisMonthTxs, bankAccountIds]);
+  const assetsTrend = useMemo(() => {
+    const moved = accountMovement(thisMonthTxs, assetAccountIds) + (totalAssetsIncludeLoans ? loansMoved : 0);
+    return metricTrend(totalAssets, moved);
+  }, [totalAssets, thisMonthTxs, assetAccountIds, totalAssetsIncludeLoans, loansMoved]);
+  const loansTrend = useMemo(() => metricTrend(activeLoansOutstanding, loansMoved), [activeLoansOutstanding, loansMoved]);
   const accountsByMember = useMemo(() => {
     const map = new Map<string, typeof accounts>();
     for (const acct of accounts) { if (acct.type === 'counterparty') continue; const mid = acct.memberId ?? '__unassigned__'; if (!map.has(mid)) map.set(mid, []); map.get(mid)!.push(acct); }
@@ -82,6 +88,6 @@ export function useDashboardData() {
   const showMoreRecent = () => setRecentLimit((l) => l + dashboardTxLimit);
 
   return {
-    accounts, members, transactions, loanStacks, locale, currency, totalAssetsIncludeLoans, loading, error, internalMembers, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, activeLoanStacks, recentTxs, visibleRecentTxs, recentRemaining, showMoreRecent, thisMonth, lastMonth, thisMonthTxs, lastMonthTxs, thisMonthIncome, thisMonthExpenses, thisMonthNet, lastMonthNet, prevAssets, prevCash, prevBanks, prevLoans, assetsChange, cashChange, banksChange, loansChange, accountsByMember, filteredAccountsByMember, filteredRecentTxs, rawQuery, debouncedQuery, memberById,
+    accounts, members, transactions, loanStacks, locale, currency, totalAssetsIncludeLoans, loading, error, internalMembers, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, activeLoanStacks, recentTxs, visibleRecentTxs, recentRemaining, showMoreRecent, thisMonth, lastMonth, thisMonthTxs, lastMonthTxs, thisMonthIncome, thisMonthExpenses, thisMonthNet, lastMonthNet, cashTrend, banksTrend, assetsTrend, loansTrend, accountsByMember, filteredAccountsByMember, filteredRecentTxs, rawQuery, debouncedQuery, memberById,
   };
 }

@@ -1,6 +1,7 @@
 import type { Database as SqlJsDb } from 'sql.js';
 import type { Loan, LoanItem, LoanStack, LenderBreakdown } from '../domain/types';
 import { getStackDisplayName } from '../domain/loanDisplay';
+import { loanItemStatus, splitStack, stackIsSettled } from '../domain/loanStatus';
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -44,15 +45,52 @@ export function buildLenderBreakdown(loans: Loan[]): LenderBreakdown[] {
   return [...byLender.values()].sort((a, b) => b.outstanding - a.outstanding);
 }
 
+/**
+ * Lifetime totals for one borrower's stack — **every** loan, settled or not.
+ *
+ * BUG-27: these used to be computed over the active loans only, so a borrower who
+ * had fully repaid an older loan and then taken a new one showed ~0% progress next
+ * to the money left on the new loan. Progress has to read as
+ * (repaid / ever borrowed); that also keeps it consistent with `totalOutstanding`,
+ * which is the money left: remaining + repaid = lent. Pure for unit testing.
+ */
+export function stackTotals(loans: Loan[]): {
+  totalAmount: number;
+  totalRecovered: number;
+  progressPercent: number;
+} {
+  let totalAmount = 0;
+  let totalRecovered = 0;
+  for (const l of loans) {
+    totalAmount += l.principal;
+    totalRecovered += l.principal - Math.max(0, l.outstanding);
+  }
+  return {
+    totalAmount,
+    totalRecovered,
+    progressPercent: totalAmount > 0 ? Math.round((totalRecovered / totalAmount) * 100) : 0,
+  };
+}
+
 export class LoanDatabase {
   private db: SqlJsDb;
+  private onWrite?: () => void;
 
-  constructor(db: SqlJsDb) {
+  /**
+   * `onWrite` is called after every write, and exists because these statements go
+   * straight into the raw sql.js database: the owning service only persists what
+   * it knows is dirty, so a loan write that does not announce itself can be
+   * discarded on reload (BUG-46). `LoanService` wires it to
+   * `SQLiteDatabaseService.markDirty()`.
+   */
+  constructor(db: SqlJsDb, onWrite?: () => void) {
     this.db = db;
+    this.onWrite = onWrite;
   }
 
   private run(sql: string, params?: Record<string, string | number | null>): void {
     this.db.run(sql, params as Parameters<SqlJsDb['run']>[1]);
+    this.onWrite?.();
   }
 
   private query<T>(sql: string, params?: Record<string, string | number | null>): T[] {
@@ -161,48 +199,34 @@ export class LoanDatabase {
       allAcctIds.add(l.borrowerAccountId);
     }
 
-    const settledLoans: LoanItem[] = [];
-    const activeLoanItems: LoanItem[] = [];
-    let totalOutstanding = 0;
-
-    for (const l of loans) {
+    // BUG-45: the split asks "is anything still owed?" (loanStatus), not the raw
+    // flag — one definition for the count, the filters and the label.
+    const split = splitStack(loans, (l): LoanItem => {
       const outstanding = Math.max(0, l.outstanding);
-      const recovered = l.principal - outstanding;
-      let status: LoanItem['status'];
-      if (l.status === 'settled') {
-        status = 'settled';
-      } else if (outstanding <= 0) {
-        status = 'on_track';
-      } else {
-        status = 'active';
-      }
       const lenderAcct = accountMap.get(l.lenderAccountId);
-      const fundingName = lenderAcct?.name as string ?? l.lenderAccountId;
-      const item: LoanItem = {
-        id: l.id, fundingSource: fundingName,
-        amount: l.principal, recovered, status, date: l.createdAt,
+      return {
+        id: l.id,
+        fundingSource: lenderAcct?.name as string ?? l.lenderAccountId,
+        amount: l.principal,
+        recovered: l.principal - outstanding,
+        status: loanItemStatus(l),
+        date: l.createdAt,
       };
-      if (l.status === 'settled') {
-        settledLoans.push(item);
-      } else {
-        activeLoanItems.push(item);
-        totalOutstanding += outstanding;
-      }
-    }
+    });
 
-    const totalActiveAmount = activeLoanItems.reduce((s, i) => s + i.amount, 0);
-    const totalActiveRecovered = activeLoanItems.reduce((s, i) => s + i.recovered, 0);
-    const isSettled = loans.length > 0 && loans.every((l) => l.status === 'settled');
+    // Stack-wide (settled loans included) — see stackTotals (BUG-27).
+    const totals = stackTotals(loans);
+    const isSettled = stackIsSettled(loans);
 
     return {
       debtorId: borrowerId,
       debtorName: name,
-      totalOutstanding,
-      totalRecovered: totalActiveRecovered,
-      progressPercent: totalActiveAmount > 0 ? Math.round((totalActiveRecovered / totalActiveAmount) * 100) : 0,
-      settledCount: settledLoans.length,
-      activeCount: activeLoanItems.length,
-      loans: [...activeLoanItems, ...settledLoans],
+      totalOutstanding: split.totalOutstanding,
+      totalRecovered: totals.totalRecovered,
+      progressPercent: totals.progressPercent,
+      settledCount: split.finished.length,
+      activeCount: split.running.length,
+      loans: [...split.running, ...split.finished],
       lenderBreakdown: buildLenderBreakdown(loans),
       stackType,
       isSettled,

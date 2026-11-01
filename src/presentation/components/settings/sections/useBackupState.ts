@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { getDatabase } from '../../../../infrastructure/database/getDatabase';
 import { folderSync } from '../../../../infrastructure/database/FolderSync';
 import type { SnapshotInfo, StorageHealth } from '../../../../core/ports/IDatabaseService';
+import type { IntegrityReport } from '../../../../core/domain/transactionIntegrity';
 import { useSettingsStore } from '../../../stores/useSettingsStore';
 
 export interface BackupFile {
@@ -18,6 +19,7 @@ export function useBackupState() {
   const locale = useSettingsStore((s) => s.settings.locale);
   const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
   const [storageHealth, setStorageHealth] = useState<StorageHealth | null>(null);
+  const [integrity, setIntegrity] = useState<IntegrityReport | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [folderName, setFolderName] = useState<string | null>(null);
@@ -28,6 +30,13 @@ export function useBackupState() {
   const refresh = useCallback(async () => {
     setSnapshots(await getDatabase().getSnapshots());
     setStorageHealth(getDatabase().getStorageHealth());
+    try {
+      // BUG-41: read-only scan of stored transactions. Caught on purpose — a
+      // failed scan must never stop the rest of the backup card from loading.
+      setIntegrity(await getDatabase().findInvalidTransactions());
+    } catch {
+      setIntegrity(null);
+    }
     const handle = await folderSync.getFolderHandle();
     if (handle) {
       setFolderName(handle.name);
@@ -114,6 +123,7 @@ export function useBackupState() {
   return {
     snapshots,
     storageHealth,
+    integrity,
     restoreError,
     setRestoreError,
     restoring,

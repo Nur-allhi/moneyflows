@@ -3,6 +3,7 @@ import { Transaction } from '../../../core/domain/Transaction';
 import type { Loan } from '../../domain/types';
 import { LoanService } from '../LoanService';
 import { buildLenderBreakdown } from '../../infrastructure/LoanDatabase';
+import { OverpaymentError } from '../../domain/errors';
 import { SQLiteDatabaseService } from '../../../infrastructure/database/SQLiteDatabaseService';
 
 const BORROWER = 'acct-home-exp';
@@ -147,5 +148,53 @@ describe('LoanService.recordRepayment (targeted)', () => {
     await expect(service.recordRepayment(repayParams({ lenderAccountId: 'acct-unknown' }))).rejects.toThrow(
       'No active loans found for the selected lender',
     );
+  });
+});
+
+describe('LoanService.recordRepayment overpayment guard (BUG-23)', () => {
+  // Total outstanding across homeExpLoans() = 9230 + 1000 + 9000 + 10000 + 5000
+  const TOTAL_OUTSTANDING = 34230;
+
+  it('refuses a repayment bigger than everything still outstanding, and writes nothing', async () => {
+    const { service, saved, loanDb } = makeService(homeExpLoans());
+    const before = loanDb.loans.map((l) => ({ id: l.id, outstanding: l.outstanding, status: l.status }));
+
+    await expect(service.recordRepayment(repayParams({ amount: 40000 }))).rejects.toBeInstanceOf(OverpaymentError);
+
+    // No transaction booked, and every loan left exactly as it was — a refused
+    // repayment must not leave a half-applied allocation behind.
+    expect(saved).toHaveLength(0);
+    expect(loanDb.loans.map((l) => ({ id: l.id, outstanding: l.outstanding, status: l.status }))).toEqual(before);
+  });
+
+  it('reports the amount actually still owed so the message can name it', async () => {
+    // Settled / zero-outstanding loans must not inflate the ceiling.
+    const { service } = makeService([
+      ...homeExpLoans(),
+      loan(BRAC_A, 2000, 0, '2026-06-01T00:00:00.000Z', 'settled'),
+    ]);
+
+    await expect(service.recordRepayment(repayParams({ amount: 40000 }))).rejects.toMatchObject({
+      attempted: 40000,
+      maximum: TOTAL_OUTSTANDING,
+    });
+  });
+
+  it('still accepts paying off exactly everything outstanding', async () => {
+    const { service, saved, loanDb } = makeService(homeExpLoans());
+
+    await service.recordRepayment(repayParams({ amount: TOTAL_OUTSTANDING }));
+
+    expect(loanDb.loans.every((l) => l.outstanding === 0 && l.status === 'settled')).toBe(true);
+    expect(saved).toHaveLength(1);
+    expect(saved[0]?.amount).toBe(TOTAL_OUTSTANDING);
+  });
+
+  it('applies the guard to a targeted lender too, since the spillover limit is the same', async () => {
+    const { service, saved } = makeService(homeExpLoans());
+
+    await expect(service.recordRepayment(repayParams({ lenderAccountId: BRAC_B, amount: 40000 })))
+      .rejects.toBeInstanceOf(OverpaymentError);
+    expect(saved).toHaveLength(0);
   });
 });

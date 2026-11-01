@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { logger } from './Logger';
 
 interface Props { children: ReactNode; }
@@ -18,13 +19,11 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 24, color: 'var(--color-text)', background: 'var(--color-bg)', minHeight: '40vh', display: 'grid', placeItems: 'center' }}>
-          <div style={{ textAlign: 'center', maxWidth: 480 }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>⚠️</div>
-            <div style={{ fontWeight: 600, marginBottom: 8 }}>Something went wrong</div>
-            <div style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 16 }}>{this.state.msg}</div>
-            <button onClick={() => window.location.reload()} style={{ padding: '10px 18px', borderRadius: 8, background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-deep))', color: 'var(--color-text-on-primary)', border: 'none', cursor: 'pointer' }}>Reload</button>
-          </div>
+        <div className="error-state">
+          <div className="error-state-icon"><AlertTriangle size={32} strokeWidth={1.8} aria-hidden="true" /></div>
+          <div className="error-state-title">Something went wrong</div>
+          <div className="empty-state-text">{this.state.msg}</div>
+          <button className="error-state-btn" onClick={() => window.location.reload()}>Reload</button>
         </div>
       );
     }

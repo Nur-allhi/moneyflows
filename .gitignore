@@ -39,4 +39,4 @@ db_b64.txt
 DemoDB/
 
 # Misc debug artifacts
-dashboard
+/dashboard

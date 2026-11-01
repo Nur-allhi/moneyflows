@@ -235,6 +235,129 @@
   color: var(--color-text-secondary);
   font-size: var(--text-xl);
 }
+/* M-04: composed mobile empty state — icon + hint + one primary CTA. */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 56px 24px;
+}
+.emptyIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklch, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+}
+.emptyTitle { font-size: var(--text-xl, 18px); font-weight: 700; color: var(--color-text); }
+.emptyHint { font-size: var(--text-sm); color: var(--color-text-secondary); max-width: 300px; line-height: 1.5; }
+.emptyCta {
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.emptyCta:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
+.emptyCta:active { transform: scale(0.98); }
+/* M-04/M-06: anchored mobile action bar — sits between the hero card and the
+   list, right-aligned; never floats mid-screen. */
+.mobileToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0 16px;
+}
+.mobileAddBtn {
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border: none;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.mobileAddIcon { display: flex; }
+.mobileAddBtn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
+.mobileAddBtn:active { transform: scale(0.98); }
+/* M-06: 44x44 touch targets for icon-only actions. */
+.iconBtnMobile {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  transition: var(--transition-fast);
+}
+.iconBtnMobile:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.iconBtnMobile:active { transform: scale(0.92); }
+.iconBtnDanger:hover {
+  color: var(--color-expense);
+  border-color: oklch(62% 0.22 25 / 0.28);
+  background: oklch(62% 0.22 25 / 0.12);
+}
+/* Sentinel for infinite-scroll observation (no inline styles). */
+.sentinel { height: 1px; }
+/* Delete confirm copy + actions (Modal + BottomSheet) — token-based. */
+.sheetDesc {
+  text-align: center;
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+  margin: 12px 0;
+}
+.sheetBtnRow {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0 4px;
+}
+.sheetCancel {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 500 var(--text-md) var(--font-display);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.sheetCancel:active { transform: scale(0.98); }
+.sheetDelete {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-coral);
+  color: var(--color-text-on-primary);
+  font: 500 var(--text-md) var(--font-display);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.sheetDelete:active { transform: scale(0.98); }
 .heroCard {
   display: none;
 }

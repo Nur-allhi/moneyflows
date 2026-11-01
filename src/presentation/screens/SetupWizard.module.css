@@ -1,7 +1,12 @@
+/* M-08: `safe center` — card stays vertically centered when it fits the
+   viewport, but falls back to top-aligned (scrollable, nothing clipped)
+   for taller steps like the "How it works" feature list. */
 .page {
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  align-items: center;
   padding: 24px 16px;
   background: radial-gradient(1200px 600px at 80% -10%, color-mix(in oklch, var(--color-primary) 12%, transparent), transparent), var(--color-bg);
 }
@@ -16,31 +21,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
 }
-.dots { display: flex; gap: 6px; }
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background: color-mix(in oklch, var(--color-wash) 18%, transparent);
-  transition: background var(--transition-fast), width var(--transition-fast);
-}
-.dotActive { background: var(--color-primary); width: 22px; }
 .skip {
+  flex-shrink: 0;
   background: none;
   border: none;
   color: var(--color-text-secondary);
   font-size: 13px;
   cursor: pointer;
+  min-height: 44px;
 }
 .skip:hover { color: var(--color-text); }
 .progressWrap {
+  flex: 1;
   height: 3px;
   border-radius: 9999px;
   background: color-mix(in oklch, var(--color-wash) 8%, transparent);
   overflow: hidden;
 }
 .progressFill {
+  width: var(--fill-width, 0%);
   height: 100%;
   background: linear-gradient(90deg, var(--color-primary), oklch(65% 0.15 170));
   transition: width 0.35s ease;
@@ -89,6 +90,9 @@
 }
 .illus { display: flex; gap: 8px; justify-content: center; }
 .illusCard {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 10px;
   border-radius: 12px;
   background: var(--color-surface);
@@ -141,7 +145,7 @@
   gap: 6px;
   text-align: center;
 }
-.cardIcon { font-size: 20px; }
+.cardIcon { display: flex; color: var(--color-text-secondary); }
 .cardTitle { font-size: 12px; font-weight: 700; color: var(--color-text); }
 .cardDesc { font-size: 11px; color: var(--color-text-secondary); line-height: 1.3; }
 .actions { display: flex; gap: 8px; justify-content: space-between; margin-top: 4px; }

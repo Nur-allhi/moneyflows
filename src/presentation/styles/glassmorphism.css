@@ -129,7 +129,11 @@
 }
 
 .empty-state-icon {
-  font-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   opacity: 0.4;
 }
 
@@ -148,9 +152,32 @@
 }
 
 .error-state-icon {
-  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   opacity: 0.5;
 }
+
+.error-state-title {
+  font-weight: 600;
+}
+
+/* ErrorBoundary reload action */
+.error-state-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.error-state-btn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
+.error-state-btn:active { transform: scale(0.98); }
 
 .error-state-text {
   font-size: 14px;

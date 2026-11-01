@@ -12,6 +12,8 @@ import { shortDate, MONTHS } from '../constants/dates';
 import { Highlight } from '../utils/highlight';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { matchesTx } from '../utils/search';
+import { withRunningBalances } from '../utils/runningBalance';
+import { matchesLedgerTab, type LedgerTab } from '../constants/ledgerTabs';
 import styles from './GroupLedgerScreen.module.css';
 
 const TX_TABS = [
@@ -103,8 +105,6 @@ export function GroupLedgerScreen() {
     [searchFilteredAll, displayLimit, sortOrder],
   );
 
-  const searchFilteredTxs = displayedTxs;
-
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el || displayLimit >= searchFilteredAll.length || loadingMore) return;
@@ -126,11 +126,8 @@ export function GroupLedgerScreen() {
 
   const mobileFilteredTxs = useMemo(() => {
     let txs = [...displayedTxs];
-    if (typeFilter !== 'all') {
-      const map: Record<string, string[]> = { income: ['income'], expense: ['expense', 'lend', 'loan_issue'], transfer: ['transfer'], loan: ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'] };
-      const allowed = map[typeFilter] ?? [];
-      txs = txs.filter((tx) => allowed.includes(tx.type));
-    }
+    // BUG-42: the same tab rule the desktop table uses — one definition, not one per layout.
+    if (typeFilter !== 'all') txs = txs.filter((tx) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
     return txs.sort((a, b) => (sortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
   }, [displayedTxs, typeFilter, sortOrder]);
 
@@ -180,22 +177,28 @@ export function GroupLedgerScreen() {
   }, [accountMap]);
 
   const ledgerRows = useMemo((): LedgerRow[] => {
-    const netChange = searchFilteredTxs.reduce((sum, tx) => {
-      if (isGroupCredit(tx) && !isGroupDebit(tx)) return sum + tx.amount;
-      if (isGroupDebit(tx) && !isGroupCredit(tx)) return sum - tx.amount;
-      return sum;
-    }, 0);
-    let running = totalBalance - netChange;
+    // Only movements into or out of the group change its balance; an internal
+    // transfer washes out. The same walk feeds the PDF (BUG-28).
+    const balanceRows = withRunningBalances(displayedTxs, (tx) => {
+      if (isGroupCredit(tx) && !isGroupDebit(tx)) return tx.amount;
+      if (isGroupDebit(tx) && !isGroupCredit(tx)) return -tx.amount;
+      return 0;
+    }, totalBalance);
 
     const isLoanType = (t: string) => ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'].includes(t);
 
-    const allRows = displayedTxs.map((tx) => {
+    // BUG-42: the tab decides which rows are listed, through the shared rule; the
+    // row's `type` below is only how it is painted. Filtering here (before the
+    // balance walk's output is mapped) keeps the running balances computed over
+    // the whole ledger, which is what the column means.
+    const shownRows = typeFilter === 'all'
+      ? balanceRows
+      : balanceRows.filter(({ item: tx }) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
+
+    const allRows = shownRows.map(({ item: tx, balance }) => {
       const credit = isGroupCredit(tx) && !isGroupDebit(tx);
       const debit = isGroupDebit(tx) && !isGroupCredit(tx);
       const internal = isGroupDebit(tx) && isGroupCredit(tx);
-
-      if (credit) running += tx.amount;
-      else if (debit) running -= tx.amount;
 
       return {
         id: tx.id,
@@ -204,20 +207,15 @@ export function GroupLedgerScreen() {
         account: internal ? `(internal) ${resolveAccountDisplay(tx)}` : resolveAccountDisplay(tx),
         debit: credit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
         credit: debit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
-        balance: formatAmountParts(running, locale, currency).amount,
+        balance: formatAmountParts(balance, locale, currency).amount,
         currencyLabel: currency,
         type: isLoanType(tx.type) ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer',
       };
     });
 
     const result = sortOrder === 'desc' ? allRows.reverse() : allRows;
-
-    if (typeFilter === 'all') return result;
-    return result.filter((r) => {
-      if (typeFilter === 'loan') return r.type === 'loan';
-      return r.type === typeFilter;
-    });
-  }, [searchFilteredTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay, displayedTxs, sortOrder]);
+    return result;
+  }, [displayedTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay, sortOrder]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     const tx = txs.find((t) => t.id === row.id);
@@ -227,54 +225,58 @@ export function GroupLedgerScreen() {
   const handleDownloadPdf = useCallback(async () => {
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
+
+    // BUG-28: the statement covers the whole ledger matching the search, not
+    // the page slice rendered on screen.
+    const exportRows = withRunningBalances(searchFilteredAll, (tx) => {
+      if (isGroupCredit(tx) && !isGroupDebit(tx)) return tx.amount;
+      if (isGroupDebit(tx) && !isGroupCredit(tx)) return -tx.amount;
+      return 0;
+    }, totalBalance);
+
+    if (exportRows.length === 0) return;
+
+    const netChange = exportRows.reduce((sum, row) => sum + row.delta, 0);
+    const openingBalance = totalBalance - netChange;
+
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     doc.setFontSize(16);
     doc.text(groupName, pageW / 2, 20, { align: 'center' });
     doc.setFontSize(10);
-    const firstTx = searchFilteredTxs[0];
-    const lastTx = searchFilteredTxs[searchFilteredTxs.length - 1];
+    const firstTx = searchFilteredAll[0];
+    const lastTx = searchFilteredAll[searchFilteredAll.length - 1];
     const dateRange = firstTx && lastTx
       ? `${shortDate(firstTx.date, locale)} - ${shortDate(lastTx.date, locale)}`
       : '';
     if (dateRange) doc.text(`Period: ${dateRange}`, 14, 28);
     doc.text(`Accounts: ${accountIds.length}`, 14, 36);
 
-    const isCredit = (tx: Transaction) => accountSet.has(tx.destAccount ?? '') && !accountSet.has(tx.sourceAccount ?? '');
     const pdfRows: { date: string; type: string; desc: string; debit: string; credit: string; balance: string }[] = [];
-
-    const netChange = searchFilteredTxs.reduce((sum, tx) => {
-      if (isCredit(tx)) return sum + tx.amount;
-      if (accountSet.has(tx.sourceAccount ?? '')) return sum - tx.amount;
-      return sum;
-    }, 0);
-    let running = totalBalance - netChange;
 
     let totalDebit = 0;
     let totalCredit = 0;
 
-    for (const tx of searchFilteredTxs) {
-      const credit = isCredit(tx);
-      const debit = accountSet.has(tx.sourceAccount ?? '') && !accountSet.has(tx.destAccount ?? '');
-      if (credit) { running += tx.amount; totalCredit += tx.amount; }
-      else if (debit) { running -= tx.amount; totalDebit += tx.amount; }
+    for (const { item: tx, balance } of exportRows) {
+      const credit = isGroupCredit(tx) && !isGroupDebit(tx);
+      const debit = isGroupDebit(tx) && !isGroupCredit(tx);
+      if (credit) totalCredit += tx.amount;
+      else if (debit) totalDebit += tx.amount;
       pdfRows.push({
         date: shortDate(tx.date, locale),
         type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
         desc: tx.description,
         debit: credit ? '' : formatAmount(tx.amount, locale, currency),
         credit: debit ? '' : formatAmount(tx.amount, locale, currency),
-        balance: formatAmount(running, locale, currency),
+        balance: formatAmount(balance, locale, currency),
       });
     }
-
-    if (pdfRows.length === 0) return;
 
     const rightX = pageW - 14;
     const gap = 3;
     doc.setFontSize(10);
 
-    const obVal = formatAmount(totalBalance - netChange, locale, currency);
+    const obVal = formatAmount(openingBalance, locale, currency);
     const obValW = doc.getTextWidth(obVal);
     doc.setFont('helvetica', 'bold');
     doc.text('Opening Balance:', rightX - obValW - gap, 28, { align: 'right' });
@@ -313,14 +315,13 @@ export function GroupLedgerScreen() {
 
     doc.text('MoneyFlows \u2014 System generated report', pageW / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
     doc.save(`${groupName.replace(/\s+/g, '_')}_ledger.pdf`);
-  }, [groupName, searchFilteredTxs, accountIds.length, accountSet, totalBalance, locale, currency]);
+  }, [groupName, searchFilteredAll, accountIds.length, totalBalance, locale, currency, isGroupCredit, isGroupDebit]);
 
   if (loading) return <div className={styles.loading}>Loading...</div>;
 
-  const typeRows = typeFilter === 'all' ? searchFilteredTxs : searchFilteredTxs.filter((tx) => {
-    if (typeFilter === 'loan') return ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'].includes(tx.type);
-    return tx.type === typeFilter;
-  });
+  const typeRows = typeFilter === 'all'
+    ? displayedTxs
+    : displayedTxs.filter((tx) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
 
   return (
     <div className={styles.container}>

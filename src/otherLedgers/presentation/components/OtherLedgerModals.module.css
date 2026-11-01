@@ -1,0 +1,138 @@
+/**
+ * M-07: shared styles for the Other Ledgers modals (CreateLedger, RenameLedger,
+ * AddEntry). Extracted from inline `style={{}}` (DESIGN_IDENTITY §2/§14).
+ * Form-control visuals intentionally reuse TransactionFormModal.module.css
+ * (`txStyles) field classes for cross-modal consistency; only composites that
+ * have no tx counterpart live here.
+ */
+
+/* Form container + field wrappers */
+.form { display: flex; flex-direction: column; gap: 12px; }
+
+/* Segmented toggle pills (Member/Other person, Debit/Credit) */
+.toggleGroup { display: flex; gap: 8px; }
+.toggleBtn {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.toggleBtn:active { transform: scale(0.98); }
+.toggleOn {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+.toggleOn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+/* Multi-line description field (textarea variant of txStyles.inputField) */
+.textareaField {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text);
+  font: 400 14px/1.4 var(--font-body);
+  min-height: 88px;
+  resize: vertical;
+  transition: border-color var(--transition-fast);
+}
+.textareaField:hover { border-color: var(--color-primary); }
+.textareaField:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+/* Validation surface */
+.errorText { color: var(--color-expense); font-size: var(--text-sm); }
+
+/* Danger-outline "Delete entry" action (edit mode) */
+.entryDeleteBtn {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid oklch(62% 0.22 25 / 0.28);
+  background: oklch(62% 0.22 25 / 0.10);
+  color: var(--color-expense);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition-fast);
+}
+.entryDeleteBtn:hover { background: oklch(62% 0.22 25 / 0.18); }
+.entryDeleteBtn:active { transform: scale(0.98); }
+
+/* BottomSheet footer actions */
+.sheetActions { display: flex; gap: 8px; margin-top: 12px; }
+.sheetBtn {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+.sheetBtnGhost {
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+}
+.sheetBtnGhost:active { transform: scale(0.98); }
+.sheetBtnPrimary {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+.sheetBtnPrimary:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
+.sheetBtnPrimary:active { transform: scale(0.98); }
+
+/* Delete-confirmation copy + actions (Modal + BottomSheet variants) */
+.confirmDesc {
+  text-align: center;
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+  margin: 12px 0;
+}
+.confirmRow { display: flex; gap: 10px; padding: 8px 0 4px; }
+.confirmBtn {
+  flex: 1;
+  min-height: 44px;
+  padding: 14px;
+  border-radius: var(--radius-lg, 12px);
+  font: 500 var(--text-md) var(--font-display);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.confirmGhost {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.confirmGhost:active { transform: scale(0.98); }
+.confirmDanger {
+  border: none;
+  background: var(--color-coral);
+  color: var(--color-text-on-primary);
+}
+.confirmDanger:hover { filter: brightness(1.08); }
+.confirmDanger:active { transform: scale(0.98); }
