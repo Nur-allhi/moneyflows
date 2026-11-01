@@ -2499,3 +2499,12 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Bumped 2.0.0 -> 2.0.1 PATCH (BUG-48 tags search shape) on beta_v2.0 as d115b33: package.json + whatsNew 2.0.1 entry + CHANGELOG [2.0.1]. Gates incl. full Playwright 31/0 green. Merged beta -> dev as c3d1550 (content-identical, user-approved), pushed both. AGENTS.md branch map updated.
 ### Status
 - beta_v2.0 = dev = v2.0.1. master untouched at 1.17.3. Next: user testing; Other Ledgers V2 on "next update".
+## Session 2026-11-01 (master release + T-174 tag sorting)
+### Changes
+- Merged dev (c3d1550, v2.0.1) into master as b241159 on the user call and pushed; vitest 235/235 green on merged master. Docs commit 2127575 on dev (branch map: master = v2.0.1).
+- T-174 (user choice Option A over B/C): tag-card grid on /tags now sortable — Most used (default, unchanged), Name A-Z, Z-A (localeCompare + count-desc tie-break). Pills reuse the detail ledger's sortPill styles; rendered only when >1 tag; new .tagSortRow margin class only, tokens only. Gates: typecheck / scoped eslint --max-warnings 0 / vitest 235 / build / detect_changes (TagLedgerScreen + docs only, 0 affected processes, low risk). Feature commit 8322c74 on beta_v2.0.
+- Version bump 2.0.1 -> 2.1.0 MINOR per VERSIONING.md sec.2 (feat: commit) in atomic commit dbf4c47: package.json + whatsNew.ts 2.1.0 entry + CHANGELOG [2.1.0] Added + AGENTS sec.5 T-174 note. Pushed origin/beta_v2.0.
+### Skill(s) Used
+- senior-frontend
+### Status
+- beta_v2.0 at dbf4c47 = v2.1.0 (not yet on dev/master — sweep at next merge). master = v2.0.1. Next: Other Ledgers V2 (T-119..T-123) when user says "next update".
