@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.1.0',
+    items: [
+      'New: the Tags page card grid can now be sorted — most used (as before), name A-Z, or Z-A — using the same pill control as the per-tag ledger.',
+    ],
+  },
+  {
     version: '2.0.1',
     items: [
       'Small polish fix: the Tags page search box keeps its proper rounded shape at rest and expands on hover — same as on every other ledger page.',

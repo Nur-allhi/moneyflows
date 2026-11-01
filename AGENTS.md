@@ -236,7 +236,9 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **Phase 16: Theme (Light/Dark) + Accent Color (A1+B1)** — **merged to `dev`** (+ Phase 17 background presets, BUG-4/BUG-5 fixed, + Phase 18 type overhaul: Manrope + Inter-tnum + Anek Bangla self-hosted). Branch `feature/theme-accent` kept (next: TBD).
 
-**Phase 19 safety:** Google Drive sync workstream (T-145..T-153 + plan) lives on long-lived branch `google_signin_backup` (= `dev` + `feature/online-sync-drive` merge `881b249`, pushed). `master` carries releases only and is now at **v1.17.3** (`d4936f6`), without sync. Next sync work merges `dev → google_signin_backup` on user call; current work continues on `beta_v2.0` (below).
+**Phase 19 safety:** Google Drive sync workstream (T-145..T-153 + plan) lives on long-lived branch `google_signin_backup` (= `dev` + `feature/online-sync-drive` merge `881b249`, pushed). `master` carries releases only and is now at **v2.0.1** (`b241159`), without sync. Next sync work merges `dev → google_signin_backup` on user call; current work continues on `beta_v2.0` (below).
+
+**T-174 (2026-11-01): tag-overview sorting** — card grid on `/tags` gets a **Most used / Name A–Z / Z–A** pill group (default unchanged); alphabetical sorts use `localeCompare` with a count-desc tie-break, and the pills reuse the detail ledger's `sortPill` styles, shown when more than one tag exists. `feat:` → **MINOR bump to 2.1.0** on `beta_v2.0` per `VERSIONING.md` §2→§3 (T-174 ticket in TICKETS.md; feature commit `8322c74`, release commit same session).
 
 **Branch map (2026-10-31):** `master` = releases only, `d4936f6` = merge of `dev`, v1.17.3 (stable, **without** 2.0 work). `dev` = `c3d1550` = merge of `beta_v2.0` — content-identical to beta tip **v2.0.1** (audit + M-01..M-09 + BUG-48 + the v2.0.0 README rewrite) for testing. `beta_v2.0` = `d115b33` (v2.0.1, all future updates number from 2.0.x). `fix/calculation-audit` = kept at `5a4904c` (merged).
 
