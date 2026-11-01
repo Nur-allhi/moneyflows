@@ -2521,3 +2521,5 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend (T-174 in-session carry), none for merges
 ### Status
 - master = dev = beta_v2.0 content at v2.1.0 (463652e / 634426b / a28d252). Next: Other Ledgers V2 (T-119..T-123) when user says "next update".
+### Follow-up 2026-11-01 (docs): VERSIONING.md retargeted to the v2.x stable line
+- Per user call: stable line is v2.x with massive changes behind (v2.0.0 stamped 2026-10-31). Added "Stable line" note; sec.1 table examples now cite v2.x cases (MINOR 2.x.0 = T-174 v2.1.0, PATCH 2.0.x = BUG-48 v2.0.1, MAJOR stays hypothetical); sec.7 replaced the 1.x examples with the 2.x case law (2.0.0 renumber = not a second bump, 2.0.1 PATCH, 2.1.0 single-feat MINOR) and archives pre-2.x cases to git history; sec.4 checklist Playwright count corrected 4/4 -> 31/0; sec.6 whatsNew-guardrail examples updated 1.x -> 2.x. No version bump (docs only). Committed on dev.
