@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
+import type { Transaction } from '../../core/domain/Transaction';
 import type { OtherLedger, OtherLedgerEntry } from '../domain/types';
 
 function nowIso(): string {
@@ -155,6 +156,48 @@ export class OtherLedgerService {
     if (!e) throw new Error('Entry not found');
     await this.db.softDeleteOtherLedgerEntry(id);
     await this.recomputeBalances(e.ledgerId);
+  }
+
+  /**
+   * T-120: builds the ledger row that mirrors a real transaction and writes both
+   * rows atomically (db.saveTransactionWithLedgerEntry). Side defaults come from
+   * the wizard (expense → credit, income → debit), but any side is legal.
+   */
+  async createLinkedEntryFromTransaction(params: {
+    tx: Transaction;
+    ledgerId: string;
+    side: 'debit' | 'credit';
+  }): Promise<OtherLedgerEntry> {
+    const ledger = await this.db.getOtherLedgerById(params.ledgerId);
+    if (!ledger || ledger.deletedAt) throw new Error('Ledger not found');
+    const desc = params.tx.description.trim();
+    if (desc.length < 1 || desc.length > 200) throw new Error('Description must be 1–200 characters');
+    const date = params.tx.date.slice(0, 10);
+    if (!date || isNaN(Date.parse(date))) throw new Error('Valid date is required');
+    if (date < ledger.startingDate) throw new Error('Date cannot be before ledger starting date');
+    if (!(params.tx.amount > 0)) throw new Error('A posted amount must be > 0');
+    // Append-at-end balance; the walk below corrects it if the tx date lands mid-history.
+    const existing = sortOtherEntries(await this.db.getOtherLedgerEntries(params.ledgerId));
+    const sortedBal = computeOtherRunningBalances(existing, ledger.openingBalance);
+    const lastBal = existing.length > 0 ? (sortedBal.get(existing[existing.length - 1]!.id) ?? ledger.openingBalance) : ledger.openingBalance;
+    const now = nowIso();
+    const entry: OtherLedgerEntry = {
+      id: uuidv4(),
+      ledgerId: params.ledgerId,
+      date,
+      description: desc,
+      debit: params.side === 'debit' ? params.tx.amount : 0,
+      credit: params.side === 'credit' ? params.tx.amount : 0,
+      balance: lastBal + (params.side === 'credit' ? params.tx.amount : -params.tx.amount),
+      linkedTransactionId: params.tx.id,
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    };
+    await this.db.saveTransactionWithLedgerEntry(params.tx, entry);
+    await this.recomputeBalances(params.ledgerId);
+    const saved = await this.db.getOtherLedgerEntryById(entry.id);
+    return saved ?? entry;
   }
 
   async recomputeBalances(ledgerId: string): Promise<void> {

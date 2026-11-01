@@ -21,9 +21,9 @@ export function useTxSubmit(params: {
   onClose: () => void; setClosing: (v: boolean) => void;
   setDestination: (v: string) => void; setShowAddCp: (v: boolean) => void; setNewCpName: (v: string) => void; newCpName: string;
   selectedLenderId?: string; lenderChoiceActive?: boolean;
-  ledgerOn?: boolean; ledgerId?: string;
+  ledgerOn?: boolean; ledgerId?: string; ledgerSide?: 'debit' | 'credit';
 }) {
-  const { tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName, accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName, selectedLenderId, lenderChoiceActive, ledgerOn = false, ledgerId = '' } = params;
+  const { tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName, accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName, selectedLenderId, lenderChoiceActive, ledgerOn = false, ledgerId = '', ledgerSide = 'credit' } = params;
   const { addTransaction } = useTransactionStore();
   const { createLoan, recordRepayment, createCounterparty, fetchLoanStacks } = useLoanStore();
   const { fetchAccounts } = useAccountStore();
@@ -104,7 +104,13 @@ export function useTxSubmit(params: {
     const dateTime = new Date(Number(y), Number(m) - 1, Number(d), now.getHours(), now.getMinutes(), now.getSeconds()).toISOString();
     const cleanDesc = description.trim(); const capitalizedDesc = cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1);
     const tx = new Transaction(uuidv4(), type, capitalizedDesc, amount, txMemberId, dateTime, src, dst, debtorId, undefined, tagName.trim() ? { tags: [tagName.trim()] } : {});
-    await addTransaction(tx);
+    // Dual-post: only the plain ledger tabs reach this line (loan returns above),
+    // so the checked toggle is the only gate — a loan is its own master data and
+    // never mirrors into an Other Ledger.
+    const ledgerLink = ledgerOn && ledgerId
+      ? { ledgerId, side: ledgerSide as 'debit' | 'credit' }
+      : undefined;
+    await addTransaction(tx, ledgerLink);
     // addTransaction rolls back and records the reason instead of throwing, so
     // read it back — otherwise the form closes on a save the database refused
     // and the reason is never seen (BUG-24).

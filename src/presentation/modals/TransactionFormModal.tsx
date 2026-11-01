@@ -213,7 +213,7 @@ export function TransactionFormModal({
     tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName,
     accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName,
     selectedLenderId, lenderChoiceActive: showLenderChoice,
-    ledgerOn, ledgerId,
+    ledgerOn, ledgerId, ledgerSide,
   });
 
   const handleLedgerToggle = () => {
