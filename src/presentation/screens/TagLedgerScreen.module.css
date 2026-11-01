@@ -108,6 +108,10 @@
   color: var(--color-text-on-primary);
 }
 
+.tagSortRow {
+  margin: 18px 0 12px;
+}
+
 .empty {
   color: var(--color-text-secondary, #94a3b8);
   font-size: var(--text-base);

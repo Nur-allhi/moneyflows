@@ -236,9 +236,11 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **Phase 16: Theme (Light/Dark) + Accent Color (A1+B1)** — **merged to `dev`** (+ Phase 17 background presets, BUG-4/BUG-5 fixed, + Phase 18 type overhaul: Manrope + Inter-tnum + Anek Bangla self-hosted). Branch `feature/theme-accent` kept (next: TBD).
 
-**Phase 19 safety:** Google Drive sync workstream (T-145..T-153 + plan) lives on long-lived branch `google_signin_backup` (= `dev` + `feature/online-sync-drive` merge `881b249`, pushed). `master` carries releases only and is now at **v1.17.3** (`d4936f6`), without sync. Next sync work merges `dev → google_signin_backup` on user call; current work continues on `beta_v2.0` (below).
+**Phase 19 safety:** Google Drive sync workstream (T-145..T-153 + plan) lives on long-lived branch `google_signin_backup` (= `dev` + `feature/online-sync-drive` merge `881b249`, pushed). `master` carries releases only and is now at **v2.0.1** (`b241159`), without sync. Next sync work merges `dev → google_signin_backup` on user call; current work continues on `beta_v2.0` (below).
 
-**Branch map (2026-10-31):** `master` = releases only, `d4936f6` = merge of `dev`, v1.17.3 (stable, **without** 2.0 work). `dev` = `3a7c39d` = merge of `beta_v2.0` — content-identical to beta tip, carries the audit + M-01..M-09 + the v2.0.0 README rewrite for testing. `beta_v2.0` = `567c8f4` (v2.0.0, all future updates number from 2.0.x). `fix/calculation-audit` = kept at `5a4904c` (merged).
+**T-174 (2026-11-01): tag-overview sorting** — card grid on `/tags` gets a **Most used / Name A–Z / Z–A** pill group (default unchanged); alphabetical sorts use `localeCompare` with a count-desc tie-break, and the pills reuse the detail ledger's `sortPill` styles, shown when more than one tag exists. `feat:` → **MINOR bump to 2.1.0** on `beta_v2.0` per `VERSIONING.md` §2→§3 (T-174 ticket in TICKETS.md; feature commit `8322c74`, release commit `dbf4c47`, session log `a28d252`).
+
+**Branch map (2026-11-01):** `master` = releases only, `b241159` = merge of `dev`, **v2.0.1** — calculation audit (BUG-21..BUG-47), M-01..M-09 mobile refinements, BUG-48 (v2.0.1), v2.0.0 README rewrite; 235 unit tests green at merge. `beta_v2.0` = `a28d252` (**v2.1.0** — T-174 tag sorting; all future updates number from 2.0.x). `dev` = this merge (content-identical to beta tip v2.1.0). `fix/calculation-audit` = kept at `5a4904c` (merged).
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 

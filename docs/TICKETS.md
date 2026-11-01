@@ -515,6 +515,16 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 3. Full gates green.
 **Acceptance:** add a transaction → ring spins without any tap; tap → spins → completes; error → warn state; guests see nothing.
 
+### T-174 - Tag overview sorting (card grid)
+**Skill:** `senior-frontend`
+**Effort:** S
+**File(s):** `src/presentation/screens/TagLedgerScreen.tsx`, `TagLedgerScreen.module.css`
+**Content:**
+1. Overview page `/tags` renders the card grid hard-locked to "most transactions first" (`tagCounts` sort). Add a sort state (`most` default / `az` / `za`) and the same pill group the detail ledger already uses (`sortPills`/`sortPill`/`sortPillActive`), rendered under the create row when there is more than one tag.
+2. Alpha sorts use plain `localeCompare` (repo precedent, LoansScreen `'alpha'`, GroupsListScreen) with count-desc tie-break; count ties keep existing order.
+3. `feat:` commit → MINOR bump 2.0.1 → 2.1.0 per VERSIONING.md §2→§3 (package.json + whatsNew.ts + CHANGELOG + AGENTS) in the release commit.
+**Acceptance:** /tags cards can be ordered alphabetically both ways; default stays most-used; no visual drift (tokens only, pill pattern reused); gates green.
+
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 
