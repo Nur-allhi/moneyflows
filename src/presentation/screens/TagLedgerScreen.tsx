@@ -58,6 +58,7 @@ export function TagLedgerScreen() {
   const [pickedDel, setPickedDel] = useState<string | null>(null);
   const [backKey, replayBack] = useReplay();
   const [delEmptyKey, replayDelEmpty] = useReplay();
+  const [tagSort, setTagSort] = useState<'most' | 'az' | 'za'>('most');
 
   /** Rewrites the tag inside every matching transaction's metadata. */
   const applyToTxs = async (tag: string, transform: (tags: string[]) => string[]) => {
@@ -113,6 +114,12 @@ export function TagLedgerScreen() {
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [transactions, knownTags]);
 
+  const orderedTagCards = useMemo(() => {
+    if (tagSort === 'az') return [...tagCounts].sort((a, b) => a[0].localeCompare(b[0]) || b[1] - a[1]);
+    if (tagSort === 'za') return [...tagCounts].sort((a, b) => b[0].localeCompare(a[0]) || b[1] - a[1]);
+    return tagCounts;
+  }, [tagCounts, tagSort]);
+
   const totalIn = tagged
     .filter((tx) => CREDIT_TYPES.has(tx.type))
     .reduce((s, tx) => s + tx.amount, 0);
@@ -160,8 +167,33 @@ export function TagLedgerScreen() {
         {tagCounts.length === 0 ? (
           <p className={styles.empty}>No tags yet — create one above or attach it while adding a transaction.</p>
         ) : (
-          <div className={styles.tagGrid}>
-            {tagCounts.map(([name, count]) => (
+          <>
+            {tagCounts.length > 1 && (
+              <div className={styles.tagSortRow}>
+                <div className={styles.sortPills} role="group" aria-label="Sort tags">
+                  <button
+                    type="button"
+                    className={`${styles.sortPill} ${tagSort === 'most' ? styles.sortPillActive : ''}`}
+                    onClick={() => setTagSort('most')}
+                    aria-pressed={tagSort === 'most'}
+                  >Most used</button>
+                  <button
+                    type="button"
+                    className={`${styles.sortPill} ${tagSort === 'az' ? styles.sortPillActive : ''}`}
+                    onClick={() => setTagSort('az')}
+                    aria-pressed={tagSort === 'az'}
+                  >Name A–Z</button>
+                  <button
+                    type="button"
+                    className={`${styles.sortPill} ${tagSort === 'za' ? styles.sortPillActive : ''}`}
+                    onClick={() => setTagSort('za')}
+                    aria-pressed={tagSort === 'za'}
+                  >Z–A</button>
+                </div>
+              </div>
+            )}
+            <div className={styles.tagGrid}>
+            {orderedTagCards.map(([name, count]) => (
               <div
                 key={name}
                 className={`${styles.tagCard} ${styles.tagCardClickable}`}
@@ -243,6 +275,7 @@ export function TagLedgerScreen() {
               </div>
             ))}
           </div>
+          </>
         )}
       </div>
     );
