@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [2.1.0] - 2026-11-01
+
+### Added
+- Tags overview (`/tags`): the card grid can be ordered after its own pill group — **Most used** (default, as before), **Name A–Z**, or **Z–A** (alphabetical with a most-used tie-break). Pills reuse the detail ledger's sort control; shown when more than one tag exists.
+
 ## [2.0.1] - 2026-10-31
 
 ### Fixed
