@@ -2494,3 +2494,12 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - ui-ux-pro-max (component geometry diagnosis)
 ### Status
 - BUG-48 closed. Next: user continues UI review on beta_v2.0 / dev; Other Ledgers V2 on "next update".
+## Session 2026-11-01 (dev -> master release merge)
+### Changes
+- Merged dev (c3d1550, v2.0.1) into master with --no-ff on the user call as b241159: "Merge dev: release v2.0.1 - calculation audit (BUG-21..BUG-47), mobile refinements M-01..M-09, tags search shape BUG-48". 57 commits, 102 files, +4689/-799; no conflict (dev contained all of master). Release on master is v2.0.1, without the Drive-sync workstream (that stays on google_signin_backup).
+- Gates: vitest 235/235 green on merged master (~2.8s). Pushed origin/master (d4936f6 -> b241159).
+- AGENTS.md sec.5 branch map + Phase 19 line updated: master now at v2.0.1 (b241159).
+### Skill(s) Used
+- (none — release/chore session)
+### Status
+- master = v2.0.1 stable (b241159), dev/beta_v2.0 unchanged at v2.0.1 content. Docs commit follows on dev. Next: Other Ledgers V2 (T-119..T-123) when user says "next update".
