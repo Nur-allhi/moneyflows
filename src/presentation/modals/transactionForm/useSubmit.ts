@@ -21,8 +21,9 @@ export function useTxSubmit(params: {
   onClose: () => void; setClosing: (v: boolean) => void;
   setDestination: (v: string) => void; setShowAddCp: (v: boolean) => void; setNewCpName: (v: string) => void; newCpName: string;
   selectedLenderId?: string; lenderChoiceActive?: boolean;
+  ledgerOn?: boolean; ledgerId?: string;
 }) {
-  const { tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName, accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName, selectedLenderId, lenderChoiceActive } = params;
+  const { tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName, accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName, selectedLenderId, lenderChoiceActive, ledgerOn = false, ledgerId = '' } = params;
   const { addTransaction } = useTransactionStore();
   const { createLoan, recordRepayment, createCounterparty, fetchLoanStacks } = useLoanStore();
   const { fetchAccounts } = useAccountStore();
@@ -32,9 +33,13 @@ export function useTxSubmit(params: {
     if (tab === 'loan' && loanAction === 'repay' && lenderChoiceActive && !selectedLenderId) {
       next.destination = 'Select which lender this repays';
     }
+    // Other Ledger dual-post: an opted-in post must name its ledger (T-119).
+    if (tab !== 'loan' && ledgerOn && !ledgerId) {
+      next.ledger = 'Select a ledger to post to';
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId, lenderChoiceActive, selectedLenderId, setErrors]);
+  }, [tab, rawAmount, description, source, destination, accounts, loanAction, selectedBorrowerId, lenderChoiceActive, selectedLenderId, ledgerOn, ledgerId, setErrors]);
 
   const handleCreateCp = async () => {
     if (!newCpName.trim()) return;

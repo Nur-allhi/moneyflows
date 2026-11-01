@@ -6,10 +6,11 @@ import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
 import { useAccountStore } from '../../../presentation/stores/useAccountStore';
 import { useReplay } from '../../../presentation/hooks/useReplay';
 import type { Member } from '../../../core/domain/Member';
+import type { OtherLedger } from '../../domain/types';
 import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
 import otherStyles from './OtherLedgerModals.module.css';
 
-export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: boolean; onClose: () => void; onCreated?: () => void }) {
+export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: boolean; onClose: () => void; onCreated?: (ledger: OtherLedger) => void }) {
   const createLedger = useOtherLedgerStore((s) => s.createLedger);
   const allLedgers = useOtherLedgerStore((s) => s.ledgers);
   const accounts = useAccountStore((s) => s.accounts);
@@ -64,7 +65,7 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
       return;
     }
     try {
-      await createLedger({
+      const ledger = await createLedger({
         name: trimmed,
         startingDate,
         ownerType,
@@ -75,7 +76,7 @@ export function CreateLedgerModal({ isOpen, onClose, onCreated }: { isOpen: bool
       setName('');
       setOwnerName('');
       setOpeningBalance('0');
-      onCreated?.();
+      onCreated?.(ledger);
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

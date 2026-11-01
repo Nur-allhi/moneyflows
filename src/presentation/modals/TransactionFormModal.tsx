@@ -16,6 +16,9 @@ import { SourceDestinationPickers, BorrowerPicker, LenderPicker } from './transa
 import { TransactionFormLayout } from './transactionForm/layout';
 import { EmptyAccountsState, ErrorState, LoadingState } from './transactionForm/states';
 import { TagPicker, CreatePersonModal } from './transactionForm/extraPickers';
+import { LedgerLinkRow, LedgerPickerOverlay } from './transactionForm/ledgerLink';
+import { defaultLedgerSide, type LedgerSide } from './transactionForm/ledgerLinkHelpers';
+import { useOtherLedgerStore } from '../../otherLedgers/presentation/stores/useOtherLedgerStore';
 import { useTxSubmit } from './transactionForm/useSubmit';
 
 interface TransactionFormModalProps {
@@ -74,11 +77,22 @@ export function TransactionFormModal({
   const knownTags = useTagStore((s) => s.tags);
   const [showBorrowerPicker, setShowBorrowerPicker] = useState(false);
 
+  // Other Ledger dual-post (T-119): toggle + picker state. Defaults opposite the
+  // account movement; side resets to the tab default whenever a ledger is picked
+  // (the user can still flip it before submitting).
+  const ledgerChoices = useOtherLedgerStore((s) => s.ledgers);
+  const fetchLedgerChoices = useOtherLedgerStore((s) => s.fetchLedgers);
+  const [ledgerOn, setLedgerOn] = useState(false);
+  const [ledgerId, setLedgerId] = useState('');
+  const [ledgerSide, setLedgerSide] = useState<LedgerSide>(defaultLedgerSide(tab));
+  const [showLedgerPicker, setShowLedgerPicker] = useState(false);
+
   useEffect(() => {
     fetchAccounts();
     fetchMembers();
     fetchLoanStacks();
-  }, [fetchAccounts, fetchMembers, fetchLoanStacks]);
+    fetchLedgerChoices();
+  }, [fetchAccounts, fetchMembers, fetchLoanStacks, fetchLedgerChoices]);
 
   const memberLookup = useMemo(
     () => Object.fromEntries(members.map((m) => [m.id, m])),
@@ -199,7 +213,27 @@ export function TransactionFormModal({
     tab, rawAmount, description, source, destination, loanAction, selectedBorrowerId, date, tagName,
     accounts, members, setErrors, onClose, setClosing, setDestination, setShowAddCp, setNewCpName, newCpName,
     selectedLenderId, lenderChoiceActive: showLenderChoice,
+    ledgerOn, ledgerId,
   });
+
+  const handleLedgerToggle = () => {
+    setLedgerOn((v) => !v);
+    setLedgerSide(defaultLedgerSide(tab));
+    clearError('ledger');
+  };
+
+  const ledgerLink = tab !== 'loan' && (
+    <LedgerLinkRow
+      on={ledgerOn}
+      onToggle={handleLedgerToggle}
+      ledgers={ledgerChoices}
+      ledgerId={ledgerId}
+      side={ledgerSide}
+      onSideChange={setLedgerSide}
+      onOpenPicker={() => setShowLedgerPicker(true)}
+      error={errors.ledger}
+    />
+  );
 
   const loading = acctLoading || memberLoading;
   const emptyAccounts = !loading && !acctError && accounts.length === 0;
@@ -260,6 +294,7 @@ export function TransactionFormModal({
         setTab={setTab}
         tabs={tabs}
         formFields={formFields}
+        ledgerLink={ledgerLink}
         buttonLabel={buttonLabel}
         handleSubmit={handleSubmit}
         handleClose={handleClose}
@@ -267,6 +302,8 @@ export function TransactionFormModal({
         rawAmount={rawAmount}
         errors={errors}
       />
+
+      <LedgerPickerOverlay show={showLedgerPicker} onClose={() => setShowLedgerPicker(false)} onSelect={(id) => { setLedgerId(id); setLedgerSide(defaultLedgerSide(tab)); clearError('ledger'); }} />
 
       <TagPicker show={showTagPicker} onClose={() => setShowTagPicker(false)} setTagName={setTagName} newTagName={newTagName} setNewTagName={setNewTagName} knownTags={knownTags} />
 
