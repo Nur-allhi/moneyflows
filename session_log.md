@@ -2512,3 +2512,12 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 ### Status
 - beta_v2.0 at dbf4c47 = v2.1.0 (not yet on dev/master — sweep at next merge). master = v2.0.1. Next: Other Ledgers V2 (T-119..T-123) when user says "next update".
+## Session 2026-11-01 (dev->beta merge + master release v2.1.0)
+### Changes
+- Merged beta_v2.0 (a28d252, v2.1.0) into dev as 634426b (no conflicts in code; AGENTS.md + session_log resolved by hand, beta's duplicate v2.0.1 session block dropped). vitest 235/235 green; pushed origin/dev.
+- Merged dev into master as 463652e on the user call: "Merge dev: release v2.1.0 - tags overview sorting (T-174)". vitest 235/235 green on merged master; pushed origin/master. NOTE: no git tag created — repo tags stopped at v1.9.0 and later releases shipped untagged; flag raised to user (VERSIONING.md sec.5 disagrees with practice).
+- AGENTS.md sec.5: master = v2.1.0 (463652e) in Phase 19 line + branch map.
+### Skill(s) Used
+- senior-frontend (T-174 in-session carry), none for merges
+### Status
+- master = dev = beta_v2.0 content at v2.1.0 (463652e / 634426b / a28d252). Next: Other Ledgers V2 (T-119..T-123) when user says "next update".
