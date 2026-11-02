@@ -2,15 +2,17 @@
 
 **Source:** `package.json:4` `version` → injected as `__APP_VERSION__` `vite.config.ts:11` → read via `constants/appVersion.ts:6` `APP_VERSION` → shown in `SettingsModal` footer + `whatsNewFor()` `constants/whatsNew.ts:31` + `CHANGELOG.md` headings. One source, three consumers — keep them in sync or Settings lies.
 
+> **Stable line: v2.x.** `v2.0.0` was stamped 2026-10-31 as the new app generation — it carries the calculation-audit fixes (BUG-21..BUG-47), the M-01..M-09 mobile refinements, and every 1.x capability. All future updates number from **2.0.x**. The 1.x examples are retired; they live in git history.
+
 ## 1. Semver (strict)
 
 `MAJOR.MINOR.PATCH` — `https://semver.org/spec/v2.0.0.html`
 
-| Bump | When (at least one) | Examples in this repo |
-|------|---------------------|-----------------------|
-| **MAJOR** `x.0.0` | Breaking data or contract change that old installs cannot open, or a wholesale persistence/schema rewrite. | OPFS migration that drops the localStorage fallback, or a `transactions` CHECK that invalidates old rows. Requires migration note in `CHANGELOG` + `whatsNew` caveat. |
-| **MINOR** `1.x.0` | New user-visible feature, new route, new capability. No break. | Search S-1..S-4 (`dashboard all + ledger-scoped + Highlight`), Tags `1.1.0` (T-109..T-112), Account edit `1.1.0`, Playwright harness is **not** user-visible → not minor. |
-| **PATCH** `1.1.x` | Fix, polish, perf, layout, a11y, docs, or non-feature refactor. | Header/sidebar single-logo, splash logo match, dashboard duplicate date `txType` hide, gap `24→12`, lint/config. |
+| Bump | When (at least one) | Examples in this repo (v2.x line) |
+|------|---------------------|-----------------------------------|
+| **MAJOR** `x.0.0` | Breaking data or contract change that old installs cannot open, or a wholesale persistence/schema rewrite. | A future OPFS/backend change that drops an install-supported fallback, or a `transactions` CHECK that invalidates old rows. Requires migration note in `CHANGELOG` + `whatsNew` caveat. |
+| **MINOR** `2.x.0` | New user-visible feature, new route, new capability. No break. | Tags overview sorting T-174 (`feat:` → **v2.1.0**). The v2.0.0 generation itself (audit + M-01..M-09 batch) was numbered MINOR by user call. A Playwright harness change is **not** user-visible → not minor. |
+| **PATCH** `2.0.x` | Fix, polish, perf, layout, a11y, docs, or non-feature refactor. | BUG-48 tags search shape (**v2.0.1**), BUG-44 Playwright gate (`fullyParallel: false` / `workers: 1`). |
 
 **Pre-1.0 exception retired** (`REPO_RULES.md §7` `Pre-1.0: breaking→minor` no longer applies post `1.0.0`).
 
@@ -52,7 +54,7 @@ All four touch in **one commit** (otherwise `AGENTS.md §3.4` Settings shows wro
 - [ ] package.json:4 bumped a.b.c → a.b'.c'
 - [ ] whatsNew.ts:8 new entry a.b'.c' added (newest first, plain English)
 - [ ] CHANGELOG.md:8 Unreleased → [a.b'.c] - YYYY-MM-DD (Added/Changed/Fixed buckets)
-- [ ] typecheck + lint --max-warnings 0 + build + playwright 4/4 green
+- [ ] typecheck + lint --max-warnings 0 + build + full Playwright suite green (currently 31/0)
 - [ ] Settings footer shows new version (manual spot-check: open / → ⚙ → footer)
 - [ ] Whats New modal shows new bullets once after reload (lastSeenVersion gate)
 ```
@@ -72,14 +74,16 @@ Per `REPO_RULES.md §3` + `AGENTS.md §3.12`: agent never tags alone. When the u
 
 - **Never bump on `master` directly** (`REPO_RULES.md §1` `No direct commits, ever`).
 - **Never bump twice in one batch.** One batch = one version.
-- **Never leave `whatsNew` behind.** If `package.json` says `1.2.0` but `whatsNew` latest is `1.1.0`, `whatsNewFor(1.2.0)` falls back to `1.1.0` and the modal lies — the checklist catches it.
+- **Never leave `whatsNew` behind.** If `package.json` says `2.1.0` but `whatsNew` latest is `2.0.1`, `whatsNewFor(2.1.0)` falls back to `2.0.1` and the modal lies — the checklist catches it.
 - **No `style={{}}` for version strings** — use constants.
 
-## 7. Examples from this repo
+## 7. Examples from this repo (v2.x line)
 
-- `1.0.0 → 1.1.0` (2026-08-24): `feat` Tags + `feat` Account edit → `MINOR`.
-- `1.1.0 → 1.2.0` (2026-08-26): `feat` Search S-1..S-4 → `MINOR` even though the same batch also had `fix(layout)` gap/duplicate-date and `style(splash)` logo — highest wins is `MINOR`.
-- A pure gap fix with no `feat` would have been `1.1.1` `PATCH`.
+- `2.0.0` (2026-10-31): the interim `1.18.2` batch — calculation audit (BUG-21..BUG-47) + mobile refinements M-01..M-09 — **renamed** to `2.0.0` by user call ("new app generation", no migration needed). A renumber is not a second bump: same content, same atomic-commit shape (`c50fa8e`).
+- `2.0.0 → 2.0.1` (2026-10-31): BUG-48 UI-shape fix → `PATCH`, versioned on `beta_v2.0` then merged to `dev` and released on `master` (`b241159`).
+- `2.0.1 → 2.1.0` (2026-11-01): a single `feat(tags)` commit (T-174) in one batch is already `MINOR` — highest wins, even without a second feature (release `dbf4c47`, swept to `master` as `463652e`).
+- A pure gap fix with no `feat` would have been a `PATCH` instead.
+- Pre-2.x case law (Tags T-109..T-112 `1.1.0`, Search S-1..S-4 `1.2.0`, calculation audit `1.18.0` MINOR) lives in git history; the same §2 table drove it.
 
 ---
 *Keep this doc short enough that an agent can apply §2→§3 without re-reading the whole repo.*

@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
+import type { Transaction } from '../../core/domain/Transaction';
 import type { OtherLedger, OtherLedgerEntry } from '../domain/types';
 
 function nowIso(): string {
@@ -102,6 +103,7 @@ export class OtherLedgerService {
     debit?: number;
     credit?: number;
     tags?: string[];
+    linkedTransactionId?: string;
   }): Promise<OtherLedgerEntry> {
     const ledger = await this.db.getOtherLedgerById(params.ledgerId);
     if (!ledger) throw new Error('Ledger not found');
@@ -120,6 +122,9 @@ export class OtherLedgerService {
     const lastBal = sorted.length > 0 ? balMap.get(sorted[sorted.length - 1]!.id) ?? ledger.openingBalance : ledger.openingBalance;
     const newBal = lastBal + credit - debit;
     // but chronological position may not be last; we recompute all after insert via caller refresh
+    if (params.linkedTransactionId) {
+      await this.assertTransactionLinkable(params.linkedTransactionId, null);
+    }
     const entry: OtherLedgerEntry = {
       id: uuidv4(),
       ledgerId: params.ledgerId,
@@ -128,6 +133,7 @@ export class OtherLedgerService {
       debit,
       credit,
       balance: newBal,
+      linkedTransactionId: params.linkedTransactionId,
       metadata: params.tags && params.tags.length > 0 ? { tags: params.tags } : {},
       createdAt: nowIso(),
       updatedAt: nowIso(),
@@ -142,6 +148,9 @@ export class OtherLedgerService {
   async updateEntry(id: string, patch: Partial<Omit<OtherLedgerEntry, 'id' | 'ledgerId'>>): Promise<OtherLedgerEntry> {
     const existing = await this.db.getOtherLedgerEntryById(id);
     if (!existing) throw new Error('Entry not found');
+    if (patch.linkedTransactionId !== undefined && patch.linkedTransactionId !== existing.linkedTransactionId) {
+      await this.assertTransactionLinkable(patch.linkedTransactionId, id);
+    }
     const next: OtherLedgerEntry = { ...existing, ...patch, updatedAt: nowIso() } as OtherLedgerEntry;
     if (next.description.trim().length < 1 || next.description.trim().length > 200) throw new Error('Description must be 1–200');
     await this.db.saveOtherLedgerEntry(next);
@@ -150,11 +159,104 @@ export class OtherLedgerService {
     return saved ?? next;
   }
 
+  /**
+   * T-122: a transaction may carry at most one live mirror. The target tx must
+   * exist and must not already be linked to a different entry (except the one
+   * being reassigned): creating two mirror rows for one movement would double
+   * count inside a ledger.
+   */
+  private async assertTransactionLinkable(txId: string, entryId: string | null): Promise<void> {
+    const tx = await this.db.getTransactionById(txId);
+    if (!tx) throw new Error('Transaction not found');
+    const holder = await this.db.getOtherLedgerEntryByTransactionId(txId);
+    if (holder && holder.id !== entryId) throw new Error(`This transaction is already linked to #${holder.description}`);
+  }
+
+  /**
+   * T-122: keeps the mirror row honest after its transaction is edited, or cuts
+   * the link ('unlink'). 'linked' rewrites date/description/amount on the same
+   * side the entry was posted with — the side was chosen when the post was made
+   * and an edit does not relabel the movement.
+   */
+  async syncLinkedEntryAfterTransactionUpdate(
+    tx: Transaction,
+    mode: 'linked' | 'unlink',
+  ): Promise<{ ledgerId: string } | null> {
+    const entry = await this.db.getOtherLedgerEntryByTransactionId(tx.id);
+    if (!entry) return null;
+    if (mode === 'unlink') {
+      await this.db.updateOtherLedgerEntry(entry.id, { ...entry, linkedTransactionId: undefined, updatedAt: nowIso() });
+      await this.recomputeBalances(entry.ledgerId);
+      return { ledgerId: entry.ledgerId };
+    }
+    const ledger = await this.db.getOtherLedgerById(entry.ledgerId);
+    if (!ledger || ledger.deletedAt) throw new Error('Linked ledger was deleted');
+    const date = tx.date.slice(0, 10);
+    if (!date || isNaN(Date.parse(date))) throw new Error('Valid date is required');
+    if (date < ledger.startingDate) throw new Error(`Linked ledger "${ledger.name}" starts on ${ledger.startingDate} — move it later, or unlink the row`);
+    const desc = tx.description.trim();
+    if (desc.length < 1 || desc.length > 200) throw new Error('Description must be 1–200 characters');
+    if (!(tx.amount > 0)) throw new Error('A posted amount must be > 0');
+    const side = entry.debit > 0 ? 'debit' : 'credit';
+    await this.db.updateOtherLedgerEntry(entry.id, {
+      ...entry,
+      date,
+      description: desc,
+      debit: side === 'debit' ? tx.amount : 0,
+      credit: side === 'credit' ? tx.amount : 0,
+      updatedAt: nowIso(),
+    });
+    await this.recomputeBalances(entry.ledgerId);
+    return { ledgerId: entry.ledgerId };
+  }
+
   async deleteEntry(id: string): Promise<void> {
     const e = await this.db.getOtherLedgerEntryById(id);
     if (!e) throw new Error('Entry not found');
     await this.db.softDeleteOtherLedgerEntry(id);
     await this.recomputeBalances(e.ledgerId);
+  }
+
+  /**
+   * T-120: builds the ledger row that mirrors a real transaction and writes both
+   * rows atomically (db.saveTransactionWithLedgerEntry). Side defaults come from
+   * the wizard (expense → credit, income → debit), but any side is legal.
+   */
+  async createLinkedEntryFromTransaction(params: {
+    tx: Transaction;
+    ledgerId: string;
+    side: 'debit' | 'credit';
+  }): Promise<OtherLedgerEntry> {
+    const ledger = await this.db.getOtherLedgerById(params.ledgerId);
+    if (!ledger || ledger.deletedAt) throw new Error('Ledger not found');
+    const desc = params.tx.description.trim();
+    if (desc.length < 1 || desc.length > 200) throw new Error('Description must be 1–200 characters');
+    const date = params.tx.date.slice(0, 10);
+    if (!date || isNaN(Date.parse(date))) throw new Error('Valid date is required');
+    if (date < ledger.startingDate) throw new Error('Date cannot be before ledger starting date');
+    if (!(params.tx.amount > 0)) throw new Error('A posted amount must be > 0');
+    // Append-at-end balance; the walk below corrects it if the tx date lands mid-history.
+    const existing = sortOtherEntries(await this.db.getOtherLedgerEntries(params.ledgerId));
+    const sortedBal = computeOtherRunningBalances(existing, ledger.openingBalance);
+    const lastBal = existing.length > 0 ? (sortedBal.get(existing[existing.length - 1]!.id) ?? ledger.openingBalance) : ledger.openingBalance;
+    const now = nowIso();
+    const entry: OtherLedgerEntry = {
+      id: uuidv4(),
+      ledgerId: params.ledgerId,
+      date,
+      description: desc,
+      debit: params.side === 'debit' ? params.tx.amount : 0,
+      credit: params.side === 'credit' ? params.tx.amount : 0,
+      balance: lastBal + (params.side === 'credit' ? params.tx.amount : -params.tx.amount),
+      linkedTransactionId: params.tx.id,
+      metadata: {},
+      createdAt: now,
+      updatedAt: now,
+    };
+    await this.db.saveTransactionWithLedgerEntry(params.tx, entry);
+    await this.recomputeBalances(params.ledgerId);
+    const saved = await this.db.getOtherLedgerEntryById(entry.id);
+    return saved ?? entry;
   }
 
   async recomputeBalances(ledgerId: string): Promise<void> {

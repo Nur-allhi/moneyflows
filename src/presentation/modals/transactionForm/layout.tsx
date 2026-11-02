@@ -8,6 +8,7 @@ interface Props {
   setTab: (v: string) => void;
   tabs: { key: string; label: string }[];
   formFields: React.ReactNode;
+  ledgerLink?: React.ReactNode | false;
   buttonLabel: string;
   handleSubmit: () => void;
   handleClose: () => void;
@@ -17,7 +18,7 @@ interface Props {
 }
 
 export function TransactionFormLayout(props: Props) {
-  const { tab, setTab, tabs, formFields, buttonLabel, handleSubmit, handleClose, closing, rawAmount, errors } = props;
+  const { tab, setTab, tabs, formFields, ledgerLink, buttonLabel, handleSubmit, handleClose, closing, rawAmount, errors } = props;
   const [closeKey, replayClose] = useReplay();
   const [submitKey, replaySubmit] = useReplay();
   const [cancelKey, replayCancel] = useReplay();
@@ -37,6 +38,7 @@ export function TransactionFormLayout(props: Props) {
             </div>
             <div className={styles.formBody} onFocus={handleFormFocus} onKeyDown={(e) => { if (e.key !== 'Enter' || e.shiftKey) return; e.preventDefault(); void handleSubmit(); }}>
               {formFields}
+              {ledgerLink}
               <button className={`${styles.submitBtn} ${submitKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replaySubmit(); handleSubmit(); }} disabled={!rawAmount || Object.keys(errors).length > 0}><span className="anim-target" key={submitKey}>{buttonLabel}</span></button>
             </div>
           </div>
@@ -52,6 +54,7 @@ export function TransactionFormLayout(props: Props) {
           <div className={styles.modalBody} onKeyDown={(e) => { if (e.key !== 'Enter' || e.shiftKey) return; e.preventDefault(); void handleSubmit(); }}>
             <SegmentedTabs tabs={tabs} activeKey={tab} onChange={setTab} />
             {formFields}
+            {ledgerLink}
           </div>
           <div className={styles.modalActions}>
             <button className={`${styles.cancelBtn} ${cancelKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCancel(); handleClose(); }}><span className="anim-target" key={cancelKey}>Cancel</span></button>

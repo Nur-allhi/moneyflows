@@ -8,6 +8,7 @@ import { useAccountStore } from '../stores/useAccountStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useModalStore } from '../stores/useModalStore';
 import { useReplay } from '../hooks/useReplay';
+import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { formatAmount } from '../utils/format';
 import { displayTxType } from '../constants/labels';
 import styles from './TransactionDetailModal.module.css';
@@ -39,6 +40,29 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
   const [deleteKey, replayDelete] = useReplay();
 
   const transaction = txProp ?? storeTx;
+
+  // T-121: "Also posted to" — one linked Other Ledger row, resolved from the id
+  // the entry stores. Best-effort display: failures leave the field out.
+  const [ledgerLink, setLedgerLink] = useState<{ ledgerName: string; side: 'debit' | 'credit'; amount: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setLedgerLink(null);
+    if (!transaction) return;
+    void (async () => {
+      try {
+        const db = getDatabase();
+        const entry = await db.getOtherLedgerEntryByTransactionId(transaction.id);
+        if (!entry || cancelled) return;
+        const ledger = await db.getOtherLedgerById(entry.ledgerId);
+        if (!ledger || ledger.deletedAt || cancelled) return;
+        const side = entry.debit > 0 ? 'debit' : 'credit';
+        setLedgerLink({ ledgerName: ledger.name, side, amount: side === 'debit' ? entry.debit : entry.credit });
+      } catch {
+        if (!cancelled) setLedgerLink(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [transaction]);
 
   if (!transaction) {
     return (
@@ -193,6 +217,12 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
           <div className={styles.field}>
             <span className={styles.fieldKey}>Loan Reference</span>
             <span className={styles.value}>{transaction.loanRef}</span>
+          </div>
+        )}
+        {ledgerLink && (
+          <div className={styles.field}>
+            <span className={styles.fieldKey}>Also posted to</span>
+            <span className={styles.value}>{`#${ledgerLink.ledgerName} (${ledgerLink.side === 'debit' ? 'Debit' : 'Credit'} ${formatAmount(ledgerLink.amount, locale, currency)})`}</span>
           </div>
         )}
       </div>

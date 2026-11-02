@@ -30,7 +30,7 @@ money_flows_v0.4/
 │   ├── REPO_RULES.md          — Repo Management Document (branch/commit/merge rules)
 │   ├── plans/
 │   │   ├── OTHER_LEDGERS_PLAN.md       — Other Ledgers v1 (approved, next to build)
-│   │   └── OTHER_LEDGERS_FUTURE_V2.md  — Other Ledgers V2 dual-post (next update)
+│   │   └── OTHER_LEDGERS_FUTURE_V2.md  — Other Ledgers V2 dual-post (complete, v2.2.0)
 │   └── audit/                 — Project audit reports + findings register
 ├── src/
 │   ├── core/
@@ -230,17 +230,19 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 | T-117 | CreateLedgerModal + AddEntryModal (edit/delete, validation, tags) | **Complete** (`2c8957c`) |
 | T-118 | Wiring: Sidebar/BottomNav/routeTitles/Recycle Bin/Search/PDF | **Complete** (`2c8957c`) |
 
-**Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131). Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
+**Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131).
+
+**Phase 20 (2026-11-02): Other Ledgers V2 — dual-post account linking — COMPLETE on `dev`, released as v2.2.0 (bump commit pending merge to `master`)** — spec `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`, commits T-119 `5d98eb8`, T-120 `7a8c38e`, T-121 `b4cce91`, T-122 `a8bf1be`, T-123 `65c6b87`. Wizard "Also post to Other Ledger" toggle → atomic dual-post (`saveTransactionWithLedgerEntry`), ↔ cross-navigating badge + "Also posted to" in tx detail, edit prompt (Yes/No/Unlink) + delete checkbox, retro-link picker, purge cuts dangling links explicitly, All/Debit/Credit/Linked/Standalone pills + link-text search. Unit suite **244**; Playwright sweep pending before `dev → master` (master must approve merge first).
 
 **Phase 14: Mobile Screen Refinements (M-01..M-09)** — merged into `beta_v2.0` as `2ae487d` and released there as **v2.0.0** (renamed from the interim 1.18.2 PATCH at the user's call; atomic bump `83d1dfe` + rename commit, 2026-10-31). `beta_v2.0` line now numbers **all future updates from 2.0.x**. All 9 mobile-representation tickets from `docs/plans/MOBILE_UI_REFINEMENTS_PLAN.md` complete; branch `feature/mobile-refinements` kept on remote.
 
 **Phase 16: Theme (Light/Dark) + Accent Color (A1+B1)** — **merged to `dev`** (+ Phase 17 background presets, BUG-4/BUG-5 fixed, + Phase 18 type overhaul: Manrope + Inter-tnum + Anek Bangla self-hosted). Branch `feature/theme-accent` kept (next: TBD).
 
-**Phase 19 safety:** Google Drive sync workstream (T-145..T-153 + plan) lives on long-lived branch `google_signin_backup` (= `dev` + `feature/online-sync-drive` merge `881b249`, pushed). `master` carries releases only and is now at **v2.0.1** (`b241159`), without sync. Next sync work merges `dev → google_signin_backup` on user call; current work continues on `beta_v2.0` (below).
+**Phase 19 safety:** Google Drive sync workstream (T-145..T-153 + plan) lives on long-lived branch `google_signin_backup` (= `dev` + `feature/online-sync-drive` merge `881b249`, pushed). `master` carries releases only and is now at **v2.1.0** (`463652e`), without sync. Next sync work merges `dev → google_signin_backup` on user call; current work continues on `beta_v2.0` (below).
 
 **T-174 (2026-11-01): tag-overview sorting** — card grid on `/tags` gets a **Most used / Name A–Z / Z–A** pill group (default unchanged); alphabetical sorts use `localeCompare` with a count-desc tie-break, and the pills reuse the detail ledger's `sortPill` styles, shown when more than one tag exists. `feat:` → **MINOR bump to 2.1.0** on `beta_v2.0` per `VERSIONING.md` §2→§3 (T-174 ticket in TICKETS.md; feature commit `8322c74`, release commit `dbf4c47`, session log `a28d252`).
 
-**Branch map (2026-11-01):** `master` = releases only, `b241159` = merge of `dev`, **v2.0.1** — calculation audit (BUG-21..BUG-47), M-01..M-09 mobile refinements, BUG-48 (v2.0.1), v2.0.0 README rewrite; 235 unit tests green at merge. `beta_v2.0` = `a28d252` (**v2.1.0** — T-174 tag sorting; all future updates number from 2.0.x). `dev` = this merge (content-identical to beta tip v2.1.0). `fix/calculation-audit` = kept at `5a4904c` (merged).
+**Branch map (2026-11-01):** `master` = releases only, `463652e` = merge of `dev`, **v2.1.0** (calculation audit + M-01..M-09 + v2.0.1 + T-174 tags sorting; 235 unit tests green at both merges today). `beta_v2.0` = `a28d252` (v2.1.0; all future updates number from 2.0.x). `dev` = 634426b merge of `beta_v2.0` (content-identical to beta tip in code). `fix/calculation-audit` = kept at `5a4904c` (merged).
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 

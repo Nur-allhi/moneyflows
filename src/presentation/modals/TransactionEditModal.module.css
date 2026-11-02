@@ -55,3 +55,71 @@
   color: var(--color-expense);
   margin-top: 8px;
 }
+
+/* T-122: link sync prompt — "Update linked ledger entry too?" asked once on
+   save when the transaction mirrors an Other Ledger row. */
+.linkPrompt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--color-wash) 4%, transparent);
+}
+
+.linkPromptTitle {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.linkPromptText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.linkPromptRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.linkPromptBtn {
+  padding: 8px 12px;
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 500 var(--text-sm) var(--font-display);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.linkPromptBtn:hover {
+  background: color-mix(in oklch, var(--color-wash) 8%, transparent);
+}
+
+.linkPromptPrimary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.linkPromptPrimary:hover {
+  background: color-mix(in oklch, var(--color-primary) 88%, black);
+}
+
+.linkPromptGhost {
+  border-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linkPromptBtn {
+    transition: none;
+  }
+}

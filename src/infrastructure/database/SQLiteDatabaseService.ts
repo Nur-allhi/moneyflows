@@ -1286,6 +1286,30 @@ export class SQLiteDatabaseService implements IDatabaseService {
     await this.flush();
   }
 
+  async saveTransactionWithLedgerEntry(tx: Transaction, entry: OtherLedgerEntry): Promise<void> {
+    this.validateTransaction(tx);
+    // Same guards the standalone entry write enforces, checked BEFORE anything
+    // is applied so a bad entry cannot leave a half-posted transaction behind.
+    if (entry.debit > 0 && entry.credit > 0) throw new Error('Entry cannot have both debit and credit');
+    if (entry.debit <= 0 && entry.credit <= 0) throw new Error('Entry must have debit or credit > 0');
+    this.run('BEGIN');
+    try {
+      this.saveTransactionToDb(tx);
+      this.applyBalanceChange(tx.type, tx.amount, tx.sourceAccount, tx.destAccount);
+      this.run(`INSERT INTO other_ledger_entries (id,ledger_id,date,description,debit,credit,balance,linkedTransactionId,metadata,created_at,updated_at)
+        VALUES ($id,$lid,$date,$desc,$debit,$credit,$bal,$link,$meta,$created,$updated)`,
+        { $id: entry.id, $lid: entry.ledgerId, $date: entry.date, $desc: entry.description, $debit: entry.debit, $credit: entry.credit, $bal: entry.balance, $link: entry.linkedTransactionId ?? null, $meta: JSON.stringify(entry.metadata ?? {}), $created: entry.createdAt, $updated: entry.updatedAt });
+      this.run('COMMIT');
+    } catch (e) {
+      // The in-memory database shared the failure with the caller — nothing
+      // partial reaches the persisted file because the flush only happens on
+      // the success path below.
+      this.run('ROLLBACK');
+      throw e instanceof Error ? e : new Error(String(e));
+    }
+    await this.flush();
+  }
+
   async updateTransaction(id: string, tx: Transaction): Promise<void> {
     // Validate BEFORE touching any balance: the edit path used to write the
     // change straight through, so a cleared/NaN/negative amount corrupted
@@ -1319,7 +1343,14 @@ export class SQLiteDatabaseService implements IDatabaseService {
     this.run('UPDATE transactions SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()});
     await this.flush();
   }
-  async purgeTransaction(id: string): Promise<void> { this.run('DELETE FROM transactions WHERE id=$id',{$id:id}); await this.flush(); }
+  async purgeTransaction(id: string): Promise<void> {
+    // T-122: foreign_keys are OFF in this in-memory database, so the declared
+    // ON DELETE SET NULL never fires by itself and a purge would leave dangling
+    // links behind. Null them explicitly — the entries stay as standalone rows.
+    this.run('UPDATE other_ledger_entries SET linkedTransactionId=NULL, updated_at=$now WHERE linkedTransactionId=$id', { $now: now(), $id: id });
+    this.run('DELETE FROM transactions WHERE id=$id', { $id: id });
+    await this.flush();
+  }
 
   private applyBalanceChange(type: string, amount: number, sourceAccount?: string, destAccount?: string): void {
     if (type === 'income' && destAccount) {
@@ -1408,6 +1439,18 @@ export class SQLiteDatabaseService implements IDatabaseService {
   getOtherLedgerEntryById(id: string): Promise<OtherLedgerEntry | null> {
     const r = this.queryOne<Record<string, unknown>>('SELECT * FROM other_ledger_entries WHERE id=$id', { $id: id });
     return Promise.resolve(r ? rowToOtherEntry(r) : null);
+  }
+
+  /** T-121: the linked entry for a transaction, queried in reverse of the write path. */
+  getOtherLedgerEntryByTransactionId(txId: string): Promise<OtherLedgerEntry | null> {
+    const r = this.queryOne<Record<string, unknown>>('SELECT * FROM other_ledger_entries WHERE linkedTransactionId=$tx AND deleted_at IS NULL ORDER BY date ASC LIMIT 1', { $tx: txId });
+    return Promise.resolve(r ? rowToOtherEntry(r) : null);
+  }
+
+  /** T-122: transaction ids that already have a live mirror row. */
+  getLinkedTransactionIds(): Promise<string[]> {
+    const rows = this.query<Record<string, unknown>>('SELECT DISTINCT linkedTransactionId AS tx FROM other_ledger_entries WHERE linkedTransactionId IS NOT NULL AND deleted_at IS NULL');
+    return Promise.resolve(rows.map((r) => r.tx as string));
   }
 
   async saveOtherLedgerEntry(entry: OtherLedgerEntry): Promise<void> {

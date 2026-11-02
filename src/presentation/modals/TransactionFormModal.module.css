@@ -1017,3 +1017,73 @@
   opacity: 0.45;
   cursor: default;
 }
+
+/* --- "Also post to Other Ledger" (T-119) --- */
+.ledgerSwitchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.ledgerSwitchLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.ledgerSwitch {
+  width: 40px;
+  height: 22px;
+  min-width: 44px;
+  min-height: 22px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+/* 46px invisible hit area around the small track (M-06 pattern). */
+.ledgerSwitch::before {
+  content: '';
+  position: absolute;
+  inset: -13px;
+}
+
+.ledgerSwitchOn {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.ledgerKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-text-secondary);
+  transition: transform var(--transition-fast);
+}
+
+.ledgerSwitchOn .ledgerKnob {
+  background: var(--color-text-on-primary);
+  transform: translateX(18px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ledgerKnob {
+    transition: none;
+  }
+}
+
+.pickerMeta {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}

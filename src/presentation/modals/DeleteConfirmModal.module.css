@@ -1,0 +1,26 @@
+/* T-122: "delete the linked ledger row too?" checkbox row shown when the
+   transaction being deleted mirrors an Other Ledger entry. The modal itself is
+   legacy inline-style markup; only this new row uses classes. */
+.linkRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px auto 0;
+  width: fit-content;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.linkCheckbox {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.linkLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}

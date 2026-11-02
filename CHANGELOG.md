@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+### Fixed
+- The full Playwright suite (31 tests) can now start from a **cold dev server** — the setup's first page visit gets a 30s budget instead of 8s; it used to time out when no dev server was already running. Test harness only (BUG-49).
+
+## [2.2.0] - 2026-11-02
+
+### Added
+- **Other Ledgers V2 — dual-post (account linking), tickets T-119..T-123** (`docs/plans/OTHER_LEDGERS_FUTURE_V2.md`):
+  - Transaction wizard (income/expense/transfer tabs): new **Also post to Other Ledger** switch + searchable ledger picker (inline create) + Debit/Credit side choice; the write lands as one atomic dual-post (`saveTransactionWithLedgerEntry`) — a refused post leaves neither side behind.
+  - Linked ledger rows show a **↔** badge in the register (mobile rows + desktop table) that opens the source transaction; transaction details show **"Also posted to #Ledger (Debit/Credit X)"**.
+  - Editing a transaction mirroring a register row asks **Update linked ledger entry too? Yes / No / Unlink** (date-before-starting refusals surface before anything is written); deleting offers **Also delete the linked ledger row** (default on, restorable from the Recycle Bin).
+  - Recycle-bin **purge** now explicitly cuts dangling links (foreign keys are off in the in-memory database, so `ON DELETE SET NULL` never fired — entries become standalone, never deleted).
+  - Register entry panel (**Link to transaction** picker) can retro-link a row to a past income/expense/transfer transaction — one transaction may mirror at most one live row; unlinking clears the pointer.
+  - Registers gained **All / Debit / Credit / Linked / Standalone** pills (both layouts), and register search now also matches rows through their linked transaction's text.
+  - 9 new unit tests (dual-post + link sync + one-link rule; suite 244).
+
 ## [2.1.0] - 2026-11-01
 
 ### Added

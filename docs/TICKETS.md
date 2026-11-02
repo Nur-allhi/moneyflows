@@ -1,7 +1,7 @@
 # MoneyFlows — Feature Ticket List
 
 **Version:** 3.2 · 2026-08-27
-All tickets T-001…T-118 + Search S-1..S-4 are **complete** (Phase 13 Other Ledgers v1 shipped on `2c8957c`). Full historical specs live in git history (`git log -- docs/TICKETS.md`); audit context in `docs/audit/FINDINGS.md`. Next: Other Ledgers V2 dual-post (T-119..T-123) in `docs/plans/OTHER_LEDGERS_FUTURE_V2.md` — build on "next update".
+All tickets T-001…T-118 + Search S-1..S-4 are **complete** (Phase 13 Other Ledgers v1 shipped on `2c8957c`). Full historical specs live in git history (`git log -- docs/TICKETS.md`); audit context in `docs/audit/FINDINGS.md`. **Other Ledgers V2 dual-post (T-119..T-123) is also complete** — shipped on `dev` 2026-11-02 (`5d98eb8`…`65c6b87`), released as **v2.2.0**. Spec: `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`.
 
 ---
 
@@ -93,7 +93,7 @@ Storage: separate tables `other_ledgers` + `other_ledger_entries` with `linkedTr
 
 Dependencies: `T-113 → T-114 → (T-115 ∥ T-117) → T-116 → T-118`. Each file ≤300 LOC, `DESIGN_IDENTITY.md §17` gate, `typecheck/lint --max-warnings 0/build/vitest` green.
 
-Future V2 (not ticketed here): dual-post linking — `Transaction Wizard → Also post to Other Ledger [dropdown]` creating `linkedTransactionId` link (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123). Build only when user says "next update / V2".
+Future V2 (now **complete**, shipped as v2.2.0 on 2026-11-02): dual-post linking — `Transaction Wizard → Also post to Other Ledger [dropdown]` creating `linkedTransactionId` link (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123).
 
 ## Phase 15 — Cleanup & Optimization (Lean Combo 1A+2A+3A) — In Progress
 
@@ -112,7 +112,7 @@ Plan: `docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` (branch `feature/cleanup-optimiz
 
 Dependencies: `T-124 → (T-125 ∥ T-126) → (T-127 ∥ T-128 ∥ T-129 ∥ T-130) → T-131`. Only `T-124` blocks the rest.
 
-Future V2 still `T-119..T-123` in `OTHER_LEDGERS_FUTURE_V2.md` (build on “next update”).
+Future V2 `T-119..T-123` — **complete**, shipped as v2.2.0 (2026-11-02).
 
 ## Phase 16 — Theme (Light/Dark) + Accent Color (A1 + B1) — Planned
 

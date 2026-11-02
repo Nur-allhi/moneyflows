@@ -109,6 +109,12 @@ export interface IDatabaseService {
   getTransactions(filters?: TransactionFilter): Promise<Transaction[]>;
   getTransactionById(id: string): Promise<Transaction | null>;
   saveTransaction(tx: Transaction): Promise<void>;
+  /**
+   * T-120: writes the transaction AND its linked Other Ledger entry through one
+   * shared validation, one in-memory transaction and ONE flush, so a failure on
+   * either side leaves the database untouched (dual-post atomicity).
+   */
+  saveTransactionWithLedgerEntry(tx: Transaction, entry: OtherLedgerEntry): Promise<void>;
   updateTransaction(id: string, tx: Transaction): Promise<void>;
   softDeleteTransaction(id: string): Promise<void>;
   restoreTransaction(id: string): Promise<void>;
@@ -131,6 +137,10 @@ export interface IDatabaseService {
 
   getOtherLedgerEntries(ledgerId: string): Promise<OtherLedgerEntry[]>;
   getOtherLedgerEntryById(id: string): Promise<OtherLedgerEntry | null>;
+  /** T-121: cross-link lookup — the ledger row mirroring this transaction, if any. */
+  getOtherLedgerEntryByTransactionId(txId: string): Promise<OtherLedgerEntry | null>;
+  /** T-122: every transaction id already mirrored by a live entry (retro-link picker exclusion). */
+  getLinkedTransactionIds(): Promise<string[]>;
   saveOtherLedgerEntry(entry: OtherLedgerEntry): Promise<void>;
   updateOtherLedgerEntry(id: string, entry: OtherLedgerEntry): Promise<void>;
   softDeleteOtherLedgerEntry(id: string): Promise<void>;
