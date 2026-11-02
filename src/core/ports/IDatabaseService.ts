@@ -137,6 +137,8 @@ export interface IDatabaseService {
 
   getOtherLedgerEntries(ledgerId: string): Promise<OtherLedgerEntry[]>;
   getOtherLedgerEntryById(id: string): Promise<OtherLedgerEntry | null>;
+  /** T-121: cross-link lookup — the ledger row mirroring this transaction, if any. */
+  getOtherLedgerEntryByTransactionId(txId: string): Promise<OtherLedgerEntry | null>;
   saveOtherLedgerEntry(entry: OtherLedgerEntry): Promise<void>;
   updateOtherLedgerEntry(id: string, entry: OtherLedgerEntry): Promise<void>;
   softDeleteOtherLedgerEntry(id: string): Promise<void>;

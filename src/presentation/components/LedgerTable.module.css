@@ -220,3 +220,39 @@
   color: var(--color-text-secondary);
   font-size: var(--text-sm);
 }
+
+/* T-121: ↔ badge on rows that mirror a real transaction. Sits after the
+   description text inside the desc cell — small pill, hover-lifted. */
+.linkBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  min-height: 22px;
+  margin-left: 8px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.linkBadge:hover {
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
+  color: var(--color-text);
+}
+
+.linkBadge:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linkBadge {
+    transition: none;
+  }
+}

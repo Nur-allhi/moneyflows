@@ -1434,6 +1434,12 @@ export class SQLiteDatabaseService implements IDatabaseService {
     return Promise.resolve(r ? rowToOtherEntry(r) : null);
   }
 
+  /** T-121: the linked entry for a transaction, queried in reverse of the write path. */
+  getOtherLedgerEntryByTransactionId(txId: string): Promise<OtherLedgerEntry | null> {
+    const r = this.queryOne<Record<string, unknown>>('SELECT * FROM other_ledger_entries WHERE linkedTransactionId=$tx AND deleted_at IS NULL ORDER BY date ASC LIMIT 1', { $tx: txId });
+    return Promise.resolve(r ? rowToOtherEntry(r) : null);
+  }
+
   async saveOtherLedgerEntry(entry: OtherLedgerEntry): Promise<void> {
     if (entry.debit > 0 && entry.credit > 0) throw new Error('Entry cannot have both debit and credit');
     if (entry.debit <= 0 && entry.credit <= 0) throw new Error('Entry must have debit or credit > 0');

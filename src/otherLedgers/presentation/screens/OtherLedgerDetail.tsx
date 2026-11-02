@@ -11,6 +11,7 @@ import { Highlight } from '../../../presentation/utils/highlight';
 import { useDebouncedValue } from '../../../presentation/utils/useDebouncedValue';
 import { AddEntryModal } from '../components/AddEntryModal';
 import { RenameLedgerModal } from '../components/RenameLedgerModal';
+import { openTransactionDetail } from '../../../presentation/utils/openTransactionDetail';
 import styles from './OtherLedgerDetail.module.css';
 
 const FILTER_TABS = [
@@ -89,6 +90,7 @@ export function OtherLedgerDetail() {
         balance: formatAmountParts(e.balance, locale, currency).amount,
         currencyLabel: currency,
         type: isDebit ? 'expense' as const : 'income' as const,
+        linked: !!e.linkedTransactionId,
       };
     });
     // Balances are stored chronological; display follows sortOrder (newest first by default).
@@ -106,6 +108,12 @@ export function OtherLedgerDetail() {
   const handleRowClick = useCallback((row: LedgerRow) => {
     if (row.id) setEditId(row.id);
   }, []);
+
+  // T-121: the ↔ badge reverses the cross-link — ledger row to transaction detail.
+  const handleLinkBadgeClick = useCallback((row: LedgerRow) => {
+    const e = row.id ? displayed.find((x) => x.id === row.id) : null;
+    if (e?.linkedTransactionId) void openTransactionDetail(e.linkedTransactionId);
+  }, [displayed]);
 
   const downloadPdf = useCallback(async () => {
     if (!ledger) return;
@@ -210,6 +218,17 @@ export function OtherLedgerDetail() {
                   <span className={styles.txMonth}>{MONTHS[new Date(e.date).getMonth()]}</span>
                 </span>
                 <span className={styles.txDesc}><Highlight text={e.description} query={ledgerQuery} /></span>
+                {e.linkedTransactionId && (
+                  <span
+                    className={styles.linkBadge}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Open linked transaction"
+                    title="Open linked transaction"
+                    onClick={(ev) => { ev.stopPropagation(); void openTransactionDetail(e.linkedTransactionId!); }}
+                    onKeyDown={(ev) => { if (ev.key !== 'Enter' && ev.key !== ' ') return; ev.preventDefault(); ev.stopPropagation(); void openTransactionDetail(e.linkedTransactionId!); }}
+                  >{'\u2194'}</span>
+                )}
                 <span className={styles.txAmount}>
                   <span className={`${styles.txArrow} ${isDebit ? styles.txArrowOut : styles.txArrowIn}`}>
                     {isDebit ? (
@@ -302,6 +321,7 @@ export function OtherLedgerDetail() {
             showBalance
             desktop
             onRowClick={handleRowClick}
+            onLinkBadgeClick={handleLinkBadgeClick}
             sentinel={<div ref={sentinelRef} className={styles.sentinel} />}
             searchQuery={ledgerQuery}
           />

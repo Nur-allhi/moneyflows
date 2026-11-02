@@ -14,6 +14,8 @@ export interface LedgerRow {
   currencyLabel?: string;
   type?: 'income' | 'expense' | 'transfer' | 'loan';
   typeLabel?: string;
+  /** T-121: row mirrors a real transaction — shows the ↔ badge. */
+  linked?: boolean;
 }
 
 interface LedgerTableProps {
@@ -25,6 +27,8 @@ interface LedgerTableProps {
   fillHeight?: boolean;
   sentinel?: React.ReactNode;
   searchQuery?: string;
+  /** T-121: click on a row's ↔ badge (cross-navigation to the linked transaction). */
+  onLinkBadgeClick?: (row: LedgerRow) => void;
 }
 
 const typeClassMap: Record<string, string | undefined> = {
@@ -33,7 +37,7 @@ const typeClassMap: Record<string, string | undefined> = {
   transfer: styles.transfer,
 };
 
-export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, fillHeight = false, sentinel, searchQuery = '' }: LedgerTableProps) {
+export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, fillHeight = false, sentinel, searchQuery = '', onLinkBadgeClick }: LedgerTableProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [bodyHeight, setBodyHeight] = useState(desktop ? 360 : 340);
@@ -131,7 +135,20 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                     <span className={`${styles.typeCell} ${row.type ? (typeClassMap[row.type] ?? '') : ''}`}>
                       {row.typeLabel ?? row.type ?? '\u2014'}
                     </span>
-                    <span className={styles.desc}><Highlight text={row.description} query={searchQuery} /></span>
+                    <span className={styles.desc}>
+                      <Highlight text={row.description} query={searchQuery} />
+                      {row.linked && (
+                        <span
+                          className={styles.linkBadge}
+                          role="button"
+                          tabIndex={0}
+                          aria-label="Open linked transaction"
+                          title="Open linked transaction"
+                          onClick={(e) => { e.stopPropagation(); onLinkBadgeClick?.(row); }}
+                          onKeyDown={(e) => { if (e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); e.stopPropagation(); onLinkBadgeClick?.(row); }}
+                        >{'\u2194'}</span>
+                      )}
+                    </span>
                     {!showBalance && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                     <span className={styles.debit}>{row.debit ? <>{row.debit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                     <span className={styles.credit}>{row.credit ? <>{row.credit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
@@ -156,7 +173,20 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                 <span className={`${styles.typeCell} ${row.type ? (typeClassMap[row.type] ?? '') : ''}`}>
                   {row.typeLabel ?? row.type ?? '\u2014'}
                 </span>
-                <span className={styles.desc}><Highlight text={row.description} query={searchQuery} /></span>
+                <span className={styles.desc}>
+                  <Highlight text={row.description} query={searchQuery} />
+                  {row.linked && (
+                    <span
+                      className={styles.linkBadge}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Open linked transaction"
+                      title="Open linked transaction"
+                      onClick={(e) => { e.stopPropagation(); onLinkBadgeClick?.(row); }}
+                      onKeyDown={(e) => { if (e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); e.stopPropagation(); onLinkBadgeClick?.(row); }}
+                    >{'\u2194'}</span>
+                  )}
+                </span>
                 {!showBalance && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                 <span className={styles.debit}>{row.debit ? <>{row.debit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                 <span className={styles.credit}>{row.credit ? <>{row.credit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
