@@ -26,6 +26,7 @@ interface OtherLedgerState {
     debit?: number;
     credit?: number;
     tags?: string[];
+    linkedTransactionId?: string;
   }) => Promise<void>;
   updateEntry: (id: string, patch: Partial<OtherLedgerEntry>) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;

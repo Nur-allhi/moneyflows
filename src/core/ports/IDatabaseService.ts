@@ -139,6 +139,8 @@ export interface IDatabaseService {
   getOtherLedgerEntryById(id: string): Promise<OtherLedgerEntry | null>;
   /** T-121: cross-link lookup — the ledger row mirroring this transaction, if any. */
   getOtherLedgerEntryByTransactionId(txId: string): Promise<OtherLedgerEntry | null>;
+  /** T-122: every transaction id already mirrored by a live entry (retro-link picker exclusion). */
+  getLinkedTransactionIds(): Promise<string[]>;
   saveOtherLedgerEntry(entry: OtherLedgerEntry): Promise<void>;
   updateOtherLedgerEntry(id: string, entry: OtherLedgerEntry): Promise<void>;
   softDeleteOtherLedgerEntry(id: string): Promise<void>;

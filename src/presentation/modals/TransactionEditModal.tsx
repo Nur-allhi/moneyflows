@@ -37,6 +37,29 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
   const [errors, setErrors] = useState<TransactionFieldIssues>({});
   const [formError, setFormError] = useState<string | null>(null);
 
+  // T-122: link sync prompt. Resolved once per session — the ledger name for the
+  // label, its starting date for the pre-save constraint check.
+  const [linkedLedger, setLinkedLedger] = useState<{ name: string; startingDate: string } | null>(null);
+  const [linkChoice, setLinkChoice] = useState<'linked' | 'standalone' | 'unlink' | null>(null);
+  const [askLink, setAskLink] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const db = getDatabase();
+        const entry = await db.getOtherLedgerEntryByTransactionId(txId);
+        if (cancelled) return;
+        if (!entry) { setLinkedLedger(null); return; }
+        const ledger = await db.getOtherLedgerById(entry.ledgerId);
+        if (cancelled) return;
+        setLinkedLedger(ledger && !ledger.deletedAt ? { name: ledger.name, startingDate: ledger.startingDate } : null);
+      } catch {
+        if (!cancelled) setLinkedLedger(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [txId]);
+
   const isOpeningBalance = (transaction?.metadata as Record<string, unknown>)?.isOpeningBalance === true;
 
   useEffect(() => {
@@ -49,7 +72,7 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
     }
   }, [transaction]);
 
-  const handleSave = useCallback(async () => {
+  const doSave = useCallback(async (choice: 'linked' | 'standalone' | 'unlink' | null) => {
     if (!transaction) return;
     // Check the fields BEFORE writing anything, and keep the modal open when
     // they fail: it used to close unconditionally, so a rejected save looked
@@ -107,7 +130,21 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
         return;
       }
     }
-    await updateTransaction(transaction.id, updated);
+    // T-122: a mirrored ledger row follows the save (or is cut loose). The first
+    // save asks once; the chosen kind is remembered for retries inside the
+    // modal. The one database constraint (ledger starting date) is checked here
+    // so the pre-check refuses BEFORE the transaction itself is written.
+    if (linkedLedger) {
+      if (!choice) {
+        if (!linkChoice) { setAskLink(true); return; }
+        choice = linkChoice;
+      }
+      if (choice === 'linked' && date && date < linkedLedger.startingDate) {
+        setFormError(`Linked ledger "${linkedLedger.name}" starts on ${linkedLedger.startingDate} — move the date later, or unlink the row.`);
+        return;
+      }
+    }
+    await updateTransaction(transaction.id, updated, choice === 'linked' ? 'linked' : choice === 'unlink' ? 'unlink' : undefined);
     // The store rolls back and records the reason rather than throwing, so read
     // it back — otherwise a save the database refused still closes the modal.
     const failure = useTransactionStore.getState().error;
@@ -127,7 +164,10 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
       } catch { /* best-effort */ }
     }
     onClose();
-  }, [transaction, amount, desc, date, txType, updateTransaction, onClose, tagName]);
+  }, [transaction, amount, desc, date, txType, updateTransaction, onClose, tagName, linkedLedger, linkChoice]);
+
+  // Modal save button: first save asks (T-122) when a mirror row is linked.
+  const handleSave = useCallback(() => { void doSave(null); }, [doSave]);
 
   const showTypeToggle = editableTypes.includes(transaction?.type as typeof editableTypes[number]) && !isOpeningBalance;
   const [incomeKey, replayIncome] = useReplay();
@@ -157,6 +197,18 @@ export function TransactionEditModal({ txId, onClose }: TransactionEditModalProp
           <DatePicker value={date} onChange={setDate} />
         </FormField>
       {formError && <span className={styles.formError}>{formError}</span>}
+      {askLink && linkedLedger && (
+        <div className={styles.linkPrompt}>
+          <span className={styles.linkPromptTitle}>{`This transaction is mirrored in #${linkedLedger.name}`}</span>
+          <span className={styles.linkPromptText}>Update the linked ledger row too?</span>
+          <div className={styles.linkPromptRow}>
+            <button type="button" className={`${styles.linkPromptBtn} ${styles.linkPromptPrimary}`} onClick={() => { setLinkChoice('linked'); setAskLink(false); void doSave('linked'); }}>Yes — update it</button>
+            <button type="button" className={styles.linkPromptBtn} onClick={() => { setLinkChoice('standalone'); setAskLink(false); void doSave('standalone'); }}>No — leave it</button>
+            <button type="button" className={styles.linkPromptBtn} onClick={() => { setLinkChoice('unlink'); setAskLink(false); void doSave('unlink'); }}>Unlink</button>
+            <button type="button" className={`${styles.linkPromptBtn} ${styles.linkPromptGhost}`} onClick={() => { setAskLink(false); }}>Cancel</button>
+          </div>
+        </div>
+      )}
       {showTypeToggle && (
         <div className={styles.typeToggle}>
           <button

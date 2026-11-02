@@ -1343,7 +1343,14 @@ export class SQLiteDatabaseService implements IDatabaseService {
     this.run('UPDATE transactions SET deleted_at=NULL,updated_at=$now WHERE id=$id',{$id:id,$now:now()});
     await this.flush();
   }
-  async purgeTransaction(id: string): Promise<void> { this.run('DELETE FROM transactions WHERE id=$id',{$id:id}); await this.flush(); }
+  async purgeTransaction(id: string): Promise<void> {
+    // T-122: foreign_keys are OFF in this in-memory database, so the declared
+    // ON DELETE SET NULL never fires by itself and a purge would leave dangling
+    // links behind. Null them explicitly — the entries stay as standalone rows.
+    this.run('UPDATE other_ledger_entries SET linkedTransactionId=NULL, updated_at=$now WHERE linkedTransactionId=$id', { $now: now(), $id: id });
+    this.run('DELETE FROM transactions WHERE id=$id', { $id: id });
+    await this.flush();
+  }
 
   private applyBalanceChange(type: string, amount: number, sourceAccount?: string, destAccount?: string): void {
     if (type === 'income' && destAccount) {
@@ -1438,6 +1445,12 @@ export class SQLiteDatabaseService implements IDatabaseService {
   getOtherLedgerEntryByTransactionId(txId: string): Promise<OtherLedgerEntry | null> {
     const r = this.queryOne<Record<string, unknown>>('SELECT * FROM other_ledger_entries WHERE linkedTransactionId=$tx AND deleted_at IS NULL ORDER BY date ASC LIMIT 1', { $tx: txId });
     return Promise.resolve(r ? rowToOtherEntry(r) : null);
+  }
+
+  /** T-122: transaction ids that already have a live mirror row. */
+  getLinkedTransactionIds(): Promise<string[]> {
+    const rows = this.query<Record<string, unknown>>('SELECT DISTINCT linkedTransactionId AS tx FROM other_ledger_entries WHERE linkedTransactionId IS NOT NULL AND deleted_at IS NULL');
+    return Promise.resolve(rows.map((r) => r.tx as string));
   }
 
   async saveOtherLedgerEntry(entry: OtherLedgerEntry): Promise<void> {
