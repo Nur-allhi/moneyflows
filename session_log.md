@@ -2539,3 +2539,13 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 
 ### Follow-up 2026-11-02 (remediation): BUG-49 pre-merge Playwright
 - Full Playwright suite before the merge timed out twice at setup (page.goto 8s budget on a cold dev server; splash screenshot showed the static page while the bundle was still loading). Logged BUG-49, fixed with a 30s timeout on the setup's first navigation only (option a; b/c rejected). Suite 31/31 green (~2.1m) from cold. Test-harness-only commit (e2e/auth.setup.ts + BUGS.md + CHANGELOG Unreleased) - no app code, no version bump.
+
+## Session 2026-11-02 (master release merge: v2.2.0)
+### Changes
+- Pre-merge Playwright sweep failed twice at setup (page.goto 8s on cold dev server) -> logged BUG-49, fixed with a 30s timeout on the setup's first navigation only (test-harness-only, commit e468d3d). Full suite then 31/31 green (~2.1m) from cold.
+- Merged dev -> master --no-ff as 4fbc898 on the user call: 34 files +1265/-49, no conflicts. vitest 244/244 on merged master. Tagged v2.2.0 on master (first tag since v1.9.0) and pushed origin/master --follow-tags. dev fast-forwarded to 4fbc898 and pushed.
+- AGENTS.md sec.5 Phase 20 line + branch map updated (master = dev = v2.2.0 @ 4fbc898; beta_v2.0 behind at v2.1.0).
+### Skill(s) Used
+- (release session; BUG-49 diagnosis/ferramentas: playwright config + auth.setup)
+### Status
+- master = dev = v2.2.0 stable (4fbc898, tag v2.2.0). Open question stands: retro-tag v2.0.0/v2.0.1/v2.1.0 on master? Next work: Phase 15 Cleanup & Optimization (T-124..T-131) per plan.
