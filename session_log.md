@@ -2539,3 +2539,63 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 
 ### Follow-up 2026-11-02 (remediation): BUG-49 pre-merge Playwright
 - Full Playwright suite before the merge timed out twice at setup (page.goto 8s budget on a cold dev server; splash screenshot showed the static page while the bundle was still loading). Logged BUG-49, fixed with a 30s timeout on the setup's first navigation only (option a; b/c rejected). Suite 31/31 green (~2.1m) from cold. Test-harness-only commit (e2e/auth.setup.ts + BUGS.md + CHANGELOG Unreleased) - no app code, no version bump.
+
+## Session 2026-11-02 (master release merge: v2.2.0)
+### Changes
+- Pre-merge Playwright sweep failed twice at setup (page.goto 8s on cold dev server) -> logged BUG-49, fixed with a 30s timeout on the setup's first navigation only (test-harness-only, commit e468d3d). Full suite then 31/31 green (~2.1m) from cold.
+- Merged dev -> master --no-ff as 4fbc898 on the user call: 34 files +1265/-49, no conflicts. vitest 244/244 on merged master. Tagged v2.2.0 on master (first tag since v1.9.0) and pushed origin/master --follow-tags. dev fast-forwarded to 4fbc898 and pushed.
+- AGENTS.md sec.5 Phase 20 line + branch map updated (master = dev = v2.2.0 @ 4fbc898; beta_v2.0 behind at v2.1.0).
+### Skill(s) Used
+- (release session; BUG-49 diagnosis/ferramentas: playwright config + auth.setup)
+### Status
+- master = dev = v2.2.0 stable (4fbc898, tag v2.2.0). Open question stands: retro-tag v2.0.0/v2.0.1/v2.1.0 on master? Next work: Phase 15 Cleanup & Optimization (T-124..T-131) per plan.
+
+## Session 2026-11-02 (Phase 15 closure decision - no branch created)
+### Changes
+- User asked to open Phase 15 on a new branch; survey found the old feature/cleanup-optimization branch (5 of 8 tickets: T-124/T-125/T-126/T-130/T-131) already shipped and merged into dev, with hygiene verified clean on v2.2.0. Real remainder: oversized-file splits (T-129 SQLiteDatabaseService 1473 LOC the biggest, 11 files >300 LOC total).
+- User decision: Phase 15 CLOSED - remaining work declined for app-stability reasons (storage/money-math refactors, tidiness-only payoff). No code branch created, no code touched. TICKETS.md Phase 15 marked Closed with the closing note; AGENTS.md sec.5 updated to the same effect.
+### Skill(s) Used
+- (none - survey + docs closure)
+### Status
+- Phase 15 closed by decision; 300-LOC splits stay "split when next edited" (T-092 policy). Old merged branch feature/cleanup-optimization left in place pending user call (safe to delete - fully merged). Next up candidates: Drive-sync integration (google_signin_backup), update-available toast, BUG-44 root cause, or new feature work on user call.
+
+## Session 2026-11-02 (worktree/branch cleanup on user call)
+### Changes
+- Deleted all local branches except master + dev (18 branches: 13 ancestry-merged into master + mobile-refinements after removing its stale opencode worktree + 4 draft workstreams after archiving their tips to origin).
+- Pushed draft workstream tips to origin first: feature/loan-ledger-header, feature/loan-lender-breakdown (global-search, member-wise-report already there). Deleted 8 merged remote branches (beta_v2.0, online-sync-drive, setup-settings-refresh, theme-accent, ui-polish, fix/calculation-audit, google_signin_backup, feature/mobile-refinements).
+- Audit found member report + lender breakdown features shipped via dev under different SHAs (v1.8.0 5f6c501, v1.6.0 ded577d) - the 4 stray branch tips are stale drafts, preserved on origin as archive.
+### Skill(s) Used
+- (none - housekeeping)
+### Status
+- Local: master + dev only. Remote: master, dev, + 4 archived draft branches (deleteable later on call). Nothing merged was lost; drafts recoverable via origin. Next: user picks next workstream (Drive sync test-drive / update toast / new features).
+
+## Session 2026-11-02 (Phase 19 docs closure - cloud sync user-verified)
+### Changes
+- User confirmed Google sign-in works on their build: Phase 19 (Online Sync via Google Drive, T-145..T-153) is live in the released app since v1.17.0, riding v2.2.0.
+- Docs corrected: AGENTS.md Phase 19 rewritten from stale "branch lives on google_signin_backup / master without sync" to COMPLETE + user-verified (note on GOOGLE_CLIENT_ID build requirement); TICKETS.md Phase 19 header In Progress -> Complete; stale "branch kept on remote" notes for feature/theme-accent and feature/mobile-refinements aligned with the 2026-11-02 worktree cleanup.
+### Skill(s) Used
+- (none - docs closure)
+### Status
+- Cloud-sync roadmap item closed by verification; no code, no version bump. Remaining roadmap candidates: update-available banner (D2), BUG-44 root cause, new feature work.
+
+## Session 2026-11-03 (feature/update-banner - update-available banner, option A)
+### Changes
+- User picked option A (banner + button, no auto-reload). Branch feature/update-banner off dev @ 204aa38.
+- src/presentation/utils/appUpdate.ts: pure takeover rule - page started with a controller = any controllerchange is an update; started without = first change is the initial claim (sw.js clients.claim), second is a real update. 4 tests (suite 244 -> 248).
+- src/presentation/components/AppUpdateBanner.tsx + module.css: glass pill above BottomNav (bottom 64px + safe-area + space-3), z-250 (nav 200 < banner < modal 300), token-only styling, role=status, Not now hides for the session, Refresh reloads; reduced-motion + print rules. Banner text has no version number - the new version is not knowable before the reload; WhatsNew modal covers it after.
+- App.tsx: renders banner once inside BrowserRouter (all routes incl. setup/screen). Impact on App: LOW (1 direct caller). sw.js itself untouched (skipWaiting+claim already there).
+- Gates: tsc 0, eslint 0, vitest 248/248, build ok. detect_changes returned empty surface (tool index did not pick up new files; impact + full gates cover). Feature commit 457a683 pushed.
+### Skill(s) Used
+- senior-frontend
+### Status
+- Next: user approval to merge feature/update-banner -> dev, then MINOR bump 2.3.0 (package.json + whatsNew + CHANGELOG) per VERSIONING sec.2 (single feat commit). Playwright sweep prudent at merge (SW present in e2e env? banner should stay inert; controllerchange only on real update).
+
+## Session 2026-11-03 (merge feature/update-banner -> dev + release bump 2.3.0)
+### Changes
+- Merged feature/update-banner into dev --no-ff as c96f492 (6 files, +202, no conflicts). Gates: vitest 248/248; Playwright 31/31 in ~2.1m - banner confirmed inert in tests (no SW takeover happens mid-run).
+- Release bump 587a340: MINOR 2.2.0 -> 2.3.0 (single feat commit) - package.json + whatsNew 2.3.0 entry + CHANGELOG [2.3.0] (folds previously-unreleased BUG-49 harness note in). tsc + vitest re-green after the bump.
+### Skill(s) Used
+- senior-frontend
+### Status
+- dev = v2.3.0 (587a340) with update banner; master still v2.2.0 until user approves the release merge. Banner becomes visible the first time a newer build serves to a running app.
+

@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.3.0',
+    items: [
+      'New: when a newer version of MoneyFlows has been delivered to this device, a small notice appears offering one-tap Refresh. No update surprises mid-form — refresh only when you tap it.',
+    ],
+  },
+  {
     version: '2.2.0',
     items: [
       'A transaction can now post into a manual register at the same time — flip "Also post to Other Ledger" while recording it.',

@@ -95,9 +95,11 @@ Dependencies: `T-113 → T-114 → (T-115 ∥ T-117) → T-116 → T-118`. Each 
 
 Future V2 (now **complete**, shipped as v2.2.0 on 2026-11-02): dual-post linking — `Transaction Wizard → Also post to Other Ledger [dropdown]` creating `linkedTransactionId` link (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123).
 
-## Phase 15 — Cleanup & Optimization (Lean Combo 1A+2A+3A) — In Progress
+## Phase 15 — Cleanup & Optimization (Lean Combo 1A+2A+3A) — **Closed 2026-11-02 (user decision)**
 
 Plan: `docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` (branch `feature/cleanup-optimization` off `v1.5.0`). Tickets `T-124..T-131` atomic, gates `typecheck/lint/build/vitest` green per REPO_RULES §9.
+
+**Closing note (2026-11-02):** 5 of 8 tickets had shipped and merged into `dev`; a fresh survey on v2.2.0 confirmed T-124/T-125/T-126/T-130/T-131 done and hygiene clean. The remainder — T-127 (MemberProfile now 64 LOC, resolved elsewhere), T-128 (TransactionFormModal 311 LOC, ~at target) and T-129 (SQLiteDatabaseService 1,473 LOC → repo split) — touches storage and money-math paths on 11 files >300 LOC. **User decision: declined for stability** — the value is tidiness, the risk is to app correctness; the 300-LOC rule stays "split when next edited" (T-092 policy), not as a batch.
 
 | Ticket | Title | Skill | Effort | Status |
 |--------|-------|-------|--------|--------|
@@ -151,7 +153,7 @@ Plan approved 2026-10-02 (full scope, Manrope headings, Anek Bangla, mono kept f
 | T-143 | Identity docs: DESIGN_IDENTITY (§1/§2/§3/§5/§17) + DESIGN.md type tables | `skill-creator` | S | **Complete** |
 | T-144 | Verification: bn-BD/৳ fallback, table alignment, bundle weight, offline (no googleapis) | `code-reviewer` | S | **Complete** (bn digits+৳ render aligned, Inter `zero` N/A in Chrome → dropped, 560KB fonts w/ unicode-range lazy subsets, 0 CDN refs) |
 
-## Phase 19 — Online Sync via Google Drive (Path 1) — In Progress
+## Phase 19 — Online Sync via Google Drive (Path 1) — **Complete — user-verified on the released app (2026-11-02)**
 
 Plan: `docs/plans/ONLINE_SYNC_PLAN.md`. Branch `feature/online-sync-drive` off `dev`.
 Google login → auto-sync of `money_flows.db` to the user's Drive `appDataFolder`.
