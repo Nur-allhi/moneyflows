@@ -2589,3 +2589,13 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 ### Status
 - Next: user approval to merge feature/update-banner -> dev, then MINOR bump 2.3.0 (package.json + whatsNew + CHANGELOG) per VERSIONING sec.2 (single feat commit). Playwright sweep prudent at merge (SW present in e2e env? banner should stay inert; controllerchange only on real update).
+
+## Session 2026-11-03 (merge feature/update-banner -> dev + release bump 2.3.0)
+### Changes
+- Merged feature/update-banner into dev --no-ff as c96f492 (6 files, +202, no conflicts). Gates: vitest 248/248; Playwright 31/31 in ~2.1m - banner confirmed inert in tests (no SW takeover happens mid-run).
+- Release bump 587a340: MINOR 2.2.0 -> 2.3.0 (single feat commit) - package.json + whatsNew 2.3.0 entry + CHANGELOG [2.3.0] (folds previously-unreleased BUG-49 harness note in). tsc + vitest re-green after the bump.
+### Skill(s) Used
+- senior-frontend
+### Status
+- dev = v2.3.0 (587a340) with update banner; master still v2.2.0 until user approves the release merge. Banner becomes visible the first time a newer build serves to a running app.
+
