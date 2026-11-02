@@ -2599,3 +2599,16 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - dev = v2.3.0 (587a340) with update banner; master still v2.2.0 until user approves the release merge. Banner becomes visible the first time a newer build serves to a running app.
 
+
+## Session 2026-11-03 (release merge dev -> master: v2.3.0)
+### Changes
+- User approved merge to master. Merged dev -> master --no-ff as 33d1a94 (11 files, +272/-9): update-available banner (option A: glass pill above bottom nav, Not now / Refresh, first-claim guard in appUpdate.ts).
+- Pre-release gates on merged master: vitest 248/248 green; Playwright full suite 31/31 green (~2.1m) - banner confirmed inert in tests.
+- Tagged v2.3.0 on master (release commit 33d1a94) and pushed origin/master --follow-tags. 
+- Fast-forwarded dev to master, pushed.
+- AGENTS.md sec.5 branch map updated to v2.3.0 / 33d1a94; minor typo fix on a follow-up doc commit (76cf547).
+### Skill(s) Used
+- (release session)
+### Status
+- master = dev = v2.3.0 stable (tagged). Roadmap now fully delivered: dual-post (v2.2.0), cloud sync (verified on your build), update banner (v2.3.0). Open question stands: retro-tag v2.0.0/v2.0.1/v2.1.0 on master? Next: your call - new feature, Drive test-drive expansion, or just use the app.
+
