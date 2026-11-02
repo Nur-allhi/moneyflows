@@ -2577,3 +2577,15 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - (none - docs closure)
 ### Status
 - Cloud-sync roadmap item closed by verification; no code, no version bump. Remaining roadmap candidates: update-available banner (D2), BUG-44 root cause, new feature work.
+
+## Session 2026-11-03 (feature/update-banner - update-available banner, option A)
+### Changes
+- User picked option A (banner + button, no auto-reload). Branch feature/update-banner off dev @ 204aa38.
+- src/presentation/utils/appUpdate.ts: pure takeover rule - page started with a controller = any controllerchange is an update; started without = first change is the initial claim (sw.js clients.claim), second is a real update. 4 tests (suite 244 -> 248).
+- src/presentation/components/AppUpdateBanner.tsx + module.css: glass pill above BottomNav (bottom 64px + safe-area + space-3), z-250 (nav 200 < banner < modal 300), token-only styling, role=status, Not now hides for the session, Refresh reloads; reduced-motion + print rules. Banner text has no version number - the new version is not knowable before the reload; WhatsNew modal covers it after.
+- App.tsx: renders banner once inside BrowserRouter (all routes incl. setup/screen). Impact on App: LOW (1 direct caller). sw.js itself untouched (skipWaiting+claim already there).
+- Gates: tsc 0, eslint 0, vitest 248/248, build ok. detect_changes returned empty surface (tool index did not pick up new files; impact + full gates cover). Feature commit 457a683 pushed.
+### Skill(s) Used
+- senior-frontend
+### Status
+- Next: user approval to merge feature/update-banner -> dev, then MINOR bump 2.3.0 (package.json + whatsNew + CHANGELOG) per VERSIONING sec.2 (single feat commit). Playwright sweep prudent at merge (SW present in e2e env? banner should stay inert; controllerchange only on real update).
