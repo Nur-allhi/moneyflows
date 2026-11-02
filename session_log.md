@@ -2549,3 +2549,12 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - (release session; BUG-49 diagnosis/ferramentas: playwright config + auth.setup)
 ### Status
 - master = dev = v2.2.0 stable (4fbc898, tag v2.2.0). Open question stands: retro-tag v2.0.0/v2.0.1/v2.1.0 on master? Next work: Phase 15 Cleanup & Optimization (T-124..T-131) per plan.
+
+## Session 2026-11-02 (Phase 15 closure decision - no branch created)
+### Changes
+- User asked to open Phase 15 on a new branch; survey found the old feature/cleanup-optimization branch (5 of 8 tickets: T-124/T-125/T-126/T-130/T-131) already shipped and merged into dev, with hygiene verified clean on v2.2.0. Real remainder: oversized-file splits (T-129 SQLiteDatabaseService 1473 LOC the biggest, 11 files >300 LOC total).
+- User decision: Phase 15 CLOSED - remaining work declined for app-stability reasons (storage/money-math refactors, tidiness-only payoff). No code branch created, no code touched. TICKETS.md Phase 15 marked Closed with the closing note; AGENTS.md sec.5 updated to the same effect.
+### Skill(s) Used
+- (none - survey + docs closure)
+### Status
+- Phase 15 closed by decision; 300-LOC splits stay "split when next edited" (T-092 policy). Old merged branch feature/cleanup-optimization left in place pending user call (safe to delete - fully merged). Next up candidates: Drive-sync integration (google_signin_backup), update-available toast, BUG-44 root cause, or new feature work on user call.

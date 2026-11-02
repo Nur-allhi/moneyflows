@@ -230,7 +230,7 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 | T-117 | CreateLedgerModal + AddEntryModal (edit/delete, validation, tags) | **Complete** (`2c8957c`) |
 | T-118 | Wiring: Sidebar/BottomNav/routeTitles/Recycle Bin/Search/PDF | **Complete** (`2c8957c`) |
 
-**Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131).
+**Phase 15: Cleanup & Optimization (Lean Combo 1A+2A+3A)** — **CLOSED 2026-11-02 by user decision.** T-124/T-125/T-126/T-130/T-131 shipped on `feature/cleanup-optimization` (merged into `dev`) and hygiene is verified clean on v2.2.0. Remaining oversized-file splits (T-127/T-128/T-129 — SQLiteDatabaseService 1,473 LOC being the real one) **declined for app stability**: they touch storage/money-math paths and the payoff is tidiness, not behavior. 300-LOC rule stays "split when next edited" (T-092).
 
 **Phase 20 (2026-11-02): Other Ledgers V2 — dual-post account linking — COMPLETE, merged and released as v2.2.0 (`4fbc898`)** — spec `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`, commits T-119 `5d98eb8`, T-120 `7a8c38e`, T-121 `b4cce91`, T-122 `a8bf1be`, T-123 `65c6b87`, bump `3644e3d`. Wizard "Also post to Other Ledger" toggle → atomic dual-post (`saveTransactionWithLedgerEntry`), ↔ cross-navigating badge + "Also posted to" in tx detail, edit prompt (Yes/No/Unlink) + delete checkbox, retro-link picker, purge cuts dangling links explicitly, All/Debit/Credit/Linked/Standalone pills + link-text search. Unit suite **244**; Playwright **31/31** pre-merge (after BUG-49 fix).
 
