@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+### Fixed
+- The full Playwright suite (31 tests) can now start from a **cold dev server** — the setup's first page visit gets a 30s budget instead of 8s; it used to time out when no dev server was already running. Test harness only (BUG-49).
+
 ## [2.2.0] - 2026-11-02
 
 ### Added

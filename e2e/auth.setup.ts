@@ -8,7 +8,7 @@ setup('seed tiny DB', async ({ page }) => {
   mkdirSync('e2e/.auth', { recursive: true });
   const b64 = await seedTinyB64();
 
-  await page.goto('/');
+  await page.goto('/', { timeout: 30_000 }); // BUG-49: the first visit on a cold dev server must transform the whole module graph — the global 8s budget cannot cover it (past green runs rode an already-warm server).
   await page.evaluate(async (b) => {
     localStorage.setItem('moneyflows_db', b);
     localStorage.removeItem('moneyflows_opfs_migrated');

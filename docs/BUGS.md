@@ -26,6 +26,16 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-49: Playwright suite cannot start from a cold dev server (setup seed timeout)
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-11-02 (during: pre-merge gate before dev → master v2.2.0)
+- **Location:** `e2e/auth.setup.ts:11` / `playwright.config.ts` (`navigationTimeout: 8_000`, `webServer`)
+- **Description:** `page.goto('/')` in the setup spec times out twice in a row at 8s; screenshot shows the static splash (typed brand + v2.2.0 footer) rendered while the main bundle never finishes loading. Playwright cold-starts a fresh **dev** server each run (`reuseExistingServer` only helps if one is already up), and dev mode transforms the whole module graph on demand — the setup's first visit is the coldest one there is. Past green runs (31/0) presumably rode an already-warm server, which is why this never surfaced.
+- **Root Cause:** the global 8s `navigationTimeout` (wants the full `load` event) is not enough to cover a cold Vite dev transform; the setup file has no timeout override of its own.
+- **Fix Approach:** option (a) — override just the setup's first navigation to 30s in `e2e/auth.setup.ts` (surgical, test-only); `(b)`/`(c)` rejected: (b) masks real slowness globally, (c) is too much machinery for a cold first paint.
+- **Resolved:** 2026-11-02 on `dev`. Full suite **31/31 green (~2.1 min)** from a cold server, three prior 8s timeouts eliminated; test-harness-only — no app code, no version bump.
 ## BUG-48: Tags page — idle LedgerSearch renders as an oval
 
 - **Status:** fixed

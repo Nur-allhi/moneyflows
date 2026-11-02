@@ -2536,3 +2536,6 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend, senior-backend, ui-ux-pro-max
 ### Status
 - All 5 V2 tickets complete on dev; suite 244/244; Playwright gate not run this session (suite untouched by these paths - e2e wiring sweep pending). Next: merge dev -> master (needs user approval, VERSIONING.md sec.5 flow incl. tag); open question from 2026-11-01 stands: retroactively tag older releases on master?
+
+### Follow-up 2026-11-02 (remediation): BUG-49 pre-merge Playwright
+- Full Playwright suite before the merge timed out twice at setup (page.goto 8s budget on a cold dev server; splash screenshot showed the static page while the bundle was still loading). Logged BUG-49, fixed with a 30s timeout on the setup's first navigation only (option a; b/c rejected). Suite 31/31 green (~2.1m) from cold. Test-harness-only commit (e2e/auth.setup.ts + BUGS.md + CHANGELOG Unreleased) - no app code, no version bump.
