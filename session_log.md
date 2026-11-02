@@ -2558,3 +2558,13 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - (none - survey + docs closure)
 ### Status
 - Phase 15 closed by decision; 300-LOC splits stay "split when next edited" (T-092 policy). Old merged branch feature/cleanup-optimization left in place pending user call (safe to delete - fully merged). Next up candidates: Drive-sync integration (google_signin_backup), update-available toast, BUG-44 root cause, or new feature work on user call.
+
+## Session 2026-11-02 (worktree/branch cleanup on user call)
+### Changes
+- Deleted all local branches except master + dev (18 branches: 13 ancestry-merged into master + mobile-refinements after removing its stale opencode worktree + 4 draft workstreams after archiving their tips to origin).
+- Pushed draft workstream tips to origin first: feature/loan-ledger-header, feature/loan-lender-breakdown (global-search, member-wise-report already there). Deleted 8 merged remote branches (beta_v2.0, online-sync-drive, setup-settings-refresh, theme-accent, ui-polish, fix/calculation-audit, google_signin_backup, feature/mobile-refinements).
+- Audit found member report + lender breakdown features shipped via dev under different SHAs (v1.8.0 5f6c501, v1.6.0 ded577d) - the 4 stray branch tips are stale drafts, preserved on origin as archive.
+### Skill(s) Used
+- (none - housekeeping)
+### Status
+- Local: master + dev only. Remote: master, dev, + 4 archived draft branches (deleteable later on call). Nothing merged was lost; drafts recoverable via origin. Next: user picks next workstream (Drive sync test-drive / update toast / new features).
