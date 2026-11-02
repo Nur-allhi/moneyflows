@@ -5,6 +5,7 @@ import { Users, SquareStack, HandCoins } from 'lucide-react';
 import { Sidebar, BottomNav, Header, PageTransition, RippleGlow, SearchBar } from './presentation/components';
 import { ModalRenderer } from './presentation/modals/ModalRenderer';
 import { CloudUpdatePrompt } from './presentation/components/CloudUpdatePrompt';
+import { AppUpdateBanner } from './presentation/components/AppUpdateBanner';
 import { useMemberStore } from './presentation/stores/useMemberStore';
 import { useModalStore } from './presentation/stores/useModalStore';
 import { useReplay } from './presentation/hooks/useReplay';
@@ -237,6 +238,7 @@ export function App() {
           </Route>
         </Routes>
       </Suspense>
+      <AppUpdateBanner />
       {process.env.NODE_ENV === 'development' && <Agentation />}
     </BrowserRouter>
   );
