@@ -4,6 +4,7 @@ import { LedgerTable, LedgerSearch, MobileLedger, Modal, BottomSheet } from '../
 import type { LedgerRow } from '../../../presentation/components';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
 import { useMemberStore } from '../../../presentation/stores/useMemberStore';
+import { useTransactionStore } from '../../../presentation/stores/useTransactionStore';
 import { useSettingsStore } from '../../../presentation/stores/useSettingsStore';
 import { formatAmount, formatAmountParts } from '../../../presentation/utils/format';
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
@@ -18,6 +19,8 @@ const FILTER_TABS = [
   { key: 'all', label: 'All' },
   { key: 'debit', label: 'Debit' },
   { key: 'credit', label: 'Credit' },
+  { key: 'linked', label: 'Linked' },
+  { key: 'standalone', label: 'Standalone' },
 ];
 
 const PAGE_SIZE = 10;
@@ -53,13 +56,24 @@ export function OtherLedgerDetail() {
   const entries = useMemo(() => (id ? entriesByLedger[id] ?? [] : []), [id, entriesByLedger]);
   const memberMap = useMemo(() => new Map(members.map((m) => [m.id, m.name])), [members]);
 
+  // T-123: the linked transaction mirror — searched by the link's counterpart
+  // text ("↔ Brac Bank transaction" matches when you type it), badge already
+  // carries the visual cross-link.
+  const transactions = useTransactionStore((s) => s.transactions);
+  const linkedTxMap = useMemo(() => {
+    const map = new Map<string, { description: string }>();
+    for (const t of transactions) map.set(t.id, { description: t.description.toLowerCase() });
+    return map;
+  }, [transactions]);
+
   const debouncedQuery = useDebouncedValue(ledgerQuery, 200);
 
   const searchFiltered = useMemo(() => {
     const q = debouncedQuery.trim().toLowerCase();
     if (!q) return entries;
-    return entries.filter((e) => e.description.toLowerCase().includes(q) || e.date.includes(q) || String(e.debit).includes(q) || String(e.credit).includes(q));
-  }, [entries, debouncedQuery]);
+    return entries.filter((e) => e.description.toLowerCase().includes(q) || e.date.includes(q) || String(e.debit).includes(q) || String(e.credit).includes(q)
+      || (e.linkedTransactionId ? (linkedTxMap.get(e.linkedTransactionId)?.description ?? '').includes(q) : false));
+  }, [entries, debouncedQuery, linkedTxMap]);
 
   const displayed = useMemo(
     () => (sortOrder === 'desc' ? searchFiltered.slice(-displayLimit) : searchFiltered.slice(0, displayLimit)),
@@ -95,13 +109,19 @@ export function OtherLedgerDetail() {
     });
     // Balances are stored chronological; display follows sortOrder (newest first by default).
     if (sortOrder === 'desc') rows.reverse();
+    // T-123: link filter rides the same pill state — Linked/Standalone select on
+    // the mirror instead of the side.
+    if (filter === 'linked') return rows.filter((r) => r.linked === true);
+    if (filter === 'standalone') return rows.filter((r) => r.linked !== true);
     if (filter === 'all') return rows;
     return rows.filter((r) => (filter === 'debit' ? r.debit !== '—' : r.credit !== '—'));
   }, [displayed, filter, locale, currency, sortOrder]);
 
   const mobileFiltered = useMemo(() => {
     let list = [...displayed];
-    if (filter !== 'all') list = list.filter((e) => (filter === 'debit' ? e.debit > 0 : e.credit > 0));
+    if (filter === 'linked') list = list.filter((e) => !!e.linkedTransactionId);
+    else if (filter === 'standalone') list = list.filter((e) => !e.linkedTransactionId);
+    else if (filter !== 'all') list = list.filter((e) => (filter === 'debit' ? e.debit > 0 : e.credit > 0));
     return list.sort((a, b) => (sortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
   }, [displayed, filter, sortOrder]);
 
@@ -293,6 +313,10 @@ export function OtherLedgerDetail() {
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M8 3v10M3 8h10" opacity="0.35" /></svg>
                   ) : t.key === 'debit' ? (
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M8 5v6M5 8l3 3 3-3" /></svg>
+                  ) : t.key === 'linked' ? (
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="14" height="14"><path d="M2.5 8h2M11.5 8h2M4.5 5.5h4a2.5 2.5 0 0 1 0 5h-1.5" opacity="0.85" /></svg>
+                  ) : t.key === 'standalone' ? (
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M6.5 9.5l3-3M9.5 9.5l-3-3" /></svg>
                   ) : (
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" width="14" height="14"><circle cx="8" cy="8" r="5.5" /><path d="M8 11V5M11 8l-3-3-3 3" /></svg>
                   )}
