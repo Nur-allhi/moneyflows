@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [2.3.0] - 2026-11-03
+
+### Added
+- **Update-available banner**: while the app is open and a freshly installed version takes over in the background, a small glass pill appears above the bottom navigation — *"MoneyFlows was updated — Refresh"* — one tap reloads to the new version; **Not now** dismisses it for the session (later updates re-offer). The takeover detection distinguishes a real update from the service worker's first self-install on a new device (4 unit tests, suite 248). The banner sits under modals and never blocks an open form. Includes the BUG-49 test-harness fix below (unreleased sidebar).
+
 ### Fixed
 - The full Playwright suite (31 tests) can now start from a **cold dev server** — the setup's first page visit gets a 30s budget instead of 8s; it used to time out when no dev server was already running. Test harness only (BUG-49).
 
