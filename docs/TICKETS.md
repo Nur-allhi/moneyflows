@@ -153,7 +153,7 @@ Plan approved 2026-10-02 (full scope, Manrope headings, Anek Bangla, mono kept f
 | T-143 | Identity docs: DESIGN_IDENTITY (§1/§2/§3/§5/§17) + DESIGN.md type tables | `skill-creator` | S | **Complete** |
 | T-144 | Verification: bn-BD/৳ fallback, table alignment, bundle weight, offline (no googleapis) | `code-reviewer` | S | **Complete** (bn digits+৳ render aligned, Inter `zero` N/A in Chrome → dropped, 560KB fonts w/ unicode-range lazy subsets, 0 CDN refs) |
 
-## Phase 19 — Online Sync via Google Drive (Path 1) — In Progress
+## Phase 19 — Online Sync via Google Drive (Path 1) — **Complete — user-verified on the released app (2026-11-02)**
 
 Plan: `docs/plans/ONLINE_SYNC_PLAN.md`. Branch `feature/online-sync-drive` off `dev`.
 Google login → auto-sync of `money_flows.db` to the user's Drive `appDataFolder`.

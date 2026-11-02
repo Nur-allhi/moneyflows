@@ -2568,3 +2568,12 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - (none - housekeeping)
 ### Status
 - Local: master + dev only. Remote: master, dev, + 4 archived draft branches (deleteable later on call). Nothing merged was lost; drafts recoverable via origin. Next: user picks next workstream (Drive sync test-drive / update toast / new features).
+
+## Session 2026-11-02 (Phase 19 docs closure - cloud sync user-verified)
+### Changes
+- User confirmed Google sign-in works on their build: Phase 19 (Online Sync via Google Drive, T-145..T-153) is live in the released app since v1.17.0, riding v2.2.0.
+- Docs corrected: AGENTS.md Phase 19 rewritten from stale "branch lives on google_signin_backup / master without sync" to COMPLETE + user-verified (note on GOOGLE_CLIENT_ID build requirement); TICKETS.md Phase 19 header In Progress -> Complete; stale "branch kept on remote" notes for feature/theme-accent and feature/mobile-refinements aligned with the 2026-11-02 worktree cleanup.
+### Skill(s) Used
+- (none - docs closure)
+### Status
+- Cloud-sync roadmap item closed by verification; no code, no version bump. Remaining roadmap candidates: update-available banner (D2), BUG-44 root cause, new feature work.
