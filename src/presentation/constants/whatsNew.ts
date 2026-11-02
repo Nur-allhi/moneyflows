@@ -7,6 +7,16 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.2.0',
+    items: [
+      'A transaction can now post into a manual register at the same time — flip "Also post to Other Ledger" while recording it.',
+      'Register rows synced with a real transaction wear a ↔ badge that jumps straight back to the original.',
+      'Editing or deleting a shared transaction now asks whether the linked register row should follow along, stay as-is, or be cut loose.',
+      'Any register row can be linked to a past transaction from its own edit panel (and unlinked again).',
+      'Registers gained Linked / Standalone filters, and searching a register now also finds rows by the linked transaction.',
+    ],
+  },
+  {
     version: '2.1.0',
     items: [
       'New: the Tags page card grid can now be sorted — most used (as before), name A-Z, or Z-A — using the same pill control as the per-tag ledger.',

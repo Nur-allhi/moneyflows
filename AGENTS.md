@@ -30,7 +30,7 @@ money_flows_v0.4/
 │   ├── REPO_RULES.md          — Repo Management Document (branch/commit/merge rules)
 │   ├── plans/
 │   │   ├── OTHER_LEDGERS_PLAN.md       — Other Ledgers v1 (approved, next to build)
-│   │   └── OTHER_LEDGERS_FUTURE_V2.md  — Other Ledgers V2 dual-post (next update)
+│   │   └── OTHER_LEDGERS_FUTURE_V2.md  — Other Ledgers V2 dual-post (complete, v2.2.0)
 │   └── audit/                 — Project audit reports + findings register
 ├── src/
 │   ├── core/
@@ -230,7 +230,9 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 | T-117 | CreateLedgerModal + AddEntryModal (edit/delete, validation, tags) | **Complete** (`2c8957c`) |
 | T-118 | Wiring: Sidebar/BottomNav/routeTitles/Recycle Bin/Search/PDF | **Complete** (`2c8957c`) |
 
-**Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131). Next: **Other Ledgers V2** — `Also post to Other Ledger` toggle (see `OTHER_LEDGERS_FUTURE_V2.md` T-119..T-123) when user says "next update".
+**Phase 15: Cleanup & Optimization — Lean Combo (1A+2A+3A)** — active on `feature/cleanup-optimization` off `v1.5.0` (`docs/plans/CLEANUP_OPTIMIZATION_PLAN.md` T-124..T-131).
+
+**Phase 20 (2026-11-02): Other Ledgers V2 — dual-post account linking — COMPLETE on `dev`, released as v2.2.0 (bump commit pending merge to `master`)** — spec `docs/plans/OTHER_LEDGERS_FUTURE_V2.md`, commits T-119 `5d98eb8`, T-120 `7a8c38e`, T-121 `b4cce91`, T-122 `a8bf1be`, T-123 `65c6b87`. Wizard "Also post to Other Ledger" toggle → atomic dual-post (`saveTransactionWithLedgerEntry`), ↔ cross-navigating badge + "Also posted to" in tx detail, edit prompt (Yes/No/Unlink) + delete checkbox, retro-link picker, purge cuts dangling links explicitly, All/Debit/Credit/Linked/Standalone pills + link-text search. Unit suite **244**; Playwright sweep pending before `dev → master` (master must approve merge first).
 
 **Phase 14: Mobile Screen Refinements (M-01..M-09)** — merged into `beta_v2.0` as `2ae487d` and released there as **v2.0.0** (renamed from the interim 1.18.2 PATCH at the user's call; atomic bump `83d1dfe` + rename commit, 2026-10-31). `beta_v2.0` line now numbers **all future updates from 2.0.x**. All 9 mobile-representation tickets from `docs/plans/MOBILE_UI_REFINEMENTS_PLAN.md` complete; branch `feature/mobile-refinements` kept on remote.
 
