@@ -3,17 +3,19 @@
 ## Session 2026-11-05 (cont.)
 
 ### Changes
-- Fixed calendar month/year dropdown height & width design in `src/components/ui/calendar.tsx`:
-  - Constrained CustomSelect dropdown menu: added `max-w-sm`, `min-w-32`, and `max-h-[70vh] overflow-y-auto` so month/year dropdowns no longer render full-screen height (the year dropdown previously listed ~100 options from the default 100-year nav range).
-  - Bounded the calendar navigation range via `startMonth`/`endMonth` (default 60 years back, 10 years forward; overridable via props) so the year dropdown stays short.
-- Re-verified: tsc 0, eslint 0 warnings, vitest 248/248 green, calendar-dropdown e2e test passes (headed).
-- Committed on branch `fix/calendar-dropdown-month-year` as `d712f34` (follow-up to `5d4260f`; not merged to master — pending user approval per REPO_RULES §3.8).
+- Fixed calendar month/year dropdown size in `src/components/ui/calendar.tsx`:
+  - Changed CustomSelect dropdown from `absolute` to `fixed positioning` with `max-w-[240px] min-w-[80px]` width and `max-h-[60vh] overflow-y-auto` — prevents full-screen height stretch.
+  - Reduced year navigation range from 60 years back to 20 years back (20+10 years), so year dropdown has ~31 options instead of 70+.
+- Verified: tsc 0, eslint 0 warnings, vitest 248/248 green, e2e/calendar-dropdown.spec.ts passes.
+- Commits on `fix/calendar-dropdown-month-year`:
+  - `5d4260f` — made month/year dropdown triggers clickable (removed `pointer-events-none`/`opacity-0` blockers)
+  - `357f551` — constrained dropdown size (width 240px, height 60vh) and reduced year range to 31 years
 
 ### Skill(s) Used
 - senior-frontend, playwright E2E verification
 
 ### Status
-- Dropdown height/width design fixed and verified. Ready for review/merge when user instructs.
+- Fix complete and verified. Dropdown menus now fit within viewport constraints. Ready for review/merge when user instructs.
 
 ---
 
