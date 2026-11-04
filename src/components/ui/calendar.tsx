@@ -60,8 +60,8 @@ function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & { c
       {open && options.length > 0 && (
         <div
           className={cn(
-            "fixed z-50 mt-2 min-w-[80px] max-w-[240px] rounded-md border border-border bg-surface backdrop-blur-md shadow-lg",
-            "flex flex-col max-h-[60vh] overflow-y-auto",
+            "fixed z-50 mt-2 min-w-[120px] max-w-[180px] rounded-md border border-border bg-surface/95 shadow-lg",
+            "flex flex-col max-h-[50vh] overflow-y-auto",
             disabled && "opacity-50 pointer-events-none"
           )}
         >
