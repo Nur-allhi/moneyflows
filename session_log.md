@@ -2680,5 +2680,18 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 
 ### Status
-- Changes uncommitted on top of pushed ba58ca9. Ready to commit + push to origin/dev.
+- Changes uncommitted on top of pushed ba58ca9 + 1176bd7. Ready to commit + push to origin/dev.
+
+## Session 2026-11-04 17:15
+
+### Changes
+- Balance right-alignment fix (per page feedback: amount showing left-aligned with blank space to its right): the balance wrapper `.anim-target:last-child` had no flex properties so `.cardBalance`'s `width: 100%` resolved to the content width, leaving blank space on the right. Added `flex: 0 1 30%; min-width: 30%` to `.card > :global(.anim-target):last-child` so the balance column takes exactly 30% of card width, and removed `flex/min-width` from `.cardBalance` itself (now just `text-align: right; display: block; width: 100%`). The amount is now right-aligned within its 30% column.
+- Verified live at 1864×949: balance right-aligned, no blank space to right of amount; delete on hover only; 70/30 split with divider intact.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 1176bd7. Ready to commit + push to origin/dev.
 
