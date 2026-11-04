@@ -117,7 +117,8 @@ export function OtherLedgersIndex() {
                         <span className={styles.cardAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
                         <span className={styles.cardInfo}>
                           <span className={styles.cardName}><Highlight text={l.name} query={search} /></span>
-                          <span className={styles.cardTag}>{getCount(l.id)} entries · {l.startingDate}</span>
+                          <span className={styles.cardEntries}>{getCount(l.id)} entries</span>
+                          <span className={styles.cardDate}>{l.startingDate}</span>
                         </span>
                       </span>
                       </span>

@@ -2641,3 +2641,18 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - Grid/table toggle complete and verified; all changes uncommitted on `dev` ahead of `b299f69`. Ready to commit.
 
+## Session 2026-11-04 16:00
+
+### Changes
+- Other Ledgers index card layout (per page feedback at 1864×949): left section now shows three separate lines — ledger name, entries count, creation date; right section shows only the balance. Delete button hidden by default, appears only on card hover (`opacity: 0`/`visibility: hidden`, revealed via `.cardWrap:hover .cardDelete`).
+- CSS: replaced `.cardTag` with `.cardEntries` + `.cardDate`; `.cardDelete` initially hidden + hover reveal; `.cardWrap` already `position: relative`.
+- Verified live on :3000: name/entries/date on left, balance on right, delete appears on hover only, no card overflow at 1864×949.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+- Committed on dev as ba58ca9 (no version bump — release decision separate).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on dev as ba58ca9. Ready for push to origin/dev.
+

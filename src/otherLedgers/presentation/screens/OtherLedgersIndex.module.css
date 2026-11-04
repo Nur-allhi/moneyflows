@@ -40,6 +40,15 @@
   place-items: center;
   cursor: pointer;
   transition: var(--transition-fast);
+  /* Hidden by default — only shown on card hover. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+}
+.cardWrap:hover .cardDelete {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 /* M-06: icon stays compact for the card layout, but the hit area extends to
    >=44px via an invisible pseudo overlay (UNGuideline touch-target-size). */
@@ -114,7 +123,8 @@
    word from widening the column. */
 .cardName { font-size: var(--text-base); font-weight: 600; color: var(--color-text); overflow-wrap: anywhere; }
 /* Entries count and creation date each sit on their own line. */
-.cardTag { font-size: var(--text-xs); color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cardEntries { font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.cardDate { font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; }
 .cardBalance { font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; color: var(--color-text); white-space: nowrap; }
 .grouped { display: flex; flex-direction: column; gap: 16px; }
 .section {
