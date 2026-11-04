@@ -2654,7 +2654,20 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 
 ### Status
-- Committed on dev as ba58ca9. Ready for push to origin/dev.
+- Committed on dev as ba58ca9 + 5143a52. Ready for push to origin/dev.
+
+## Session 2026-11-04 17:00
+
+### Changes
+- Right-side balance alignment fix (per page feedback): balance is now right-aligned on the card's right side. Changed `.cardBalance` from inline to `display: block; width: 100%` so `text-align: right` takes effect (the `<span>` was inline, ignoring text-align). Delete button remains top-right on card hover only.
+- Verified live at 1864×949: balance right-aligned on right side, delete on hover only, 70/30 split with divider intact.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 5143a52. Ready to commit + push to origin/dev.
 
 ## Session 2026-11-04 16:30
 
