@@ -242,11 +242,13 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **T-174 (2026-11-01): tag-overview sorting** — card grid on `/tags` gets a **Most used / Name A–Z / Z–A** pill group (default unchanged); alphabetical sorts use `localeCompare` with a count-desc tie-break, and the pills reuse the detail ledger's `sortPill` styles, shown when more than one tag exists. `feat:` → **MINOR bump to 2.1.0** on `beta_v2.0` per `VERSIONING.md` §2→§3 (T-174 ticket in TICKETS.md; feature commit `8322c74`, release commit `dbf4c47`, session log `a28d252`).
 
-**Branch map (2026-11-02):** `master` = releases only, `4fbc898` = merge of `dev`, **v2.2.0** (Other Ledgers V2 dual-post T-119..T-123 + BUG-49 e2e fix + v2.1.0 lineage; 244 unit + 31 Playwright green; **tag `v2.2.0` created — first tag since v1.9.0**). `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `dev` = fast-forwarded to `4fbc898` (== master). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
+**Branch map (2026-11-03):** `master` = releases only, `33d1a94` = merge of `dev`, **v2.3.0** (update-available banner option A + v2.2.0 lineage; 248 unit + 31 Playwright green; **tag `v2.3.0` created**). `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `dev` = fast-forwarded to `33d1a94` (== master). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 
 **BUG-20 (linked-accounts modal 0 BDT vs dashboard total):** closed 2026-10-17 as **resolved-by-BUG-19** — diagnosed live, not reproducible on current code (dashboard/members list/profile hero/mobile modal/desktop dropdown all agree, before and after reload). Regression guard added in `e2e/flows/03-accounts.spec.ts` (mutation-verified). No production code change, no version bump.
+
+**BUG-50 (Other Ledgers index long-name overflow):** fixed 2026-11-04 on `dev` (commit `b299f69`). A long ledger name now wraps to fit its card instead of pushing the balance out / forcing page horizontal scroll; verified at 1864/1280/1024/768/390, gates green (tsc/eslint/vitest 14/14/e2e 2/2). See docs/BUGS.md and session log for details. No version bump (release decision separate).
 
 **Harness defects — both closed 2026-10-30.** BUG-38 **fixed** (`1ee794d`): `vite.config.ts` `test.include` pinned to `src/**/*.{test,spec}.{ts,tsx}`, so `npm test` runs the unit suite and exits 0. BUG-39 **fixed**: the stale `e2e/search.smoke.spec.ts` case now asserts the header global search (dashboard input is long gone) instead of failing forever. BUG-44 **fixed as a gate**: `playwright.config.ts` runs `fullyParallel: false` / `workers: 1` — full suite is **31 passed / 0 failed in ~1.9 min**, the first genuinely green baseline; the *cause* of the parallel flakiness is still undocumented (candidates in the BUGS entry), so option (b) readiness waits remain a follow-up.
 
@@ -255,7 +257,7 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **moneyflows** (3783 symbols, 8522 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **moneyflows** (4163 symbols, 9261 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 

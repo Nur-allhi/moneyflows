@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-50: Other Ledgers index — a long ledger name overflows its card instead of shrinking
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-11-04 (during: user manual UI review of `/other-ledgers`)
+- **Location:** `src/otherLedgers/presentation/screens/OtherLedgersIndex.module.css` (`.grid`, `.cardWrap`, `.card`, `.cardLeft` / `.cardInfo` / `.cardName`) and `OtherLedgersIndex.tsx` (`.card`'s two `span.anim-target` wrappers)
+- **Description:** On `/other-ledgers`, when a ledger name is longer than the remaining space in its card, the content ran out past the card's right edge (the balance was pushed out / the name bled over the border) instead of the name wrapping and the card keeping its column width. Expected: the card always stays inside its grid column; the name wraps to fit (never hidden); entries count + creation date each on their own line; the balance separated and right-aligned; no page horizontal overflow.
+- **Root Cause:** the card's two `<span className="anim-target">` wrappers (`OtherLedgersIndex.tsx:146,155`) are flex items with default `min-width: auto`, so each one's minimum size was its content's min-content width. `.cardName` was `white-space: nowrap`, so that minimum was the whole untruncated name — the `overflow: hidden`/`text-overflow: ellipsis` never got a narrower box to truncate into, so the left wrapper grew to the full name width and pushed the balance out. `.cardWrap` was a grid item with `min-width: auto`, so `repeat(auto-fill, minmax(280px,1fr))` couldn't shrink below the card's min-content and the page scrolled sideways at small widths.
+- **Fix Approach:** CSS-only in `OtherLedgersIndex.module.css`: `.cardWrap { min-width: 0 }`; `.card > :global(.anim-target):first-child { flex: 1 1 0; min-width: 0; }` (left section fills available width so the name gets a bounded box to wrap within); `.card > :global(.anim-target):last-child { flex: 0 0 auto; }` (balance stays natural size); `.card` switched from `justify-content: space-between` to `gap` so the balance stays separated and right-aligned; `.cardName` changed from `nowrap`+`overflow:hidden`+`ellipsis` to `overflow-wrap: anywhere` so a long name wraps instead of being hidden; `.cardTag` kept `nowrap`+`ellipsis` on one line (entries count + creation date).
+- **Resolved:** 2026-11-04 — committed on `dev`. typecheck / lint / vitest otherLedgers (14/14) / e2e 05-other-ledgers (2/2) green. Verified on the live dev server (:3000) at 1864/1280/1024/768/390: no card overflow anywhere, name wraps 1–4 lines, balance separated by a 12px gap inside the card, `pageW == vp` at every width.
+
+---
+
 ## BUG-49: Playwright suite cannot start from a cold dev server (setup seed timeout)
 
 - **Status:** fixed

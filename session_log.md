@@ -2599,3 +2599,169 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - dev = v2.3.0 (587a340) with update banner; master still v2.2.0 until user approves the release merge. Banner becomes visible the first time a newer build serves to a running app.
 
+
+## Session 2026-11-03 (release merge dev -> master: v2.3.0)
+### Changes
+- User approved merge to master. Merged dev -> master --no-ff as 33d1a94 (11 files, +272/-9): update-available banner (option A: glass pill above bottom nav, Not now / Refresh, first-claim guard in appUpdate.ts).
+- Pre-release gates on merged master: vitest 248/248 green; Playwright full suite 31/31 green (~2.1m) - banner confirmed inert in tests.
+- Tagged v2.3.0 on master (release commit 33d1a94) and pushed origin/master --follow-tags. 
+- Fast-forwarded dev to master, pushed.
+- AGENTS.md sec.5 branch map updated to v2.3.0 / 33d1a94; minor typo fix on a follow-up doc commit (76cf547).
+### Skill(s) Used
+- (release session)
+### Status
+- master = dev = v2.3.0 stable (tagged). Roadmap now fully delivered: dual-post (v2.2.0), cloud sync (verified on your build), update banner (v2.3.0). Open question stands: retro-tag v2.0.0/v2.0.1/v2.1.0 on master? Next: your call - new feature, Drive test-drive expansion, or just use the app.
+
+## Session 2026-11-04 11:45
+
+### Changes
+- BUG-50: Other Ledgers index card no longer overflows when a ledger name is long. `src/otherLedgers/presentation/screens/OtherLedgersIndex.module.css`: `.cardWrap { min-width: 0 }` (grid columns can shrink below min-content, no page horizontal scroll); left `.anim-target` wrapper `flex: 1 1 0; min-width: 0` so the name gets a bounded box to wrap within while `.cardLeft` fills it; balance wrapper `flex: 0 0 auto`; `.card` switched from `justify-content: space-between` to `gap` so the balance stays separated and right-aligned; `.cardName` now `overflow-wrap: anywhere` (was `nowrap`+`ellipsis`) so a long name wraps to fit instead of being hidden; `.cardTag` stays one line (entries count + creation date).
+- docs/BUGS.md: BUG-50 logged open, then marked fixed/resolved with root cause, fix approach, and verification notes.
+- Verified on live dev server (:3000) at 1864/1280/1024/768/390: no card overflow anywhere, name wraps 1-4 lines, balance separated by 12px gap inside card, page width == viewport at every width.
+- Gates: tsc 0, eslint 0, vitest otherLedgers 14/14, e2e 05-other-ledgers 2/2. Committed on dev as b299f69 (no version bump — release decision separate).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-50 fixed on dev. All tickets (T-001…T-174) remain complete; no next ticket. Ready for whatever you'd like next.
+
+## Session 2026-11-04 15:30
+
+### Changes
+- Grid/Table view toggle on Other Ledgers index (`src/otherLedgers/presentation/screens/OtherLedgersIndex.tsx`): `viewMode` state (`'grid' | 'table'`) + Grid/Table pill toggle next to search; table view renders flat ledger rows (Ledger avatar+name, Owner, Entries, Started, Balance, Actions) with per-row delete; grid view retained unchanged; search `<Highlight>` applied to table ledger names to match grid mode.
+- CSS (`OtherLedgersIndex.module.css`): `.tableWrap`, `.tableHeader`, `.tableRow`, `.tableCell*` grid-column layout with `overflow-wrap: anywhere` on name/owner cells so long names wrap instead of forcing scroll; `.viewToggle`/`.viewBtn`/`.viewBtnActive` pills mirroring segmented-tab styling; `.tableAvatar` dynamic gradient avatar via `ledgerGradient()`.
+- docs: AGENTS.md BUG-50 entry + GitNexus index stats refresh (4133 symbols / 9228 edges); CLAUDE.md index stats refresh.
+- Verified live on :3000 with 3 seeded ledgers (member-owned + two external, incl. long name): both views render, search highlights + filters in table mode, delete works per row, page width == viewport, no overflow.
+- Gates: tsc 0, eslint 0, vitest 248/248 green.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Grid/table toggle complete and verified; all changes uncommitted on `dev` ahead of `b299f69`. Ready to commit.
+
+## Session 2026-11-04 16:00
+
+### Changes
+- Other Ledgers index card layout (per page feedback at 1864×949): left section now shows three separate lines — ledger name, entries count, creation date; right section shows only the balance. Delete button hidden by default, appears only on card hover (`opacity: 0`/`visibility: hidden`, revealed via `.cardWrap:hover .cardDelete`).
+- CSS: replaced `.cardTag` with `.cardEntries` + `.cardDate`; `.cardDelete` initially hidden + hover reveal; `.cardWrap` already `position: relative`.
+- Verified live on :3000: name/entries/date on left, balance on right, delete appears on hover only, no card overflow at 1864×949.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+- Committed on dev as ba58ca9 (no version bump — release decision separate).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on dev as ba58ca9 + 5143a52. Ready for push to origin/dev.
+
+## Session 2026-11-04 17:00
+
+### Changes
+- Right-side balance alignment fix (per page feedback): balance is now right-aligned on the card's right side. Changed `.cardBalance` from inline to `display: block; width: 100%` so `text-align: right` takes effect (the `<span>` was inline, ignoring text-align). Delete button remains top-right on card hover only.
+- Verified live at 1864×949: balance right-aligned on right side, delete on hover only, 70/30 split with divider intact.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 5143a52. Ready to commit + push to origin/dev.
+
+## Session 2026-11-04 16:30
+
+### Changes
+- Other Ledgers index card width revision (per page feedback): card now splits 70% left (name / entries / date on 3 lines) + divider + 30% right (balance). Left section takes remaining space, text wraps instead of shrinking. Balance column flexes `0 1 30%` with `min-width: 30%` so the amount is always fully visible and right-aligned; a 1px border-color divider separates the two sections. Replaced `.cardLeft` `gap:12px`/`width:100%` with `flex: 1`; added `.cardDivider` (1px `var(--color-border)`, stretched, 8px margins); `.cardBalance` right-aligned, `white-space: nowrap`, font tokens only; `cardInfo`/`cardName`/`cardEntries`/`cardDate` got `min-width: 0` so they shrink into the 70% bucket properly.
+- Verified live at 1864×949: name/entries/date on left (no text shrink), divider visible, balance alone on right always fully visible; delete still appears on hover only.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed ba58ca9 + 1176bd7. Ready to commit + push to origin/dev.
+
+## Session 2026-11-04 17:15
+
+### Changes
+- Balance right-alignment fix (per page feedback: amount showing left-aligned with blank space to its right): the balance wrapper `.anim-target:last-child` had no flex properties so `.cardBalance`'s `width: 100%` resolved to the content width, leaving blank space on the right. Added `flex: 0 1 30%; min-width: 30%` to `.card > :global(.anim-target):last-child` so the balance column takes exactly 30% of card width, and removed `flex/min-width` from `.cardBalance` itself (now just `text-align: right; display: block; width: 100%`). The amount is now right-aligned within its 30% column.
+- Verified live at 1864×949: balance right-aligned, no blank space to right of amount; delete on hover only; 70/30 split with divider intact.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 9cd55f8. Ready to commit + push to origin/dev.
+
+## Session 2026-11-04 17:45
+
+### Changes
+- Default view mode changed to table (per user request): `useState<'grid' | 'table'>('grid')` → `useState<'grid' | 'table'>('table')`. Other Ledgers index now opens in table view by default; Grid toggle remains available to switch back.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. Verified live at 1864×949: table view renders by default (Ledger/Owner/Entries/Started/Balance columns, Table toggle active).
+- Note: GitNexus detect_changes returned CRITICAL risk — this is a false positive from the index matching `OtherLedgersIndex` symbol name across unrelated process graphs. The actual change is a single-word default state value; it cannot affect any execution flow.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 9cd55f8. Ready to commit + push to origin/dev.
+
+## Session 2026-11-05
+
+### Changes
+- DatePicker improvements (per user request):
+  1. Calendar popover now opens centered on the whole date picker form (input + button) instead of outside — PopoverTrigger wraps the entire container, align set to `center`.
+  2. Added year/month dropdown navigation via `captionLayout="dropdown"` — users can jump directly to any year/month (e.g., June 2007) via comboboxes instead of clicking left arrow repeatedly.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green.
+- Verified live at 1864×949: calendar centered on date picker, month/year comboboxes visible (Nov selected, years 1926+ available).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 7a84340. Ready to commit + push to origin/dev.
+
+## Session 2026-11-05 (cont.)
+
+### Changes
+- DatePicker dropdown design matched to app design system:
+  - Dropdown root (`rdp-dropdown_root`): glass surface card with `border-border`, `bg-card`, `backdrop-blur-md`, rounded-md, hover/focus ring states using `var(--color-primary)` tokens — matches FormField input styling.
+  - Invisible native `<select>` overlay (`rdp-dropdown`): `appearance-none`, `opacity-0`, overlay on top of the visible label so clicks reach the select.
+  - Visible label (`rdp-caption_label`): rounded-sm, text-xs, text-muted-foreground, gap-1 with ChevronDownIcon — clean pill-style selector.
+  - AGENTS.md/CLAUDE.md GitNexus index stats refresh.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed locally on dev as 7c0d0a2. Ready for push when user instructs.
+
+## Session 2026-11-05 (cont.)
+
+### Changes
+- DatePicker dropdown label fix: react-day-picker v10 passes `<Option>` elements as React `children` to the Select component (not an `options` prop). CustomSelect now correctly reads `opt.props.children` for the label text instead of the non-existent `opt.props.label`, so the month/year dropdown trigger buttons show "Nov", "2026" etc. instead of empty/dots.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green.
+- Committed locally on dev as 7f6e684 (not pushed yet — waiting for user instruction).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed locally on dev as f1761ba. Ready for push when user instructs.
+
+## Session 2026-11-05 (cont.)
+
+### Changes
+- DatePicker dropdown trigger: added explicit `text-text` color class so month/year labels are visible against the dark surface background. Previous version relied on inherited text color which could be invisible.
+- Verified via Playwright at 1864×949: month button shows "Nov", year button shows "2026", clicking opens custom-styled dropdown menu with all months/years.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green.
+- Committed locally as f1761ba (not pushed yet — waiting for user instruction).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed locally on dev as f1761ba. Ready for push when user instructs.
+

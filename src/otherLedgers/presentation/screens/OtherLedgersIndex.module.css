@@ -4,7 +4,7 @@
    [count | rightControls] wrapper with one less nesting level. */
 .topBar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .leftCount { order: -1; font-size: var(--text-sm); color: var(--color-text-secondary); white-space: nowrap; align-self: center; }
-.addBtn { padding: 8px 16px; border-radius: 9999px; background: var(--color-primary); color: var(--color-text-on-primary); border: none; font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; align-self: center; min-height: 36px; }
+.addBtn { padding: 6px 10px; border-radius: 9999px; background: var(--color-primary); color: var(--color-text-on-primary); border: none; font-size: var(--text-xs); font-weight: 600; cursor: pointer; transition: var(--transition-fast); white-space: nowrap; align-self: center; }
 .addBtn:hover { box-shadow: 0 0 20px var(--color-primary-glow); }
 .addBtn:active { transform: scale(0.98); }
 .searchWrap { flex: 1; width: 240px; max-width: 42vw; margin-right: 16px; display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 9999px; padding: 8px 12px; backdrop-filter: blur(20px); min-height: 44px; }
@@ -12,9 +12,25 @@
 .searchIcon { color: var(--color-text-secondary); display: flex; flex-shrink: 0; }
 .searchClear { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); display: flex; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.cardWrap { position: relative; }
-.card { display: flex; align-items: center; justify-content: space-between; padding: 16px; padding-right: 44px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); cursor: pointer; transition: var(--transition-fast); text-align: left; width: 100%; }
+/* BUG-50: a grid item defaults to min-width:auto, so the column could not go
+   below the card's min-content width (a 50-char nowrap name) and the page
+   scrolled sideways on phones. */
+.cardWrap { position: relative; min-width: 0; }
+.card { display: flex; align-items: center; gap: 0; padding: 16px; padding-right: 44px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); cursor: pointer; transition: var(--transition-fast); text-align: left; width: 100%; }
 .card:hover { border-color: var(--color-primary); box-shadow: 0 0 20px var(--color-primary-glow); }
+/* Card splits into 70% left (name/entries/date) + divider + 30% right (balance).
+   Balance column is at least 30% and can grow if the amount is wider; the amount
+   never wraps so it stays fully visible. Left section takes the remaining space
+   and its text wraps instead of shrinking. */
+.cardLeft { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.cardInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cardDivider { width: 1px; background: var(--color-border); align-self: stretch; margin: 0 8px; }
+/* Left section expands to fill all remaining space so the balance column
+   sits flush against the right edge — no blank space after the amount. */
+.card > :global(.anim-target):first-child { flex: 1; min-width: 0; }
+/* Balance wrapper takes 30% of card width so the amount can right-align within it. */
+.card > :global(.anim-target):last-child { flex: 0 1 30%; min-width: 30%; }
+.cardBalance { text-align: right; white-space: nowrap; display: block; width: 100%; font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
 .cardDelete {
   position: absolute;
   top: 8px;
@@ -29,6 +45,15 @@
   place-items: center;
   cursor: pointer;
   transition: var(--transition-fast);
+  /* Hidden by default — only shown on card hover. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+}
+.cardWrap:hover .cardDelete {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 /* M-06: icon stays compact for the card layout, but the hit area extends to
    >=44px via an invisible pseudo overlay (UNGuideline touch-target-size). */
@@ -39,11 +64,72 @@
   border-radius: 50%;
 }
 .cardDelete:hover { background: oklch(62% 0.22 25 / 0.18); border-color: oklch(62% 0.22 25 / 0.3); color: var(--color-expense); }
-.cardLeft { display: flex; align-items: center; gap: 12px; min-width: 0; }
+/* BUG-50: view toggle pills (Grid / Table). Mirrors SegmentedTabs styling. */
+.viewToggle { display: flex; gap: 3px; background: color-mix(in oklch, var(--color-wash) 5%, transparent); border-radius: 10px; padding: 3px; }
+.viewBtn { flex: 1; text-align: center; padding: 6px 10px; font-size: var(--text-xs); font-weight: 500; border-radius: 8px; cursor: pointer; transition: all var(--transition-fast); color: var(--color-text-secondary); border: none; background: none; font-family: inherit; white-space: nowrap; min-width: 0; }
+.viewBtn:hover:not(.viewBtnActive) { color: var(--color-text); background: color-mix(in oklch, var(--color-wash) 6%, transparent); }
+.viewBtnActive { background: var(--color-primary); color: var(--color-text-on-primary); box-shadow: 0 0 20px var(--color-primary-glow); }
+/* Table view: flat list of ledgers with owner column. Columns shrink/grow so
+   long names wrap instead of breaking layout; horizontal scroll on narrow screens. */
+.tableWrap { overflow-x: auto; margin-top: 8px; }
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1fr 130px 70px 120px 120px 64px;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: var(--text-3xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+.tableRow {
+  display: grid;
+  grid-template-columns: 1fr 130px 70px 120px 120px 64px;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: var(--text-sm);
+  align-items: center;
+  border-bottom: 1px solid color-mix(in oklch, var(--color-wash) 4%, transparent);
+  transition: background var(--transition-fast);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.tableRow:hover { background: color-mix(in oklch, var(--color-wash) 4%, transparent); }
+.tableRow:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; border-radius: var(--radius-sm); }
+.tableCellLedger { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tableAvatar { width: 28px; height: 28px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.tableLedgerName { font-weight: 600; color: var(--color-text); overflow-wrap: anywhere; min-width: 0; }
+.tableCellOwner { color: var(--color-text-secondary); font-size: var(--text-xs); overflow-wrap: anywhere; min-width: 0; }
+.tableCellEntries { color: var(--color-text-secondary); font-size: var(--text-xs); text-align: center; white-space: nowrap; }
+.tableCellStarted { color: var(--color-text-secondary); font-size: var(--text-xs); white-space: nowrap; }
+.tableCellBalance { font-family: var(--font-body); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.tableCellActions { display: flex; justify-content: flex-end; }
+.tableDelete {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
+  color: var(--color-text-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  padding: 0;
+}
+.tableDelete:hover { background: oklch(62% 0.22 25 / 0.18); border-color: oklch(62% 0.22 25 / 0.3); color: var(--color-expense); }
 .cardAvatar { width: 40px; height: 40px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; flex-shrink: 0; }
-.cardInfo { display: flex; flex-direction: column; min-width: 0; }
-.cardName { font-size: var(--text-base); font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cardTag { font-size: var(--text-xs); color: var(--color-text-secondary); }
+.cardInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+/* BUG-50: the name wraps (a ledger name is never hidden) — the card grows
+   taller instead of pushing its content out. `anywhere` keeps one very long
+   word from widening the column. */
+.cardName { font-size: var(--text-base); font-weight: 600; color: var(--color-text); overflow-wrap: anywhere; min-width: 0; }
+/* Entries count and creation date each sit on their own line. */
+.cardEntries { font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; min-width: 0; }
+.cardDate { font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; min-width: 0; }
 .cardBalance { font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; color: var(--color-text); white-space: nowrap; }
 .grouped { display: flex; flex-direction: column; gap: 16px; }
 .section {
