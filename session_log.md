@@ -7,7 +7,7 @@
   - Constrained CustomSelect dropdown menu: added `max-w-sm`, `min-w-32`, and `max-h-[70vh] overflow-y-auto` so month/year dropdowns no longer render full-screen height (the year dropdown previously listed ~100 options from the default 100-year nav range).
   - Bounded the calendar navigation range via `startMonth`/`endMonth` (default 60 years back, 10 years forward; overridable via props) so the year dropdown stays short.
 - Re-verified: tsc 0, eslint 0 warnings, vitest 248/248 green, calendar-dropdown e2e test passes (headed).
-- Committed on branch `fix/calendar-dropdown-month-year` as a follow-up to `5d4260f` (not merged to master — pending user approval per REPO_RULES §3.8).
+- Committed on branch `fix/calendar-dropdown-month-year` as `d712f34` (follow-up to `5d4260f`; not merged to master — pending user approval per REPO_RULES §3.8).
 
 ### Skill(s) Used
 - senior-frontend, playwright E2E verification
