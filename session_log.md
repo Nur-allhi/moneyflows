@@ -2765,3 +2765,18 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - Committed locally on dev as f1761ba. Ready for push when user instructs.
 
+## Session 2026-11-05 (merge dev → master)
+
+### Changes
+- Merged dev → master as commit `04a6646` (17 commits, +537/-94, 8 files).
+- Includes all Other Ledgers improvements: Grid/Table view toggle, card 70/30 width split with divider, delete-on-hover, default table view, topBar button sizing, long-name overflow fix (BUG-50).
+- Includes all DatePicker improvements: manual text input (YYYY-MM-DD), centered calendar popover, year/month dropdown navigation, app-matching dropdown design.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green.
+- Pushed to origin/master as `04a6646`.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- dev → master merged and pushed as `04a6646`. master is now in sync with origin/master.
+
