@@ -166,14 +166,19 @@ function Calendar({
           "flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-sm font-medium",
           defaultClassNames.dropdowns
         ),
+        /* Container for the CustomSelect month/year trigger. The custom trigger
+           button (+ its dropdown menu) must be clickable, so `pointer-events-none`
+           is removed here — it previously blocked all interaction on the dropdowns.
+           Visual styling (border/bg/padding) is provided by CustomSelect itself,
+           so this stays a plain layout container to avoid double borders. */
         dropdown_root: cn(
-          "relative flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1 backdrop-blur-md transition-colors hover:border-primary focus-within:border-primary focus-within:ring-1 focus-within:ring-primary pointer-events-none",
+          "relative flex items-center gap-2",
           defaultClassNames.dropdown_root
         ),
-        dropdown: cn(
-          "absolute inset-0 bg-transparent border-none outline-none cursor-pointer appearance-none opacity-0",
-          defaultClassNames.dropdown
-        ),
+        /* The native <select> is replaced by CustomSelect, which renders its own
+           visible trigger + dropdown menu. Keep `dropdown` neutral so it does not
+           hide (opacity-0) or absolutely-position/restyle the custom trigger button. */
+        dropdown: cn(defaultClassNames.dropdown),
         /* Hidden — CustomSelect renders its own visible trigger + dropdown menu. */
         caption_label: cn("hidden", defaultClassNames.caption_label),
         month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
