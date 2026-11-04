@@ -2612,3 +2612,32 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - master = dev = v2.3.0 stable (tagged). Roadmap now fully delivered: dual-post (v2.2.0), cloud sync (verified on your build), update banner (v2.3.0). Open question stands: retro-tag v2.0.0/v2.0.1/v2.1.0 on master? Next: your call - new feature, Drive test-drive expansion, or just use the app.
 
+## Session 2026-11-04 11:45
+
+### Changes
+- BUG-50: Other Ledgers index card no longer overflows when a ledger name is long. `src/otherLedgers/presentation/screens/OtherLedgersIndex.module.css`: `.cardWrap { min-width: 0 }` (grid columns can shrink below min-content, no page horizontal scroll); left `.anim-target` wrapper `flex: 1 1 0; min-width: 0` so the name gets a bounded box to wrap within while `.cardLeft` fills it; balance wrapper `flex: 0 0 auto`; `.card` switched from `justify-content: space-between` to `gap` so the balance stays separated and right-aligned; `.cardName` now `overflow-wrap: anywhere` (was `nowrap`+`ellipsis`) so a long name wraps to fit instead of being hidden; `.cardTag` stays one line (entries count + creation date).
+- docs/BUGS.md: BUG-50 logged open, then marked fixed/resolved with root cause, fix approach, and verification notes.
+- Verified on live dev server (:3000) at 1864/1280/1024/768/390: no card overflow anywhere, name wraps 1-4 lines, balance separated by 12px gap inside card, page width == viewport at every width.
+- Gates: tsc 0, eslint 0, vitest otherLedgers 14/14, e2e 05-other-ledgers 2/2. Committed on dev as b299f69 (no version bump — release decision separate).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- BUG-50 fixed on dev. All tickets (T-001…T-174) remain complete; no next ticket. Ready for whatever you'd like next.
+
+## Session 2026-11-04 15:30
+
+### Changes
+- Grid/Table view toggle on Other Ledgers index (`src/otherLedgers/presentation/screens/OtherLedgersIndex.tsx`): `viewMode` state (`'grid' | 'table'`) + Grid/Table pill toggle next to search; table view renders flat ledger rows (Ledger avatar+name, Owner, Entries, Started, Balance, Actions) with per-row delete; grid view retained unchanged; search `<Highlight>` applied to table ledger names to match grid mode.
+- CSS (`OtherLedgersIndex.module.css`): `.tableWrap`, `.tableHeader`, `.tableRow`, `.tableCell*` grid-column layout with `overflow-wrap: anywhere` on name/owner cells so long names wrap instead of forcing scroll; `.viewToggle`/`.viewBtn`/`.viewBtnActive` pills mirroring segmented-tab styling; `.tableAvatar` dynamic gradient avatar via `ledgerGradient()`.
+- docs: AGENTS.md BUG-50 entry + GitNexus index stats refresh (4133 symbols / 9228 edges); CLAUDE.md index stats refresh.
+- Verified live on :3000 with 3 seeded ledgers (member-owned + two external, incl. long name): both views render, search highlights + filters in table mode, delete works per row, page width == viewport, no overflow.
+- Gates: tsc 0, eslint 0, vitest 248/248 green.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Grid/table toggle complete and verified; all changes uncommitted on `dev` ahead of `b299f69`. Ready to commit.
+

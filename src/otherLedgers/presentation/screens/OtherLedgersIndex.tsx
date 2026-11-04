@@ -34,6 +34,7 @@ export function OtherLedgersIndex() {
   const [pickerPicked, setPickerPicked] = useState<string | null>(null);
   const [cancelKey, replayCancel] = useReplay();
   const [deleteKey, replayDelete] = useReplay();
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
@@ -87,6 +88,102 @@ export function OtherLedgersIndex() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, memberMap, entriesByLedger]);
 
+  // Grid or table rendering of the filtered ledgers. Kept as a const so the
+  // outer ternary branches stay simple JSX (no nested expression braces).
+  const ledgerList =
+    viewMode === 'grid' ? (
+      <div className={styles.grouped}>
+        {grouped.map((group) => (
+          <div key={group.key} className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionAvatar} style={{ background: ledgerGradient(group.ownerName) }}>{(group.ownerName[0] ?? '?').toUpperCase()}</span>
+              <span className={styles.sectionInfo}>
+                <span className={styles.sectionName}>{group.ownerName}</span>
+                <span className={styles.sectionMeta}>
+                  <span>{group.ledgers.length} ledger{group.ledgers.length !== 1 ? 's' : ''}</span>
+                  <span style={{ opacity: 0.4 }}>·</span>
+                  <span style={{ fontFamily: 'var(--font-body)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(group.totalBalance, locale, currency)}</span>
+                </span>
+              </span>
+            </div>
+            <div className={styles.grid}>
+              {group.ledgers.map((l) => {
+                const bal = getBalance(l.id, l.openingBalance);
+                return (
+                  <div key={l.id} className={styles.cardWrap}>
+                    <button className={`${styles.card} ${cardPicked === l.id && cardKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCard(); setCardPicked(l.id); navigate(`/other-ledgers/${l.id}`); }}>
+                      <span className="anim-target" key={`${l.id}-${cardPicked === l.id ? cardKey : 0}-l`}>
+                      <span className={styles.cardLeft}>
+                        <span className={styles.cardAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
+                        <span className={styles.cardInfo}>
+                          <span className={styles.cardName}><Highlight text={l.name} query={search} /></span>
+                          <span className={styles.cardTag}>{getCount(l.id)} entries · {l.startingDate}</span>
+                        </span>
+                      </span>
+                      </span>
+                      <span className="anim-target" key={`${l.id}-${cardPicked === l.id ? cardKey : 0}-b`}>
+                      <span className={styles.cardBalance}>{formatAmount(bal, locale, currency)}</span>
+                      </span>
+                    </button>
+                    <button
+                      className={`${styles.cardDelete} ${cardDelKey > 0 ? 'anim-twist' : ''}`}
+                      aria-label={`Delete ${l.name}`}
+                      onClick={(e) => {
+                        replayCardDel();
+                        e.stopPropagation();
+                        setDeleteTarget({ id: l.id, name: l.name });
+                      }}
+                    >
+                      <svg key={cardDelKey} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className={styles.tableWrap}>
+        <div className={styles.tableHeader}>
+          <div className={styles.tableCellLedger}>Ledger</div>
+          <div className={styles.tableCellOwner}>Owner</div>
+          <div className={styles.tableCellEntries}>Entries</div>
+          <div className={styles.tableCellStarted}>Started</div>
+          <div className={styles.tableCellBalance}>Balance</div>
+          <div className={styles.tableCellActions}>Actions</div>
+        </div>
+        {grouped.flatMap((g) => g.ledgers).map((l) => {
+          const bal = getBalance(l.id, l.openingBalance);
+          const owner = l.ownerType === 'member' ? memberMap.get(l.ownerMemberId ?? '')?.name ?? 'Unknown' : l.ownerName ?? '—';
+          return (
+            <div key={l.id} className={styles.tableRow} onClick={() => navigate(`/other-ledgers/${l.id}`)}>
+              <div className={styles.tableCellLedger}>
+                <span className={styles.tableAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
+                <span className={styles.tableLedgerName}><Highlight text={l.name} query={search} /></span>
+              </div>
+              <div className={styles.tableCellOwner}>{owner}</div>
+              <div className={styles.tableCellEntries}>{getCount(l.id)}</div>
+              <div className={styles.tableCellStarted}>{l.startingDate}</div>
+              <div className={styles.tableCellBalance}>{formatAmount(bal, locale, currency)}</div>
+              <div className={styles.tableCellActions}>
+                <button
+                  className={styles.tableDelete}
+                  aria-label={`Delete ${l.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteTarget({ id: l.id, name: l.name });
+                  }}
+                >
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+
   if (loading && ledgers.length === 0) {
     return <div className={styles.page}><div className={styles.grid}>{[1, 2, 3].map((i) => <div key={i} className="skeleton skeleton-card" />)}</div></div>;
   }
@@ -103,6 +200,10 @@ export function OtherLedgersIndex() {
           </span>
           <input placeholder="Search ledgers..." value={search} onChange={(e) => setSearch(e.target.value)} />
           {search && <button className={`${styles.searchClear} ${clearKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayClear(); setSearch(''); }} aria-label="Clear"><svg key={clearKey} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M3 3l6 6M9 3l-6 6" /></svg></button>}
+        </div>
+        <div className={styles.viewToggle}>
+          <button className={`${styles.viewBtn} ${viewMode === 'grid' ? styles.viewBtnActive : ''}`} onClick={() => setViewMode('grid')}>Grid</button>
+          <button className={`${styles.viewBtn} ${viewMode === 'table' ? styles.viewBtnActive : ''}`} onClick={() => setViewMode('table')}>Table</button>
         </div>
         {ledgers.length > 0 && (
           <button className={`${styles.addBtn} ${entryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayEntry(); setShowEntryPicker(true); }} title="Add entry"><span className="anim-target" key={entryKey}>+ Entry</span></button>
@@ -123,57 +224,7 @@ export function OtherLedgersIndex() {
           </div>
         )
       ) : (
-        <div className={styles.grouped}>
-          {grouped.map((group) => (
-            <div key={group.key} className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionAvatar} style={{ background: ledgerGradient(group.ownerName) }}>{(group.ownerName[0] ?? '?').toUpperCase()}</span>
-                <span className={styles.sectionInfo}>
-                  <span className={styles.sectionName}>{group.ownerName}</span>
-                  <span className={styles.sectionMeta}>
-                    <span>{group.ledgers.length} ledger{group.ledgers.length !== 1 ? 's' : ''}</span>
-                    <span style={{ opacity: 0.4 }}>·</span>
-                    <span style={{ fontFamily: 'var(--font-body)', fontVariantNumeric: 'tabular-nums' }}>{formatAmount(group.totalBalance, locale, currency)}</span>
-                  </span>
-                </span>
-              </div>
-              <div className={styles.grid}>
-                {group.ledgers.map((l) => {
-                  const bal = getBalance(l.id, l.openingBalance);
-                  return (
-                    <div key={l.id} className={styles.cardWrap}>
-                      <button className={`${styles.card} ${cardPicked === l.id && cardKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayCard(); setCardPicked(l.id); navigate(`/other-ledgers/${l.id}`); }}>
-                        <span className="anim-target" key={`${l.id}-${cardPicked === l.id ? cardKey : 0}-l`}>
-                        <span className={styles.cardLeft}>
-                          <span className={styles.cardAvatar} style={{ background: ledgerGradient(l.name) }}>{(l.name[0] ?? 'O').toUpperCase()}</span>
-                          <span className={styles.cardInfo}>
-                            <span className={styles.cardName}><Highlight text={l.name} query={search} /></span>
-                            <span className={styles.cardTag}>{getCount(l.id)} entries · {l.startingDate}</span>
-                          </span>
-                        </span>
-                        </span>
-                        <span className="anim-target" key={`${l.id}-${cardPicked === l.id ? cardKey : 0}-b`}>
-                        <span className={styles.cardBalance}>{formatAmount(bal, locale, currency)}</span>
-                        </span>
-                      </button>
-                      <button
-                        className={`${styles.cardDelete} ${cardDelKey > 0 ? 'anim-twist' : ''}`}
-                        aria-label={`Delete ${l.name}`}
-                        onClick={(e) => {
-                          replayCardDel();
-                          e.stopPropagation();
-                          setDeleteTarget({ id: l.id, name: l.name });
-                        }}
-                      >
-                        <svg key={cardDelKey} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width="12" height="12"><path d="M3 4h10" /><path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" /><path d="M6 7l0 5M10 7l0 5M4 4l0 8a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1L12 4" /></svg>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+        ledgerList
       )}
 
       {showCreate && <CreateLedgerModal isOpen onClose={() => setShowCreate(false)} onCreated={() => setShowCreate(false)} />}
