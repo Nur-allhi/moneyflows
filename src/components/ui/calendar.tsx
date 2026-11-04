@@ -48,7 +48,7 @@ function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & { c
           if (!disabled) setOpen((prev: boolean) => !prev)
         }}
         className={cn(
-          "w-full flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-sm text-left transition-colors",
+          "w-full flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-sm text-text text-left transition-colors",
           "hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
           disabled && "opacity-50 cursor-not-allowed",
           className
