@@ -60,8 +60,8 @@ function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & { c
       {open && options.length > 0 && (
         <div
           className={cn(
-            "absolute z-50 mt-1 w-full min-w-32 max-w-sm rounded-md border border-border bg-surface backdrop-blur-md shadow-lg",
-            "flex flex-col max-h-[70vh] overflow-y-auto",
+            "fixed z-50 mt-2 min-w-[80px] max-w-[240px] rounded-md border border-border bg-surface backdrop-blur-md shadow-lg",
+            "flex flex-col max-h-[60vh] overflow-y-auto",
             disabled && "opacity-50 pointer-events-none"
           )}
         >
@@ -118,11 +118,11 @@ function Calendar({
   const defaultClassNames = getDefaultClassNames()
   const [navKey, replayNav] = useReplay()
 
-  /* Bound the navigation range so the year dropdown stays short (a money app
-     rarely needs dates more than ~60 years in the past). Callers can override
-     via props.startMonth / props.endMonth. */
+  /* Bound the navigation range so the year dropdown stays short.
+     A money app typically needs ~30 years: 20 back, 10 forward.
+     Callers can override via props.startMonth / props.endMonth. */
   const today = new Date()
-  const startMonth = props.startMonth ?? new Date(today.getFullYear() - 60, 0, 1)
+  const startMonth = props.startMonth ?? new Date(today.getFullYear() - 20, 0, 1)
   const endMonth = props.endMonth ?? new Date(today.getFullYear() + 10, 11, 31)
 
   return (
@@ -131,8 +131,8 @@ function Calendar({
       onMonthChange={(month) => { replayNav(); props.onMonthChange?.(month); }}
       className={cn(
         "group/calendar bg-transparent p-1 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(9)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
-        String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
-        String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
+        String.raw`rtl:**:[.rdp-button_next>svg]:rotate-180`,
+        String.raw`rtl:**:[.rdp-button_previous>svg]:rotate-180`,
         className
       )}
       captionLayout={captionLayout}
