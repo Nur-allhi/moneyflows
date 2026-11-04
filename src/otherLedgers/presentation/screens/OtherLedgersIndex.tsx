@@ -34,7 +34,7 @@ export function OtherLedgersIndex() {
   const [pickerPicked, setPickerPicked] = useState<string | null>(null);
   const [cancelKey, replayCancel] = useReplay();
   const [deleteKey, replayDelete] = useReplay();
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
