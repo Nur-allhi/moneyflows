@@ -2730,12 +2730,24 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
   - Dropdown root (`rdp-dropdown_root`): glass surface card with `border-border`, `bg-card`, `backdrop-blur-md`, rounded-md, hover/focus ring states using `var(--color-primary)` tokens — matches FormField input styling.
   - Invisible native `<select>` overlay (`rdp-dropdown`): `appearance-none`, `opacity-0`, overlay on top of the visible label so clicks reach the select.
   - Visible label (`rdp-caption_label`): rounded-sm, text-xs, text-muted-foreground, gap-1 with ChevronDownIcon — clean pill-style selector.
-  - Native `<option>` elements (via tailwind.css): `var(--color-surface)` bg, `var(--color-text)` color, checked state uses `var(--color-primary)` bg + `var(--color-text-on-primary)` color, hover uses `color-mix(in oklch, var(--color-primary) 15%, transparent)`.
-- AGENTS.md/CLAUDE.md GitNexus index stats refresh.
+  - AGENTS.md/CLAUDE.md GitNexus index stats refresh.
 
 ### Skill(s) Used
 - senior-frontend
 
 ### Status
-- Changes uncommitted on top of pushed 7a84340. Ready to commit + push to origin/dev.
+- Committed locally on dev as 7c0d0a2. Ready for push when user instructs.
+
+## Session 2026-11-05 (cont.)
+
+### Changes
+- DatePicker dropdown label fix: react-day-picker v10 passes `<Option>` elements as React `children` to the Select component (not an `options` prop). CustomSelect now correctly reads `opt.props.children` for the label text instead of the non-existent `opt.props.label`, so the month/year dropdown trigger buttons show "Nov", "2026" etc. instead of empty/dots.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green.
+- Committed locally on dev as 7f6e684 (not pushed yet — waiting for user instruction).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed locally on dev as 7f6e684. Ready for push when user instructs.
 
