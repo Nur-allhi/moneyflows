@@ -2693,5 +2693,18 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 
 ### Status
-- Changes uncommitted on top of pushed 1176bd7. Ready to commit + push to origin/dev.
+- Changes uncommitted on top of pushed 07f72de. Ready to commit + push to origin/dev.
+
+## Session 2026-11-04 17:30
+
+### Changes
+- Blank-space-after-amount fix (per page feedback): the left `.anim-target` (first-child) lacked `flex: 1`, so default `justify-content: flex-start` left empty space between the balance column and the card's right edge. Added `flex: 1; min-width: 0` to `.card > :global(.anim-target):first-child` so the left section expands to fill all remaining space, pushing the balance column flush against the right edge. No blank space remains after the amount.
+- Verified live at 1864×949: balance right-aligned flush to right edge, no blank space after amount; delete on hover only; 70/30 split with divider intact.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 07f72de. Ready to commit + push to origin/dev.
 

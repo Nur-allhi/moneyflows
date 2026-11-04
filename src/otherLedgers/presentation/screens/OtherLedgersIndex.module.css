@@ -25,6 +25,9 @@
 .cardLeft { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .cardInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .cardDivider { width: 1px; background: var(--color-border); align-self: stretch; margin: 0 8px; }
+/* Left section expands to fill all remaining space so the balance column
+   sits flush against the right edge — no blank space after the amount. */
+.card > :global(.anim-target):first-child { flex: 1; min-width: 0; }
 /* Balance wrapper takes 30% of card width so the amount can right-align within it. */
 .card > :global(.anim-target):last-child { flex: 0 1 30%; min-width: 30%; }
 .cardBalance { text-align: right; white-space: nowrap; display: block; width: 100%; font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
