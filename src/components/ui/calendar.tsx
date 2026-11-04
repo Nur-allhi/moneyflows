@@ -19,14 +19,14 @@ import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react
 /* CSS, so we render our own dropdown menu with <button> items.       */
 /* ------------------------------------------------------------------ */
 
-function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & {
-  options?: { value: string | number; label: string; disabled?: boolean }[]
-}) {
-  const { className, options, value, onChange, disabled } = props
+function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & { children?: React.ReactNode }) {
+  const { className, children, value, onChange, disabled } = props
   const [open, setOpen] = useState(false)
+  const options = React.Children.toArray(children) as React.ReactElement<
+    { value: string | number; label?: string; disabled?: boolean; children?: React.ReactNode }
+  >[]
   const selectedValue = value ?? ''
-  const selectedOption = options?.find((o) => String(o.value) === String(selectedValue))
-
+  const selectedOption = options.find((o) => String(o.props.value) === String(selectedValue))
   function handleOptionSelect(val: string | number) {
     setOpen(false)
     const event = {
@@ -54,10 +54,10 @@ function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & {
           className
         )}
       >
-        <span className="truncate">{selectedOption?.label ?? selectedValue}</span>
+        <span className="truncate">{String(selectedOption?.props.children ?? selectedValue)}</span>
         <ChevronDownIcon className="size-3.5 shrink-0 text-text-secondary" />
       </button>
-      {open && options && (
+      {open && options.length > 0 && (
         <div
           className={cn(
             "absolute z-50 mt-1 w-full rounded-md border border-border bg-surface backdrop-blur-md shadow-lg",
@@ -66,15 +66,15 @@ function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & {
           )}
         >
           {options.map((opt) => {
-            const isSelected = String(opt.value) === String(selectedValue)
+            const isSelected = String(opt.props.value) === String(selectedValue)
             return (
               <button
-                key={opt.value}
+                key={opt.props.value}
                 type="button"
-                disabled={opt.disabled || disabled}
+                disabled={opt.props.disabled || disabled}
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleOptionSelect(opt.value)
+                  handleOptionSelect(opt.props.value)
                 }}
                 className={cn(
                   "w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors",
@@ -82,10 +82,10 @@ function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & {
                   isSelected
                     ? "bg-gradient-to-r from-primary via-primary to-primary-deep text-text-on-primary"
                     : "hover:bg-wash-8 hover:text-text",
-                  opt.disabled && "opacity-50 cursor-not-allowed"
+                  opt.props.disabled && "opacity-50 cursor-not-allowed"
                 )}
               >
-                <span>{opt.label}</span>
+                <span>{String(opt.props.children)}</span>
                 {isSelected && (
                   <span className="size-2.5 shrink-0 text-text-on-primary">
                     <ChevronDownIcon size={16} />
