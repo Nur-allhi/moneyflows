@@ -2749,5 +2749,19 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 
 ### Status
-- Committed locally on dev as 7f6e684. Ready for push when user instructs.
+- Committed locally on dev as f1761ba. Ready for push when user instructs.
+
+## Session 2026-11-05 (cont.)
+
+### Changes
+- DatePicker dropdown trigger: added explicit `text-text` color class so month/year labels are visible against the dark surface background. Previous version relied on inherited text color which could be invisible.
+- Verified via Playwright at 1864×949: month button shows "Nov", year button shows "2026", clicking opens custom-styled dropdown menu with all months/years.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green.
+- Committed locally as f1761ba (not pushed yet — waiting for user instruction).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed locally on dev as f1761ba. Ready for push when user instructs.
 
