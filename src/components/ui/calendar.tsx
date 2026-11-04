@@ -1,4 +1,4 @@
-import * as React from "react"
+import React, { useState } from "react"
 import {
   DayPicker,
   getDefaultClassNames,
@@ -10,6 +10,98 @@ import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { useReplay } from "@/presentation/hooks/useReplay"
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react"
+
+/* ------------------------------------------------------------------ */
+/* Custom Select / Option components — replace react-day-picker's     */
+/* native <select> so the month/year dropdowns match the app design   */
+/* (same glass surface, border, hover/active states as MemberPicker   */
+/* and FormSelect). The native <select> popup cannot be styled with   */
+/* CSS, so we render our own dropdown menu with <button> items.       */
+/* ------------------------------------------------------------------ */
+
+function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & { children?: React.ReactNode }) {
+  const { className, children, value, onChange, disabled } = props
+  const [open, setOpen] = useState(false)
+  const options = React.Children.toArray(children) as React.ReactElement<
+    { value: string | number; children: string; disabled?: boolean }
+  >[]
+  const selectedValue = value ?? ''
+  const selectedOption = options.find((o) => String(o.props.value) === String(selectedValue))
+
+  function handleOptionSelect(val: string | number) {
+    setOpen(false)
+    const event = {
+      target: { value: val },
+      preventDefault: () => {},
+      stopPropagation: () => {},
+      persist: () => {},
+    } as React.ChangeEvent<HTMLSelectElement>
+    onChange?.(event)
+  }
+
+  return (
+    <div className="relative w-full">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={(e) => {
+          e.stopPropagation()
+          if (!disabled) setOpen((prev: boolean) => !prev)
+        }}
+        className={cn(
+          "w-full flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-sm text-left transition-colors",
+          "hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+          disabled && "opacity-50 cursor-not-allowed",
+          className
+        )}
+      >
+        <span className="truncate">{selectedOption?.props.children ?? selectedValue}</span>
+        <ChevronDownIcon className="size-3.5 shrink-0 text-text-secondary" />
+      </button>
+      {open && (
+        <div
+          className={cn(
+            "absolute z-50 mt-1 w-full rounded-md border border-border bg-surface backdrop-blur-md shadow-lg",
+            "flex flex-col",
+            disabled && "opacity-50 pointer-events-none"
+          )}
+        >
+          {options.map((opt) => {
+            const isSelected = String(opt.props.value) === String(selectedValue)
+            return (
+              <button
+                key={opt.props.value}
+                type="button"
+                disabled={opt.props.disabled || disabled}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleOptionSelect(opt.props.value)
+                }}
+                className={cn(
+                  "w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors",
+                  "text-text",
+                  isSelected
+                    ? "bg-gradient-to-r from-primary via-primary to-primary-deep text-text-on-primary"
+                    : "hover:bg-wash-8 hover:text-text",
+                  opt.props.disabled && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <span>{opt.props.children}</span>
+                {isSelected && (
+                  <span className="size-2.5 shrink-0 text-text-on-primary">
+                    <ChevronDownIcon size={16} />
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 
 function Calendar({
   className,
@@ -76,20 +168,15 @@ function Calendar({
           defaultClassNames.dropdowns
         ),
         dropdown_root: cn(
-          "relative flex items-center gap-2 rounded-md border border-border bg-card px-2 py-1 backdrop-blur-md transition-colors hover:border-primary focus-within:border-primary focus-within:ring-1 focus-within:ring-primary",
+          "relative flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1 backdrop-blur-md transition-colors hover:border-primary focus-within:border-primary focus-within:ring-1 focus-within:ring-primary pointer-events-none",
           defaultClassNames.dropdown_root
         ),
         dropdown: cn(
           "absolute inset-0 bg-transparent border-none outline-none cursor-pointer appearance-none opacity-0",
           defaultClassNames.dropdown
         ),
-        caption_label: cn(
-          "flex items-center gap-1 rounded-sm text-xs text-muted-foreground [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
-          captionLayout === "label"
-            ? "text-sm"
-            : "flex items-center gap-1 rounded-sm text-xs text-muted-foreground [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
-          defaultClassNames.caption_label
-        ),
+        /* Hidden — CustomSelect renders its own visible trigger + dropdown menu. */
+        caption_label: cn("hidden", defaultClassNames.caption_label),
         month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
@@ -137,45 +224,46 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        Root: ({ className, rootRef, ...props }) => {
+        Root: ({ className, rootRef, ...restProps }) => {
           return (
             <div
               data-slot="calendar"
               ref={rootRef}
               className={cn(className)}
-              {...props}
+              {...restProps}
             />
           )
         },
-        Chevron: ({ className, orientation, ...props }) => {
+        Chevron: ({ className, orientation, ...restProps }) => {
           if (orientation === "left") {
             return (
-              <ChevronLeftIcon key={navKey} className={cn("size-4", className)} {...props} />
+              <ChevronLeftIcon key={navKey} className={cn("size-4", className)} {...restProps} />
             )
           }
 
           if (orientation === "right") {
             return (
-              <ChevronRightIcon key={navKey} className={cn("size-4", className)} {...props} />
+              <ChevronRightIcon key={navKey} className={cn("size-4", className)} {...restProps} />
             )
           }
 
           return (
-            <ChevronDownIcon className={cn("size-4", className)} {...props} />
+            <ChevronDownIcon className={cn("size-4", className)} {...restProps} />
           )
         },
-        DayButton: ({ ...props }) => (
-          <CalendarDayButton locale={locale} {...props} />
+        DayButton: ({ ...restProps }) => (
+          <CalendarDayButton locale={locale} {...restProps} />
         ),
-        WeekNumber: ({ children, ...props }) => {
+        WeekNumber: ({ children, ...restProps }) => {
           return (
-            <td {...props}>
+            <td {...restProps}>
               <div className="flex size-(--cell-size) items-center justify-center text-center">
                 {children}
               </div>
             </td>
           )
         },
+        Select: CustomSelect,
         ...components,
       }}
       {...props}
