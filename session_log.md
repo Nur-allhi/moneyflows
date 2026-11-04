@@ -3,19 +3,19 @@
 ## Session 2026-11-05 (cont.)
 
 ### Changes
-- Fixed calendar month/year dropdown size in `src/components/ui/calendar.tsx`:
-  - Changed CustomSelect dropdown from `absolute` to `fixed positioning` with `max-w-[240px] min-w-[80px]` width and `max-h-[60vh] overflow-y-auto` — prevents full-screen height stretch.
-  - Reduced year navigation range from 60 years back to 20 years back (20+10 years), so year dropdown has ~31 options instead of 70+.
-- Verified: tsc 0, eslint 0 warnings, vitest 248/248 green, e2e/calendar-dropdown.spec.ts passes.
-- Commits on `fix/calendar-dropdown-month-year`:
-  - `5d4260f` — made month/year dropdown triggers clickable (removed `pointer-events-none`/`opacity-0` blockers)
-  - `357f551` — constrained dropdown size (width 240px, height 60vh) and reduced year range to 31 years
+- Fixed calendar month/year dropdown readability and width in `src/components/ui/calendar.tsx`:
+  - Removed `backdrop-blur-md` from dropdown menu — was causing glass/transparent background where text behind bleeds through, making options poorly visible
+  - Made background more opaque: `bg-surface` → `bg-surface/95`
+  - Tightened width: `max-w-[240px]` → `max-w-[180px]`, `min-w-[80px]` → `min-w-[120px]`
+  - Reduced max-height: `60vh` → `50vh`
+- Reduced year navigation range from 60 years back to 20 years back (~31 options instead of 70+)
+- Verified: tsc 0, eslint 0 warnings, vitest 248/248 green, e2e/calendar-dropdown.spec.ts passes
 
 ### Skill(s) Used
 - senior-frontend, playwright E2E verification
 
 ### Status
-- Fix complete and verified. Dropdown menus now fit within viewport constraints. Ready for review/merge when user instructs.
+- Dropdown readability and width fixed. Ready for review/merge when user instructs.
 
 ---
 
