@@ -2693,7 +2693,7 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 
 ### Status
-- Changes uncommitted on top of pushed 5140319. Ready to commit + push to origin/dev.
+- Changes uncommitted on top of pushed 9cd55f8. Ready to commit + push to origin/dev.
 
 ## Session 2026-11-04 17:45
 
@@ -2706,5 +2706,20 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 
 ### Status
-- Changes uncommitted on top of pushed 5140319. Ready to commit + push to origin/dev.
+- Changes uncommitted on top of pushed 9cd55f8. Ready to commit + push to origin/dev.
+
+## Session 2026-11-05
+
+### Changes
+- DatePicker improvements (per user request):
+  1. Calendar popover now opens centered on the whole date picker form (input + button) instead of outside — PopoverTrigger wraps the entire container, align set to `center`.
+  2. Added year/month dropdown navigation via `captionLayout="dropdown"` — users can jump directly to any year/month (e.g., June 2007) via comboboxes instead of clicking left arrow repeatedly.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green.
+- Verified live at 1864×949: calendar centered on date picker, month/year comboboxes visible (Nov selected, years 1926+ available).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 9cd55f8. Ready to commit + push to origin/dev.
 
