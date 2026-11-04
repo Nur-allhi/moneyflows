@@ -1,5 +1,41 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-05 (cont.)
+
+### Changes
+- Fixed calendar month/year dropdown height & width design in `src/components/ui/calendar.tsx`:
+  - Constrained CustomSelect dropdown menu: added `max-w-sm`, `min-w-32`, and `max-h-[70vh] overflow-y-auto` so month/year dropdowns no longer render full-screen height (the year dropdown previously listed ~100 options from the default 100-year nav range).
+  - Bounded the calendar navigation range via `startMonth`/`endMonth` (default 60 years back, 10 years forward; overridable via props) so the year dropdown stays short.
+- Re-verified: tsc 0, eslint 0 warnings, vitest 248/248 green, calendar-dropdown e2e test passes (headed).
+- Committed on branch `fix/calendar-dropdown-month-year` as a follow-up to `5d4260f` (not merged to master — pending user approval per REPO_RULES §3.8).
+
+### Skill(s) Used
+- senior-frontend, playwright E2E verification
+
+### Status
+- Dropdown height/width design fixed and verified. Ready for review/merge when user instructs.
+
+---
+
+## Session 2026-11-05 11:05
+
+### Changes
+- Fixed calendar month/year dropdowns in `src/components/ui/calendar.tsx`:
+  - Removed `pointer-events-none` from `dropdown_root` CSS class — it was blocking all clicks on the CustomSelect month/year trigger buttons.
+  - Neutralized the `dropdown` CSS class (was `opacity-0 absolute inset-0 border-none outline-none`) which was hiding the custom trigger button and overriding its border/padding.
+  - CustomSelect now renders its own visible trigger + dropdown menu that respond to interaction.
+- Added `e2e/calendar-dropdown.spec.ts` — Playwright test verifying the calendar opens with both month ("Oct"/"Nov") and year ("2026") dropdown labels visible side by side.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green, new e2e test passes.
+- Committed on branch `fix/calendar-dropdown-month-year` as `5d4260f` (not merged to master — pending user approval per REPO_RULES §3.8).
+
+### Skill(s) Used
+- senior-frontend, playwright E2E verification
+
+### Status
+- Fix complete and verified. Committed locally on feature branch. Ready for review/merge when user instructs.
+
+---
+
 Archived first 1000 lines to docs/audit/session_log.archive.md on 2026-08-27 — recent tail below.
 
 - [whatsNew.ts] release notes re-keyed to 1.0.0

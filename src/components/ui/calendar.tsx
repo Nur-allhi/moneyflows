@@ -60,8 +60,8 @@ function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & { c
       {open && options.length > 0 && (
         <div
           className={cn(
-            "absolute z-50 mt-1 w-full rounded-md border border-border bg-surface backdrop-blur-md shadow-lg",
-            "flex flex-col",
+            "absolute z-50 mt-1 w-full min-w-32 max-w-sm rounded-md border border-border bg-surface backdrop-blur-md shadow-lg",
+            "flex flex-col max-h-[70vh] overflow-y-auto",
             disabled && "opacity-50 pointer-events-none"
           )}
         >
@@ -117,6 +117,13 @@ function Calendar({
 }) {
   const defaultClassNames = getDefaultClassNames()
   const [navKey, replayNav] = useReplay()
+
+  /* Bound the navigation range so the year dropdown stays short (a money app
+     rarely needs dates more than ~60 years in the past). Callers can override
+     via props.startMonth / props.endMonth. */
+  const today = new Date()
+  const startMonth = props.startMonth ?? new Date(today.getFullYear() - 60, 0, 1)
+  const endMonth = props.endMonth ?? new Date(today.getFullYear() + 10, 11, 31)
 
   return (
     <DayPicker
@@ -271,6 +278,8 @@ function Calendar({
         ...components,
       }}
       {...props}
+      startMonth={startMonth}
+      endMonth={endMonth}
     />
   )
 }
