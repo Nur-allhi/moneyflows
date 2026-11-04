@@ -2721,5 +2721,21 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend
 
 ### Status
-- Changes uncommitted on top of pushed 9cd55f8. Ready to commit + push to origin/dev.
+- Changes uncommitted on top of pushed 7a84340. Ready to commit + push to origin/dev.
+
+## Session 2026-11-05 (cont.)
+
+### Changes
+- DatePicker dropdown design matched to app design system:
+  - Dropdown root (`rdp-dropdown_root`): glass surface card with `border-border`, `bg-card`, `backdrop-blur-md`, rounded-md, hover/focus ring states using `var(--color-primary)` tokens — matches FormField input styling.
+  - Invisible native `<select>` overlay (`rdp-dropdown`): `appearance-none`, `opacity-0`, overlay on top of the visible label so clicks reach the select.
+  - Visible label (`rdp-caption_label`): rounded-sm, text-xs, text-muted-foreground, gap-1 with ChevronDownIcon — clean pill-style selector.
+  - Native `<option>` elements (via tailwind.css): `var(--color-surface)` bg, `var(--color-text)` color, checked state uses `var(--color-primary)` bg + `var(--color-text-on-primary)` color, hover uses `color-mix(in oklch, var(--color-primary) 15%, transparent)`.
+- AGENTS.md/CLAUDE.md GitNexus index stats refresh.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed 7a84340. Ready to commit + push to origin/dev.
 

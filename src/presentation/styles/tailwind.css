@@ -48,3 +48,23 @@ body {
   color: var(--color-text);
   font-family: var(--font-sans);
 }
+
+/* Calendar dropdown (react-day-picker) option styling — match app design */
+select.rdp-dropdown option {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  padding: 6px 10px;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+}
+
+select.rdp-dropdown option:checked {
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+select.rdp-dropdown option:hover,
+select.rdp-dropdown option:focus {
+  background-color: color-mix(in oklch, var(--color-primary) 15%, transparent);
+  color: var(--color-text);
+}
