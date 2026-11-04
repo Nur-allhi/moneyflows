@@ -16,16 +16,16 @@
    below the card's min-content width (a 50-char nowrap name) and the page
    scrolled sideways on phones. */
 .cardWrap { position: relative; min-width: 0; }
-.card { display: flex; align-items: center; gap: 12px; padding: 16px; padding-right: 44px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); cursor: pointer; transition: var(--transition-fast); text-align: left; width: 100%; }
+.card { display: flex; align-items: center; gap: 0; padding: 16px; padding-right: 44px; border-radius: 16px; background: var(--color-surface); border: 1px solid var(--color-border); backdrop-filter: blur(20px); cursor: pointer; transition: var(--transition-fast); text-align: left; width: 100%; }
 .card:hover { border-color: var(--color-primary); box-shadow: 0 0 20px var(--color-primary-glow); }
-/* BUG-50: ledger name must never be hidden — it wraps to fit the card
-   (overflow-wrap: anywhere) instead of ellipsizing. The left section fills
-   the available space so the name gets a bounded width to wrap within;
-   `gap` + flex:0 on the balance keep it separated and right-aligned.
-   cardWrap min-width:0 keeps grid columns from forcing page overflow. */
-.card > :global(.anim-target):first-child { flex: 1 1 0; min-width: 0; }
-.card > :global(.anim-target):last-child { flex: 0 0 auto; }
-.cardLeft { display: flex; align-items: center; gap: 12px; width: 100%; min-width: 0; }
+/* Card splits into 70% left (name/entries/date) + divider + 30% right (balance).
+   Balance column is at least 30% and can grow if the amount is wider; the amount
+   never wraps so it stays fully visible. Left section takes the remaining space
+   and its text wraps instead of shrinking. */
+.cardLeft { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.cardInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cardDivider { width: 1px; background: var(--color-border); align-self: stretch; margin: 0 8px; }
+.cardBalance { flex: 0 1 30%; min-width: 30%; text-align: right; white-space: nowrap; font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; color: var(--color-text); }
 .cardDelete {
   position: absolute;
   top: 8px;
@@ -121,10 +121,10 @@
 /* BUG-50: the name wraps (a ledger name is never hidden) — the card grows
    taller instead of pushing its content out. `anywhere` keeps one very long
    word from widening the column. */
-.cardName { font-size: var(--text-base); font-weight: 600; color: var(--color-text); overflow-wrap: anywhere; }
+.cardName { font-size: var(--text-base); font-weight: 600; color: var(--color-text); overflow-wrap: anywhere; min-width: 0; }
 /* Entries count and creation date each sit on their own line. */
-.cardEntries { font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; }
-.cardDate { font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.cardEntries { font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; min-width: 0; }
+.cardDate { font-size: var(--text-xs); color: var(--color-text-secondary); overflow-wrap: anywhere; min-width: 0; }
 .cardBalance { font-family: var(--font-body); font-size: var(--text-base); font-weight: 600; color: var(--color-text); white-space: nowrap; }
 .grouped { display: flex; flex-direction: column; gap: 16px; }
 .section {

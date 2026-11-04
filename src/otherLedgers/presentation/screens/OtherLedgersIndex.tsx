@@ -122,6 +122,7 @@ export function OtherLedgersIndex() {
                         </span>
                       </span>
                       </span>
+                      <span className={styles.cardDivider} />
                       <span className="anim-target" key={`${l.id}-${cardPicked === l.id ? cardKey : 0}-b`}>
                       <span className={styles.cardBalance}>{formatAmount(bal, locale, currency)}</span>
                       </span>

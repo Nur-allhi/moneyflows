@@ -2656,3 +2656,16 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - Committed on dev as ba58ca9. Ready for push to origin/dev.
 
+## Session 2026-11-04 16:30
+
+### Changes
+- Other Ledgers index card width revision (per page feedback): card now splits 70% left (name / entries / date on 3 lines) + divider + 30% right (balance). Left section takes remaining space, text wraps instead of shrinking. Balance column flexes `0 1 30%` with `min-width: 30%` so the amount is always fully visible and right-aligned; a 1px border-color divider separates the two sections. Replaced `.cardLeft` `gap:12px`/`width:100%` with `flex: 1`; added `.cardDivider` (1px `var(--color-border)`, stretched, 8px margins); `.cardBalance` right-aligned, `white-space: nowrap`, font tokens only; `cardInfo`/`cardName`/`cardEntries`/`cardDate` got `min-width: 0` so they shrink into the 70% bucket properly.
+- Verified live at 1864×949: name/entries/date on left (no text shrink), divider visible, balance alone on right always fully visible; delete still appears on hover only.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green. GitNexus impact: LOW risk, no affected processes.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Changes uncommitted on top of pushed ba58ca9. Ready to commit + push to origin/dev.
+
