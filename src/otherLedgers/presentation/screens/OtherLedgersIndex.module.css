@@ -177,3 +177,35 @@
   .leftCount { margin-right: auto; }
   .addBtn { align-self: center; }
 }
+
+/* Picker: member-grouped list (sort by member, divider between groups). */
+.pickerGroupLabel {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+  padding: 6px 2px 2px;
+}
+
+.pickerDivider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 4px 0;
+}
+
+.pickerGroupList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.pickerGroupList > *:first-child {
+  padding-top: 4px;
+}
+
+.pickerGroupList > *:not(:first-child):not(.pickerDivider):not(.pickerGroupLabel) {
+  /* ensure item row styling is preserved */
+}

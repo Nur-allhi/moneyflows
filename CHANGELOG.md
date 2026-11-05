@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [2.4.0] - 2026-11-05
+
+### Added
+- **Other Ledgers entry picker** now sorts ledgers by owner (member/person name) with visual dividers between each group, making it easier to find ledgers owned by a specific person. Ledger list is scrollable when it exceeds available height.
+- Ledger entries in the picker are grouped by owner with alphabetical sorting within each group.
+
+### Changed
+- **Other Ledgers "Choose ledger" picker** now uses the app's standard modal design (header bar with title, X close button, frosted backdrop) matching other pickers like "Select member" and "Select account".
+
+### Fixed
+- **Date picker form field styling** — the trigger in Add Entry and other form fields now has proper inner padding (12px 14px), background color, border, and 10px border-radius matching every other form field. The calendar button maintains proper alignment with the input.
+
+## [2.3.2] - 2026-11-05
+
+### Fixed
+- **Date fields now match the rest of the form**: the date picker trigger (used in Add Entry and other date pickers) now has proper inner padding, a surface background and a bordered 10px-radius container matching every other form field — it no longer looked flat or cramped next to text inputs and textareas.
+
 ## [2.3.1] - 2026-11-05
 
 ### Changed

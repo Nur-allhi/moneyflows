@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
+import styles from "./date-picker.module.css"
 
 interface DatePickerProps {
   value: string
@@ -47,24 +48,19 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger>
-        <div
-          className={cn(
-            "flex items-center gap-2 rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none",
-            "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-            className
-          )}
-        >
+        <div className={cn(styles.field, className)}>
+
           <input
             type="text"
             value={inputValue}
             onChange={handleInputChange}
             onClick={(e) => e.stopPropagation()}
-            className="h-auto w-full bg-transparent px-0 py-0 text-sm outline-none placeholder:text-muted-foreground"
+            className="placeholder:text-muted-foreground"
             placeholder="YYYY-MM-DD"
             autoComplete="off"
             spellCheck={false}
           />
-          <Button variant="outline" size="icon" className="shrink-0">
+          <Button variant="ghost" size="icon" className="shrink-0 border-0 bg-transparent hover:bg-transparent">
             <CalendarIcon className="size-4" />
           </Button>
         </div>

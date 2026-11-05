@@ -677,3 +677,33 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** two sources of truth for one question — the derived item status (computed, consumed by nothing) and the raw row flag (which drove the split) — with nothing forcing them to agree. A third copy of the same question lived in the dashboard panel's badge, which re-derived "settled" from the row flags itself.
 - **Fix Approach:** user-approved definition — **"nothing left to pay" wins**, the flag can only describe a loan, never outvote its money. One place now answers: `isLoanRunning` (built on the existing `loanItemStatus`), `splitStack` for the running/finished split and the outstanding total, `stackIsSettled` for the stack verdict. `_getStackForBorrower` uses all three, so `activeCount`, `settledCount`, `totalOutstanding`, the `loans` order and `isSettled` all agree; the dashboard panel badge now reads the stack's own `isSettled` instead of re-deriving it.
 - **Resolved:** 2026-10-30 on `beta_v2.0`. Evidence: 3 new tests in `loanStatus.test.ts` — a stale-flag/zero-outstanding loan counts as finished with nothing owed; a mixed stack splits correctly and totals only what is owed; a stack is settled only when every loan is finished (and an empty stack is not settled). **Mutation-verified** (restoring `loan.status === 'active'` fails all 3). Full Playwright suite green (31 passed); typecheck / lint / 235 unit tests pass.
+
+## BUG-52: Other Ledgers Add Entry — date field had no padding/height
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-05 (during: page feedback on /other-ledgers Add Entry form)
+- **Location:** `src/components/ui/date-picker.tsx` (default chrome) + `src/otherLedgers/presentation/components/AddEntryModal.tsx`
+- **Description:** The Date field in the Add Entry form rendered with zero inner padding and an improper (too short) height, not matching the other fields (Description, Amount). Root cause: the DatePicker default styling relied on Tailwind arbitrary classes `px-[14px]`/`py-[12px]`, which Tailwind v4 did not generate in this project, leaving the composite unstyled. Fields that passed `className={styles.inputField}` (transaction form) worked, masking the issue.
+- **Fix Approach:** Moved the field chrome into a dedicated CSS module (`src/components/ui/date-picker.module.css`) so padding/border/background/radius are guaranteed to apply; tuned vertical padding so the 32px calendar button keeps the field height (~40px) aligned with other single-line fields. Removed the now-redundant `className={styles.inputField}` from the transaction form.
+- **Resolved:** 2026-11-05 — working tree (uncommitted).
+
+## BUG-53: Other Ledgers 'Choose ledger' picker used bespoke design
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-05 (during: page feedback on /other-ledgers)
+- **Location:** `src/otherLedgers/presentation/screens/OtherLedgersIndex.tsx` (entry picker overlay)
+- **Description:** The "Choose ledger" picker used a bespoke `pickerSheet`/`pickerTitle`/`pickerItem` style that did not match the app's standard picker modal (used by "Select member", "Select Account", etc.) — no header bar, no close button, different container styling.
+- **Fix Approach:** Replaced the bespoke styles with the shared `txStyles` (TransactionFormModal.module.css) picker classes: `pickerOverlay`/`pickerModal`/`pickerHeader`/`pickerTitle`/`pickerClose`/`pickerList`/`pickerItem`/`pickerEmpty`, including the close (X) button. Added `pickerCloseKey`/`replayPickerClose` for the close-button animation.
+- **Resolved:** 2026-11-05 — commit `a9dd1df`.
+
+## BUG-54: Other Ledgers picker — entries not sorted by member with dividers
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-05 (during: page feedback on /other-ledgers)
+- **Location:** `src/otherLedgers/presentation/screens/OtherLedgersIndex.tsx` (picker overlay)
+- **Description:** The "Choose ledger" entry picker showed all ledgers in a flat list without sorting by member, and lacked scrollable overflow when the list exceeded available height.
+- **Fix Approach:** Grouped ledgers by owner (member name or external person name), sorted groups alphabetically, added dividers between groups and a group label header above each group. Added `pickerGroupList` class with `max-height: 60vh` and `overflow-y: auto` for scrollability. Used the same `txStyles` picker classes as the standard "Select member" picker.
+- **Resolved:** 2026-11-05 — commit `8a2de68`.
