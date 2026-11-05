@@ -163,6 +163,7 @@ Like `TransactionDetailModal.tsx:195-247`. Escape closes, overlay click closes, 
 | **Picker overlay** | `fixed inset bg /0.45 blur4 z350 fadeIn 0.2s` | `TransactionFormModal.module.css:625-640` |
 | **Picker modal** | `360/85vw/70vh blur24 radius16 shadow 0 24px 80px /0.5 + pickerSlideIn 0.2s 8px scale0.97` · header `border` · item `12/14 radius10 hover /0.06 active /0.12` | `TransactionFormModal.module.css:640-766` |
 | **Calendar (shadcn)** | `DayPicker ghost variant cell radius-md today muted selected primary` | `calendar.tsx:31-133` |
+| **Calendar month/year dropdown** | trigger `6/12 surface blur12 border radius8 13/500 chevron 12 muted → hover/open primary + glow` · panel `bg 95% blur24 border radius16 shadow-lg+dropdownIn` anchored under the trigger, 3-col grid · item `8/4 radius8 13/500 hover wash6 · active primary-gradient + text-on-primary + glow` · closes on pick / Esc / outside click | `calendar.module.css` |
 | **Popover (shadcn)** | `popover bg 22% /0.95 blur border radius` | `tailwind.css:13-14` `popover.tsx` |
 | **Placement** | `position: fixed/absolute z300-350 max-height 70vh scroll min-width 360 (account picker) or 280 (generic)` — never clipped by parent overflow. | — |
 

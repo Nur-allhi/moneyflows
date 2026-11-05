@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
   DayPicker,
   getDefaultClassNames,
@@ -10,23 +10,55 @@ import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { useReplay } from "@/presentation/hooks/useReplay"
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react"
+import styles from "./calendar.module.css"
 
 /* ------------------------------------------------------------------ */
 /* Custom Select / Option components — replace react-day-picker's     */
-/* native <select> so the month/year dropdowns match the app design   */
-/* (same glass surface, border, hover/active states as MemberPicker   */
-/* and FormSelect). The native <select> popup cannot be styled with   */
-/* CSS, so we render our own dropdown menu with <button> items.       */
+/* native <select> so the month/year dropdowns match the app design.   */
+/* The native <select> popup cannot be styled with CSS, so we render   */
+/* our own trigger + dropdown panel. Chrome and item states follow     */
+/* DESIGN_IDENTITY §9: frosted panel (bg 95% + blur 24, border,        */
+/* radius 16, --shadow-lg), item hover wash, primary-gradient active.  */
 /* ------------------------------------------------------------------ */
 
 function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & { children?: React.ReactNode }) {
   const { className, children, value, onChange, disabled } = props
   const [open, setOpen] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const options = React.Children.toArray(children) as React.ReactElement<
     { value: string | number; label?: string; disabled?: boolean; children?: React.ReactNode }
   >[]
   const selectedValue = value ?? ''
   const selectedOption = options.find((o) => String(o.props.value) === String(selectedValue))
+
+  /* Close on outside click / Escape — the menu is anchored inside the
+     calendar popover, so it must not linger when the user moves on. */
+  useEffect(() => {
+    if (!open) return
+    function handlePointerDown(e: PointerEvent) {
+      if (!wrapperRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        setOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown, true)
+    document.addEventListener('keydown', handleKeyDown, true)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true)
+      document.removeEventListener('keydown', handleKeyDown, true)
+    }
+  }, [open])
+
+  /* Long option lists (years) start scrolled to the current value. */
+  useEffect(() => {
+    if (!open) return
+    listRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' })
+  }, [open])
+
   function handleOptionSelect(val: string | number) {
     setOpen(false)
     const event = {
@@ -39,58 +71,41 @@ function CustomSelect(props: React.SelectHTMLAttributes<HTMLSelectElement> & { c
   }
 
   return (
-    <div className="relative w-full">
+    <div ref={wrapperRef} className="relative">
       <button
         type="button"
         disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
         onClick={(e) => {
           e.stopPropagation()
           if (!disabled) setOpen((prev: boolean) => !prev)
         }}
-        className={cn(
-          "w-full flex items-center justify-between rounded-md border border-border bg-surface px-3 py-2 text-sm text-text text-left transition-colors",
-          "hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
-          disabled && "opacity-50 cursor-not-allowed",
-          className
-        )}
+        className={cn(styles.trigger, open && styles.triggerOpen, className)}
       >
-        <span className="truncate">{String(selectedOption?.props.children ?? selectedValue)}</span>
-        <ChevronDownIcon className="size-3.5 shrink-0 text-text-secondary" />
+        <span className={styles.triggerLabel}>
+          {String(selectedOption?.props.children ?? selectedValue)}
+        </span>
+        <ChevronDownIcon className={styles.arrow} />
       </button>
       {open && options.length > 0 && (
-        <div
-          className={cn(
-            "absolute z-50 mt-1 w-full rounded-md border border-border bg-surface backdrop-blur-md shadow-lg",
-            "flex flex-col",
-            disabled && "opacity-50 pointer-events-none"
-          )}
-        >
+        <div ref={listRef} role="listbox" className={styles.panel}>
           {options.map((opt) => {
             const isSelected = String(opt.props.value) === String(selectedValue)
             return (
               <button
                 key={opt.props.value}
                 type="button"
+                role="option"
+                aria-selected={isSelected}
                 disabled={opt.props.disabled || disabled}
                 onClick={(e) => {
                   e.stopPropagation()
                   handleOptionSelect(opt.props.value)
                 }}
-                className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors",
-                  "text-text",
-                  isSelected
-                    ? "bg-gradient-to-r from-primary via-primary to-primary-deep text-text-on-primary"
-                    : "hover:bg-wash-8 hover:text-text",
-                  opt.props.disabled && "opacity-50 cursor-not-allowed"
-                )}
+                className={cn(styles.item, isSelected && styles.itemActive)}
               >
-                <span>{String(opt.props.children)}</span>
-                {isSelected && (
-                  <span className="size-2.5 shrink-0 text-text-on-primary">
-                    <ChevronDownIcon size={16} />
-                  </span>
-                )}
+                {String(opt.props.children)}
               </button>
             )
           })}
@@ -118,14 +133,21 @@ function Calendar({
   const defaultClassNames = getDefaultClassNames()
   const [navKey, replayNav] = useReplay()
 
+  /* Bound the navigation range so the year dropdown stays short.
+     A money app typically needs ~30 years: 20 back, 10 forward.
+     Callers can override via props.startMonth / props.endMonth. */
+  const today = new Date()
+  const startMonth = props.startMonth ?? new Date(today.getFullYear() - 20, 0, 1)
+  const endMonth = props.endMonth ?? new Date(today.getFullYear() + 10, 11, 31)
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
       onMonthChange={(month) => { replayNav(); props.onMonthChange?.(month); }}
       className={cn(
         "group/calendar bg-transparent p-1 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(9)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
-        String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
-        String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
+        String.raw`rtl:**:[.rdp-button_next>svg]:rotate-180`,
+        String.raw`rtl:**:[.rdp-button_previous>svg]:rotate-180`,
         className
       )}
       captionLayout={captionLayout}
@@ -166,14 +188,18 @@ function Calendar({
           "flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-sm font-medium",
           defaultClassNames.dropdowns
         ),
+        /* Container for the CustomSelect month/year trigger. The custom trigger
+           button (+ its dropdown panel) must be clickable, so `pointer-events-none`
+           is removed here — it previously blocked all interaction on the dropdowns.
+           Visual styling (border/bg/padding) is provided by CustomSelect itself,
+           so this stays a plain layout container to avoid double borders. */
         dropdown_root: cn(
-          "relative flex items-center gap-2 rounded-md border border-border bg-surface px-2 py-1 backdrop-blur-md transition-colors hover:border-primary focus-within:border-primary focus-within:ring-1 focus-within:ring-primary pointer-events-none",
+          "relative flex shrink-0 items-center gap-2",
           defaultClassNames.dropdown_root
         ),
-        dropdown: cn(
-          "absolute inset-0 bg-transparent border-none outline-none cursor-pointer appearance-none opacity-0",
-          defaultClassNames.dropdown
-        ),
+        /* The native <select> is replaced by CustomSelect, which renders its own
+           trigger + frosted dropdown panel, so the wrapper stays neutral. */
+        dropdown: cn(defaultClassNames.dropdown),
         /* Hidden — CustomSelect renders its own visible trigger + dropdown menu. */
         caption_label: cn("hidden", defaultClassNames.caption_label),
         month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
@@ -266,6 +292,8 @@ function Calendar({
         ...components,
       }}
       {...props}
+      startMonth={startMonth}
+      endMonth={endMonth}
     />
   )
 }

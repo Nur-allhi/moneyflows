@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Placeholder
+### Changed
+- **Calendar month/year dropdown restyle**: the date picker's month and year menus now use the app's own dropdown vocabulary instead of the stripped default look — the trigger is a bordered surface chip with a rotating chevron, and the menu is a frosted panel anchored under it (same chrome as the global search), with months and years in a 3-column grid, a wash hover and the primary-gradient selected state. Closes on pick, on **Escape** (menu only — the calendar stays open) and on outside click; the selected year scrolls itself into view. Implemented as a CSS module rather than utilities because `reset.css` styles `button`/`*` unlayered, which made every Tailwind class the old dropdown used (background, border, colour, font, padding) inert. Spec added to `docs/DESIGN_IDENTITY.md` §9, and `e2e/calendar-dropdown.spec.ts` is now a real 5-test guard — the previous version passed without the calendar ever opening.
+
+### Fixed
+- **Report filters → Custom date range calendar never opened (BUG-51)**: clicking either date field or its calendar icon did nothing, so From/To could only be set by typing `YYYY-MM-DD`. Each `DatePicker` sat inside a `<label>`, and the label's implicit control resolved to the Popover trigger `<button>` — every press activated it twice, toggling the popover open→closed within a single event turn so it never mounted. The two labels are now `<div>` + `<span>` captions (the same visual-only label pattern `FormField` uses everywhere else); `DatePicker` is unchanged. `e2e/report-calendar.spec.ts` is now a working regression guard and the Playwright suite is fully green.
 
 ## [2.3.0] - 2026-11-03
 
