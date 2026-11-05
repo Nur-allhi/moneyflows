@@ -11,6 +11,7 @@ import { useReplay } from '../../../presentation/hooks/useReplay';
 import { CreateLedgerModal } from '../components/CreateLedgerModal';
 import { AddEntryModal } from '../components/AddEntryModal';
 import styles from './OtherLedgersIndex.module.css';
+import txStyles from '../../../presentation/modals/TransactionFormModal.module.css';
 
 export function OtherLedgersIndex() {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ export function OtherLedgersIndex() {
   const [cardPicked, setCardPicked] = useState<string | null>(null);
   const [cardDelKey, replayCardDel] = useReplay();
   const [pickerKey, replayPicker] = useReplay();
+  const [pickerCloseKey, replayPickerClose] = useReplay();
   const [pickerPicked, setPickerPicked] = useState<string | null>(null);
   const [cancelKey, replayCancel] = useReplay();
   const [deleteKey, replayDelete] = useReplay();
@@ -231,14 +233,21 @@ export function OtherLedgersIndex() {
 
       {showCreate && <CreateLedgerModal isOpen onClose={() => setShowCreate(false)} onCreated={() => setShowCreate(false)} />}
       {showEntryPicker && (
-        <div className={styles.pickerOverlay} onClick={() => setShowEntryPicker(false)}>
-          <div className={styles.pickerSheet} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.pickerTitle}>Choose ledger</div>
-            <div className={styles.pickerList}>
+        <div className={txStyles.pickerOverlay} onClick={() => setShowEntryPicker(false)}>
+          <div className={txStyles.pickerModal} onClick={(e) => e.stopPropagation()}>
+            <div className={txStyles.pickerHeader}>
+              <span className={txStyles.pickerTitle}>Choose ledger</span>
+              <button className={`${txStyles.pickerClose} ${pickerCloseKey > 0 ? 'anim-twist' : ''}`} onClick={() => { replayPickerClose(); setShowEntryPicker(false); }}>
+                <svg key={pickerCloseKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              </button>
+            </div>
+            <div className={txStyles.pickerList}>
               {ledgers.map((l) => (
-                <button key={l.id} className={`${styles.pickerItem} ${pickerPicked === l.id && pickerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayPicker(); setPickerPicked(l.id); setEntryLedgerId(l.id); setShowEntryPicker(false); }}><span className="anim-target" key={`${l.id}-${pickerPicked === l.id ? pickerKey : 0}`}>{l.name}</span></button>
+                <button key={l.id} className={`${txStyles.pickerItem} ${pickerPicked === l.id && pickerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayPicker(); setPickerPicked(l.id); setEntryLedgerId(l.id); setShowEntryPicker(false); }}>
+                  <span className="anim-target" key={`${l.id}-${pickerPicked === l.id ? pickerKey : 0}`}>{l.name}</span>
+                </button>
               ))}
-              {ledgers.length === 0 && <div className={styles.empty}>No ledgers — create one first</div>}
+              {ledgers.length === 0 && <div className={txStyles.pickerEmpty}>No ledgers — create one first</div>}
             </div>
           </div>
         </div>
