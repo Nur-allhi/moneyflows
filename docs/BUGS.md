@@ -677,3 +677,13 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Root Cause:** two sources of truth for one question — the derived item status (computed, consumed by nothing) and the raw row flag (which drove the split) — with nothing forcing them to agree. A third copy of the same question lived in the dashboard panel's badge, which re-derived "settled" from the row flags itself.
 - **Fix Approach:** user-approved definition — **"nothing left to pay" wins**, the flag can only describe a loan, never outvote its money. One place now answers: `isLoanRunning` (built on the existing `loanItemStatus`), `splitStack` for the running/finished split and the outstanding total, `stackIsSettled` for the stack verdict. `_getStackForBorrower` uses all three, so `activeCount`, `settledCount`, `totalOutstanding`, the `loans` order and `isSettled` all agree; the dashboard panel badge now reads the stack's own `isSettled` instead of re-deriving it.
 - **Resolved:** 2026-10-30 on `beta_v2.0`. Evidence: 3 new tests in `loanStatus.test.ts` — a stale-flag/zero-outstanding loan counts as finished with nothing owed; a mixed stack splits correctly and totals only what is owed; a stack is settled only when every loan is finished (and an empty stack is not settled). **Mutation-verified** (restoring `loan.status === 'active'` fails all 3). Full Playwright suite green (31 passed); typecheck / lint / 235 unit tests pass.
+
+## BUG-52: Other Ledgers Add Entry — date field had no padding/height
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-05 (during: page feedback on /other-ledgers Add Entry form)
+- **Location:** `src/components/ui/date-picker.tsx` (default chrome) + `src/otherLedgers/presentation/components/AddEntryModal.tsx`
+- **Description:** The Date field in the Add Entry form rendered with zero inner padding and an improper (too short) height, not matching the other fields (Description, Amount). Root cause: the DatePicker default styling relied on Tailwind arbitrary classes `px-[14px]`/`py-[12px]`, which Tailwind v4 did not generate in this project, leaving the composite unstyled. Fields that passed `className={styles.inputField}` (transaction form) worked, masking the issue.
+- **Fix Approach:** Moved the field chrome into a dedicated CSS module (`src/components/ui/date-picker.module.css`) so padding/border/background/radius are guaranteed to apply; tuned vertical padding so the 32px calendar button keeps the field height (~40px) aligned with other single-line fields. Removed the now-redundant `className={styles.inputField}` from the transaction form.
+- **Resolved:** 2026-11-05 — working tree (uncommitted).

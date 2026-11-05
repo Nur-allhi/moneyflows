@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
+import styles from "./date-picker.module.css"
 
 interface DatePickerProps {
   value: string
@@ -47,24 +48,19 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger>
-        <div
-          className={cn(
-            "flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur-[12px] px-[14px] py-[12px] text-[14px] font-[var(--font-body)] text-[var(--color-text)] transition-colors outline-none",
-            "focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-[-1px] focus-visible:border-transparent",
-            className
-          )}
-        >
+        <div className={cn(styles.field, className)}>
+
           <input
             type="text"
             value={inputValue}
             onChange={handleInputChange}
             onClick={(e) => e.stopPropagation()}
-            className="h-auto w-full bg-transparent px-0 py-0 text-[14px] font-[var(--font-body)] text-[var(--color-text)] outline-none placeholder:text-muted-foreground"
+            className="placeholder:text-muted-foreground"
             placeholder="YYYY-MM-DD"
             autoComplete="off"
             spellCheck={false}
           />
-          <Button variant="outline" size="icon" className="shrink-0">
+          <Button variant="ghost" size="icon" className="shrink-0 border-0 bg-transparent hover:bg-transparent">
             <CalendarIcon className="size-4" />
           </Button>
         </div>

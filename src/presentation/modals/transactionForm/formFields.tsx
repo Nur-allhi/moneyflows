@@ -93,7 +93,7 @@ export function FormFields(props: Props & {
       )}
       <div className={styles.fieldGroup}>
         <span className={styles.fieldLabel}>Date</span>
-        <DatePicker className={styles.inputField} value={date} onChange={setDate} />
+        <DatePicker value={date} onChange={setDate} />
       </div>
       {tab === 'loan' && loanAction === 'repay' ? (
         <>
