@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [2.3.2] - 2026-11-05
+
+### Fixed
+- **Date fields now match the rest of the form**: the date picker trigger (used in Add Entry and other date pickers) now has proper inner padding, a surface background and a bordered 10px-radius container matching every other form field — it no longer looked flat or cramped next to text inputs and textareas.
+
 ## [2.3.1] - 2026-11-05
 
 ### Changed

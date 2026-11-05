@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.3.2',
+    items: [
+      'Date fields now match the rest of the form — proper padding, background and border height in Add Entry and other date pickers.',
+    ],
+  },
+  {
     version: '2.3.1',
     items: [
       'The date picker\'s month and year menus now match the rest of the app — a clean trigger chip with a frosted menu anchored underneath.',

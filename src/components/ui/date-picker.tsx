@@ -49,8 +49,8 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
       <PopoverTrigger>
         <div
           className={cn(
-            "flex items-center gap-2 rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none",
-            "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            "flex items-center gap-2 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur-[12px] px-[14px] py-[12px] text-[14px] font-[var(--font-body)] text-[var(--color-text)] transition-colors outline-none",
+            "focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-[-1px] focus-visible:border-transparent",
             className
           )}
         >
@@ -59,7 +59,7 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
             value={inputValue}
             onChange={handleInputChange}
             onClick={(e) => e.stopPropagation()}
-            className="h-auto w-full bg-transparent px-0 py-0 text-sm outline-none placeholder:text-muted-foreground"
+            className="h-auto w-full bg-transparent px-0 py-0 text-[14px] font-[var(--font-body)] text-[var(--color-text)] outline-none placeholder:text-muted-foreground"
             placeholder="YYYY-MM-DD"
             autoComplete="off"
             spellCheck={false}
