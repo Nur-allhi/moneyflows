@@ -19,6 +19,29 @@
 
 ---
 
+## Session 2026-11-05 10:59
+
+### Changes
+- **Released v2.3.1 (PATCH per VERSIONING.md §2 row 3 → §3):** atomic bump of the four touchpoints in one commit `46ab40d` on `dev`, then merged `dev → master` with explicit user approval (§3.12):
+  1. `package.json:4` — `"version": "2.3.0" → "2.3.1"`.
+  2. `src/presentation/constants/whatsNew.ts:8` — prepended `{ version: '2.3.1', items: [...] }` newest-first, plain English (dropdown restyle + BUG-51).
+  3. `CHANGELOG.md:8` — `[Unreleased]` content moved under `## [2.3.1] - 2026-11-05` (Added/Changed/Fixed buckets preserved); fresh `## [Unreleased]` `Placeholder` left on top.
+  4. No `session_log.md` bump (history, not release metadata).
+- `git tag -a v2.3.1` on `master`; pushed `master` + tags; fast-forwarded `dev` to `master`; both at `a58f824`.
+- `AGENTS.md` §5 branch map updated: `master`/`dev` = `bc659e7` (then `a58f824`), **v2.3.1**, tag `v2.3.1` created.
+
+### Gates (§4 checklist, all green before release)
+- typecheck 0, eslint `--max-warnings 0` 0 warnings, `vite build` clean, full Playwright suite **35/35** (~2.2 min).
+
+### Skill(s) Used
+- gitnexus (merge/tag protocol §5), senior-frontend, code-reviewer
+
+### Status
+- **v2.3.1 released on master; tag `v2.3.1` pushed.** `dev` and `master` in sync at `a58f824`. Branch `fix/calendar-dropdown-month-year` can be deleted.
+- **Next up:** next ticket in the queue (none currently active).
+
+---
+
 ## Session 2026-11-05 10:56
 
 ### Changes

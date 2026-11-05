@@ -242,7 +242,7 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **T-174 (2026-11-01): tag-overview sorting** — card grid on `/tags` gets a **Most used / Name A–Z / Z–A** pill group (default unchanged); alphabetical sorts use `localeCompare` with a count-desc tie-break, and the pills reuse the detail ledger's `sortPill` styles, shown when more than one tag exists. `feat:` → **MINOR bump to 2.1.0** on `beta_v2.0` per `VERSIONING.md` §2→§3 (T-174 ticket in TICKETS.md; feature commit `8322c74`, release commit `dbf4c47`, session log `a28d252`).
 
-**Branch map (2026-11-05):** `master` = releases only, `bc659e7` = merge of `dev`, **v2.3.1** (calendar month/year dropdown restyle + BUG-51 report-filter date-picker fix; 248 unit + 35 Playwright green; **tag `v2.3.1** created**). `dev` = fast-forwarded to `bc659e7` (== master). `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
+**Branch map (2026-11-05):** `master` = releases only, `bc659e7` = merge of `dev`, **v2.3.1** (calendar month/year dropdown restyle + BUG-51 report-filter date-picker fix; 248 unit + 35 Playwright green; **tag `v2.3.1` created**). `dev` = fast-forwarded to `bc659e7` (== master). `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 
