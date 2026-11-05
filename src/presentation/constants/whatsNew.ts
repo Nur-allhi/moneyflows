@@ -7,9 +7,17 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.4.0',
+    items: [
+      'Date picker form fields now have proper padding, background and border height in Add Entry and other forms.',
+      'Other Ledgers entry picker now sorts ledgers by owner and shows visual dividers between each group.',
+      'Other Ledgers "Choose ledger" picker now uses the app\'s standard modal design with header and close button.',
+    ],
+  },
+  {
     version: '2.3.2',
     items: [
-      'Date fields now match the rest of the form — proper padding, background and border height in Add Entry and other date pickers.',
+      'Date fields in the form now match the rest of the app — proper padding, background and border height in Add Entry and other date pickers.',
     ],
   },
   {
