@@ -241,13 +241,31 @@ export function OtherLedgersIndex() {
                 <svg key={pickerCloseKey} width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
               </button>
             </div>
-            <div className={txStyles.pickerList}>
-              {ledgers.map((l) => (
-                <button key={l.id} className={`${txStyles.pickerItem} ${pickerPicked === l.id && pickerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayPicker(); setPickerPicked(l.id); setEntryLedgerId(l.id); setShowEntryPicker(false); }}>
-                  <span className="anim-target" key={`${l.id}-${pickerPicked === l.id ? pickerKey : 0}`}>{l.name}</span>
-                </button>
-              ))}
-              {ledgers.length === 0 && <div className={txStyles.pickerEmpty}>No ledgers — create one first</div>}
+            <div className={styles.pickerGroupList}>
+              {(() => {
+                const groups = new Map<string, typeof ledgers>();
+                for (const l of ledgers) {
+                  const ownerName = l.ownerType === 'member' ? (memberMap.get(l.ownerMemberId ?? '')?.name ?? 'Unknown') : (l.ownerName ?? '—');
+                  if (!groups.has(ownerName)) groups.set(ownerName, []);
+                  groups.get(ownerName)!.push(l);
+                }
+                const sortedOwners = [...groups.keys()].sort((a, b) => a.localeCompare(b));
+                const nodes: JSX.Element[] = [];
+                sortedOwners.forEach((owner, gi) => {
+                  if (gi > 0) nodes.push(<div key={`div-${owner}`} className={styles.pickerDivider} />);
+                  nodes.push(<div key={`hdr-${owner}`} className={styles.pickerGroupLabel}>{owner}</div>);
+                  const groupLedgers = [...(groups.get(owner) ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+                  groupLedgers.forEach((l) => {
+                    nodes.push(
+                      <button key={l.id} className={`${txStyles.pickerItem} ${pickerPicked === l.id && pickerKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayPicker(); setPickerPicked(l.id); setEntryLedgerId(l.id); setShowEntryPicker(false); }}>
+                        <span className="anim-target" key={`${l.id}-${pickerPicked === l.id ? pickerKey : 0}`}>{l.name}</span>
+                      </button>
+                    );
+                  });
+                });
+                if (ledgers.length === 0) nodes.push(<div key="empty" className={txStyles.pickerEmpty}>No ledgers — create one first</div>);
+                return nodes;
+              })()}
             </div>
           </div>
         </div>
