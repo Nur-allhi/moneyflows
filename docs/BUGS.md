@@ -697,3 +697,13 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Description:** The "Choose ledger" picker used a bespoke `pickerSheet`/`pickerTitle`/`pickerItem` style that did not match the app's standard picker modal (used by "Select member", "Select Account", etc.) — no header bar, no close button, different container styling.
 - **Fix Approach:** Replaced the bespoke styles with the shared `txStyles` (TransactionFormModal.module.css) picker classes: `pickerOverlay`/`pickerModal`/`pickerHeader`/`pickerTitle`/`pickerClose`/`pickerList`/`pickerItem`/`pickerEmpty`, including the close (X) button. Added `pickerCloseKey`/`replayPickerClose` for the close-button animation.
 - **Resolved:** 2026-11-05 — commit `a9dd1df`.
+
+## BUG-54: Other Ledgers picker — entries not sorted by member with dividers
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-05 (during: page feedback on /other-ledgers)
+- **Location:** `src/otherLedgers/presentation/screens/OtherLedgersIndex.tsx` (picker overlay)
+- **Description:** The "Choose ledger" entry picker showed all ledgers in a flat list without sorting by member, and lacked scrollable overflow when the list exceeded available height.
+- **Fix Approach:** Grouped ledgers by owner (member name or external person name), sorted groups alphabetically, added dividers between groups and a group label header above each group. Added `pickerGroupList` class with `max-height: 60vh` and `overflow-y: auto` for scrollability. Used the same `txStyles` picker classes as the standard "Select member" picker.
+- **Resolved:** 2026-11-05 — commit `8a2de68`.
