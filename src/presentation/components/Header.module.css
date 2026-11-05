@@ -25,13 +25,22 @@
 }
 
 .searchWrap {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
+  /* On desktop, search wrap flows naturally in the flex row */
+  position: relative;
+  flex: 1;
   max-width: 400px;
   z-index: 351;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .searchWrap {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+  }
 }
 
 .searchIcon {
@@ -158,9 +167,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
   margin-left: auto;
   z-index: 1;
+  flex-shrink: 0;
 }
 
 .date {
