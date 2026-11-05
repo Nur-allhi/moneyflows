@@ -54,12 +54,14 @@ export function ReportFilterSheet(props: FilterSheetProps) {
       </div>
       {preset === 'custom' && (
         <div className={styles.dateRow}>
-          <label className={styles.dateField}>From
+          <div className={styles.dateField}>
+            <span>From</span>
             <DatePicker value={customStart} onChange={setCustomStart} />
-          </label>
-          <label className={styles.dateField}>To
+          </div>
+          <div className={styles.dateField}>
+            <span>To</span>
             <DatePicker value={customEnd} onChange={setCustomEnd} />
-          </label>
+          </div>
         </div>
       )}
 

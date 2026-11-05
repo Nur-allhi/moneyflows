@@ -1,5 +1,102 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-05 10:46
+
+### Changes
+- **BUG-51 fixed — lean call-site fix (user's choice of "go with lean")** in `src/reports/presentation/screens/ReportFilterSheet.tsx`: the two `<label className={styles.dateField}>From/To <DatePicker/></label>` wrappers are now `<div className={styles.dateField}>` + a plain `<span>` caption. The `<label>`'s implicit control was resolving to the `DatePicker` Popover trigger `<button>`, so every press activated it twice and the popover toggled open→closed within one event turn never mounting. `DatePicker` itself is untouched — this matches the house `FormField` pattern (visual-only label, never an implicit form control). No CSS change needed: `.dateField` is a layout-only class.
+- **`e2e/report-calendar.spec.ts` is now a real regression guard** (was red for two reasons — the label bug plus a long-removed `Pick a date` label): it opens the picker from the calendar icon, asserts `[data-slot="calendar"]` visible, clicks the first enabled `button[data-day]`, then asserts the popover closed and the input holds `YYYY-MM-DD`.
+- `docs/BUGS.md`: BUG-51 flipped **open → fixed**, with the lean approach + rejected alternatives recorded (guarding inside `DatePicker` would hide the same bug class at future call sites; a real `htmlFor`/`id` pair would point at a hidden input instead of the trigger) and the Resolved line. BUG-51 was the last open bug — the tracker is now all fixed/wontfix.
+- `CHANGELOG.md` `[Unreleased]`: replaced `Placeholder` with a `Changed` entry for the calendar month/year dropdown restyle and a `Fixed` entry for BUG-51.
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, playwright E2E verification
+
+### Status
+- **Gates all green: typecheck 0, eslint 0 warnings, vitest 248/248, Playwright 35/35** (~2.2 min) — the suite is fully green for the first time; `report-calendar.spec.ts` was the last red test.
+- Branch `fix/calendar-dropdown-month-year` holds the restyle (`14cfb24`), its docs (`1a8c0ae`) and this BUG-51 fix. **Merged to `dev` as `4012e0c` with explicit user approval (§3.12)** — pushed to `origin/dev`. The branch can now be deleted.
+- A `PATCH` bump (**2.3.1**) applies when this batch is released (`VERSIONING.md` §2→§3); not bumped yet — that's a separate decision at release time.
+- **Next up:** PATCH bump (2.3.1) + release; or the next ticket in the queue once released.
+
+---
+
+## Session 2026-11-05 10:56
+
+### Changes
+- **Merged `fix/calendar-dropdown-month-year` → `dev`** (explicit user approval via §3.12, then `git push origin dev`) as merge commit `4012e0c`. Included:
+  - `14cfb24` — calendar month/year dropdown restyle (anchored frosted panel, 3-col grid, matches app dropdown design).
+  - `1a8c0ae` — docs: BUG-51 + session notes.
+  - `7febf53` — BUG-51 lean call-site fix (`ReportFilterSheet.tsx`: `<label>` → `<div>` + `<span>` caption) + `e2e/report-calendar.spec.ts` real regression guard.
+- `docs/BUGS.md` BUG-51 → fixed; tracker now all fixed/wontfix. `CHANGELOG.md` `[Unreleased]` updated (Changed dropdown restyle + Fixed BUG-51). `session_log.md` + `AGENTS.md` §5 updated (both entries now say "merged to `dev`").
+
+### Skill(s) Used
+- gitnexus (merge protocol §3.12), senior-frontend, code-reviewer
+
+### Status
+- Merge complete and pushed to `origin/dev`. Gates were verified green before merge (typecheck 0, eslint 0 warnings, vitest 248/248, Playwright 35/35).
+- **Next up:** PATCH bump (2.3.1) + release (separate decision), then the next ticket.
+
+---
+
+## Session 2026-11-05 10:45
+
+### Changes
+- **Calendar month/year dropdown now matches the app's dropdown design** (`src/components/ui/calendar.tsx` + new `src/components/ui/calendar.module.css`):
+  - Root cause of the "generic" look: `reset.css` styles `button` and `*` **unlayered**, so the Tailwind utility layer loses on `<button>` for background/border/color/font and on every element for padding. Every class the old dropdown used (`bg-surface`, `text-text`, `bg-wash-8`, `px-*`, `py-*`) was therefore dead — the triggers rendered as bare text and the menu as a flat unstyled column.
+  - Dropdown chrome is now a CSS module (project convention, tokens only): trigger = bordered `--color-surface` chip w/ blur + muted chevron (hover/open → primary + glow); panel = frosted `bg 95% + blur 24`, border, `--radius-lg`, `--shadow-lg`, `dropdownIn`; items = `--radius-sm`, wash-6% hover, primary-gradient active + glow.
+  - Panel is anchored under its trigger (3-column grid: 4 rows of months, 11 rows of years), `max-height: min(280px, 50vh)` with scroll, auto-scrolls the selected year into view, and closes on pick / Escape (menu only, calendar stays open) / outside click.
+  - Trigger/panel/items use the app's picker vocabulary (`pickerTrigger` + `GlobalSearch` dropdown panel), per user choice of the anchored-panel option over the full-screen modal picker.
+- `e2e/calendar-dropdown.spec.ts` rewritten as a real regression guard (5 tests): it now opens the calendar from the transaction wizard and asserts 12 options, `aria-selected`, the gradient active state, panel stays inside the popover, pick applies, Escape closes only the menu. The old version passed without the calendar ever opening.
+- `docs/DESIGN_IDENTITY.md` §9: added the "Calendar month/year dropdown" spec row.
+- **BUG-51 logged** (`docs/BUGS.md`): Report filters → Custom date pickers never open the calendar — the `DatePicker` sits inside a `<label>` whose implicit control is the Popover trigger `<button>`, so each press activates it twice and the popover toggles open→closed in one turn. Pre-existing (not caused by this work); verified by breaking `label.htmlFor` at runtime, after which it opens. This is also why `e2e/report-calendar.spec.ts:3` is red. Awaiting user decision on the fix approach.
+
+### Skill(s) Used
+- senior-frontend, frontend-design, playwright E2E verification
+
+### Status
+- Month/year dropdown restyled and verified (dark + light theme, 390px mobile): tsc 0, eslint 0 warnings, vitest 248/248, e2e 34/35 (only the pre-existing `report-calendar` failure, blocked by BUG-51).
+- Committed on branch `fix/calendar-dropdown-month-year`. Not merged — merge needs explicit approval (§3.12). A `PATCH` bump (2.3.1) applies when this batch is released (§2 of `VERSIONING.md`); not bumped yet.
+- **Next up:** user decision on BUG-51's fix approach.
+
+---
+
+## Session 2026-11-05 (cont.)
+
+### Changes
+- Fixed calendar month/year dropdown readability and width in `src/components/ui/calendar.tsx`:
+  - Removed `backdrop-blur-md` from dropdown menu — was causing glass/transparent background where text behind bleeds through, making options poorly visible
+  - Made background more opaque: `bg-surface` → `bg-surface/95`
+  - Tightened width: `max-w-[240px]` → `max-w-[180px]`, `min-w-[80px]` → `min-w-[120px]`
+  - Reduced max-height: `60vh` → `50vh`
+- Reduced year navigation range from 60 years back to 20 years back (~31 options instead of 70+)
+- Verified: tsc 0, eslint 0 warnings, vitest 248/248 green, e2e/calendar-dropdown.spec.ts passes
+
+### Skill(s) Used
+- senior-frontend, playwright E2E verification
+
+### Status
+- Dropdown readability and width fixed. Ready for review/merge when user instructs.
+
+---
+
+## Session 2026-11-05 11:05
+
+### Changes
+- Fixed calendar month/year dropdowns in `src/components/ui/calendar.tsx`:
+  - Removed `pointer-events-none` from `dropdown_root` CSS class — it was blocking all clicks on the CustomSelect month/year trigger buttons.
+  - Neutralized the `dropdown` CSS class (was `opacity-0 absolute inset-0 border-none outline-none`) which was hiding the custom trigger button and overriding its border/padding.
+  - CustomSelect now renders its own visible trigger + dropdown menu that respond to interaction.
+- Added `e2e/calendar-dropdown.spec.ts` — Playwright test verifying the calendar opens with both month ("Oct"/"Nov") and year ("2026") dropdown labels visible side by side.
+- Gates: tsc 0, eslint 0 warnings, vitest 248/248 green, new e2e test passes.
+- Committed on branch `fix/calendar-dropdown-month-year` as `5d4260f` (not merged to master — pending user approval per REPO_RULES §3.8).
+
+### Skill(s) Used
+- senior-frontend, playwright E2E verification
+
+### Status
+- Fix complete and verified. Committed locally on feature branch. Ready for review/merge when user instructs.
+
+---
+
 Archived first 1000 lines to docs/audit/session_log.archive.md on 2026-08-27 — recent tail below.
 
 - [whatsNew.ts] release notes re-keyed to 1.0.0
