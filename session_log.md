@@ -13,8 +13,27 @@
 
 ### Status
 - **Gates all green: typecheck 0, eslint 0 warnings, vitest 248/248, Playwright 35/35** (~2.2 min) — the suite is fully green for the first time; `report-calendar.spec.ts` was the last red test.
-- Branch `fix/calendar-dropdown-month-year` holds the restyle (`14cfb24`), its docs (`1a8c0ae`) and this BUG-51 fix. **Not merged** — merge needs explicit approval (§3.12). A `PATCH` bump (**2.3.1**) applies when this batch is released (`VERSIONING.md` §2→§3); not bumped yet.
-- **Next up:** user decides whether to merge `fix/calendar-dropdown-month-year` into `dev` (then the 2.3.1 bump + release).
+- Branch `fix/calendar-dropdown-month-year` holds the restyle (`14cfb24`), its docs (`1a8c0ae`) and this BUG-51 fix. **Merged to `dev` as `4012e0c` with explicit user approval (§3.12)** — pushed to `origin/dev`. The branch can now be deleted.
+- A `PATCH` bump (**2.3.1**) applies when this batch is released (`VERSIONING.md` §2→§3); not bumped yet — that's a separate decision at release time.
+- **Next up:** PATCH bump (2.3.1) + release; or the next ticket in the queue once released.
+
+---
+
+## Session 2026-11-05 10:56
+
+### Changes
+- **Merged `fix/calendar-dropdown-month-year` → `dev`** (explicit user approval via §3.12, then `git push origin dev`) as merge commit `4012e0c`. Included:
+  - `14cfb24` — calendar month/year dropdown restyle (anchored frosted panel, 3-col grid, matches app dropdown design).
+  - `1a8c0ae` — docs: BUG-51 + session notes.
+  - `7febf53` — BUG-51 lean call-site fix (`ReportFilterSheet.tsx`: `<label>` → `<div>` + `<span>` caption) + `e2e/report-calendar.spec.ts` real regression guard.
+- `docs/BUGS.md` BUG-51 → fixed; tracker now all fixed/wontfix. `CHANGELOG.md` `[Unreleased]` updated (Changed dropdown restyle + Fixed BUG-51). `session_log.md` + `AGENTS.md` §5 updated (both entries now say "merged to `dev`").
+
+### Skill(s) Used
+- gitnexus (merge protocol §3.12), senior-frontend, code-reviewer
+
+### Status
+- Merge complete and pushed to `origin/dev`. Gates were verified green before merge (typecheck 0, eslint 0 warnings, vitest 248/248, Playwright 35/35).
+- **Next up:** PATCH bump (2.3.1) + release (separate decision), then the next ticket.
 
 ---
 
