@@ -28,14 +28,14 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ## BUG-51: Report filters — the custom date-range calendar never opens
 
-- **Status:** open
+- **Status:** fixed
 - **Severity:** medium
 - **Found:** 2026-11-05 (during: user UI review of the date-picker calendar; found while inspecting the month/year dropdown)
 - **Location:** `src/reports/presentation/screens/ReportFilterSheet.tsx:56-64` (`<label className={styles.dateField}>From <DatePicker …/></label>`, same for `To`) + `src/components/ui/date-picker.tsx`
 - **Description:** On the member report (`/member/:id/report`) → **Report filters** → **Custom**, clicking either date field or its calendar icon does nothing — the calendar popover never appears, so From/To can only be set by typing `YYYY-MM-DD`. Expected: the calendar opens, as it does everywhere else (`AddAccountModal`, `CreateLedgerModal`, `AddEntryModal`, `TransactionEditModal`, transaction wizard). Reproduced headless: `[data-slot="calendar"]` count stays 0, no popover node is ever mounted (a MutationObserver recorded zero add/remove events), and the trigger's `aria-expanded` stays `false`. `e2e/report-calendar.spec.ts:3` ("report filter custom calendar opens") is red for the same reason — it also targets a long-removed `Pick a date` label — so it cannot go green until this is fixed; the whole rest of the suite is green (34/35 as of 2026-11-05).
 - **Root Cause:** each `DatePicker` sits inside a `<label>` whose implicit labelled control resolves to the Popover trigger `<button>` (`label.control` → `button[data-base-ui-click-trigger]`). A pointer press inside the label therefore activates that button **twice** — once from the click itself and once from the label's forwarding behaviour — so the Popover toggles open→closed inside one event turn and React never commits it. Verified by setting `label.htmlFor` to a non-existent id at runtime: the calendar then opens normally.
-- **Fix Approach:** pending user decision.
-- **Resolved:** —
+- **Fix Approach:** **lean (user's call)** — fix the call site, not the component. `ReportFilterSheet.tsx` replaces the two wrapping `<label className={styles.dateField}>` elements with `<div className={styles.dateField}>` + a plain `<span>` caption, matching the house `FormField` pattern (visual-only label, never an implicit form control). `DatePicker` itself is untouched. The alternatives were rejected: injecting a defensive `onClick` stop-propagation/label-guard inside `DatePicker` would hide the same class of bug at every future call site, and generating a real `htmlFor`/`id` pair would have made the label control a hidden input rather than the trigger.
+- **Resolved:** 2026-11-05 — committed on `fix/calendar-dropdown-month-year` (same branch as the calendar dropdown restyle). `e2e/report-calendar.spec.ts` rewritten as a real regression guard: it opens the picker from the calendar icon, asserts `[data-slot="calendar"]` is visible, clicks the first enabled `button[data-day]`, then asserts the popover closed and the input holds `YYYY-MM-DD`. Full gate: typecheck 0, lint 0 warnings, vitest 248/248, **Playwright 35/35** (was 34/35 — this was the last red test).
 
 ---
 

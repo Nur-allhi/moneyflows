@@ -1,5 +1,23 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-05 10:46
+
+### Changes
+- **BUG-51 fixed — lean call-site fix (user's choice of "go with lean")** in `src/reports/presentation/screens/ReportFilterSheet.tsx`: the two `<label className={styles.dateField}>From/To <DatePicker/></label>` wrappers are now `<div className={styles.dateField}>` + a plain `<span>` caption. The `<label>`'s implicit control was resolving to the `DatePicker` Popover trigger `<button>`, so every press activated it twice and the popover toggled open→closed within one event turn never mounting. `DatePicker` itself is untouched — this matches the house `FormField` pattern (visual-only label, never an implicit form control). No CSS change needed: `.dateField` is a layout-only class.
+- **`e2e/report-calendar.spec.ts` is now a real regression guard** (was red for two reasons — the label bug plus a long-removed `Pick a date` label): it opens the picker from the calendar icon, asserts `[data-slot="calendar"]` visible, clicks the first enabled `button[data-day]`, then asserts the popover closed and the input holds `YYYY-MM-DD`.
+- `docs/BUGS.md`: BUG-51 flipped **open → fixed**, with the lean approach + rejected alternatives recorded (guarding inside `DatePicker` would hide the same bug class at future call sites; a real `htmlFor`/`id` pair would point at a hidden input instead of the trigger) and the Resolved line. BUG-51 was the last open bug — the tracker is now all fixed/wontfix.
+- `CHANGELOG.md` `[Unreleased]`: replaced `Placeholder` with a `Changed` entry for the calendar month/year dropdown restyle and a `Fixed` entry for BUG-51.
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, playwright E2E verification
+
+### Status
+- **Gates all green: typecheck 0, eslint 0 warnings, vitest 248/248, Playwright 35/35** (~2.2 min) — the suite is fully green for the first time; `report-calendar.spec.ts` was the last red test.
+- Branch `fix/calendar-dropdown-month-year` holds the restyle (`14cfb24`), its docs (`1a8c0ae`) and this BUG-51 fix. **Not merged** — merge needs explicit approval (§3.12). A `PATCH` bump (**2.3.1**) applies when this batch is released (`VERSIONING.md` §2→§3); not bumped yet.
+- **Next up:** user decides whether to merge `fix/calendar-dropdown-month-year` into `dev` (then the 2.3.1 bump + release).
+
+---
+
 ## Session 2026-11-05 10:45
 
 ### Changes
