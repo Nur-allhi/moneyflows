@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.3.1',
+    items: [
+      'The date picker\'s month and year menus now match the rest of the app — a clean trigger chip with a frosted menu anchored underneath.',
+      'Report filters → Custom: the date-range calendar now opens when you tap a date field or its calendar icon (was stuck, so From/To could only be typed).',
+    ],
+  },
+  {
     version: '2.3.0',
     items: [
       'New: when a newer version of MoneyFlows has been delivered to this device, a small notice appears offering one-tap Refresh. No update surprises mid-form — refresh only when you tap it.',

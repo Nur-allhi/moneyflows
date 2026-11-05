@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [2.3.1] - 2026-11-05
+
 ### Changed
 - **Calendar month/year dropdown restyle**: the date picker's month and year menus now use the app's own dropdown vocabulary instead of the stripped default look — the trigger is a bordered surface chip with a rotating chevron, and the menu is a frosted panel anchored under it (same chrome as the global search), with months and years in a 3-column grid, a wash hover and the primary-gradient selected state. Closes on pick, on **Escape** (menu only — the calendar stays open) and on outside click; the selected year scrolls itself into view. Implemented as a CSS module rather than utilities because `reset.css` styles `button`/`*` unlayered, which made every Tailwind class the old dropdown used (background, border, colour, font, padding) inert. Spec added to `docs/DESIGN_IDENTITY.md` §9, and `e2e/calendar-dropdown.spec.ts` is now a real 5-test guard — the previous version passed without the calendar ever opening.
 
