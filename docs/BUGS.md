@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-51: Report filters — the custom date-range calendar never opens
+
+- **Status:** open
+- **Severity:** medium
+- **Found:** 2026-11-05 (during: user UI review of the date-picker calendar; found while inspecting the month/year dropdown)
+- **Location:** `src/reports/presentation/screens/ReportFilterSheet.tsx:56-64` (`<label className={styles.dateField}>From <DatePicker …/></label>`, same for `To`) + `src/components/ui/date-picker.tsx`
+- **Description:** On the member report (`/member/:id/report`) → **Report filters** → **Custom**, clicking either date field or its calendar icon does nothing — the calendar popover never appears, so From/To can only be set by typing `YYYY-MM-DD`. Expected: the calendar opens, as it does everywhere else (`AddAccountModal`, `CreateLedgerModal`, `AddEntryModal`, `TransactionEditModal`, transaction wizard). Reproduced headless: `[data-slot="calendar"]` count stays 0, no popover node is ever mounted (a MutationObserver recorded zero add/remove events), and the trigger's `aria-expanded` stays `false`. `e2e/report-calendar.spec.ts:3` ("report filter custom calendar opens") is red for the same reason — it also targets a long-removed `Pick a date` label — so it cannot go green until this is fixed; the whole rest of the suite is green (34/35 as of 2026-11-05).
+- **Root Cause:** each `DatePicker` sits inside a `<label>` whose implicit labelled control resolves to the Popover trigger `<button>` (`label.control` → `button[data-base-ui-click-trigger]`). A pointer press inside the label therefore activates that button **twice** — once from the click itself and once from the label's forwarding behaviour — so the Popover toggles open→closed inside one event turn and React never commits it. Verified by setting `label.htmlFor` to a non-existent id at runtime: the calendar then opens normally.
+- **Fix Approach:** pending user decision.
+- **Resolved:** —
+
+---
+
 ## BUG-50: Other Ledgers index — a long ledger name overflows its card instead of shrinking
 
 - **Status:** fixed

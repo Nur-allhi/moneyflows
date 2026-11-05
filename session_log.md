@@ -1,5 +1,27 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-05 10:45
+
+### Changes
+- **Calendar month/year dropdown now matches the app's dropdown design** (`src/components/ui/calendar.tsx` + new `src/components/ui/calendar.module.css`):
+  - Root cause of the "generic" look: `reset.css` styles `button` and `*` **unlayered**, so the Tailwind utility layer loses on `<button>` for background/border/color/font and on every element for padding. Every class the old dropdown used (`bg-surface`, `text-text`, `bg-wash-8`, `px-*`, `py-*`) was therefore dead — the triggers rendered as bare text and the menu as a flat unstyled column.
+  - Dropdown chrome is now a CSS module (project convention, tokens only): trigger = bordered `--color-surface` chip w/ blur + muted chevron (hover/open → primary + glow); panel = frosted `bg 95% + blur 24`, border, `--radius-lg`, `--shadow-lg`, `dropdownIn`; items = `--radius-sm`, wash-6% hover, primary-gradient active + glow.
+  - Panel is anchored under its trigger (3-column grid: 4 rows of months, 11 rows of years), `max-height: min(280px, 50vh)` with scroll, auto-scrolls the selected year into view, and closes on pick / Escape (menu only, calendar stays open) / outside click.
+  - Trigger/panel/items use the app's picker vocabulary (`pickerTrigger` + `GlobalSearch` dropdown panel), per user choice of the anchored-panel option over the full-screen modal picker.
+- `e2e/calendar-dropdown.spec.ts` rewritten as a real regression guard (5 tests): it now opens the calendar from the transaction wizard and asserts 12 options, `aria-selected`, the gradient active state, panel stays inside the popover, pick applies, Escape closes only the menu. The old version passed without the calendar ever opening.
+- `docs/DESIGN_IDENTITY.md` §9: added the "Calendar month/year dropdown" spec row.
+- **BUG-51 logged** (`docs/BUGS.md`): Report filters → Custom date pickers never open the calendar — the `DatePicker` sits inside a `<label>` whose implicit control is the Popover trigger `<button>`, so each press activates it twice and the popover toggles open→closed in one turn. Pre-existing (not caused by this work); verified by breaking `label.htmlFor` at runtime, after which it opens. This is also why `e2e/report-calendar.spec.ts:3` is red. Awaiting user decision on the fix approach.
+
+### Skill(s) Used
+- senior-frontend, frontend-design, playwright E2E verification
+
+### Status
+- Month/year dropdown restyled and verified (dark + light theme, 390px mobile): tsc 0, eslint 0 warnings, vitest 248/248, e2e 34/35 (only the pre-existing `report-calendar` failure, blocked by BUG-51).
+- Committed on branch `fix/calendar-dropdown-month-year`. Not merged — merge needs explicit approval (§3.12). A `PATCH` bump (2.3.1) applies when this batch is released (§2 of `VERSIONING.md`); not bumped yet.
+- **Next up:** user decision on BUG-51's fix approach.
+
+---
+
 ## Session 2026-11-05 (cont.)
 
 ### Changes
