@@ -17,6 +17,7 @@ Placeholder
 
 ### Changed
 - **Other Ledgers "Choose ledger" picker** now uses the app's standard modal design (header bar with title, X close button, frosted backdrop) matching other pickers like "Select member" and "Select account".
+- **Desktop header layout** — the search bar now flows naturally in the header flex row instead of being absolutely positioned, preventing overlap with the "New transaction" button and other right-side controls on wide screens.
 
 ### Fixed
 - **Date picker form field styling** — the trigger in Add Entry and other form fields now has proper inner padding (12px 14px), background color, border, and 10px border-radius matching every other form field. The calendar button maintains proper alignment with the input.
