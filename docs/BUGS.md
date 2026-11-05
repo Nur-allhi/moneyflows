@@ -687,3 +687,13 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 - **Description:** The Date field in the Add Entry form rendered with zero inner padding and an improper (too short) height, not matching the other fields (Description, Amount). Root cause: the DatePicker default styling relied on Tailwind arbitrary classes `px-[14px]`/`py-[12px]`, which Tailwind v4 did not generate in this project, leaving the composite unstyled. Fields that passed `className={styles.inputField}` (transaction form) worked, masking the issue.
 - **Fix Approach:** Moved the field chrome into a dedicated CSS module (`src/components/ui/date-picker.module.css`) so padding/border/background/radius are guaranteed to apply; tuned vertical padding so the 32px calendar button keeps the field height (~40px) aligned with other single-line fields. Removed the now-redundant `className={styles.inputField}` from the transaction form.
 - **Resolved:** 2026-11-05 — working tree (uncommitted).
+
+## BUG-53: Other Ledgers 'Choose ledger' picker used bespoke design
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-05 (during: page feedback on /other-ledgers)
+- **Location:** `src/otherLedgers/presentation/screens/OtherLedgersIndex.tsx` (entry picker overlay)
+- **Description:** The "Choose ledger" picker used a bespoke `pickerSheet`/`pickerTitle`/`pickerItem` style that did not match the app's standard picker modal (used by "Select member", "Select Account", etc.) — no header bar, no close button, different container styling.
+- **Fix Approach:** Replaced the bespoke styles with the shared `txStyles` (TransactionFormModal.module.css) picker classes: `pickerOverlay`/`pickerModal`/`pickerHeader`/`pickerTitle`/`pickerClose`/`pickerList`/`pickerItem`/`pickerEmpty`, including the close (X) button. Added `pickerCloseKey`/`replayPickerClose` for the close-button animation.
+- **Resolved:** 2026-11-05 — commit `a9dd1df`.
