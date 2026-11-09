@@ -2981,3 +2981,18 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Committed on `dev` as `fix(e2e): give setup a real time budget so the suite runs again (BUG-56)`. Not pushed, not merged to `master` — awaiting user instruction.
 - Only remaining known-narrow screen: `TagLedgerScreen` (1100px) — not requested, left alone. No open bugs in `docs/BUGS.md`.
 
+## Session 2026-11-10 (release — v2.4.2)
+
+### Changes
+- **Version bump to 2.4.2** (PATCH, atomic commit `8235cf7`): `package.json:4`, `whatsNew.ts` entry (newest first, worded honestly as a behind-the-scenes fix), `CHANGELOG.md` `[Unreleased] → [2.4.2] - 2026-11-10` under `Fixed`.
+  - **Decision surfaced before bumping** (per `AGENTS.md` §3.10) because the rules conflicted: `VERSIONING.md` §2 rule 4 says a change with no user-visible effect gets no bump, but §1's PATCH row explicitly cites *"BUG-44 Playwright gate (`fullyParallel: false` / `workers: 1`)"* as a PATCH precedent. User chose **PATCH 2.4.2**. (My earlier "no bump" note in the session log was superseded by that call.)
+- **Full gate suite green on the bumped version** — `lint` 0 warnings, `build` green (3418 modules, 9.88s, which also runs `tsc -b`), unit **248/248**, and **Playwright 35/35 from a cold server (2.4m)**. This is the first release where the e2e gate could actually be run since v2.3.1 — the box that was knowingly unchecked for v2.4.1 is now honestly ticked.
+- **`dev → master` merged** on explicit user instruction: `--no-ff` merge `7a3f225` ("Merge dev: release v2.4.2"), annotated tag `v2.4.2`, pushed `master --follow-tags`, then `dev` fast-forwarded to `master` and pushed.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- `master` = `dev` = `7a3f225` (v2.4.2), both pushed; tag `v2.4.2` on origin.
+- No open bugs. Nothing queued — the optional `TagLedgerScreen` width alignment (1100px vs the 1240px used by the other three registers) is the only known inconsistency and is NOT a logged bug.
+
