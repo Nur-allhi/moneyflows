@@ -4,17 +4,30 @@ import { useTransactionStore } from '../stores/useTransactionStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useTagStore } from '../stores/useTagStore';
-import { formatAmount } from '../utils/format';
+import { formatAmount, formatAmountParts } from '../utils/format';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { Highlight } from '../utils/highlight';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { matchesTx } from '../utils/search';
 import { shortDate } from '../constants/dates';
 import { useReplay } from '../hooks/useReplay';
-import { LedgerSearch } from '../components';
+import { LedgerSearch, LedgerTable } from '../components';
+import type { LedgerRow } from '../components';
 import styles from './TagLedgerScreen.module.css';
 
 const CREDIT_TYPES = new Set(['income', 'loan_repayment', 'repay', 'loan_received']);
+const LOAN_TYPES = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback']);
+
+/** BUG-58: which viewport the register is drawn for — same 1024px breakpoint
+ *  the other ledger screens use, so `desktop` matches across the app. */
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
+/** BUG-58: the Member column is an extra 140px track, so it only appears once
+ *  the register is wide enough to carry it. Below this the tag ledger falls back
+ *  to the exact 6 columns the other registers use, which is the width at which
+ *  they start to need all the room they can get. Measured: at 1280 the
+ *  Description column still gets 112px, at 1100 the grid would overflow. */
+const MEMBER_COL_QUERY = '(min-width: 1280px)';
 
 function txHasTag(tx: { metadata?: Record<string, unknown> }, tag: string): boolean {
   const tags = tx.metadata?.tags;
@@ -145,6 +158,26 @@ export function TagLedgerScreen() {
       }),
     );
   }, [sorted, sortOrder, debouncedLedgerQuery, members, accounts, locale]);
+
+  // BUG-58: the register is now the shared LedgerTable, which needs `desktop`
+  // decided in JS rather than by CSS — same pattern as the other ledger screens.
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia(DESKTOP_QUERY).matches);
+  const [showMemberCol, setShowMemberCol] = useState(() => window.matchMedia(MEMBER_COL_QUERY).matches);
+  useEffect(() => {
+    const desktopMq = window.matchMedia(DESKTOP_QUERY);
+    const memberMq = window.matchMedia(MEMBER_COL_QUERY);
+    const onDesktop = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    const onMember = (e: MediaQueryListEvent) => setShowMemberCol(e.matches);
+    desktopMq.addEventListener('change', onDesktop);
+    memberMq.addEventListener('change', onMember);
+    return () => {
+      desktopMq.removeEventListener('change', onDesktop);
+      memberMq.removeEventListener('change', onMember);
+    };
+  }, []);
+
+  // No running balance here on purpose: a tag spans accounts, so a cumulative
+  // balance over the filtered subset would be a number that exists nowhere.
 
   if (!tag) {
     return (
@@ -289,6 +322,24 @@ export function TagLedgerScreen() {
     return acct ? `${acct.name}` : '(deleted account)';
   };
 
+  // BUG-58: same row shape the other registers feed LedgerTable. `debit`/`credit`
+  // stay undefined on the empty side so the table prints its own em-dash.
+  const ledgerRows: LedgerRow[] = filteredSorted.map((tx) => {
+    const credit = CREDIT_TYPES.has(tx.type);
+    const amount = formatAmountParts(tx.amount, locale, currency).amount;
+    return {
+      id: tx.id,
+      date: shortDate(tx.date, locale),
+      description: tx.description,
+      member: memberName(tx.memberId),
+      account: accountLabel(credit ? (tx.destAccount ?? tx.sourceAccount) : (tx.sourceAccount ?? tx.destAccount)),
+      debit: credit ? undefined : amount,
+      credit: credit ? amount : undefined,
+      currencyLabel: currency,
+      type: LOAN_TYPES.has(tx.type) ? 'loan' : (tx.type as LedgerRow['type']),
+    };
+  });
+
   return (
     <div className={styles.page}>
       <button className={`${styles.backBtn} ${backKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack(); navigate('/tags'); }}><span className="anim-target" key={backKey}>← All tags</span></button>
@@ -330,11 +381,23 @@ export function TagLedgerScreen() {
             <>No matches for &ldquo;{ledgerQuery}&rdquo;</>
           )}
         </p>
+      ) : isDesktop ? (
+        <LedgerTable
+          rows={ledgerRows}
+          desktop
+          showBalance={false}
+          showMember={showMemberCol}
+          searchQuery={ledgerQuery}
+        />
       ) : (
+        /* Phones keep this plain, horizontally scrollable table: LedgerTable's
+           `.noBalance` grid needs ~450px for Date+Type+Account+Debit+Credit and
+           a phone gives ~302px here, so the shared grid would clip the money
+           columns. The desktop register above is the one that has to match. */
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
-              <tr><th>Date</th><th>Member</th><th>Account</th><th>Description</th><th style={{ textAlign: 'right' }}>Amount</th></tr>
+              <tr><th>Date</th><th>Member</th><th>Account</th><th>Description</th><th className={styles.amt}>Amount</th></tr>
             </thead>
             <tbody>
               {filteredSorted.map((tx) => {

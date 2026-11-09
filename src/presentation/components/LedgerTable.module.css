@@ -40,8 +40,17 @@
   grid-template-columns: 95px 55px 1fr 150px 55px 55px;
 }
 
-.desktop.noBalance .header {
-  grid-template-columns: 140px 84px 1fr 260px 130px 130px;
+.desktop.noBalance .header,
+.desktop.noBalance .row {
+  grid-template-columns: 140px 84px 1fr 130px 130px 130px;
+}
+
+/* BUG-58: opt-in Member column (desktop only). Inserted between Description
+   and Account; the money tracks keep their exact 130px so the tag register
+   still reads like the other three. */
+.desktop.noBalance.showMember .header,
+.desktop.noBalance.showMember .row {
+  grid-template-columns: 140px 84px 1fr 140px 130px 130px 130px;
 }
 
 .body {
@@ -88,10 +97,6 @@
 
 .noBalance .row {
   grid-template-columns: 95px 55px 1fr 150px 55px 55px;
-}
-
-.desktop.noBalance .row {
-  grid-template-columns: 140px 84px 1fr 260px 130px 130px;
 }
 
 .row:hover {
@@ -211,6 +216,21 @@
 }
 
 .desktop .account {
+  font-size: var(--text-sm);
+}
+
+/* BUG-58: Member cell — same visual weight as Account, since both are
+   secondary context next to the money columns. */
+.member {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.desktop .member {
   font-size: var(--text-sm);
 }
 
