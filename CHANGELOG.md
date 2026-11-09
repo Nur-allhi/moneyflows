@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [2.4.1] - 2026-11-10
+
+### Fixed
+- **Ledger pages are wider on desktop** — the open ledger (`/other-ledgers/:id`), the group ledger (`/groups/:groupId`) and the member report (`/member/:id/report`) all capped the register at 900px, so once the desktop sidebar left room the table sat in a narrow strip with a large empty gutter on each side (≈376px per side at 1920) while the Description column was squeezed to ~156px. All three now use the same 1240px width: Description gets ~496px at 1920 and ~428px at 1440, with the Date/Type/Debit/Credit/Balance columns, the gaps and the mobile layout unchanged. No horizontal overflow at 1920 / 1440 / 1280.
+
 ## [2.4.0] - 2026-11-05
 
 ### Added

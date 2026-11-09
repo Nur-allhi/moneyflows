@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.4.1',
+    items: [
+      'Ledger pages are wider on desktop — the open ledger, group ledger and member report now share the same width, so descriptions get room instead of sitting in a narrow strip with empty space on both sides.',
+    ],
+  },
+  {
     version: '2.4.0',
     items: [
       'Date picker form fields now have proper padding, background and border height in Add Entry and other forms.',
