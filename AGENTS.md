@@ -242,7 +242,9 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **T-174 (2026-11-01): tag-overview sorting** — card grid on `/tags` gets a **Most used / Name A–Z / Z–A** pill group (default unchanged); alphabetical sorts use `localeCompare` with a count-desc tie-break, and the pills reuse the detail ledger's `sortPill` styles, shown when more than one tag exists. `feat:` → **MINOR bump to 2.1.0** on `beta_v2.0` per `VERSIONING.md` §2→§3 (T-174 ticket in TICKETS.md; feature commit `8322c74`, release commit `dbf4c47`, session log `a28d252`).
 
-**Branch map (2026-11-05):** `master` = releases only, `bc659e7` = merge of `dev`, **v2.3.1** (calendar month/year dropdown restyle + BUG-51 report-filter date-picker fix; 248 unit + 35 Playwright green; **tag `v2.3.1` created**). `dev` = fast-forwarded to `bc659e7` (== master). `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
+**Branch map (2026-11-10):** `master` = releases only, `dd95aa0` = merge of `dev`, **v2.4.1** (ledger register width alignment — BUG-55 open ledger + BUG-57 group ledger/member report; typecheck/lint/build + 248 unit green, **Playwright blocked by BUG-56**; **tag `v2.4.1` pushed**). `dev` fast-forwarded to `dd95aa0` (== master) and then carries the session-log docs commit. `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
+
+**Open bug (next up):** **BUG-56** — the Playwright `setup` project cannot complete, so the e2e gate is dead; decision pending between (A+B) seed `lastSeenVersion` in `auth.setup.ts` + longer per-project setup timeout, (C) dismiss the What's New dialog inside the spec, (D) diagnose first, (E) leave it. See `docs/BUGS.md` BUG-56.
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 

@@ -2947,3 +2947,18 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Committed on `dev` as `fix(layout): align group ledger + member report to the 1240px register width (BUG-57)`. Not pushed, not merged to `master` — awaiting user instruction.
 - Next up: optional alignment of `TagLedgerScreen` (1100px) if the user wants every register on one width; pending PATCH release (2.4.1); BUG-56 (Playwright setup) still open and needs a decision.
 
+## Session 2026-11-10 (release — v2.4.1)
+
+### Changes
+- **Version bump to 2.4.1** (PATCH per `VERSIONING.md` §2: two `fix:` commits, no `feat:`), atomic commit `212dabe`: `package.json:4`, `whatsNew.ts` entry (newest first), `CHANGELOG.md` `[Unreleased] → [2.4.1] - 2026-11-10` under `Fixed`.
+- **Released the two width fixes**: BUG-55 (open ledger 900 → 1240px) and BUG-57 (group ledger + member report 900 → 1240px). CHANGELOG copy describes the user-visible result: Description ~156 → ~496px at 1920, no horizontal overflow, money columns and mobile unchanged.
+- **Gates run**: `typecheck` 0 · `lint` 0 warnings · `build` green (3418 modules, 9.24s) · unit suite **248/248**. **Playwright NOT run** — blocked by BUG-56 (setup project cannot complete); the user chose to release first and fix the harness afterwards, so the e2e box in the `VERSIONING.md` §4 checklist is knowingly unchecked for this release.
+- **`dev → master` merged** on explicit user instruction: `--no-ff` merge `dd95aa0` ("Merge dev: release v2.4.1"), annotated tag `v2.4.1`, pushed `master --follow-tags`, then `dev` fast-forwarded to `master` and pushed.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- `master` = `dev` = `dd95aa0` (v2.4.1), both pushed; tag `v2.4.1` on origin.
+- Next up: **BUG-56** (Playwright setup cannot complete) — user's call is pending between A+B (seed `lastSeenVersion` + longer setup timeout), C (dismiss the What's New dialog in the test) and D/E. Everything else has no open bugs.
+
