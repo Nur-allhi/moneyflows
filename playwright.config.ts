@@ -31,7 +31,17 @@ export default defineConfig({
     env: { GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'e2e-test-client-id.apps.googleusercontent.com' },
   },
   projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+      // BUG-56: a cold Vite dev boot plus OPFS init cannot finish inside the
+      // global 15s budget (the file already allowed 30s for its first `goto`
+      // per BUG-49, which the test timeout silently overrode). The seeded step
+      // is one-time work, so it gets its own budget; the specs keep 15s so a
+      // slow test still fails like a defect instead of hiding behind a long
+      // timeout.
+      timeout: 60_000,
+    },
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/storage.json' },
