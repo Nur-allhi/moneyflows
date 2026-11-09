@@ -2923,3 +2923,27 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Committed on `dev` as `fix(other-ledgers): widen the open-ledger register on desktop (BUG-55)`. Not pushed, not merged to `master` — awaiting user instruction.
 - Next up: nothing queued; the pending release batch is a PATCH (2.4.1) when the user calls for it.
 
+## Session 2026-11-10 (cont. — BUG-57, same width on Group Ledger + Member Report)
+
+### Changes
+- **BUG-57 logged** and fixed: the *other two* ledger-style screens carried the same `max-width: 900px` cap that BUG-55 removed from the Other Ledger detail page.
+  - `src/presentation/screens/GroupLedgerScreen.module.css` `.container` → `max-width: 1240px`
+  - `src/reports/presentation/screens/MemberReportScreen.module.css` `.container` → `max-width: 1240px`
+- Member report print is unaffected: its `@media print` block already forces `.container { max-width: none; padding: 0 }`.
+- Measured live (temp throwaway spec, since removed; seeded a `Household Group` account group + used the seeded Admin member):
+  - Group ledger 1920 → container 1240, table 1192, columns `140 | 84 | 496 | 130 | 130 | 130`
+  - Group ledger 1440 → container 1172, table 1124, Description 428
+  - Member report 1920 → container 1240, table 1192, Description 496
+  - Member report 1440 → container 1172, table 1124, Description 428
+  - `scrollWidth − innerWidth = 0` on both screens at both widths.
+- All three ledger-style screens now match: Other Ledger detail (BUG-55), Group Ledger, Member Report.
+- Gates: `npm run typecheck` 0, `npm run lint` 0 warnings.
+- Not touched (still narrow, not requested): `TagLedgerScreen` 1100px, `RecycleBin` 1000px, `GroupsListScreen`/`MemberList` 800px, `SettingsPage` 760px.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on `dev` as `fix(layout): align group ledger + member report to the 1240px register width (BUG-57)`. Not pushed, not merged to `master` — awaiting user instruction.
+- Next up: optional alignment of `TagLedgerScreen` (1100px) if the user wants every register on one width; pending PATCH release (2.4.1); BUG-56 (Playwright setup) still open and needs a decision.
+

@@ -39,6 +39,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-57: Group Ledger + Member Report — same 900px register cap as the Other Ledger page
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-10 (during: user desktop UI review, immediately after BUG-55 — "same width measurement should apply to the group ledger and member report ledgers too")
+- **Location:** `src/presentation/screens/GroupLedgerScreen.module.css:1-8` (`.container`) and `src/reports/presentation/screens/MemberReportScreen.module.css:1-8` (`.container`) — both `{ padding: 24px; max-width: 900px; margin: 0 auto; }`; both render `LedgerTable` (`desktop`), so the columns are the same `140px 84px 1fr 130px 130px 130px`
+- **Description:** Both screens inheritated the same cap as BUG-55, so on desktop the register (group ledger: the `All Accounts` ledger; member report: each account / loan / other-ledger section table) sat in a 900px strip with a large empty gutter on each side while the `1fr` Description column collapsed to ~156px. Expected: all three ledger-style screens use the same desktop width.
+- **Root Cause:** identical to BUG-55 — a v1 mobile-first `max-width: 900px` on the page container; the app shell imposes no cap.
+- **Fix Approach:** **user's call** — set both containers to `max-width: 1240px`, matching `OtherLedgerDetail` (BUG-55 option B). `LedgerTable` untouched, so the gain goes to Description. Member report print output is unaffected: its `@media print` block already forces `max-width: none; padding: 0`.
+- **Resolved:** 2026-11-10 on `dev` — measured live at 1920 / 1440 with a seeded group and the seeded member: **both screens give container 1240 / 1172, table 1192 / 1124, columns `140 | 84 | 496 / 428 | 130 | 130 | 130`, no horizontal overflow** — identical to the Other Ledger page. typecheck 0, lint 0 warnings.
+
+---
+
 ## BUG-55: Other Ledger detail — 900px cap leaves ~376px dead space per side on a 1920 desktop
 
 - **Status:** fixed

@@ -1,6 +1,9 @@
 .container {
   padding: 24px;
-  max-width: 900px;
+  /* BUG-55/57: was 900px — same cap as the Other Ledger / Group Ledger detail
+     pages. 1240px matches them so every ledger-style register uses the same
+     desktop width; print overrides this with `max-width: none`. */
+  max-width: 1240px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
