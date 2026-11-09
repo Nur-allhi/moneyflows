@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [2.4.2] - 2026-11-10
+
 ### Fixed
 - **Automated test suite can run again (BUG-56)** — the Playwright `setup` step that seeds the test database had a 15s budget but needs ~20s on a cold dev server, so the whole suite failed before a single test ran. The setup project now has its own 60s budget (specs keep the tight 15s), and the seeded settings record the current version so the "What's New" dialog never opens during tests. Test harness only — no app behaviour change. Suite is back to 35/35 from a cold start.
 

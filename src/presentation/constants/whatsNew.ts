@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.4.2',
+    items: [
+      'Behind the scenes: the automated test suite that checks each release is working again, so future updates get verified more thoroughly before they reach you. Nothing visible has changed in the app.',
+    ],
+  },
+  {
     version: '2.4.1',
     items: [
       'Ledger pages are wider on desktop — the open ledger, group ledger and member report now share the same width, so descriptions get room instead of sitting in a narrow strip with empty space on both sides.',
