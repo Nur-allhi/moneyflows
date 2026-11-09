@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-56: Playwright `setup` project cannot complete — dashboard assertion fails on the seeded reload
+
+- **Status:** open
+- **Severity:** medium
+- **Found:** 2026-11-10 (during: BUG-55 verification, `npx playwright test e2e/flows/05-other-ledgers.spec.ts`)
+- **Location:** `e2e/auth.setup.ts:28-29` (`await page.reload()` → `expect(getByText(/Where Your Money Is|Recent Transactions/i).first()).toBeVisible({ timeout: 15000 })`), `playwright.config.ts:5` (`timeout: 15_000`), `playwright.config.ts:22` (`navigationTimeout: 8_000`)
+- **Description:** The `setup` project fails and therefore the whole suite cannot run — `2 did not run`. Two distinct symptoms seen in the same session: (1) cold server — the app is still on the splash (`MoneyFl v2.4.0`, typing animation) after 30s, so the assertion times out (the file's own `goto` allowance of 30s per BUG-49 is longer than the 15s test budget in `playwright.config.ts:5`); (2) warm server — the app renders fully, but `getByText(/Where Your Money Is|Recent Transactions/i)` reports **element(s) not found** while the failure snapshot clearly shows both headings. In the warm case the snapshot also shows the **"What's New in v2.4.0"** dialog open over the dashboard (`main.tsx:51` opens it whenever `settings.lastSeenVersion !== APP_VERSION`, and `auth.setup.ts:16` seeds settings without `lastSeenVersion`), plus the `agentation` dev overlay (v3.0.2, `package.json:53`) in the DOM. Expected: setup seeds, reloads, sees the dashboard, writes `e2e/.auth/storage.json`.
+- **Root Cause:** (unknown — two candidates) (a) the What's New dialog's modal layer marks the rest of the app `aria-hidden`, so Playwright's text engine no longer matches the dashboard headings even though they are painted; (b) the 15s global `test` timeout is simply shorter than a cold Vite dev boot plus OPFS init, so the reload never settles in time. Not diagnosed further — the suite was last reported green (35/35) on 2026-11-05 at v2.3.1, before the v2.4.0 bump.
+- **Fix Approach:** pending user decision. Candidate directions: seed `lastSeenVersion: __APP_VERSION__` in `auth.setup.ts` so the modal never mounts during e2e (small, test-only, keeps production behaviour); and/or raise the `setup` project's timeout (per-project `timeout`) so the cold-boot path has the same budget as BUG-49's 30s navigation allowance.
+- **Resolved:** —
+
+---
+
 ## BUG-55: Other Ledger detail — 900px cap leaves ~376px dead space per side on a 1920 desktop
 
 - **Status:** fixed
