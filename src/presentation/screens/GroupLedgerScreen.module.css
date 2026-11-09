@@ -1,6 +1,9 @@
 .container {
   padding: 24px;
-  max-width: 900px;
+  /* BUG-55/57: was 900px — same cap as the Other Ledger detail page, which
+     left a large dead gutter on both sides of the register on desktop while
+     the `1fr` Description column collapsed. 1240px matches that page. */
+  max-width: 1240px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;

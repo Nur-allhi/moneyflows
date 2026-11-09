@@ -2900,3 +2900,50 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - dev → master merged and pushed as `04a6646`. master is now in sync with origin/master.
 
+## Session 2026-11-10 (BUG-55 — open ledger width on desktop)
+
+### Changes
+- **BUG-55 logged** in `docs/BUGS.md` (user-reported: the open ledger `/other-ledgers/:id` is narrow on desktop with dead space on both sides) and then fixed.
+- Root cause: `OtherLedgerDetail.module.css` `.container` still carried `max-width: 900px` from the v1 mobile-first spec. The app shell has no cap (`.main` in `App.module.css`), so on a 1920 viewport the register used 900px of ~1652px and the `1fr` Description column collapsed to ~156px.
+- Fix (**option B, user's call**): `.container { max-width: 1240px }`. `LedgerTable` column template, gaps and padding untouched — the whole gain goes to Description.
+- Measured live (seeded ledger, Chromium, temporary throwaway spec, since removed):
+  - 1920 → container 1240, table 1192, columns `140 | 84 | 496 | 130 | 130 | 130`
+  - 1440 → container 1172, table 1124, Description 428
+  - 1280 → container 1012, table 964, Description 268
+  - Description grew 156 → 496px at 1920; `scrollWidth − innerWidth = 0` at every width (no horizontal overflow).
+- Mobile untouched (≤768 branch drops container padding and renders `MobileLedger`).
+- Gates: `npm run typecheck` 0, `npm run lint` 0 warnings (`--max-warnings 0`).
+- **E2E note:** the Playwright suite could not run as-is in this session. The `setup` project (`e2e/auth.setup.ts`) times out at the dashboard assertion (`page.reload` + 15s test timeout) and, once warm, still fails the same assertion — the seeded settings carry no `lastSeenVersion`, so the "What's New in v2.4.0" modal mounts over the dashboard, and the agentation dev overlay (v3.0.2) is present in the DOM too. Pre-existing and unrelated to BUG-55. Worked around for verification with `--no-deps` + a warm dev server. **Needs its own bug entry/decision** — not logged yet because the exact cause (modal `aria-hidden` vs cold-boot timing) is not confirmed.
+- No version bump (per `VERSIONING.md` §2 the PATCH bump happens on the release batch; a `fix:` CSS change makes the next release a PATCH, i.e. 2.4.1).
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on `dev` as `fix(other-ledgers): widen the open-ledger register on desktop (BUG-55)`. Not pushed, not merged to `master` — awaiting user instruction.
+- Next up: nothing queued; the pending release batch is a PATCH (2.4.1) when the user calls for it.
+
+## Session 2026-11-10 (cont. — BUG-57, same width on Group Ledger + Member Report)
+
+### Changes
+- **BUG-57 logged** and fixed: the *other two* ledger-style screens carried the same `max-width: 900px` cap that BUG-55 removed from the Other Ledger detail page.
+  - `src/presentation/screens/GroupLedgerScreen.module.css` `.container` → `max-width: 1240px`
+  - `src/reports/presentation/screens/MemberReportScreen.module.css` `.container` → `max-width: 1240px`
+- Member report print is unaffected: its `@media print` block already forces `.container { max-width: none; padding: 0 }`.
+- Measured live (temp throwaway spec, since removed; seeded a `Household Group` account group + used the seeded Admin member):
+  - Group ledger 1920 → container 1240, table 1192, columns `140 | 84 | 496 | 130 | 130 | 130`
+  - Group ledger 1440 → container 1172, table 1124, Description 428
+  - Member report 1920 → container 1240, table 1192, Description 496
+  - Member report 1440 → container 1172, table 1124, Description 428
+  - `scrollWidth − innerWidth = 0` on both screens at both widths.
+- All three ledger-style screens now match: Other Ledger detail (BUG-55), Group Ledger, Member Report.
+- Gates: `npm run typecheck` 0, `npm run lint` 0 warnings.
+- Not touched (still narrow, not requested): `TagLedgerScreen` 1100px, `RecycleBin` 1000px, `GroupsListScreen`/`MemberList` 800px, `SettingsPage` 760px.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on `dev` as `fix(layout): align group ledger + member report to the 1240px register width (BUG-57)`. Not pushed, not merged to `master` — awaiting user instruction.
+- Next up: optional alignment of `TagLedgerScreen` (1100px) if the user wants every register on one width; pending PATCH release (2.4.1); BUG-56 (Playwright setup) still open and needs a decision.
+

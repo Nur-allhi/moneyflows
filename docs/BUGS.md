@@ -26,6 +26,45 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-56: Playwright `setup` project cannot complete — dashboard assertion fails on the seeded reload
+
+- **Status:** open
+- **Severity:** medium
+- **Found:** 2026-11-10 (during: BUG-55 verification, `npx playwright test e2e/flows/05-other-ledgers.spec.ts`)
+- **Location:** `e2e/auth.setup.ts:28-29` (`await page.reload()` → `expect(getByText(/Where Your Money Is|Recent Transactions/i).first()).toBeVisible({ timeout: 15000 })`), `playwright.config.ts:5` (`timeout: 15_000`), `playwright.config.ts:22` (`navigationTimeout: 8_000`)
+- **Description:** The `setup` project fails and therefore the whole suite cannot run — `2 did not run`. Two distinct symptoms seen in the same session: (1) cold server — the app is still on the splash (`MoneyFl v2.4.0`, typing animation) after 30s, so the assertion times out (the file's own `goto` allowance of 30s per BUG-49 is longer than the 15s test budget in `playwright.config.ts:5`); (2) warm server — the app renders fully, but `getByText(/Where Your Money Is|Recent Transactions/i)` reports **element(s) not found** while the failure snapshot clearly shows both headings. In the warm case the snapshot also shows the **"What's New in v2.4.0"** dialog open over the dashboard (`main.tsx:51` opens it whenever `settings.lastSeenVersion !== APP_VERSION`, and `auth.setup.ts:16` seeds settings without `lastSeenVersion`), plus the `agentation` dev overlay (v3.0.2, `package.json:53`) in the DOM. Expected: setup seeds, reloads, sees the dashboard, writes `e2e/.auth/storage.json`.
+- **Root Cause:** (unknown — two candidates) (a) the What's New dialog's modal layer marks the rest of the app `aria-hidden`, so Playwright's text engine no longer matches the dashboard headings even though they are painted; (b) the 15s global `test` timeout is simply shorter than a cold Vite dev boot plus OPFS init, so the reload never settles in time. Not diagnosed further — the suite was last reported green (35/35) on 2026-11-05 at v2.3.1, before the v2.4.0 bump.
+- **Fix Approach:** pending user decision. Candidate directions: seed `lastSeenVersion: __APP_VERSION__` in `auth.setup.ts` so the modal never mounts during e2e (small, test-only, keeps production behaviour); and/or raise the `setup` project's timeout (per-project `timeout`) so the cold-boot path has the same budget as BUG-49's 30s navigation allowance.
+- **Resolved:** —
+
+---
+
+## BUG-57: Group Ledger + Member Report — same 900px register cap as the Other Ledger page
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-10 (during: user desktop UI review, immediately after BUG-55 — "same width measurement should apply to the group ledger and member report ledgers too")
+- **Location:** `src/presentation/screens/GroupLedgerScreen.module.css:1-8` (`.container`) and `src/reports/presentation/screens/MemberReportScreen.module.css:1-8` (`.container`) — both `{ padding: 24px; max-width: 900px; margin: 0 auto; }`; both render `LedgerTable` (`desktop`), so the columns are the same `140px 84px 1fr 130px 130px 130px`
+- **Description:** Both screens inheritated the same cap as BUG-55, so on desktop the register (group ledger: the `All Accounts` ledger; member report: each account / loan / other-ledger section table) sat in a 900px strip with a large empty gutter on each side while the `1fr` Description column collapsed to ~156px. Expected: all three ledger-style screens use the same desktop width.
+- **Root Cause:** identical to BUG-55 — a v1 mobile-first `max-width: 900px` on the page container; the app shell imposes no cap.
+- **Fix Approach:** **user's call** — set both containers to `max-width: 1240px`, matching `OtherLedgerDetail` (BUG-55 option B). `LedgerTable` untouched, so the gain goes to Description. Member report print output is unaffected: its `@media print` block already forces `max-width: none; padding: 0`.
+- **Resolved:** 2026-11-10 on `dev` — measured live at 1920 / 1440 with a seeded group and the seeded member: **both screens give container 1240 / 1172, table 1192 / 1124, columns `140 | 84 | 496 / 428 | 130 | 130 | 130`, no horizontal overflow** — identical to the Other Ledger page. typecheck 0, lint 0 warnings.
+
+---
+
+## BUG-55: Other Ledger detail — 900px cap leaves ~376px dead space per side on a 1920 desktop
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-09 (during: user desktop UI review of the open ledger, `/other-ledgers/:id`)
+- **Location:** `src/otherLedgers/presentation/screens/OtherLedgerDetail.module.css:1-8` (`.container { padding: 24px; max-width: 900px; margin: 0 auto; }`) drives the width; column widths live in `src/presentation/components/LedgerTable.module.css:34-37` (`.desktop .header` / `.desktop .row` → `140px 84px 1fr 130px 130px 130px`)
+- **Description:** On the ledger detail page the whole register is capped at 900px and centred, so on a desktop the table sits in a narrow strip with a large empty gutter on both sides — at a 1920 viewport the main area is ~1652px wide, leaving ~376px of dead space per side. The slack is not used by the table: the `Date / Type / Description / Debit / Credit / Balance` columns total 900px (852px content), and because only `Description` is `1fr` it collapsed to **~156px** while `Debit/Credit/Balance` kept a fixed 130px each. Expected: the register uses the available desktop width so the description column gets proper space (the `/other-ledgers` index is already full-width; only the detail page was capped).
+- **Root Cause:** `.container` still carried a `max-width: 900px` from the mobile-first v1 spec; the app shell (`.main` in `App.module.css:12-21`) imposes no cap of its own, so the 900px was the sole limiter and every pixel above it became margin.
+- **Fix Approach:** **option B (user's call)** — raise the cap to `1240px`; `LedgerTable` columns, gaps (8px) and row padding (20px) untouched, so the whole gain goes to the `1fr` Description column. Rejected: 1100px (A, the `TagLedgerScreen` width — still ~276px dead per side) and no cap (C — matches the index page but puts the amounts very far from the text on ultra-wide screens).
+- **Resolved:** 2026-11-10 on `dev` — measured live in Chromium at 1920 / 1440 / 1280 with a seeded ledger: container `1240 / 1172 / 1012`, table `1192 / 1124 / 964`, columns `140 | 84 | 496 / 428 / 268 | 130 | 130 | 130` — Description went **156 → 496px** at 1920, no horizontal overflow at any width (`scrollWidth − innerWidth = 0`). typecheck 0, lint 0 warnings.
+
+---
+
 ## BUG-51: Report filters — the custom date-range calendar never opens
 
 - **Status:** fixed

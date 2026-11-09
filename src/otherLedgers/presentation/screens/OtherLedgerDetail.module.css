@@ -1,6 +1,10 @@
 .container {
   padding: 24px;
-  max-width: 900px;
+  /* BUG-55: was 900px — on desktop that left ~200-380px of dead space per side
+     while the `1fr` Description column collapsed to ~156px. 1240px lets the
+     register use the main area (Description ~476px @1920) without stretching
+     the amount columns too far from the text on ultra-wide screens. */
+  max-width: 1240px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
