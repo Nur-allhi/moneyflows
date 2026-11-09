@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-55: Other Ledger detail — 900px cap leaves ~376px dead space per side on a 1920 desktop
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-09 (during: user desktop UI review of the open ledger, `/other-ledgers/:id`)
+- **Location:** `src/otherLedgers/presentation/screens/OtherLedgerDetail.module.css:1-8` (`.container { padding: 24px; max-width: 900px; margin: 0 auto; }`) drives the width; column widths live in `src/presentation/components/LedgerTable.module.css:34-37` (`.desktop .header` / `.desktop .row` → `140px 84px 1fr 130px 130px 130px`)
+- **Description:** On the ledger detail page the whole register is capped at 900px and centred, so on a desktop the table sits in a narrow strip with a large empty gutter on both sides — at a 1920 viewport the main area is ~1652px wide, leaving ~376px of dead space per side. The slack is not used by the table: the `Date / Type / Description / Debit / Credit / Balance` columns total 900px (852px content), and because only `Description` is `1fr` it collapsed to **~156px** while `Debit/Credit/Balance` kept a fixed 130px each. Expected: the register uses the available desktop width so the description column gets proper space (the `/other-ledgers` index is already full-width; only the detail page was capped).
+- **Root Cause:** `.container` still carried a `max-width: 900px` from the mobile-first v1 spec; the app shell (`.main` in `App.module.css:12-21`) imposes no cap of its own, so the 900px was the sole limiter and every pixel above it became margin.
+- **Fix Approach:** **option B (user's call)** — raise the cap to `1240px`; `LedgerTable` columns, gaps (8px) and row padding (20px) untouched, so the whole gain goes to the `1fr` Description column. Rejected: 1100px (A, the `TagLedgerScreen` width — still ~276px dead per side) and no cap (C — matches the index page but puts the amounts very far from the text on ultra-wide screens).
+- **Resolved:** 2026-11-10 on `dev` — measured live in Chromium at 1920 / 1440 / 1280 with a seeded ledger: container `1240 / 1172 / 1012`, table `1192 / 1124 / 964`, columns `140 | 84 | 496 / 428 / 268 | 130 | 130 | 130` — Description went **156 → 496px** at 1920, no horizontal overflow at any width (`scrollWidth − innerWidth = 0`). typecheck 0, lint 0 warnings.
+
+---
+
 ## BUG-51: Report filters — the custom date-range calendar never opens
 
 - **Status:** fixed
