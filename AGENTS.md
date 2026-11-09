@@ -244,7 +244,7 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **Branch map (2026-11-10):** `master` = releases only, `dd95aa0` = merge of `dev`, **v2.4.1** (ledger register width alignment — BUG-55 open ledger + BUG-57 group ledger/member report; typecheck/lint/build + 248 unit green, **Playwright blocked by BUG-56**; **tag `v2.4.1` pushed**). `dev` fast-forwarded to `dd95aa0` (== master) and then carries the session-log docs commit. `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
 
-**Open bug (next up):** **BUG-56** — the Playwright `setup` project cannot complete, so the e2e gate is dead; decision pending between (A+B) seed `lastSeenVersion` in `auth.setup.ts` + longer per-project setup timeout, (C) dismiss the What's New dialog inside the spec, (D) diagnose first, (E) leave it. See `docs/BUGS.md` BUG-56.
+**Open bug (next up):** none — **BUG-56 is fixed (2026-11-10)**. The Playwright `setup` project needed ~20s but was killed at the global 15s, so the whole suite failed before a test ran; `setup` now has its own 60s budget (`playwright.config.ts`) plus a 30s `reload`/assertion window and a seeded `lastSeenVersion` in `e2e/auth.setup.ts`. The What's New dialog was **not** the cause (proven with a bogus-version probe) — the earlier `aria-hidden` theory is dead. Suite verified **35/35 from a cold server, twice**. See `docs/BUGS.md` BUG-56.
 
 **Context rule reminder:** At ~80% context, STOP → stage → commit → update session_log + this file → hand off for fresh session.
 

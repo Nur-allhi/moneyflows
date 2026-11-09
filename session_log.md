@@ -2962,3 +2962,22 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - `master` = `dev` = `dd95aa0` (v2.4.1), both pushed; tag `v2.4.1` on origin.
 - Next up: **BUG-56** (Playwright setup cannot complete) — user's call is pending between A+B (seed `lastSeenVersion` + longer setup timeout), C (dismiss the What's New dialog in the test) and D/E. Everything else has no open bugs.
 
+## Session 2026-11-10 (cont. — BUG-56 Playwright harness fixed, option A+B)
+
+### Changes
+- **BUG-56 fixed** (user chose **A+B**). Root cause turned out to be **only the timeout**, not the What's New dialog — see the probe below.
+  - **B — the actual fix, `playwright.config.ts`:** the `setup` project now carries its own `timeout: 60_000`; the specs keep the global 15s so a slow spec still fails like a defect instead of hiding behind a long budget.
+  - **`e2e/auth.setup.ts`:** the seeded `reload()` no longer inherits the 8s global `navigationTimeout` (now 30s, matching the BUG-49 `goto` allowance), and the dashboard assertion got a real 30s window inside the new budget.
+  - **A — defensive, `e2e/auth.setup.ts`:** seeded settings now include `lastSeenVersion` read from `package.json` (the same single source as `__APP_VERSION__`, so it can never drift on a bump), which keeps the "What's New" dialog from mounting during e2e. The `evaluate` payload changed from a b64 string to `{ db, version }`.
+- **The popup theory was disproved, and the file comments say so.** Probe: with `lastSeenVersion` set to a deliberately bogus value (so the dialog *does* open) and B still in place, setup **passed in 20.5s**. So the dialog never hid the dashboard from Playwright (the `aria-hidden` theory was wrong) — the step simply needs ~20s and was being killed at 15s. Because the assertion's own 15s `expect` timeout rivalled the 15s test timeout, a timeout used to surface as "element(s) not found" with a painted-dashboard screenshot, which is what sent the earlier diagnosis toward the modal. Both file comments were rewritten to record this honestly.
+- **Verification:** full suite **35 passed / 0 failed** from a **cold** dev server, twice — first with A+B, then again after the probe was reverted (2.5m / 2.4m). Gates: `typecheck` 0, `lint` 0 warnings.
+- **Docs:** BUG-56 → `fixed` with root cause, probe evidence and the rejected options; BUG-55/BUG-57 reordered above it per `docs/BUGS.md` ordering rule 3 (same status + severity → oldest first) and the "inheritated" typo fixed; `CHANGELOG.md` `[Unreleased]` now carries the harness fix (precedent: BUG-49's harness note is already in the changelog).
+- No production code touched and **no version bump** — this is test tooling only; the next real release batch decides its own bump.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- Committed on `dev` as `fix(e2e): give setup a real time budget so the suite runs again (BUG-56)`. Not pushed, not merged to `master` — awaiting user instruction.
+- Only remaining known-narrow screen: `TagLedgerScreen` (1100px) — not requested, left alone. No open bugs in `docs/BUGS.md`.
+
