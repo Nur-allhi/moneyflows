@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [2.4.3] - 2026-11-10
+
 ### Changed
 - **Tags ledger now looks like the other ledger registers on desktop (BUG-58)** — opening a tag (`/tags/:tag`) used to render its own plain table capped at 1100px, showing one `Amount` column. On desktop it now uses the same register as the open ledger, group ledger and member report: 1240px wide, with `Date | Type | Description | Member | Account | Debit | Credit` and the money split into Debit/Credit. The Member column is shown once the window is wide enough for it (≥1280px) and hides below that, where the register switches back to the six columns the other ledgers use, so nothing is ever cut off. There is deliberately no running-balance column here — a tag spans accounts, so a cumulative balance over that subset would not match any real balance. Phones keep the previous compact scrollable table, which fits better than the wide register at that width. No balance or total changes.
+
+### Fixed
+- **Ledger rows lost their description at narrow desktop widths** — the six-column desktop layout without a balance column reserved 260px for the Account name, leaving the Description squeezed to a few characters and cutting off the Debit/Credit columns at 1100px. Account now takes the same 130px as the other secondary columns, so Description keeps its room and nothing is clipped above 1024px.
 
 ## [2.4.2] - 2026-11-10
 
