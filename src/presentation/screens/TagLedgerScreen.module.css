@@ -1,6 +1,9 @@
 .page {
   padding: 24px 28px;
-  max-width: 1100px;
+  /* BUG-58: was 1100px — the other three registers (Other Ledger detail,
+     Group Ledger, Member Report) are 1240px, so the content edge jumped when
+     switching between ledger screens. */
+  max-width: 1240px;
   margin: 0 auto;
 }
 
@@ -118,6 +121,7 @@
   padding: 24px 0;
 }
 
+/* Phones only — the desktop register is the shared LedgerTable (BUG-58). */
 .tableWrap {
   overflow-x: auto;
   border: 1px solid var(--color-border, color-mix(in oklch, var(--color-wash) 6%, transparent));

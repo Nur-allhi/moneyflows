@@ -7,6 +7,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.4.3',
+    items: [
+      'The tag ledger now matches the other ledgers — open Transactions → Tags → any tag and it uses the same wide, easy-to-read layout, with money split into paid out and received columns. Wider windows also show whose transaction each row is.',
+    ],
+  },
+  {
     version: '2.4.2',
     items: [
       'Behind the scenes: the automated test suite that checks each release is working again, so future updates get verified more thoroughly before they reach you. Nothing visible has changed in the app.',

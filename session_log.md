@@ -2981,3 +2981,45 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Committed on `dev` as `fix(e2e): give setup a real time budget so the suite runs again (BUG-56)`. Not pushed, not merged to `master` — awaiting user instruction.
 - Only remaining known-narrow screen: `TagLedgerScreen` (1100px) — not requested, left alone. No open bugs in `docs/BUGS.md`.
 
+## Session 2026-11-10 (release — v2.4.2)
+
+### Changes
+- **Version bump to 2.4.2** (PATCH, atomic commit `8235cf7`): `package.json:4`, `whatsNew.ts` entry (newest first, worded honestly as a behind-the-scenes fix), `CHANGELOG.md` `[Unreleased] → [2.4.2] - 2026-11-10` under `Fixed`.
+  - **Decision surfaced before bumping** (per `AGENTS.md` §3.10) because the rules conflicted: `VERSIONING.md` §2 rule 4 says a change with no user-visible effect gets no bump, but §1's PATCH row explicitly cites *"BUG-44 Playwright gate (`fullyParallel: false` / `workers: 1`)"* as a PATCH precedent. User chose **PATCH 2.4.2**. (My earlier "no bump" note in the session log was superseded by that call.)
+- **Full gate suite green on the bumped version** — `lint` 0 warnings, `build` green (3418 modules, 9.88s, which also runs `tsc -b`), unit **248/248**, and **Playwright 35/35 from a cold server (2.4m)**. This is the first release where the e2e gate could actually be run since v2.3.1 — the box that was knowingly unchecked for v2.4.1 is now honestly ticked.
+- **`dev → master` merged** on explicit user instruction: `--no-ff` merge `7a3f225` ("Merge dev: release v2.4.2"), annotated tag `v2.4.2`, pushed `master --follow-tags`, then `dev` fast-forwarded to `master` and pushed.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- `master` = `dev` = `7a3f225` (v2.4.2), both pushed; tag `v2.4.2` on origin.
+- No open bugs. Nothing queued — the optional `TagLedgerScreen` width alignment (1100px vs the 1240px used by the other three registers) is the only known inconsistency and is NOT a logged bug.
+
+## Session 2026-11-10 (cont. — BUG-58: Tags ledger matched to the other registers)
+
+### Changes
+- **BUG-58 logged first** (protocol §3.11) as `low`: the Tags ledger had two divergences from the other three registers — `.page` capped at **1100px** (vs 1240px everywhere else) and a **hand-rolled `<table>`** (`Date | Member | Account | Description | Amount`) instead of the shared `LedgerTable`, plus an inline `style={{ textAlign: 'right' }}` on the Amount header (`DESIGN_IDENTITY.md` §2 violation).
+- **Scope — user's calls (both surfaced per §3.10):** (a) **width + full conversion** to `LedgerTable`, not width-only; (b) keep the Member information by **adding an opt-in Member column** to the shared component, not by dropping it or folding it into Description.
+- **`LedgerTable` (shared, opt-in only):** `member?: string` on `LedgerRow`, new `showMember?: boolean` prop, `const showMemberCol = showMember && desktop`, a `Member` header + cell in **both** row branches (virtualized and plain), `.member` cell CSS (same weight as `.account`), and one new grid variant `.desktop.noBalance.showMember` → `140px 84px 1fr 140px 130px 130px 130px`. Defaults off, so the other five callers are untouched.
+- **`TagLedgerScreen`:** `.page` **1100px → 1240px**; `isDesktop` via `matchMedia('(min-width: 1024px)')` with a change listener (same breakpoint as the other ledger screens); `ledgerRows: LedgerRow[]` mapped after `memberName`/`accountLabel` following `GroupLedgerScreen` conventions (`formatAmountParts(...).amount`, `currencyLabel`, loan types mapped to `'loan'`, empty side left `undefined` so the table prints its own em-dash); desktop renders `<LedgerTable desktop showBalance={false} showMember />`. `showBalance={false}` is deliberate — a tag spans accounts, so a running balance over that subset exists nowhere in the app.
+- **Phones keep the original scrollable `<table>`.** Measured first: `LedgerTable`'s `.noBalance` mobile grid needs ~450px for Date+Type+Account+Debit+Credit and this page gives ~302px at 390, so the shared grid clipped the money columns (`1fr` collapsed to 64px). Converting mobile would have been worse than a different table, so only the desktop register matches; the mobile branch is the pre-existing markup, with the inline style replaced by `className={styles.amt}`.
+- **`gitnexus.impact({target: "LedgerTable"})` returned CRITICAL / 146 impacted** — the known stale-index false positive (it maps UI to storage/sync processes). Real callers are `OtherLedgerDetail`, `GroupLedgerScreen`, `ReportSections`, `LoanDetailView`, `memberProfile/LedgerSection` and now `TagLedgerScreen`; the change is additive and opt-in, proven by the regression measurement below.
+- **Measured live (Playwright against the dev server, seeded tags):** `/tags/Travel` **1920** → page 1240, table 1184, headers `Date|Type|Description|Member|Account|Debit|Credit`, cols `140|84|340|140|130|130|130`; **1440** → page 1172, cols `140|84|272|140|130|130|130`; `/tags` overview 1920/1440 → 1240/1172. Document overflow **0** everywhere. **390** → plain table, all 5 headers, scrolls inside its own wrapper (410px in 300px), page overflow 0. **Regression:** member report at 1920 still `140|84|496|130|130|130` (6 columns, unchanged).
+- **Docs:** BUG-58 → `fixed` with the measured numbers and the mobile reasoning; `CHANGELOG.md` `[Unreleased]` gained a `Changed` entry; temp spec `e2e/_tmp-tags.spec.ts` and `test-results/` deleted before committing.
+
+### Follow-up the same day — narrow-desktop check (user chose option 1)
+- **A gap was found after the first commit:** at **1100px** wide the tag register clipped its Debit/Credit columns (`headerClipped: true`) while the sibling registers did not, so the 7th column had narrowed the usable window. Surfaced three options (gate the Member column at ≥1280 / accept the band / shrink tracks); **user chose option 1**.
+- **`TagLedgerScreen`:** second media query `MEMBER_COL_QUERY = '(min-width: 1280px)'`; one effect now watches both `DESKTOP_QUERY` (1024, decides `desktop`) and `MEMBER_COL_QUERY` (1280, decides `showMember`). Below 1280 the page renders the exact 6-column register its neighbours use.
+- **The real culprit was in `LedgerTable.module.css`, not the Member column:** `.desktop.noBalance` still reserved **260px** for Account (legacy space from where Balance would be), so Description collapsed to 71px and the money columns were cut at 1100. Tightened to `140px 84px 1fr 130px 130px 130px` (header and row now share one rule). `showBalance={false}` on desktop is used **only** by the tag page, so no other screen moved.
+- **Re-measured, full sweep:** 1920 → 7 cols `140|84|340|140|130|130|130`; 1440 → `140|84|272|…`; 1280 → `140|84|112|…`; 1279 → 6 cols `140|84|259|130|130|130`; 1100 → `140|84|80|130|130|130` **not clipped**; 1024 → clipped, but the open ledger and member report clip at 1024 too (pre-existing). 390 unchanged (plain table, 0 page overflow). Every size: document overflow 0, and the member report still `140|84|496|130|130|130`.
+- Screenshots eyeballed at 1280 (7 columns) and 1100 (6 columns, descriptions wrap, nothing cut).
+
+### Skill(s) Used
+- senior-frontend, code-reviewer, playwright E2E verification
+
+### Status
+- Gates green: `typecheck` 0, `lint` 0 warnings (`--max-warnings 0`), `build` green, **248/248** unit tests.
+- Amended into the single `fix(ui): match the Tags ledger to the other registers (BUG-58)` commit on `dev` (it had not been pushed). **Not pushed, not merged to `master`, no version bump** — release decision needs user approval (§3.12).
+- **Next up:** decide the bump for the BUG-58 batch at release time (`docs/VERSIONING.md` §2 — it *is* user-visible, so at least a PATCH; possibly a MINOR since the tag register gains a column vocabulary). No open bugs in `docs/BUGS.md`.
+

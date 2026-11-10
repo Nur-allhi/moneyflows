@@ -26,6 +26,28 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-58: Tags ledger — 1100px cap + a hand-rolled table that does not match the other registers
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-10 (during: v2.4.2 release wrap-up, user asked which screen `TagLedgerScreen` is)
+- **Location:** `src/presentation/screens/TagLedgerScreen.module.css:3` (`.container { max-width: 1100px }`), `src/presentation/screens/TagLedgerScreen.tsx:334-356` (bespoke `<table className={styles.table}>`), `TagLedgerScreen.tsx:337` (inline `style={{ textAlign: 'right' }}`)
+- **Description:** Two divergences from the other three ledger screens. (a) **Width:** the Tags page caps at 1100px while the Other Ledger detail, Group Ledger and Member Report are now 1240px, so switching between them shifts the content edge. (b) **Table vocabulary:** the tag ledger is a hand-rolled `<table width:100%>` with natural column widths and its own header/row padding, showing `Date | Member | Account | Description | Amount` — whereas the other registers render the shared `LedgerTable` (fixed `140px 84px 1fr 130px 130px 130px` grid, separate Debit/Credit money columns). Side effect: `:337` carries an inline `style={{ textAlign: 'right' }}` on the Amount header while the `.amt` class on `:149` already does exactly that — a `DESIGN_IDENTITY.md` §2 violation.
+- **Root Cause:** the Tags screen predates the `LedgerTable` consolidation (it still uses the plain-`<table>` pattern from before the shared register component existed) and was never migrated, so it kept both the old container cap and the old markup.
+- **Fix Approach:** **user's call — width + full conversion** to the shared `LedgerTable` (not just the width), so all four registers share one column vocabulary. `showBalance` will be **false** for this screen: a tag is a cross-account filter, so a running balance over the filtered subset would be a number that does not exist anywhere in the app.
+- **Resolved:** 2026-11-10 — fixed on `dev`.
+  - `.page` `max-width` **1100px → 1240px**; the hand-rolled `<table>` is now the shared `LedgerTable desktop showBalance={false} showMember`.
+  - `LedgerTable` gained an **opt-in** `showMember` prop (`member?: string` on `LedgerRow`, new 7-column grid `140px 84px 1fr 140px 130px 130px 130px`). It defaults off and is additionally gated on `desktop`, so the other five callers render exactly the same columns as before — verified by re-measuring the member report (`140|84|496|130|130|130`, unchanged).
+  - **The Member column appears only at ≥1280px** (`MEMBER_COL_QUERY` in `TagLedgerScreen`). A 7th track costs 140px, and at 1100–1279 the register needs that room for Description; below 1280 the tag page falls back to the 6-column layout the other registers use.
+  - **Also fixed the real cause of the narrow-desktop clipping:** the `.noBalance` desktop grid parked **260px** on Account (left over from the space where Balance would sit), which squeezed Description to 71px and cut the money columns at 1100. It is now `140px 84px 1fr 130px 130px 130px`, matching its neighbours. No other screen uses that variant on desktop, so nothing else moved.
+  - The inline `style={{ textAlign: 'right' }}` is gone: the mobile header uses `className={styles.amt}`.
+  - **Phones keep the original scrollable `<table>`** (`Date | Member | Account | Description | Amount`). `LedgerTable`'s `.noBalance` mobile grid needs ~450px for Date+Type+Account+Debit+Credit and this page gives ~302px at 390, so converting mobile would have clipped the money columns — worse than a different table. Only the desktop register has to match.
+  - Measured (Playwright, live dev server): `/tags/Travel` at **1920** → page 1240, table 1184, `Date|Type|Description|Member|Account|Debit|Credit`, cols `140|84|340|140|130|130|130`; at **1440** → page 1172, cols `140|84|272|140|130|130|130`; at **1280** → cols `140|84|112|140|130|130|130`; at **1279** → Member drops, cols `140|84|259|130|130|130`; at **1100** → `140|84|80|130|130|130`, **not clipped**. `/tags` overview 1920/1440 → 1240/1172. Document overflow **0** at every size. At **390** the plain table renders all 5 headers and scrolls inside its own wrapper (410px content in a 300px box), page overflow 0.
+  - **Parity proven against the peer register** (`/other-ledgers/:id`, seeded): 1279 → tag `…|259|130|130|130` vs open ledger `…|267|130|130|130`; 1100 → `80` vs `88`, neither clipped; **1024 → both clip identically**, a pre-existing app-wide narrow-desktop limit, not introduced here.
+  - **Regression:** member report at 1920 still `140|84|496|130|130|130` (6 columns, unchanged). `typecheck`, `lint --max-warnings 0`, `build` and **248/248** unit tests green.
+
+---
+
 ## BUG-56: Playwright `setup` project cannot complete — dashboard assertion fails on the seeded reload
 
 - **Status:** fixed

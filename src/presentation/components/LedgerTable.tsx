@@ -14,6 +14,8 @@ export interface LedgerRow {
   currencyLabel?: string;
   type?: 'income' | 'expense' | 'transfer' | 'loan';
   typeLabel?: string;
+  /** BUG-58: shown only when the table is given `showMember` (desktop only). */
+  member?: string;
   /** T-121: row mirrors a real transaction — shows the ↔ badge. */
   linked?: boolean;
 }
@@ -24,6 +26,12 @@ interface LedgerTableProps {
   onRowClick?: (row: LedgerRow, index: number) => void;
   desktop?: boolean;
   showBalance?: boolean;
+  /**
+   * BUG-58: adds a Member column between Description and Account. Opt-in, so
+   * every existing caller keeps its exact column set. Desktop only — the
+   * non-desktop grid has no room for a 7th track, so `desktop` also gates it.
+   */
+  showMember?: boolean;
   fillHeight?: boolean;
   sentinel?: React.ReactNode;
   searchQuery?: string;
@@ -37,7 +45,7 @@ const typeClassMap: Record<string, string | undefined> = {
   transfer: styles.transfer,
 };
 
-export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, fillHeight = false, sentinel, searchQuery = '', onLinkBadgeClick }: LedgerTableProps) {
+export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, showMember = false, fillHeight = false, sentinel, searchQuery = '', onLinkBadgeClick }: LedgerTableProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [bodyHeight, setBodyHeight] = useState(desktop ? 360 : 340);
@@ -45,7 +53,8 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
   const prevRowsLenRef = useRef(rows.length);
   const capturedHeightRef = useRef(0);
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${showBalance ? '' : styles.noBalance} ${fillHeight ? styles.fillHeight : ''} ${className}`;
+  const showMemberCol = showMember && desktop;
+  const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${showBalance ? '' : styles.noBalance} ${showMemberCol ? styles.showMember : ''} ${fillHeight ? styles.fillHeight : ''} ${className}`;
   const itemHeight = desktop ? DESKTOP_ROW_HEIGHT : ROW_HEIGHT;
   const containerHeight = fillHeight ? bodyHeight : (desktop ? 360 : 340);
 
@@ -99,6 +108,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
         <span className={styles.centerLabel}>Date</span>
         <span className={styles.centerLabel}>Type</span>
         <span>Description</span>
+        {showMemberCol && <span className={styles.centerLabel}>Member</span>}
         {!showBalance && <span className={styles.centerLabel}>Account</span>}
         <span className={styles.centerLabel}>Debit</span>
         <span className={styles.centerLabel}>Credit</span>
@@ -149,6 +159,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                         >{'\u2194'}</span>
                       )}
                     </span>
+                    {showMemberCol && <span className={styles.member}>{row.member ? <Highlight text={row.member} query={searchQuery} /> : '\u2014'}</span>}
                     {!showBalance && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                     <span className={styles.debit}>{row.debit ? <>{row.debit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                     <span className={styles.credit}>{row.credit ? <>{row.credit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
@@ -187,6 +198,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                     >{'\u2194'}</span>
                   )}
                 </span>
+                {showMemberCol && <span className={styles.member}>{row.member ? <Highlight text={row.member} query={searchQuery} /> : '\u2014'}</span>}
                 {!showBalance && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                 <span className={styles.debit}>{row.debit ? <>{row.debit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                 <span className={styles.credit}>{row.credit ? <>{row.credit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
