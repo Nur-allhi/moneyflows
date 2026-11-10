@@ -3023,3 +3023,19 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Amended into the single `fix(ui): match the Tags ledger to the other registers (BUG-58)` commit on `dev` (it had not been pushed). **Not pushed, not merged to `master`, no version bump** — release decision needs user approval (§3.12).
 - **Next up:** decide the bump for the BUG-58 batch at release time (`docs/VERSIONING.md` §2 — it *is* user-visible, so at least a PATCH; possibly a MINOR since the tag register gains a column vocabulary). No open bugs in `docs/BUGS.md`.
 
+## Session 2026-11-10 (release — v2.4.3)
+
+### Changes
+- **Version bump to 2.4.3** (PATCH, user's call between PATCH and MINOR), atomic commit `fd6891e`: `package.json:4`, `whatsNew.ts` (newest-first plain-English entry about the tag ledger), `CHANGELOG.md` `[Unreleased]` → `[2.4.3] - 2026-11-10`. The changelog separates the two user-visible effects: `Changed` (tag ledger now uses the shared register) and `Fixed` (the 1100px clipping caused by the legacy 260px Account track).
+- **Full gate suite green on the bumped version:** typecheck 0, lint 0 warnings, build green (10.5s, also runs `tsc -b`), unit **248/248**, **Playwright 35/35 from a cold server (2.5m)**.
+- **`dev → master` merged** on explicit user instruction (§3.12): `--no-ff` merge `0b3448f` ("Merge dev: release v2.4.3"), annotated tag `v2.4.3`, `git push origin master --follow-tags`, then `dev` fast-forwarded to `master`.
+- Docs for the release: BUG-58 stays `fixed` (already recorded), `AGENTS.md` §5 branch map + next-up updated, this entry added.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- `master` = `dev` = `0b3448f` (v2.4.3), both pushed; tag `v2.4.3` on origin.
+- No open bugs in `docs/BUGS.md`. Nothing queued.
+- Known (not a bug, not requested): at **1024px** desktop width every ledger register clips its money columns — pre-existing app-wide limit, identical before and after this release (the tag register now matches its peers exactly). Would need its own decision if it ever matters.
+
