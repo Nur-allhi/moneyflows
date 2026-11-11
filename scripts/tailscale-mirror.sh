@@ -7,8 +7,9 @@
 #   127.0.0.1:4173   ->  https://home-lab.tail2e98a8.ts.net:4173   (vite preview)
 #
 # The point is that the port you see in the URL is the port the app actually
-# runs on — no more remembering that the dev server is :5173 locally but
-# :8443 on the tailnet, and no more "which of these four URLs is the app?".
+# runs on — no more remembering that the dev server sat on :5173 locally while
+# the tailnet exposed it as :8443, and no more "which of these four URLs is
+# the app?".
 #
 # The bare hostname (the default HTTPS port, 443) points at the ROOT_PORT
 # service — OpenChamber, the chat UI — so that address keeps working.

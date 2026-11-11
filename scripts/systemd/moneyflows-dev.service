@@ -1,7 +1,7 @@
 # MoneyFlows dev server — systemd *user* unit.
 #
 # Why this exists: the Tailscale Serve rule that exposes the app at
-#   https://home-lab.tail2e98a8.ts.net:8443
+#   https://home-lab.tail2e98a8.ts.net:3000
 # lives in tailscaled's state and survives a reboot, but the dev server it
 # proxies to is just a process — it dies on reboot, on a crash, or when a
 # terminal is closed. With `Linger=yes` on this account, a user unit starts

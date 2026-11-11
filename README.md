@@ -107,7 +107,7 @@ npm install
 npm run dev
 ```
 
-Then open the URL printed by Vite (default `http://localhost:5173`).
+Then open the URL printed by Vite (default `http://localhost:3000`).
 
 ### Build & preview
 
