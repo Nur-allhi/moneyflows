@@ -14,7 +14,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "dev:remote": "HOST=${HOST:-127.0.0.1} PORT=${PORT:-5173} ALLOWED_HOSTS=${ALLOWED_HOSTS:-home-lab.tail2e98a8.ts.net} vite"
+    "dev:remote": "bash scripts/dev-remote.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

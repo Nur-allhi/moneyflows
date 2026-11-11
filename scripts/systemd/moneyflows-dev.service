@@ -20,12 +20,22 @@
 #   systemctl --user stop     moneyflows-dev
 #   journalctl --user -u moneyflows-dev -f
 #
-# The three Environment values are load-bearing — see AGENTS.md §5:
-#   HOST=127.0.0.1        Vite's default host resolves to IPv6 ::1 here, but
-#                          Tailscale Serve proxies over IPv4.
-#   PORT=5173             the port the Serve rule points at.
-#   ALLOWED_HOSTS=...     Vite 403s any Host header it does not recognise;
-#                          the tailnet hostname must be allowed by name.
+# The dev server and the tailnet route are started together by
+# scripts/dev-remote.sh, which (re)applies the Tailscale Serve rule right
+# before Vite starts — so the rule can never point at a port nothing is
+# serving. The env vars live in that script (one place, not two).
+#
+# Install (once):
+#   mkdir -p ~/.config/systemd/user
+#   cp scripts/systemd/moneyflows-dev.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now moneyflows-dev
+#
+# Use:
+#   systemctl --user status  moneyflows-dev
+#   systemctl --user restart moneyflows-dev
+#   systemctl --user stop     moneyflows-dev
+#   journalctl --user -u moneyflows-dev -f
 
 [Unit]
 Description=MoneyFlows dev server (Vite) for remote testing over Tailscale Serve
@@ -36,9 +46,6 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=%h/dev_projects/moneyflows
-Environment=HOST=127.0.0.1
-Environment=PORT=5173
-Environment=ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net
 ExecStart=/usr/local/bin/npm run dev:remote
 Restart=always
 RestartSec=3

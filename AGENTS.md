@@ -254,14 +254,14 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
   systemctl --user stop     moneyflows-dev   # stop it
   journalctl --user -u moneyflows-dev -f     # watch the logs
   ```
-  Its unit file lives in the repo at `scripts/systemd/moneyflows-dev.service` (installed to `~/.config/systemd/user/`). A manual `npm run dev:remote` while the service runs fails loudly with *"Port 5173 is already in use"* — that is intentional, stop the service first.
-- **Run the dev server manually** with the three load-bearing vars (all three matter):
+  Its unit file lives in the repo at `scripts/systemd/moneyflows-dev.service` (installed to `~/.config/systemd/user/`).
+- **One command starts the dev server *and* the tailnet route:** `npm run dev:remote` → `scripts/dev-remote.sh`, which (re)applies the Tailscale Serve rule and *then* starts Vite, so the route and the port can never drift apart. The service calls the same script, so `systemctl --user start moneyflows-dev` does the identical thing. The rule is idempotent — re-applying it replaces only its own HTTPS port and leaves the OpenChamber rule on 443 alone.
+- **Run the dev server manually** with the three load-bearing vars (all three matter) — this is what the script does for you:
   ```bash
   HOST=127.0.0.1 PORT=5173 ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net npm run dev
-  # or, same thing:
-  npm run dev:remote
   ```
-  `HOST=127.0.0.1` — Vite's default `host: 'localhost'` resolves to **IPv6 `::1` on this box**, but Tailscale Serve proxies over IPv4, so the default leaves the proxy with a dead connection. `ALLOWED_HOSTS` — Vite 403s any Host header it does not recognise (DNS-rebinding protection); the tailnet hostname has to be allowed explicitly, and no other host is.
+  `HOST=127.0.0.1` — Vite's default `host: 'localhost'` resolves to **IPv6 `::1` on this box**, but Tailscale Serve proxies over IPv4, so the default leaves the proxy with a dead connection. `ALLOWED_HOSTS` — Vite 403s any Host header it does not recognise (DNS-rebinding protection); the tailnet hostname has to be allowed explicitly, and no other host is. Starting a second dev server while one runs fails loudly with *"Port 5173 is already in use"* — intentional; stop the first one.
+
 
 
 - `node_modules` installed (`npm ci`), Playwright chromium installed, GitNexus re-indexed (5,581 nodes / 475 flows) via the global `gitnexus` CLI — npm 11 blocks its install scripts, so the grammar postinstall was run by hand.
