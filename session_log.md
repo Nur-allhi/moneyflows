@@ -3155,3 +3155,9 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - **Verified from a cold start, not by assumption:** stopped the service *and* removed the 8443 rule (`tailscale serve --https=8443 off`), then started the service again → the script re-created the rule and the server came up together; `https://home-lab.tail2e98a8.ts.net:8443/` → **200**. The manual path was tested the same way (`npm run dev:remote` by hand → rule applied, Vite up, URL 200), then the service was handed back.
 - **A missing tailnet route no longer fails silently:** if `tailscale serve` cannot apply the rule (e.g. tailscaled is down), the script prints a warning naming the cause and says the app still works locally — and Vite starts regardless.
 - `tailscaled` itself is a **system** service and is `enabled` at boot, so it is already running before either path executes.
+
+### Follow-up — one-command stop/status/restart (same day)
+
+- **`npm run dev:stop` / `dev:status` / `dev:restart`** added, wrapping the systemd commands, so the whole dev-server lifecycle is npm scripts like the rest of the project: `dev:remote` (start + route), `dev:status`, `dev:restart`, `dev:stop`.
+- **Verified what actually happens on stop** (not assumed): with the service stopped and the Serve rule still in place, `https://home-lab.tail2e98a8.ts.net:8443/` answers **502 Bad Gateway** — an error page, nothing exposed — while OpenChamber on 443 still returns 200. So stopping the server leaves the route pointing at nothing; `tailscale serve --https=8443 off` removes the URL entirely if that is wanted.
+- **`dev:stop` stops it until the next boot, not forever** — the unit is `enabled`. `systemctl --user disable --now moneyflows-dev` keeps it off across reboots. Recorded in AGENTS.md §5 so the distinction is not rediscovered later.

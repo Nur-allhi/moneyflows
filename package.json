@@ -14,7 +14,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "dev:remote": "bash scripts/dev-remote.sh"
+    "dev:remote": "bash scripts/dev-remote.sh",
+    "dev:stop": "systemctl --user stop moneyflows-dev",
+    "dev:status": "systemctl --user status moneyflows-dev --no-pager",
+    "dev:restart": "systemctl --user restart moneyflows-dev"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

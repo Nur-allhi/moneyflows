@@ -249,12 +249,14 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 - **Remote testing goes through Tailscale Serve**, not a raw port. `tailscale serve` proxies OpenChamber at `https://home-lab.tail2e98a8.ts.net` (443) — **do not touch that rule** — and MoneyFlows at **`https://home-lab.tail2e98a8.ts.net:8443`** (8443 → `http://127.0.0.1:5173`). The dev server itself stays bound to loopback, so nothing is exposed to the LAN. The Serve rule lives in tailscaled's state and survives a reboot.
 - **The dev server runs as a systemd *user* service** (`moneyflows-dev`, enabled + `Linger=yes`), so it starts at boot with no login, restarts itself if it crashes, and needs no terminal open. Control it with:
   ```bash
-  systemctl --user status  moneyflows-dev   # is it up?
-  systemctl --user restart moneyflows-dev   # after a code/dep change
-  systemctl --user stop     moneyflows-dev   # stop it
-  journalctl --user -u moneyflows-dev -f     # watch the logs
+  npm run dev:status     # is it up?
+  npm run dev:restart    # after a code/dep change
+  npm run dev:stop       # stop it when the dev work is done
   ```
-  Its unit file lives in the repo at `scripts/systemd/moneyflows-dev.service` (installed to `~/.config/systemd/user/`).
+  or the systemd commands directly (`systemctl --user status|restart|stop moneyflows-dev`, logs with `journalctl --user -u moneyflows-dev -f`). Its unit file lives in the repo at `scripts/systemd/moneyflows-dev.service` (installed to `~/.config/systemd/user/`).
+  - **Stopping the service does not remove the tailnet route** — the URL then answers **502 Bad Gateway** (an error page, nothing exposed; OpenChamber on 443 is unaffected). To take the URL away as well: `tailscale serve --https=8443 off`.
+  - `npm run dev:stop` stops it until the **next boot**, because the unit is `enabled`. To keep it off across reboots: `systemctl --user disable --now moneyflows-dev`.
+
 - **One command starts the dev server *and* the tailnet route:** `npm run dev:remote` → `scripts/dev-remote.sh`, which (re)applies the Tailscale Serve rule and *then* starts Vite, so the route and the port can never drift apart. The service calls the same script, so `systemctl --user start moneyflows-dev` does the identical thing. The rule is idempotent — re-applying it replaces only its own HTTPS port and leaves the OpenChamber rule on 443 alone.
 - **Run the dev server manually** with the three load-bearing vars (all three matter) — this is what the script does for you:
   ```bash
