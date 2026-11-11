@@ -1,0 +1,49 @@
+# MoneyFlows dev server — systemd *user* unit.
+#
+# Why this exists: the Tailscale Serve rule that exposes the app at
+#   https://home-lab.tail2e98a8.ts.net:8443
+# lives in tailscaled's state and survives a reboot, but the dev server it
+# proxies to is just a process — it dies on reboot, on a crash, or when a
+# terminal is closed. With `Linger=yes` on this account, a user unit starts
+# at boot without anyone logging in, and `Restart=always` brings it back if
+# it ever dies. The app is therefore reachable from the tailnet at all times.
+#
+# Install (once):
+#   mkdir -p ~/.config/systemd/user
+#   cp scripts/systemd/moneyflows-dev.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now moneyflows-dev
+#
+# Use:
+#   systemctl --user status  moneyflows-dev
+#   systemctl --user restart moneyflows-dev
+#   systemctl --user stop     moneyflows-dev
+#   journalctl --user -u moneyflows-dev -f
+#
+# The three Environment values are load-bearing — see AGENTS.md §5:
+#   HOST=127.0.0.1        Vite's default host resolves to IPv6 ::1 here, but
+#                          Tailscale Serve proxies over IPv4.
+#   PORT=5173             the port the Serve rule points at.
+#   ALLOWED_HOSTS=...     Vite 403s any Host header it does not recognise;
+#                          the tailnet hostname must be allowed by name.
+
+[Unit]
+Description=MoneyFlows dev server (Vite) for remote testing over Tailscale Serve
+Documentation=file://%h/dev_projects/moneyflows/AGENTS.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/dev_projects/moneyflows
+Environment=HOST=127.0.0.1
+Environment=PORT=5173
+Environment=ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net
+ExecStart=/usr/local/bin/npm run dev:remote
+Restart=always
+RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target
