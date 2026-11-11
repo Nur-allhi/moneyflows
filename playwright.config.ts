@@ -1,5 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// The dev server's port. `E2E_PORT` overrides it so the suite can run on a
+// machine where 3000 is already taken by another server (the default Vite
+// port is 3000, and `reuseExistingServer` below would otherwise attach the
+// suite to that unrelated server instead of starting Vite). Default is
+// unchanged: 3000.
+const E2E_PORT = Number(process.env.E2E_PORT ?? 3000);
+const BASE_URL = `http://localhost:${E2E_PORT}`;
+
 export default defineConfig({
   testDir: 'e2e',
   timeout: 15_000,
@@ -16,7 +24,7 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     navigationTimeout: 8_000,
@@ -24,11 +32,16 @@ export default defineConfig({
   },
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 30_000,
     // GIS is fully stubbed in e2e — any ID works; real builds use GOOGLE_CLIENT_ID.
-    env: { GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'e2e-test-client-id.apps.googleusercontent.com' },
+    // `PORT` must match `E2E_PORT`, otherwise Vite binds elsewhere and the
+    // suite waits on a URL nothing is serving.
+    env: {
+      PORT: String(E2E_PORT),
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'e2e-test-client-id.apps.googleusercontent.com',
+    },
   },
   projects: [
     {

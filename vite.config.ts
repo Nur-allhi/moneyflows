@@ -23,7 +23,15 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 3000,
+      // `PORT` overrides the dev port. It exists because the port can be
+      // taken by another server on the same machine (anything already bound to
+      // 3000 would otherwise be silently reused by Playwright's
+      // `reuseExistingServer`, which points the whole e2e suite at the wrong
+      // app). When `PORT` is set we also fail loudly instead of sliding to the
+      // next free port, so the server and Playwright's baseURL can never drift
+      // apart. Default is unchanged: 3000.
+      port: Number(process.env.PORT ?? 3000),
+      strictPort: process.env.PORT !== undefined,
       open: false,
     },
     test: {
