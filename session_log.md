@@ -3103,3 +3103,25 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - Committed on `dev`. **No version bump** — a dependency update with no user-visible behaviour change (`docs/VERSIONING.md` §2). Release decision stays with the user (§3.12).
 - **Open for the user:** (a) `react-router-dom` v6 → **v7.18.5** is the only way to clear the remaining moderate advisory — it is a **major migration** across every route, `Link`, `useNavigate` and the `createBrowserRouter` setup in `src/App.tsx`, so it needs its own ticket, not a side-effect bump; the advisory is an *open redirect*, and every navigation in the app is a hardcoded path prefix (`/member/${id}`, `/tags/${encodeURIComponent(name)}`) with a DB id — no attacker-controlled URL ever reaches the router, so the practical exposure is nil. (b) `uuid` v10 → v14 is a major bump for a flaw the app cannot reach — recommended to leave.
+
+## Session 2026-11-11 (cont. — remote testing over Tailscale Serve)
+
+### Changes
+- **Goal:** reach the dev app from the phone/PC over the tailnet, without exposing a raw port to the LAN.
+- **The box already had a Tailscale Serve rule** — `https://home-lab.tail2e98a8.ts.net` → `http://127.0.0.1:3000` (OpenChamber, the chat UI itself). That rule is **left untouched**; MoneyFlows gets its **own HTTPS port** beside it rather than a path, because a Vite app under a sub-path needs `base`, a router `basename`, a service-worker scope change and an HMR rewrite — all app changes for no gain. A second port needs none.
+- **Vite needed two fixes to be reachable through a proxy** (`vite.config.ts`, both env-driven so the repo stays portable):
+  - **`HOST`** — Vite's default `host: 'localhost'` resolves to **IPv6 `::1` on this box** (`/etc/hosts` lists `::1` first, and `getent` returns `::1` first), while Tailscale Serve proxies over **IPv4**. The default therefore leaves the proxy with a dead connection — `curl http://127.0.0.1:5173` was refused while `http://localhost:5173` answered. `HOST=127.0.0.1` binds IPv4 loopback explicitly and matches what the proxy dials.
+  - **`ALLOWED_HOSTS`** — Vite 6 answers only `localhost`/IP-literal Host headers and **403s everything else** (`Blocked request. This host ("…") is not allowed.`), which is exactly what a reverse proxy forwards. The tailnet hostname now has to be allowed by name. Verified: the tailnet Host header serves the app, an unknown host is still blocked (the DNS-rebinding protection stays intact — only the one name is opened).
+- **Dev server command for this box** (all three vars are load-bearing):
+  ```bash
+  HOST=127.0.0.1 PORT=5173 ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net npm run dev
+  ```
+- **Serving rule prepared but not applied** — `tailscale serve` needs operator rights and `sudo` on this box requires a password, so the final rule is one command the user runs: `sudo tailscale set --operator=$USER` (one-time), then `tailscale serve --bg --yes --https=8443 http://127.0.0.1:5173`.
+- **Why HTTPS (not the raw tailnet IP `http://100.84.55.69:5173`):** only an HTTPS origin (or localhost) is a **secure context**, and this app stores its database in **OPFS**, which requires one. Over plain `http://100.x` the browser would fall back to the localStorage adapter — the app would look like it works while silently using the wrong storage tier and losing the snapshot ring. HTTPS also keeps the service worker and HMR websocket working.
+
+### Skill(s) Used
+- gitnexus-cli (change analysis before commit)
+
+### Status
+- Vite config change committed on `dev`. The Tailscale Serve rule is **not yet applied** — it needs the one `sudo` command above.
+- Once applied, the app is reachable at **`https://home-lab.tail2e98a8.ts.net:8443`** (tailnet only), alongside OpenChamber on 443.

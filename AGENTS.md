@@ -246,8 +246,15 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **Dev-box setup (2026-11-11) — read before running anything:**
 - **Port 3000 is taken by OpenChamber's own web server** (`@openchamber/web serve --port 3000`). The dev port is therefore env-overridable: **`PORT=5173 npm run dev`** for the app, **`E2E_PORT=5173 npm run e2e`** for the suite. Both default to 3000 so the repo stays portable. Playwright's `reuseExistingServer` will otherwise attach the suite to the *OpenChamber* UI and every spec fails on a missing dashboard (it did, once — root cause recorded in `session_log.md`).
+- **Remote testing goes through Tailscale Serve**, not a raw port. `tailscale serve` already proxies OpenChamber at `https://home-lab.tail2e98a8.ts.net` (443) — **do not touch that rule**; MoneyFlows has its own HTTPS port alongside it (see below). The dev server itself stays bound to loopback, so nothing is exposed to the LAN.
+- **Run the dev server like this** (all three vars matter):
+  ```bash
+  HOST=127.0.0.1 PORT=5173 ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net npm run dev
+  ```
+  `HOST=127.0.0.1` — Vite's default `host: 'localhost'` resolves to **IPv6 `::1` on this box**, but Tailscale Serve proxies over IPv4, so the default leaves the proxy with a dead connection. `ALLOWED_HOSTS` — Vite 403s any Host header it does not recognise (DNS-rebinding protection); the tailnet hostname has to be allowed explicitly, and no other host is.
 - `node_modules` installed (`npm ci`), Playwright chromium installed, GitNexus re-indexed (5,581 nodes / 475 flows) via the global `gitnexus` CLI — npm 11 blocks its install scripts, so the grammar postinstall was run by hand.
 - `.env.local` exists with the `GOOGLE_CLIENT_ID` line **commented out** — Google Drive sync is therefore *not configured*; the app is fully functional and local-first without it. Uncomment + paste the ID to enable Drive sync (authorized origin must match the dev port).
+
 
 
 **Open bug (next up):** none — **BUG-58 is fixed and released in v2.4.3 (2026-11-10)**. The Tags ledger (`/tags/:tag`) was the last register still capped at 1100px and drawn with its own plain `<table>`; it now uses the shared `LedgerTable` at 1240px on desktop (`Date | Type | Description | Member | Account | Debit | Credit`, `showBalance={false}` because a tag spans accounts). The Member column is a new **opt-in** `showMember` prop on `LedgerTable` (defaults off, desktop-only) shown only at **≥1280px**, so the other five callers are byte-identical — re-measured on the member report. The `noBalance` desktop grid also lost its legacy 260px Account track (1100 was clipping because of it). Phones deliberately keep the compact scrollable table: the shared mobile grid needs ~450px and the page only gives ~302px at 390. Verified at 1920/1440/1280/1279/1100/1024/390, parity-checked against `/other-ledgers/:id`, 0 page overflow. See `docs/BUGS.md` BUG-58.
