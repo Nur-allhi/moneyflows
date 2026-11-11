@@ -3161,3 +3161,21 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - **`npm run dev:stop` / `dev:status` / `dev:restart`** added, wrapping the systemd commands, so the whole dev-server lifecycle is npm scripts like the rest of the project: `dev:remote` (start + route), `dev:status`, `dev:restart`, `dev:stop`.
 - **Verified what actually happens on stop** (not assumed): with the service stopped and the Serve rule still in place, `https://home-lab.tail2e98a8.ts.net:8443/` answers **502 Bad Gateway** — an error page, nothing exposed — while OpenChamber on 443 still returns 200. So stopping the server leaves the route pointing at nothing; `tailscale serve --https=8443 off` removes the URL entirely if that is wanted.
 - **`dev:stop` stops it until the next boot, not forever** — the unit is `enabled`. `systemctl --user disable --now moneyflows-dev` keeps it off across reboots. Recorded in AGENTS.md §5 so the distinction is not rediscovered later.
+
+### Follow-up — port-for-port tailnet mirror, and the dev server moved to 3000 (same day)
+
+- **User's call:** the tailnet should mirror local ports one-for-one (public port N serves local port N), and **the app's dev server should own 3000** while OpenChamber/Tailscale moves off it.
+- **Why 3000 matters for the repo:** 3000 is already the repo's own default in `vite.config.ts` and `playwright.config.ts`. Moving the dev server there means `npm run dev` and `npm run e2e` need **no env override at all** — the earlier `PORT=5173` / `E2E_PORT=5173` workarounds exist only because OpenChamber held 3000.
+- **OpenChamber moved 3000 → 3010.** It runs as the systemd **user** service `openchamber.service`, so the change was a unit edit + restart (backup at `~/.config/systemd/user/openchamber.service.bak`). Mid-way through, the Serve rules still pointed 443 at the old port and the chat UI answered 502 — caught immediately and repaired by the new mirror script.
+- **The mirror (`scripts/tailscale-mirror.sh`):**
+  ```
+  https://home-lab.tail2e98a8.ts.net/        ->  127.0.0.1:3010   (OpenChamber, bare hostname)
+  https://home-lab.tail2e98a8.ts.net:3000/   ->  127.0.0.1:3000   (MoneyFlows dev)
+  https://home-lab.tail2e98a8.ts.net:3010/   ->  127.0.0.1:3010   (OpenChamber)
+  https://home-lab.tail2e98a8.ts.net:4173/   ->  127.0.0.1:4173   (vite preview)
+  ```
+  `--list` prints the current mapping; extra ports can be passed as arguments. Each rule is applied independently and is idempotent — replacing one port's rule never disturbs another's, and the bare-hostname rule is written explicitly (it is the `ROOT_PORT` service, not part of the loop). The old `8443` and `5173` rules were removed so there is exactly one address per service.
+- **`scripts/dev-remote.sh`** now delegates the routing to the mirror script, so the dev server and the tailnet mapping can never drift. The systemd unit was **re-installed** from the repo copy — the installed copy was stale and still carried `Environment=PORT=5173`, which is why the first start after the move still came up on 5173. Caught by checking the actual listener, not by reading the log.
+- **Verified live, not assumed:** bare hostname → OpenChamber (200), `:3010` → OpenChamber (200), `:3000` → MoneyFlows (200). OpenChamber's own web UI works unchanged on its new port (same-origin API calls travel with the proxy).
+- **A real regression surfaced by the move — and it was a latent trap.** With the dev server on 3000 and the e2e suite also on 3000, Playwright's `reuseExistingServer` attached the suite to the **running dev service**. Three `15-cloud-sync` specs failed: the reused server had been started without `GOOGLE_CLIENT_ID`, and that ID is baked into the bundle at build time (`__GOOGLE_CLIENT_ID__`), so the page said *"Online sync is not set up in this build yet"* instead of showing the sign-in row the specs drive.
+  - **Fix:** the e2e suite now has **its own port (3001)**, separate from the app's dev port (3000), and `reuseExistingServer` is **`false`** — the suite always starts its own server with the env it expects and fails loudly if the port is busy, rather than silently testing somebody else's server. This makes the gate deterministic instead of dependent on what happens to be running.

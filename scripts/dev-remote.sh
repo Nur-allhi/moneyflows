@@ -9,11 +9,11 @@
 # survives a reboot, but the dev server behind it is a process. Two things
 # could therefore drift apart — the rule pointing at a port nothing is
 # serving, or the server running on a port the rule does not know about.
-# This script closes that gap by (re)applying the rule right before Vite
-# starts, every time.
+# This script closes that gap by (re)applying the tailnet mirror right
+# before Vite starts, every time.
 #
-# The rule is idempotent: re-applying it replaces the config for its own
-# HTTPS port and leaves any other Serve rule alone (the OpenChamber rule on
+# The mirror is idempotent: re-applying a rule replaces the config for that
+# HTTPS port only and leaves every other rule alone (the OpenChamber rule on
 # 443 is untouched).
 #
 # tailscaled itself is a *system* service and is enabled at boot, so it is
@@ -25,28 +25,23 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 HOST="${HOST:-127.0.0.1}"
-PORT="${PORT:-5173}"
+PORT="${PORT:-3000}"
 ALLOWED_HOSTS="${ALLOWED_HOSTS:-home-lab.tail2e98a8.ts.net}"
-SERVE_PORT="${SERVE_PORT:-8443}"
 
 export HOST PORT ALLOWED_HOSTS
 
 # --- 1. make sure the tailnet route points at the port we are about to use ---
-if command -v tailscale >/dev/null 2>&1; then
-  if tailscale serve --bg --yes --https="${SERVE_PORT}" "http://127.0.0.1:${PORT}" >/dev/null 2>&1; then
-    DNS_NAME="$(tailscale status --json 2>/dev/null \
-      | grep -o '"DNSName"[[:space:]]*:[[:space:]]*"[^"]*"' \
-      | head -1 | sed -E 's/.*"([^"]*)"$/\1/' | sed 's/\.$//')"
-    if [ -n "${DNS_NAME}" ]; then
-      echo "[dev-remote] tailscale serve ready → https://${DNS_NAME}:${SERVE_PORT}/"
-    else
-      echo "[dev-remote] tailscale serve ready on port ${SERVE_PORT}"
-    fi
-  else
-    echo "[dev-remote] WARNING: could not apply the tailscale serve rule." >&2
+# The tailnet mirrors local ports one-for-one (public port N serves local port
+# N), so the URL always shows the port the app actually runs on.
+# scripts/tailscale-mirror.sh owns that mapping; this call keeps it in sync.
+if [ -x ./scripts/tailscale-mirror.sh ]; then
+  if ! bash ./scripts/tailscale-mirror.sh ${MIRROR_PORTS:-"3000 3010 4173"}; then
+    echo "[dev-remote] WARNING: could not apply the tailnet mirror." >&2
     echo "[dev-remote]          Is tailscaled running? 'sudo systemctl start tailscaled'" >&2
     echo "[dev-remote]          The app still works locally at http://127.0.0.1:${PORT}/" >&2
   fi
+else
+  echo "[dev-remote] WARNING: scripts/tailscale-mirror.sh not found — not exposed on the tailnet." >&2
 fi
 
 # --- 2. start the dev server ---

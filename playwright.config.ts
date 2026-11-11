@@ -1,11 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// The dev server's port. `E2E_PORT` overrides it so the suite can run on a
-// machine where 3000 is already taken by another server (the default Vite
-// port is 3000, and `reuseExistingServer` below would otherwise attach the
-// suite to that unrelated server instead of starting Vite). Default is
-// unchanged: 3000.
-const E2E_PORT = Number(process.env.E2E_PORT ?? 3000);
+// The dev server's port for the e2e suite. `E2E_PORT` overrides it.
+//
+// It is deliberately NOT the app's own dev port (3000): the suite must never
+// share a port with a running dev server, because `reuseExistingServer` would
+// attach the tests to it — and a server that was started without this
+// suite's env has a *different build-time* `__GOOGLE_CLIENT_ID__` baked in.
+// That is not hypothetical: with the dev server on 3000, the three cloud-sync
+// specs failed because the reused server reported "Online sync is not set up
+// in this build yet" (empty client ID) instead of showing the sign-in row.
+// A dedicated port means the suite always starts its own server with the
+// env it expects.
+const E2E_PORT = Number(process.env.E2E_PORT ?? 3001);
 const BASE_URL = `http://localhost:${E2E_PORT}`;
 
 export default defineConfig({
@@ -33,7 +39,12 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
+    // Never reuse an existing server: a reused one carries whatever env it
+    // was started with, and this suite asserts on env-dependent behaviour
+    // (the mocked Google sign-in). Starting fresh is the only way the result
+    // means something. If the port is busy, Playwright fails loudly instead
+    // of testing someone else's server.
+    reuseExistingServer: false,
     timeout: 30_000,
     // GIS is fully stubbed in e2e — any ID works; real builds use GOOGLE_CLIENT_ID.
     // `PORT` must match `E2E_PORT`, otherwise Vite binds elsewhere and the
