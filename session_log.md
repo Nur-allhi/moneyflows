@@ -3125,3 +3125,14 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - Vite config change committed on `dev`. The Tailscale Serve rule is **not yet applied** — it needs the one `sudo` command above.
 - Once applied, the app is reachable at **`https://home-lab.tail2e98a8.ts.net:8443`** (tailnet only), alongside OpenChamber on 443.
+
+### Follow-up — Tailscale Serve rule applied and verified (same day)
+
+- **Operator rights granted** by the user (`sudo tailscale set --operator=$USER`), so `tailscale serve` no longer needs sudo. Rule applied:
+  ```
+  https://home-lab.tail2e98a8.ts.net:8443  (tailnet only)
+  |-- proxy http://127.0.0.1:5173
+  ```
+  The pre-existing OpenChamber rule on **443** (`/ → http://127.0.0.1:3000`) is **untouched** — `tailscale serve status` shows both rules side by side, and `https://home-lab.tail2e98a8.ts.net/` still returns 200.
+- **Verified through the proxy with a real browser** (not just curl): `https://home-lab.tail2e98a8.ts.net:8443/` → **200**, `isSecureContext: true`, **OPFS available** (`navigator.storage.getDirectory()` resolves — the app's primary storage tier works, so no silent fallback to localStorage), **service worker registered** at the right scope, full dashboard UI rendered, **zero console errors** (only React Router's informational v7 future-flag warnings), and the **Vite HMR websocket opened over wss** (`wss://home-lab.tail2e98a8.ts.net:8443/?token=…`). Screenshot matches the local render exactly.
+- **`npm run dev:remote`** added — one command that starts the dev server with the three load-bearing env vars (`HOST=127.0.0.1`, `PORT=5173`, `ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net`), each still overridable from the shell. The Serve rule survives a reboot (it lives in tailscaled's state); **the dev server process does not** — that is what this script is for.
