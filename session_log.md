@@ -3075,3 +3075,31 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 ### Status
 - On `dev` (tracking `origin/dev`, was `5c2b206`). `master` stays at `0b3448f` = v2.4.3, untouched — no merge to master without explicit approval (§3.8 / §3.12).
 - **Next up: new development work.** No open bugs in `docs/BUGS.md`. Two decisions waiting on the user: (a) the Google OAuth Client ID for Drive sync (optional — the app is fully functional without it), and (b) whether to bump `dompurify`/`react-router-dom` for the audit findings.
+
+## Session 2026-11-11 (cont. — dependency advisories: dompurify, react-router, and the misplaced `shadcn` CLI)
+
+### Changes
+- **User's call:** fix `dompurify` + `react-router` only, leave `uuid` alone (surfaced with the options and the plain-language explanation of what each advisory means for this app).
+- **`dompurify` 3.4.11 → 3.4.17** (transitive, via `jspdf@4.2.1`'s `^3.3.1` range — no jspdf change). This cleared the only **critical** advisory that reached the browser bundle. It was inert in practice: DOMPurify's HTML sanitizer is only invoked by `doc.html()`, and every PDF export in the app uses `doc.text()` / `autoTable` / `setFont` / `getTextWidth` / `save` / `addPage` — 5 export sites checked, **zero** `doc.html()` calls.
+- **`react-router-dom` 6.30.4 → 6.30.6** (with `react-router` 6.30.6 and `@remix-run/router` 1.23.4). **This does not clear the advisory** — the vulnerable range is `6.0.0-alpha.0 - 7.17.0`, so *every* v6 release is affected and only v7.18.0+ is patched. npm's own `audit fix` suggested 6.30.6, which is wrong for this advisory. Not a v7 migration on my own initiative — that is a decision for the user (see Status).
+- **The bigger find: `shadcn` was in `dependencies`, not `devDependencies`.** It is a **build-time CLI** (`npx shadcn add`), never imported by any source file and never referenced by any npm script — verified by grep over `src/` and by reading `package.json:scripts`. Because it sat in the runtime dependency list, its whole tree was classified as "production": `express`, `body-parser`, **`proxy-addr` (the remaining critical)**, `hono`, `@hono/node-server`, `undici`, `zod`, `ts-morph`, `@modelcontextprotocol/sdk`, `fast-uri`, `js-yaml`, `nanoid`, `ip-address`, `brace-expansion`, `minimatch`, `source-map-js`, `qs`, `deepmerge`, `postcss` — 14 highs and 1 critical that exist **only** because a CLI was filed under runtime deps. Moved to `devDependencies`: it stays installed for local development (where the CLI is used) and leaves the shipped dependency tree alone.
+- **Production dependency audit: 28 vulnerabilities (2 critical, 14 high, 11 moderate, 1 low) → 3 moderate.** The 3 remaining are `react-router` + `react-router-dom` (one advisory, needs v7) and `uuid` (v3/v5/v6-only flaw; the app uses `v4` exclusively — `grep` shows every import is `v4 as uuidv4`).
+- **Lockfile:** the committed `package-lock.json` had a **stale root `version` (`1.8.0` while `package.json` is `2.4.3`)** — it had drifted for many releases. The regenerated lockfile changes exactly 5 version fields (the root version + `@remix-run/router`, `dompurify`, `react-router`, `react-router-dom`), adds 316 `"dev": true` markers (shadcn's subtree) and adds/removes **no packages** — no mass re-resolution.
+
+### Gates (all green after the dependency change)
+| Gate | Result |
+|---|---|
+| `npm run typecheck` | 0 errors |
+| `npm run lint` | 0 warnings (`--max-warnings 0`) |
+| `npm run test` | **248 / 248** unit tests, 31 files |
+| `npm run build` | green (7.80s) |
+| `npm run e2e` | **35 / 35** Playwright (2.3m, cold server, `E2E_PORT=5174`) |
+| `npm audit --omit=dev` | 28 (2 critical / 14 high) → **3 moderate** |
+| `gitnexus detect-changes` | 2 files, **no indexed symbols overlap** — the diff is dependency-only (`package.json` + `package-lock.json`), so no application symbol is affected |
+
+### Skill(s) Used
+- gitnexus-cli (change analysis before commit)
+
+### Status
+- Committed on `dev`. **No version bump** — a dependency update with no user-visible behaviour change (`docs/VERSIONING.md` §2). Release decision stays with the user (§3.12).
+- **Open for the user:** (a) `react-router-dom` v6 → **v7.18.5** is the only way to clear the remaining moderate advisory — it is a **major migration** across every route, `Link`, `useNavigate` and the `createBrowserRouter` setup in `src/App.tsx`, so it needs its own ticket, not a side-effect bump; the advisory is an *open redirect*, and every navigation in the app is a hardcoded path prefix (`/member/${id}`, `/tags/${encodeURIComponent(name)}`) with a DB id — no attacker-controlled URL ever reaches the router, so the practical exposure is nil. (b) `uuid` v10 → v14 is a major bump for a flaw the app cannot reach — recommended to leave.
