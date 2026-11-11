@@ -242,7 +242,13 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **T-174 (2026-11-01): tag-overview sorting** — card grid on `/tags` gets a **Most used / Name A–Z / Z–A** pill group (default unchanged); alphabetical sorts use `localeCompare` with a count-desc tie-break, and the pills reuse the detail ledger's `sortPill` styles, shown when more than one tag exists. `feat:` → **MINOR bump to 2.1.0** on `beta_v2.0` per `VERSIONING.md` §2→§3 (T-174 ticket in TICKETS.md; feature commit `8322c74`, release commit `dbf4c47`, session log `a28d252`).
 
-**Branch map (2026-11-10):** `master` = releases only, `0b3448f` = merge of `dev`, **v2.4.3** (Tags ledger matched to the other registers — BUG-58; typecheck/lint/build + **248 unit + 35/35 e2e from a cold server**; **tag `v2.4.3` pushed**). `dev` fast-forwarded to `0b3448f` (== master) and then carries the session-log docs commit. `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
+**Branch map (2026-11-11):** `master` = releases only, `0b3448f` = merge of `dev`, **v2.4.3** (Tags ledger matched to the other registers — BUG-58; typecheck/lint/build + **248 unit + 35/35 e2e from a cold server**; **tag `v2.4.3` pushed**). `dev` = `5c2b206` (docs commit) + the 2026-11-11 setup commits — **active development branch**; `master` is releases only and is never merged into without explicit user approval (§3.8 / §3.12). `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
+
+**Dev-box setup (2026-11-11) — read before running anything:**
+- **Port 3000 is taken by OpenChamber's own web server** (`@openchamber/web serve --port 3000`). The dev port is therefore env-overridable: **`PORT=5173 npm run dev`** for the app, **`E2E_PORT=5173 npm run e2e`** for the suite. Both default to 3000 so the repo stays portable. Playwright's `reuseExistingServer` will otherwise attach the suite to the *OpenChamber* UI and every spec fails on a missing dashboard (it did, once — root cause recorded in `session_log.md`).
+- `node_modules` installed (`npm ci`), Playwright chromium installed, GitNexus re-indexed (5,581 nodes / 475 flows) via the global `gitnexus` CLI — npm 11 blocks its install scripts, so the grammar postinstall was run by hand.
+- `.env.local` exists with the `GOOGLE_CLIENT_ID` line **commented out** — Google Drive sync is therefore *not configured*; the app is fully functional and local-first without it. Uncomment + paste the ID to enable Drive sync (authorized origin must match the dev port).
+
 
 **Open bug (next up):** none — **BUG-58 is fixed and released in v2.4.3 (2026-11-10)**. The Tags ledger (`/tags/:tag`) was the last register still capped at 1100px and drawn with its own plain `<table>`; it now uses the shared `LedgerTable` at 1240px on desktop (`Date | Type | Description | Member | Account | Debit | Credit`, `showBalance={false}` because a tag spans accounts). The Member column is a new **opt-in** `showMember` prop on `LedgerTable` (defaults off, desktop-only) shown only at **≥1280px**, so the other five callers are byte-identical — re-measured on the member report. The `noBalance` desktop grid also lost its legacy 260px Account track (1100 was clipping because of it). Phones deliberately keep the compact scrollable table: the shared mobile grid needs ~450px and the page only gives ~302px at 390. Verified at 1920/1440/1280/1279/1100/1024/390, parity-checked against `/other-ledgers/:id`, 0 page overflow. See `docs/BUGS.md` BUG-58.
 
@@ -263,30 +269,30 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **moneyflows** (4163 symbols, 9261 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **moneyflows** (5581 symbols, 12968 relationships, 475 execution flows).
 
-> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
+> Index stale? Run `node .gitnexus/run.cjs analyze --index-only` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? Bootstrap with `npx`, `bunx`, or `pnpm dlx` — e.g. `bunx gitnexus@latest analyze` (npm 11 npx crash; #1939).
 
 ## Always Do
 
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
-- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "master"})`.
-- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `query({search_query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.
+- **MUST run impact before editing.** Use `impact({target: "symbolName", direction: "upstream"})` or `node .gitnexus/run.cjs impact "symbolName" --direction upstream --repo .`; report callers, processes, and risk. Never substitute grep for graph analysis.
+- **MUST analyze graph changes before committing.** Use `detect_changes({scope: "all"})` (MCP) or `node .gitnexus/run.cjs detect-changes --scope all --repo .` (CLI fallback). `partial: true` or `truncated: true` is not a clean check — a zero means unseen, not unaffected; re-run it. For regression review: `detect_changes({scope: "compare", base_ref: "master"})` or `node .gitnexus/run.cjs detect-changes --scope compare --base-ref "master" --repo .`.
+- MUST warn on HIGH/CRITICAL `risk` pre-edit; never use `riskSharedAxes` to waive a HIGH/CRITICAL `risk` warning. Compare File/symbol: MCP File omits axes; Graph-RAG expands File.
+- **MUST treat `risk: UNKNOWN` as unresolved, not as low.** An empty caller set is not evidence the symbol is unused — it can also mean the callers are not resolvable by the index (plain-object property access, dynamic dispatch, cross-language calls). `impact` pairs `UNKNOWN` with a `riskNote` saying so. Confirm with a text search before treating the symbol as safe to change or delete; do not proceed on the strength of a zero.
+- **MUST use `query({search_query: "concept"})` for concepts/flows, `context({name: "symbolName"})` for a named symbol, or `impact` for blast radius, on read-only callers, dependencies, imports, or execution flow.** Graph first; text search only for empty/`UNKNOWN`/literals.
 - For security review, `explain({target: "fileOrSymbol"})` lists taint findings (source→sink flows; needs `analyze --pdg`).
 
 ## Never Do
 
-- NEVER edit a function, class, or method without first running `impact` on it.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
+- NEVER edit a function, class, or method before MCP/CLI impact analysis.
+- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis, and never read `UNKNOWN` as an all-clear — it means the walk could not answer, which is the one verdict that requires confirming by other means.
 - NEVER rename symbols with find-and-replace — use `rename` which understands the call graph.
-- NEVER commit changes without running `detect_changes()` to check affected scope.
+- NEVER commit before MCP/CLI graph change analysis.
 
 ## Resources
 
 | Resource | Use for |
-|----------|---------|
+| --- | --- |
 | `gitnexus://repo/moneyflows/context` | Codebase overview, check index freshness |
 | `gitnexus://repo/moneyflows/clusters` | All functional areas |
 | `gitnexus://repo/moneyflows/processes` | All execution flows |
@@ -295,12 +301,12 @@ This project is indexed by GitNexus as **moneyflows** (4163 symbols, 9261 relati
 ## CLI
 
 | Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| --- | --- |
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->

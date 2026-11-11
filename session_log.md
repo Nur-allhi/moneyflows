@@ -3039,3 +3039,39 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - No open bugs in `docs/BUGS.md`. Nothing queued.
 - Known (not a bug, not requested): at **1024px** desktop width every ledger register clips its money columns — pre-existing app-wide limit, identical before and after this release (the tag register now matches its peers exactly). Would need its own decision if it ever matters.
 
+
+## Session 2026-11-11 (environment setup — fresh clone on the dev box)
+
+### Changes
+- **Fresh clone verified complete** before touching anything: full (not shallow) clone, 1 pack / 6,404 objects, `git fsck --connectivity-only` exit 0, no lock files, no running git processes, working tree clean, `master` 0/0 ahead/behind `origin/master` and matching the remote's `v2.4.3` tag exactly (all 9 remote branches + 10 tags present).
+- **Dependencies**: `npm ci` → 540 packages. npm 11.16 blocked the `esbuild` postinstall, but the platform binary ships via `@esbuild/linux-x64`, so `npx esbuild --version` → 0.25.12 and the build is unaffected — no script approval needed for the app itself.
+- **Playwright browsers**: `npx playwright install chromium` (headless shell + ffmpeg). The box is not an officially supported OS, so Playwright pulled its fallback ubuntu20.04-x64 build — it runs fine.
+- **`.env.local` created** with documented, commented instructions for the optional `GOOGLE_CLIENT_ID` (Google Drive sync, Phase 19). The ID is **not** set: the user declined to provide it, so the app stays fully local-first and Settings → Backup shows "not set up". Nothing else in the app needs it.
+- **The e2e gate pointed at the wrong server — root-caused and fixed.** The first run failed in `auth.setup.ts` ("Where Your Money Is | Recent Transactions" not visible). The captured page snapshot was **not the app at all** — it was the OpenChamber web UI. Cause: OpenChamber's own server (`@openchamber/web serve --port 3000`) already holds port 3000, and Playwright's `reuseExistingServer: !CI` attached the suite to that unrelated server instead of starting Vite. Vite itself would have slid to the next free port, so the two never agreed.
+  - **Fix (config only, no app code):** the dev port is now env-overridable — `PORT` for Vite, `E2E_PORT` for Playwright — with **3000 still the default**, so the repo stays portable for anyone whose 3000 is free. `vite.config.ts` also sets `strictPort` when `PORT` is given, so an explicit port fails loudly instead of silently sliding and desyncing from Playwright's `baseURL`.
+  - **Verified:** `E2E_PORT=5173 npm run e2e` → **35 passed / 0 failed (2.4m)** from a cold server, on the unmodified app.
+- **GitNexus re-indexed**: the fresh clone had no `.gitnexus/`. `npm i -g gitnexus` → 1.6.12, but npm 11 blocked `@ladybugdb/core`'s `install.js` and the tree-sitter `node-gyp-build` scripts, and `npm approve-scripts` refuses global installs — fixed by running gitnexus's own `postinstall` (`scripts/build-tree-sitter-grammars.cjs`) by hand (exit 0; the linux-x64 grammar prebuilds are present). `gitnexus analyze` → **5,581 nodes / 12,968 edges / 115 clusters / 475 flows in 32.3s**.
+- **Skill files relocated, not duplicated**: the analyzer wrote the v1.6.12 skill templates to `.claude/skills/gitnexus-*/SKILL.md` while the repo's older customized copies sat in `.claude/skills/gitnexus/gitnexus-*/SKILL.md`. The old copies are the superseded templates (they predate the `list_repos` / `repo:` parameter convention), so the nested folder was removed and the top-level set kept as canonical — which is also what the regenerated `AGENTS.md` / `CLAUDE.md` blocks now point at.
+- **`.gitignore`**: added `.gitnexus/` (the generated index was previously untracked-but-not-ignored).
+
+### Gates (all green, from the fresh clone)
+| Gate | Result |
+|---|---|
+| `npm run typecheck` | 0 errors |
+| `npm run lint` | 0 warnings (`--max-warnings 0`) |
+| `npm run test` | **248 / 248** unit tests, 31 files |
+| `npm run build` | green (7.79s) |
+| `npm run e2e` | **35 / 35** Playwright (2.4m, cold server, `E2E_PORT=5173`) |
+| `gitnexus analyze` | 5,581 nodes / 12,968 edges / 475 flows |
+
+### Notes / not done
+- **No version bump.** The port change is developer tooling, not a user-visible feature (`docs/VERSIONING.md` §2 — a change with no user-visible effect gets no bump). Release decision stays with the user (§3.12).
+- **`npm audit` reports 28 production-tree advisories** (2 critical / 14 high). The ones that actually reach the browser bundle are `dompurify` 3.4.11 (critical, XSS — pulled in by `jspdf` 4.2.1), `react-router-dom` 6.30.4 (moderate, open redirect) and `uuid` 10.0.0 (moderate). The rest are transitive dev-tool deps (`shadcn` CLI, `postcss`, `@modelcontextprotocol/sdk`, `hono`, `ts-morph`). **Not touched** — upgrading `dompurify`/`react-router-dom` is a dependency decision for the user, not a side effect of a setup session.
+- **Dev server**: left running on `http://localhost:5173` (`PORT=5173 npm run dev`) for interactive work. Port 3000 is occupied by OpenChamber on this box.
+
+### Skill(s) Used
+- gitnexus-cli (index rebuild + skill refresh)
+
+### Status
+- On `dev` (tracking `origin/dev`, was `5c2b206`). `master` stays at `0b3448f` = v2.4.3, untouched — no merge to master without explicit approval (§3.8 / §3.12).
+- **Next up: new development work.** No open bugs in `docs/BUGS.md`. Two decisions waiting on the user: (a) the Google OAuth Client ID for Drive sync (optional — the app is fully functional without it), and (b) whether to bump `dompurify`/`react-router-dom` for the audit findings.
