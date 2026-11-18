@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.4.4',
+    items: [
+      'The Database Error screen now follows your light or dark theme and shows backup times in your chosen language.',
+      'Behind the scenes: documentation was brought up to date, dashboard code was cleaned up, and an unreliable calendar test was fixed.',
+    ],
+  },
+  {
     version: '2.4.3',
     items: [
       'The tag ledger now matches the other ledgers — open Transactions → Tags → any tag and it uses the same wide, easy-to-read layout, with money split into paid out and received columns. Wider windows also show whose transaction each row is.',

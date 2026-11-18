@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [2.4.4] - 2026-11-18
+
 ### Changed
-- **Documentation matches the shipped app (BUG-59)** — README now shows v2.4.3, the real 248 unit / 35 e2e counts and the optional Google Drive sync, and no longer claims an MIT license that was never granted. `SECURITY.md` is v4: the threat model covers the sync network path, token storage and conflict handling instead of saying the app has no network I/O.
-- **Dashboard panels use typed props and CSS custom properties (BUG-60)** — the account-type colour, avatar gradient and loan progress bar are now CSS custom properties backed by design tokens; the last raw `Intl.NumberFormat` call on the dashboard uses the shared locale formatter. The Database Error screen moved into its own component and follows the active theme instead of hardcoded dark colours.
+- **Documentation matches the shipped app (BUG-59)** — README now shows the real unit/e2e counts and the optional Google Drive sync, and no longer claims an MIT license that was never granted. `SECURITY.md` is v4: the threat model covers the sync network path, token storage and conflict handling instead of saying the app has no network I/O.
+- **Dashboard panels use typed props and CSS custom properties (BUG-60)** — the account-type colour, avatar gradient and loan progress bar are now CSS custom properties backed by design tokens; the last raw `Intl.NumberFormat` call on the dashboard uses the shared locale formatter. The Database Error screen moved into its own component and follows the active theme instead of hardcoded dark colours; backup times use the configured locale.
 
 ### Fixed
 - **Dead code and `any` casts removed from the dashboard (BUG-60)** — a no-op loan-stack filter and the `d as any` escape hatch are gone, so the compiler checks the hook's return type again. No balance or total changes.
