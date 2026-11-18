@@ -23,7 +23,27 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 3000,
+      // `PORT` overrides the dev port. It exists because the port can be
+      // taken by another server on the same machine (anything already bound to
+      // 3000 would otherwise be silently reused by Playwright's
+      // `reuseExistingServer`, which points the whole e2e suite at the wrong
+      // app). When `PORT` is set we also fail loudly instead of sliding to the
+      // next free port, so the server and Playwright's baseURL can never drift
+      // apart. Default is unchanged: 3000.
+      port: Number(process.env.PORT ?? 3000),
+      strictPort: process.env.PORT !== undefined,
+      // `HOST` binds the dev server to an interface. The default keeps it on
+      // loopback, which is what a reverse proxy in front of it (e.g. Tailscale
+      // Serve) needs — it reaches the server over 127.0.0.1.
+      host: process.env.HOST ?? 'localhost',
+      // Vite answers only to `localhost`/IP-literal Host headers and 403s
+      // anything else, which is exactly what a proxy forwards — so reaching the
+      // dev server through a tailnet hostname needs that name allowed.
+      // `ALLOWED_HOSTS` is a comma-separated list; unset keeps Vite's default
+      // (and its DNS-rebinding protection intact).
+      allowedHosts: process.env.ALLOWED_HOSTS
+        ? process.env.ALLOWED_HOSTS.split(',').map((h) => h.trim()).filter(Boolean)
+        : undefined,
       open: false,
     },
     test: {

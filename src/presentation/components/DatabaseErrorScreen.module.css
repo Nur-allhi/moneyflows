@@ -1,0 +1,109 @@
+/* Full-screen database recovery UI — theme tokens only (DESIGN_IDENTITY.md §2). */
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-6);
+  gap: var(--space-3);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  text-align: center;
+}
+
+.iconWrap {
+  color: var(--color-warning);
+  line-height: 0;
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.message {
+  font-size: var(--text-base);
+  line-height: 1.5;
+  max-width: 400px;
+  margin: 0;
+}
+
+.hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  max-width: 420px;
+  margin: 0;
+}
+
+.hintSpaced {
+  composes: hint;
+  margin: var(--space-2) 0 0;
+}
+
+.primaryBtn,
+.freshBtn,
+.slotBtn {
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: filter var(--transition-fast), background var(--transition-fast);
+}
+
+.primaryBtn:disabled,
+.freshBtn:disabled,
+.slotBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.primaryBtn {
+  margin-top: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  background: var(--color-success);
+  color: var(--color-text-on-primary);
+  font-size: var(--text-base);
+}
+
+.primaryBtn:hover:not(:disabled) { filter: brightness(1.1); }
+
+.freshBtn {
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: var(--text-base);
+}
+
+.freshBtn:hover:not(:disabled) { filter: brightness(1.1); }
+
+.slotList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 420px;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.slotBtn {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.slotBtn:hover:not(:disabled) { background: var(--color-surface-hover); }
+
+.errorText { composes: hint; color: var(--color-danger); }
+.warningText { composes: hint; color: var(--color-warning); }

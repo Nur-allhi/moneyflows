@@ -1,13 +1,13 @@
 # MoneyFlows — Security & Access Document
 
 **Target Skills:** `senior-backend` (design) & `code-reviewer` (enforcement)
-**Version:** 3.0 · 2026-08-24
+**Version:** 4.0 · 2026-11-18
 
 ---
 
 ## 1. Threat Model
 
-Single-device, offline-first, client-only app holding real family financial data (~1.14M BDT scope). No server, no network I/O, no telemetry.
+Single-device, local-first, client-only app holding real family financial data (~1.14M BDT scope). No app server and no telemetry; the only network path is the optional, user-enabled Google Drive sync (shipped in v1.17.0).
 
 | Threat | Vector | Mitigation |
 |--------|--------|------------|
@@ -15,13 +15,14 @@ Single-device, offline-first, client-only app holding real family financial data
 | Accidental destruction | user deletes tx/account/member | soft-delete + Recycle Bin + 30-day auto-purge |
 | Boot hang / invisible dialogs | corrupt storage meets blocking UI | watchdog (15 s) + typed errors → visible recovery screen (BUG-7 lesson) |
 | Privacy leak via git | exports/dumps committed | §5 guardrails (violated once historically — commit `68f3771`) |
-| Remote attack | nothing worth stealing remotely — no auth, cookies, tokens | N/A |
+| Sync token misuse | stolen Google OAuth token (same-origin IndexedDB) | minimal scopes (`drive.appdata` + `openid email` + `profile`), access token only (no refresh token), silent renewal while the Google session lives, explicit `signOut()` revokes and clears, never logged or persisted in localStorage |
+| Remote attack | no app backend, no shared database, no public API | N/A beyond the user's own Google account; conflict resolution is explicit (keep-mine / keep-remote) and a remote pull never overwrites local data without a choice |
 
 ## 2. Authentication & Authorization
 
-**None by design.** Single-admin local app; device unlock = access. No passwords/tokens/sessions/secrets exist. Do not add any without a PRD change. Cloud sync, if approved, mandates auth + RLS → this doc gets v4.
+**None by design.** Single-admin local app; device unlock = access. No app passwords, sessions or secrets exist. Do not add any without a PRD change. A future multi-user backend would mandate server-side auth + row-level security and a fresh review.
 
-**Phase 19 update (Drive sync, on branch):** Google OAuth added solely as the sync
+**Drive sync identity (shipped; on every release since v1.17.0):** Google OAuth added solely as the sync
 identity — minimal scopes (`drive.appdata` + `openid email` + `profile`, the last
 only for the sidebar avatar/name; no Gmail/Contacts).
 Access token persists in same-origin IndexedDB alongside email/expiry (memory-first

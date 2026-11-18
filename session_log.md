@@ -3023,3 +3023,184 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Amended into the single `fix(ui): match the Tags ledger to the other registers (BUG-58)` commit on `dev` (it had not been pushed). **Not pushed, not merged to `master`, no version bump** — release decision needs user approval (§3.12).
 - **Next up:** decide the bump for the BUG-58 batch at release time (`docs/VERSIONING.md` §2 — it *is* user-visible, so at least a PATCH; possibly a MINOR since the tag register gains a column vocabulary). No open bugs in `docs/BUGS.md`.
 
+## Session 2026-11-10 (release — v2.4.3)
+
+### Changes
+- **Version bump to 2.4.3** (PATCH, user's call between PATCH and MINOR), atomic commit `fd6891e`: `package.json:4`, `whatsNew.ts` (newest-first plain-English entry about the tag ledger), `CHANGELOG.md` `[Unreleased]` → `[2.4.3] - 2026-11-10`. The changelog separates the two user-visible effects: `Changed` (tag ledger now uses the shared register) and `Fixed` (the 1100px clipping caused by the legacy 260px Account track).
+- **Full gate suite green on the bumped version:** typecheck 0, lint 0 warnings, build green (10.5s, also runs `tsc -b`), unit **248/248**, **Playwright 35/35 from a cold server (2.5m)**.
+- **`dev → master` merged** on explicit user instruction (§3.12): `--no-ff` merge `0b3448f` ("Merge dev: release v2.4.3"), annotated tag `v2.4.3`, `git push origin master --follow-tags`, then `dev` fast-forwarded to `master`.
+- Docs for the release: BUG-58 stays `fixed` (already recorded), `AGENTS.md` §5 branch map + next-up updated, this entry added.
+
+### Skill(s) Used
+- senior-frontend
+
+### Status
+- `master` = `dev` = `0b3448f` (v2.4.3), both pushed; tag `v2.4.3` on origin.
+- No open bugs in `docs/BUGS.md`. Nothing queued.
+- Known (not a bug, not requested): at **1024px** desktop width every ledger register clips its money columns — pre-existing app-wide limit, identical before and after this release (the tag register now matches its peers exactly). Would need its own decision if it ever matters.
+
+
+## Session 2026-11-11 (environment setup — fresh clone on the dev box)
+
+### Changes
+- **Fresh clone verified complete** before touching anything: full (not shallow) clone, 1 pack / 6,404 objects, `git fsck --connectivity-only` exit 0, no lock files, no running git processes, working tree clean, `master` 0/0 ahead/behind `origin/master` and matching the remote's `v2.4.3` tag exactly (all 9 remote branches + 10 tags present).
+- **Dependencies**: `npm ci` → 540 packages. npm 11.16 blocked the `esbuild` postinstall, but the platform binary ships via `@esbuild/linux-x64`, so `npx esbuild --version` → 0.25.12 and the build is unaffected — no script approval needed for the app itself.
+- **Playwright browsers**: `npx playwright install chromium` (headless shell + ffmpeg). The box is not an officially supported OS, so Playwright pulled its fallback ubuntu20.04-x64 build — it runs fine.
+- **`.env.local` created** with documented, commented instructions for the optional `GOOGLE_CLIENT_ID` (Google Drive sync, Phase 19). The ID is **not** set: the user declined to provide it, so the app stays fully local-first and Settings → Backup shows "not set up". Nothing else in the app needs it.
+- **The e2e gate pointed at the wrong server — root-caused and fixed.** The first run failed in `auth.setup.ts` ("Where Your Money Is | Recent Transactions" not visible). The captured page snapshot was **not the app at all** — it was the OpenChamber web UI. Cause: OpenChamber's own server (`@openchamber/web serve --port 3000`) already holds port 3000, and Playwright's `reuseExistingServer: !CI` attached the suite to that unrelated server instead of starting Vite. Vite itself would have slid to the next free port, so the two never agreed.
+  - **Fix (config only, no app code):** the dev port is now env-overridable — `PORT` for Vite, `E2E_PORT` for Playwright — with **3000 still the default**, so the repo stays portable for anyone whose 3000 is free. `vite.config.ts` also sets `strictPort` when `PORT` is given, so an explicit port fails loudly instead of silently sliding and desyncing from Playwright's `baseURL`.
+  - **Verified:** `E2E_PORT=5173 npm run e2e` → **35 passed / 0 failed (2.4m)** from a cold server, on the unmodified app.
+- **GitNexus re-indexed**: the fresh clone had no `.gitnexus/`. `npm i -g gitnexus` → 1.6.12, but npm 11 blocked `@ladybugdb/core`'s `install.js` and the tree-sitter `node-gyp-build` scripts, and `npm approve-scripts` refuses global installs — fixed by running gitnexus's own `postinstall` (`scripts/build-tree-sitter-grammars.cjs`) by hand (exit 0; the linux-x64 grammar prebuilds are present). `gitnexus analyze` → **5,581 nodes / 12,968 edges / 115 clusters / 475 flows in 32.3s**.
+- **Skill files relocated, not duplicated**: the analyzer wrote the v1.6.12 skill templates to `.claude/skills/gitnexus-*/SKILL.md` while the repo's older customized copies sat in `.claude/skills/gitnexus/gitnexus-*/SKILL.md`. The old copies are the superseded templates (they predate the `list_repos` / `repo:` parameter convention), so the nested folder was removed and the top-level set kept as canonical — which is also what the regenerated `AGENTS.md` / `CLAUDE.md` blocks now point at.
+- **`.gitignore`**: added `.gitnexus/` (the generated index was previously untracked-but-not-ignored).
+
+### Gates (all green, from the fresh clone)
+| Gate | Result |
+|---|---|
+| `npm run typecheck` | 0 errors |
+| `npm run lint` | 0 warnings (`--max-warnings 0`) |
+| `npm run test` | **248 / 248** unit tests, 31 files |
+| `npm run build` | green (7.79s) |
+| `npm run e2e` | **35 / 35** Playwright (2.4m, cold server, `E2E_PORT=5173`) |
+| `gitnexus analyze` | 5,581 nodes / 12,968 edges / 475 flows |
+
+### Notes / not done
+- **No version bump.** The port change is developer tooling, not a user-visible feature (`docs/VERSIONING.md` §2 — a change with no user-visible effect gets no bump). Release decision stays with the user (§3.12).
+- **`npm audit` reports 28 production-tree advisories** (2 critical / 14 high). The ones that actually reach the browser bundle are `dompurify` 3.4.11 (critical, XSS — pulled in by `jspdf` 4.2.1), `react-router-dom` 6.30.4 (moderate, open redirect) and `uuid` 10.0.0 (moderate). The rest are transitive dev-tool deps (`shadcn` CLI, `postcss`, `@modelcontextprotocol/sdk`, `hono`, `ts-morph`). **Not touched** — upgrading `dompurify`/`react-router-dom` is a dependency decision for the user, not a side effect of a setup session.
+- **Dev server**: left running on `http://localhost:5173` (`PORT=5173 npm run dev`) for interactive work. Port 3000 is occupied by OpenChamber on this box.
+
+### Skill(s) Used
+- gitnexus-cli (index rebuild + skill refresh)
+
+### Status
+- On `dev` (tracking `origin/dev`, was `5c2b206`). `master` stays at `0b3448f` = v2.4.3, untouched — no merge to master without explicit approval (§3.8 / §3.12).
+- **Next up: new development work.** No open bugs in `docs/BUGS.md`. Two decisions waiting on the user: (a) the Google OAuth Client ID for Drive sync (optional — the app is fully functional without it), and (b) whether to bump `dompurify`/`react-router-dom` for the audit findings.
+
+## Session 2026-11-11 (cont. — dependency advisories: dompurify, react-router, and the misplaced `shadcn` CLI)
+
+### Changes
+- **User's call:** fix `dompurify` + `react-router` only, leave `uuid` alone (surfaced with the options and the plain-language explanation of what each advisory means for this app).
+- **`dompurify` 3.4.11 → 3.4.17** (transitive, via `jspdf@4.2.1`'s `^3.3.1` range — no jspdf change). This cleared the only **critical** advisory that reached the browser bundle. It was inert in practice: DOMPurify's HTML sanitizer is only invoked by `doc.html()`, and every PDF export in the app uses `doc.text()` / `autoTable` / `setFont` / `getTextWidth` / `save` / `addPage` — 5 export sites checked, **zero** `doc.html()` calls.
+- **`react-router-dom` 6.30.4 → 6.30.6** (with `react-router` 6.30.6 and `@remix-run/router` 1.23.4). **This does not clear the advisory** — the vulnerable range is `6.0.0-alpha.0 - 7.17.0`, so *every* v6 release is affected and only v7.18.0+ is patched. npm's own `audit fix` suggested 6.30.6, which is wrong for this advisory. Not a v7 migration on my own initiative — that is a decision for the user (see Status).
+- **The bigger find: `shadcn` was in `dependencies`, not `devDependencies`.** It is a **build-time CLI** (`npx shadcn add`), never imported by any source file and never referenced by any npm script — verified by grep over `src/` and by reading `package.json:scripts`. Because it sat in the runtime dependency list, its whole tree was classified as "production": `express`, `body-parser`, **`proxy-addr` (the remaining critical)**, `hono`, `@hono/node-server`, `undici`, `zod`, `ts-morph`, `@modelcontextprotocol/sdk`, `fast-uri`, `js-yaml`, `nanoid`, `ip-address`, `brace-expansion`, `minimatch`, `source-map-js`, `qs`, `deepmerge`, `postcss` — 14 highs and 1 critical that exist **only** because a CLI was filed under runtime deps. Moved to `devDependencies`: it stays installed for local development (where the CLI is used) and leaves the shipped dependency tree alone.
+- **Production dependency audit: 28 vulnerabilities (2 critical, 14 high, 11 moderate, 1 low) → 3 moderate.** The 3 remaining are `react-router` + `react-router-dom` (one advisory, needs v7) and `uuid` (v3/v5/v6-only flaw; the app uses `v4` exclusively — `grep` shows every import is `v4 as uuidv4`).
+- **Lockfile:** the committed `package-lock.json` had a **stale root `version` (`1.8.0` while `package.json` is `2.4.3`)** — it had drifted for many releases. The regenerated lockfile changes exactly 5 version fields (the root version + `@remix-run/router`, `dompurify`, `react-router`, `react-router-dom`), adds 316 `"dev": true` markers (shadcn's subtree) and adds/removes **no packages** — no mass re-resolution.
+
+### Gates (all green after the dependency change)
+| Gate | Result |
+|---|---|
+| `npm run typecheck` | 0 errors |
+| `npm run lint` | 0 warnings (`--max-warnings 0`) |
+| `npm run test` | **248 / 248** unit tests, 31 files |
+| `npm run build` | green (7.80s) |
+| `npm run e2e` | **35 / 35** Playwright (2.3m, cold server, `E2E_PORT=5174`) |
+| `npm audit --omit=dev` | 28 (2 critical / 14 high) → **3 moderate** |
+| `gitnexus detect-changes` | 2 files, **no indexed symbols overlap** — the diff is dependency-only (`package.json` + `package-lock.json`), so no application symbol is affected |
+
+### Skill(s) Used
+- gitnexus-cli (change analysis before commit)
+
+### Status
+- Committed on `dev`. **No version bump** — a dependency update with no user-visible behaviour change (`docs/VERSIONING.md` §2). Release decision stays with the user (§3.12).
+- **Open for the user:** (a) `react-router-dom` v6 → **v7.18.5** is the only way to clear the remaining moderate advisory — it is a **major migration** across every route, `Link`, `useNavigate` and the `createBrowserRouter` setup in `src/App.tsx`, so it needs its own ticket, not a side-effect bump; the advisory is an *open redirect*, and every navigation in the app is a hardcoded path prefix (`/member/${id}`, `/tags/${encodeURIComponent(name)}`) with a DB id — no attacker-controlled URL ever reaches the router, so the practical exposure is nil. (b) `uuid` v10 → v14 is a major bump for a flaw the app cannot reach — recommended to leave.
+
+## Session 2026-11-11 (cont. — remote testing over Tailscale Serve)
+
+### Changes
+- **Goal:** reach the dev app from the phone/PC over the tailnet, without exposing a raw port to the LAN.
+- **The box already had a Tailscale Serve rule** — `https://home-lab.tail2e98a8.ts.net` → `http://127.0.0.1:3000` (OpenChamber, the chat UI itself). That rule is **left untouched**; MoneyFlows gets its **own HTTPS port** beside it rather than a path, because a Vite app under a sub-path needs `base`, a router `basename`, a service-worker scope change and an HMR rewrite — all app changes for no gain. A second port needs none.
+- **Vite needed two fixes to be reachable through a proxy** (`vite.config.ts`, both env-driven so the repo stays portable):
+  - **`HOST`** — Vite's default `host: 'localhost'` resolves to **IPv6 `::1` on this box** (`/etc/hosts` lists `::1` first, and `getent` returns `::1` first), while Tailscale Serve proxies over **IPv4**. The default therefore leaves the proxy with a dead connection — `curl http://127.0.0.1:5173` was refused while `http://localhost:5173` answered. `HOST=127.0.0.1` binds IPv4 loopback explicitly and matches what the proxy dials.
+  - **`ALLOWED_HOSTS`** — Vite 6 answers only `localhost`/IP-literal Host headers and **403s everything else** (`Blocked request. This host ("…") is not allowed.`), which is exactly what a reverse proxy forwards. The tailnet hostname now has to be allowed by name. Verified: the tailnet Host header serves the app, an unknown host is still blocked (the DNS-rebinding protection stays intact — only the one name is opened).
+- **Dev server command for this box** (all three vars are load-bearing):
+  ```bash
+  HOST=127.0.0.1 PORT=5173 ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net npm run dev
+  ```
+- **Serving rule prepared but not applied** — `tailscale serve` needs operator rights and `sudo` on this box requires a password, so the final rule is one command the user runs: `sudo tailscale set --operator=$USER` (one-time), then `tailscale serve --bg --yes --https=8443 http://127.0.0.1:5173`.
+- **Why HTTPS (not the raw tailnet IP `http://100.84.55.69:5173`):** only an HTTPS origin (or localhost) is a **secure context**, and this app stores its database in **OPFS**, which requires one. Over plain `http://100.x` the browser would fall back to the localStorage adapter — the app would look like it works while silently using the wrong storage tier and losing the snapshot ring. HTTPS also keeps the service worker and HMR websocket working.
+
+### Skill(s) Used
+- gitnexus-cli (change analysis before commit)
+
+### Status
+- Vite config change committed on `dev`. The Tailscale Serve rule is **not yet applied** — it needs the one `sudo` command above.
+- Once applied, the app is reachable at **`https://home-lab.tail2e98a8.ts.net:8443`** (tailnet only), alongside OpenChamber on 443.
+
+### Follow-up — Tailscale Serve rule applied and verified (same day)
+
+- **Operator rights granted** by the user (`sudo tailscale set --operator=$USER`), so `tailscale serve` no longer needs sudo. Rule applied:
+  ```
+  https://home-lab.tail2e98a8.ts.net:8443  (tailnet only)
+  |-- proxy http://127.0.0.1:5173
+  ```
+  The pre-existing OpenChamber rule on **443** (`/ → http://127.0.0.1:3000`) is **untouched** — `tailscale serve status` shows both rules side by side, and `https://home-lab.tail2e98a8.ts.net/` still returns 200.
+- **Verified through the proxy with a real browser** (not just curl): `https://home-lab.tail2e98a8.ts.net:8443/` → **200**, `isSecureContext: true`, **OPFS available** (`navigator.storage.getDirectory()` resolves — the app's primary storage tier works, so no silent fallback to localStorage), **service worker registered** at the right scope, full dashboard UI rendered, **zero console errors** (only React Router's informational v7 future-flag warnings), and the **Vite HMR websocket opened over wss** (`wss://home-lab.tail2e98a8.ts.net:8443/?token=…`). Screenshot matches the local render exactly.
+- **`npm run dev:remote`** added — one command that starts the dev server with the three load-bearing env vars (`HOST=127.0.0.1`, `PORT=5173`, `ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net`), each still overridable from the shell. The Serve rule survives a reboot (it lives in tailscaled's state); **the dev server process does not** — that is what this script is for.
+
+### Follow-up — the dev server became a systemd user service (same day)
+
+- **The gap this closes:** the Tailscale Serve rule survives a reboot (it lives in tailscaled's state) but the dev server behind it is just a process — it dies on reboot, on a crash, or when a terminal closes, and the tailnet URL goes 502. Restarting it meant remembering three env vars.
+- **Solution:** a **systemd *user* unit** `moneyflows-dev` (`scripts/systemd/moneyflows-dev.service` in the repo, installed to `~/.config/systemd/user/`), enabled and started. The account has `Linger=yes`, so it starts at boot with no login; `Restart=always` + `RestartSec=3` brings it back if it dies. The three load-bearing env vars live in the unit (`HOST=127.0.0.1`, `PORT=5173`, `ALLOWED_HOSTS=home-lab.tail2e98a8.ts.net`) instead of in someone's shell history.
+- **Verified, not assumed:**
+  - `systemctl --user is-enabled` → `enabled`; `is-active` → `active`; bound to `127.0.0.1:5173`; `https://home-lab.tail2e98a8.ts.net:8443/` → **200**.
+  - **Crash recovery tested for real:** `kill -9` on the Vite process (pid 49774) → systemd started a new one (pid 49880) within seconds and the tailnet URL was 200 again. The unit genuinely recovers; it is not just "enabled".
+  - **Conflict is loud, not silent:** starting a second manual dev server fails with `Error: Port 5173 is already in use` (because `PORT` is set, Vite runs with `strictPort`) instead of sliding to another port and desyncing from the Serve rule.
+- **Commands for the user:** `systemctl --user status|restart|stop moneyflows-dev`, logs with `journalctl --user -u moneyflows-dev -f`. `npm run dev:remote` remains for running a one-off server by hand (after stopping the service).
+
+### Follow-up — dev server and tailnet route now start as ONE action (same day)
+
+- **The remaining gap:** the Serve rule and the dev server were two separate things to start, and could drift — the rule pointing at a port nothing serves (502 on the tailnet URL) or the server on a port the rule does not know. Restarting the server did not touch the rule, and vice versa.
+- **`scripts/dev-remote.sh`** now does both, in the right order: it (re)applies `tailscale serve --https=8443 → http://127.0.0.1:5173` and *then* starts Vite. `npm run dev:remote` is that script; the systemd unit calls the same script, so the service and a manual run behave identically. The env vars live in the script — one place, not two.
+- **The rule is idempotent** — re-applying it replaces the config for its own HTTPS port only and leaves the OpenChamber rule on 443 intact. Verified: `tailscale serve status` after a re-apply still shows both rules, and `https://home-lab.tail2e98a8.ts.net/` (443) still returns 200.
+- **Verified from a cold start, not by assumption:** stopped the service *and* removed the 8443 rule (`tailscale serve --https=8443 off`), then started the service again → the script re-created the rule and the server came up together; `https://home-lab.tail2e98a8.ts.net:8443/` → **200**. The manual path was tested the same way (`npm run dev:remote` by hand → rule applied, Vite up, URL 200), then the service was handed back.
+- **A missing tailnet route no longer fails silently:** if `tailscale serve` cannot apply the rule (e.g. tailscaled is down), the script prints a warning naming the cause and says the app still works locally — and Vite starts regardless.
+- `tailscaled` itself is a **system** service and is `enabled` at boot, so it is already running before either path executes.
+
+### Follow-up — one-command stop/status/restart (same day)
+
+- **`npm run dev:stop` / `dev:status` / `dev:restart`** added, wrapping the systemd commands, so the whole dev-server lifecycle is npm scripts like the rest of the project: `dev:remote` (start + route), `dev:status`, `dev:restart`, `dev:stop`.
+- **Verified what actually happens on stop** (not assumed): with the service stopped and the Serve rule still in place, `https://home-lab.tail2e98a8.ts.net:8443/` answers **502 Bad Gateway** — an error page, nothing exposed — while OpenChamber on 443 still returns 200. So stopping the server leaves the route pointing at nothing; `tailscale serve --https=8443 off` removes the URL entirely if that is wanted.
+- **`dev:stop` stops it until the next boot, not forever** — the unit is `enabled`. `systemctl --user disable --now moneyflows-dev` keeps it off across reboots. Recorded in AGENTS.md §5 so the distinction is not rediscovered later.
+
+### Follow-up — port-for-port tailnet mirror, and the dev server moved to 3000 (same day)
+
+- **User's call:** the tailnet should mirror local ports one-for-one (public port N serves local port N), and **the app's dev server should own 3000** while OpenChamber/Tailscale moves off it.
+- **Why 3000 matters for the repo:** 3000 is already the repo's own default in `vite.config.ts` and `playwright.config.ts`. Moving the dev server there means `npm run dev` and `npm run e2e` need **no env override at all** — the earlier `PORT=5173` / `E2E_PORT=5173` workarounds exist only because OpenChamber held 3000.
+- **OpenChamber moved 3000 → 3010.** It runs as the systemd **user** service `openchamber.service`, so the change was a unit edit + restart (backup at `~/.config/systemd/user/openchamber.service.bak`). Mid-way through, the Serve rules still pointed 443 at the old port and the chat UI answered 502 — caught immediately and repaired by the new mirror script.
+- **The mirror (`scripts/tailscale-mirror.sh`):**
+  ```
+  https://home-lab.tail2e98a8.ts.net/        ->  127.0.0.1:3010   (OpenChamber, bare hostname)
+  https://home-lab.tail2e98a8.ts.net:3000/   ->  127.0.0.1:3000   (MoneyFlows dev)
+  https://home-lab.tail2e98a8.ts.net:3010/   ->  127.0.0.1:3010   (OpenChamber)
+  https://home-lab.tail2e98a8.ts.net:4173/   ->  127.0.0.1:4173   (vite preview)
+  ```
+  `--list` prints the current mapping; extra ports can be passed as arguments. Each rule is applied independently and is idempotent — replacing one port's rule never disturbs another's, and the bare-hostname rule is written explicitly (it is the `ROOT_PORT` service, not part of the loop). The old `8443` and `5173` rules were removed so there is exactly one address per service.
+- **`scripts/dev-remote.sh`** now delegates the routing to the mirror script, so the dev server and the tailnet mapping can never drift. The systemd unit was **re-installed** from the repo copy — the installed copy was stale and still carried `Environment=PORT=5173`, which is why the first start after the move still came up on 5173. Caught by checking the actual listener, not by reading the log.
+- **Verified live, not assumed:** bare hostname → OpenChamber (200), `:3010` → OpenChamber (200), `:3000` → MoneyFlows (200). OpenChamber's own web UI works unchanged on its new port (same-origin API calls travel with the proxy).
+- **A real regression surfaced by the move — and it was a latent trap.** With the dev server on 3000 and the e2e suite also on 3000, Playwright's `reuseExistingServer` attached the suite to the **running dev service**. Three `15-cloud-sync` specs failed: the reused server had been started without `GOOGLE_CLIENT_ID`, and that ID is baked into the bundle at build time (`__GOOGLE_CLIENT_ID__`), so the page said *"Online sync is not set up in this build yet"* instead of showing the sign-in row the specs drive.
+  - **Fix:** the e2e suite now has **its own port (3001)**, separate from the app's dev port (3000), and `reuseExistingServer` is **`false`** — the suite always starts its own server with the env it expects and fails loudly if the port is busy, rather than silently testing somebody else's server. This makes the gate deterministic instead of dependent on what happens to be running.
+## Session 2026-11-18 (docs sync + Dashboard type/style cleanup)
+
+### Changes
+- **Process:** session-start ritual read (`session_log.md` last entry + AGENTS.md §5); user asked for a project analysis, then chose **"Docs sync + Dashboard cleanup"** from the improvement report (§3.10 confirmation). Two further choices were surfaced and answered: **remove the MIT badge** rather than add a LICENSE file, and **include the recovery screen** in the inline-style cleanup.
+- **BUG-59 logged + fixed** — README version badge 2.0.0 → 2.4.3, gate counts 235/31 → 248/35, MIT badge removed (no license granted), intro/Privacy text corrected for shipped Google Drive sync, new optional-Cloud-Sync feature row. `SECURITY.md` promoted to **v4.0**: "no network I/O" and "Cloud sync, if approved / on branch" replaced with the shipped sync threat model (token misuse + remote attack rows, token-only claim verified against `GoogleAuth.ts`).
+- **BUG-60 logged + fixed** — `Dashboard.tsx` loses the file-wide `no-explicit-any` disable, the `d as any` destructure, the dead `(activeLoanStacks as any[]).filter(() => true)` and the `as any` re-read of `rawQuery`; skeleton inline styles moved to CSS module classes. `panels.tsx` now has typed props for all three panels (`Account`/`Member`/`Transaction`/`LoanStack`/`NavigateFunction`); the avatar gradient, account-type accent and loan progress bar use CSS custom properties (`--member-gradient`, `--icon-accent`, `--progress-width`), and the last raw `Intl.NumberFormat` call uses `formatAmountParts`. New `DatabaseErrorScreen.tsx` + CSS module replace ~115 lines of hardcoded/inline-styled JSX in `main.tsx` (277 → 216 LOC); backup timestamps are locale-aware and buttons use theme tokens. Visual values preserved.
+- **BUG-61 logged + fixed** — first full suite after the above was 34/35: the calendar Escape test timed out opening the wizard. Root cause was an ambiguous helper locator matching both the header's "New transaction" and the dashboard's "New Transaction", plus a hidden DatePicker input. Helper now uses the exact action-button name, asserts visibility, and keeps the `:visible` filter on the date input. (An intermediate hardening pass briefly made all 5 calendar tests fail by dropping `:visible` — corrected.)
+- **GitNexus index refreshed** (`node .gitnexus/run.cjs analyze`, 4163 → 4259 symbols); this regenerated the GitNexus count blocks in `AGENTS.md` and `CLAUDE.md`. Exact-symbol `impact`: `Dashboard` LOW / 0 impacted, `Root` LOW / 1 direct caller; an ambiguous-name query falsely reported CRITICAL/130 from unrelated storage files and was disregarded. `detect_changes()` before commit: 11 changed files, risk LOW, no unexpected processes.
+- `CHANGELOG.md` `[Unreleased]` gained Changed + Fixed entries describing all three bugs. Initially no bump was planned, but at release time the user chose **PATCH 2.4.4** (§3.10) because the recovery screen's visual change is user-visible (VERSIONING §2 rule 3).
+
+### Release (2026-11-18, user's explicit instruction to push + merge)
+- **Rebase onto `origin/dev`** which had advanced 10 commits (dev-server tooling, dependency advisories, port changes 3000/3001, doc refresh). 3 local commits rebased with 3 doc conflicts resolved (kept upstream `AGENTS.md`/`CLAUDE.md` gitnexus blocks, merged both session-log sections). Post-rebase fix commit `2712382`.
+- **PATCH bump to 2.4.4** (user's call; VERSIONING §2 rule 3 — recovery screen visual change is user-visible): atomic changes to `package.json:4`, `whatsNew.ts` (newest-first entry), `CHANGELOG.md` (`[Unreleased]` → `[2.4.4] - 2026-11-18`), plus README badge. `detect_changes()` on the final tree: only `WHATS_NEW` touched, low risk, no affected flows.
+- **Full gates on the rebased + bumped tree:** typecheck 0, lint 0 warnings, unit **248/248**, build green (8.72s), Playwright **35/35**.
+- `dev` pushed, then `dev → master` `--no-ff` merge, annotated tag `v2.4.4`, `git push origin master --follow-tags`, `dev` fast-forwarded. Branch map in AGENTS.md updated accordingly.
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, code-reviewer (bug protocol)
+
+### Status
+- On `dev`, commit `562c7cc` (`fix(docs,dashboard): sync docs with shipped app and remove dashboard any/inline-style leftovers (BUG-59/60/61)`). **Not pushed, not merged** — awaiting user instruction (§3.12).
+- Gates: `typecheck` 0, `lint` 0 warnings, `build` green (3420 modules), unit **248/248**, **Playwright 35/35 from a cold server (2.5m)**. Final suite fully green after the BUG-61 helper fix.
+- **UI spot-check done on user's behalf (same day):** a throwaway Playwright spec (since deleted) captured the dashboard in dark/light, an expanded member's account list (avatar gradient + account-type accent CSS props), and the forced-boot-failure Database Error screen in light, dark and gold-accent variants. Screenshots inspected: tokens, contrast and button text readable in every variant, no console/page errors. No defects found — no code change needed.
+- No open bugs in `docs/BUGS.md`. Next up: remaining items from the improvement report — behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks — or the pending release decision (the batch has no version bump).
+

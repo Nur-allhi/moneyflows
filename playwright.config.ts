@@ -1,5 +1,19 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// The dev server's port for the e2e suite. `E2E_PORT` overrides it.
+//
+// It is deliberately NOT the app's own dev port (3000): the suite must never
+// share a port with a running dev server, because `reuseExistingServer` would
+// attach the tests to it — and a server that was started without this
+// suite's env has a *different build-time* `__GOOGLE_CLIENT_ID__` baked in.
+// That is not hypothetical: with the dev server on 3000, the three cloud-sync
+// specs failed because the reused server reported "Online sync is not set up
+// in this build yet" (empty client ID) instead of showing the sign-in row.
+// A dedicated port means the suite always starts its own server with the
+// env it expects.
+const E2E_PORT = Number(process.env.E2E_PORT ?? 3001);
+const BASE_URL = `http://localhost:${E2E_PORT}`;
+
 export default defineConfig({
   testDir: 'e2e',
   timeout: 15_000,
@@ -16,7 +30,7 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     navigationTimeout: 8_000,
@@ -24,11 +38,21 @@ export default defineConfig({
   },
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    url: BASE_URL,
+    // Never reuse an existing server: a reused one carries whatever env it
+    // was started with, and this suite asserts on env-dependent behaviour
+    // (the mocked Google sign-in). Starting fresh is the only way the result
+    // means something. If the port is busy, Playwright fails loudly instead
+    // of testing someone else's server.
+    reuseExistingServer: false,
     timeout: 30_000,
     // GIS is fully stubbed in e2e — any ID works; real builds use GOOGLE_CLIENT_ID.
-    env: { GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'e2e-test-client-id.apps.googleusercontent.com' },
+    // `PORT` must match `E2E_PORT`, otherwise Vite binds elsewhere and the
+    // suite waits on a URL nothing is serving.
+    env: {
+      PORT: String(E2E_PORT),
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? 'e2e-test-client-id.apps.googleusercontent.com',
+    },
   },
   projects: [
     {

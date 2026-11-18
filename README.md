@@ -6,19 +6,18 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.0-10B981" alt="v2.0.0"/>
+  <img src="https://img.shields.io/badge/version-2.4.4-10B981" alt="v2.4.4"/>
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white" alt="React 18"/>
   <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" alt="TypeScript strict"/>
   <img src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white" alt="Vite 6"/>
   <img src="https://img.shields.io/badge/SQLite-sql.js-003B57?logo=sqlite&logoColor=white" alt="sql.js"/>
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License"/>
 </p>
 
 ---
 
 ## ✨ What it does
 
-MoneyFlows runs entirely in your browser as an installable app (PWA). There is no server and no login: your data lives in a real SQLite database file (`sql.js` compiled to WebAssembly) inside your browser's **Origin Private File System (OPFS)**, with automatic restore-point snapshots and a one-time localStorage fallback for older installs.
+MoneyFlows runs in your browser as an installable app (PWA). There is no app server and no account needed to use it: your data lives in a real SQLite database file (`sql.js` compiled to WebAssembly) inside your browser's **Origin Private File System (OPFS)**, with automatic restore-point snapshots and a one-time localStorage fallback for older installs. An optional Google Drive sync (Google sign-in) can back the database up to your own Drive app-data folder.
 
 | Feature | Description |
 |--------|-------------|
@@ -32,6 +31,7 @@ MoneyFlows runs entirely in your browser as an installable app (PWA). There is n
 | **Recycle Bin** | Soft-delete safety net for transactions, accounts, other-ledgers and their entries — per-tab totals, restore, or auto-purge after 30 days. |
 | **Themes** | Light/dark mode, accent color and background presets; typography is Manrope with Inter numerals and self-hosted Anek Bangla for Bangla text. |
 | **Data Safety** | Restore-point ring on every save, SHA-256 (or FNV digest on insecure origins) integrity verification, a **Data Integrity** scan in Settings, and a Database Error screen that can restore any auto-backup. |
+| **Cloud Sync (optional)** | Google Drive app-data backup with sign-in, autosync, boot pull, "New data available" prompts and explicit keep-mine/keep-remote conflict choices. Off by default; the app works fully offline without it. |
 | **Settings** | Currency, locale, primary member and input limits — one source of truth, applied across every screen. Five collapsible cards, live status badges. |
 
 ---
@@ -107,7 +107,7 @@ npm install
 npm run dev
 ```
 
-Then open the URL printed by Vite (default `http://localhost:5173`).
+Then open the URL printed by Vite (default `http://localhost:3000`).
 
 ### Build & preview
 
@@ -121,10 +121,10 @@ The build output is a full **PWA** (`manifest` + hand-rolled service worker in `
 ### Quality gates
 
 ```bash
-npm run test        # Vitest unit suite (235 tests)
+npm run test        # Vitest unit suite (248 tests)
 npm run typecheck   # tsc --noEmit
 npm run lint        # ESLint, max-warnings 0
-npm run e2e         # Playwright browser suite (31 scenarios, single worker)
+npm run e2e         # Playwright browser suite (35 scenarios, single worker)
 ```
 
 ---
@@ -157,8 +157,8 @@ Product and technical specs live in `docs/` (`PRD.md`, `TAD.md`, `SECURITY.md`, 
 
 ## 🔒 Privacy & Security
 
-- **No network calls.** All data is created, read, and stored locally in the browser.
-- **No authentication.** This is a single-device, single-user app — anyone with device access has full control.
+- **Local-first storage.** All data is created, read and stored locally in the browser. The only network path is the optional Google Drive sync, which writes to your own Drive app-data folder; no telemetry or app backend exists.
+- **No app login.** This is a single-device, single-user app — anyone with device access has full control. Google sign-in is used only to authorise the optional Drive sync.
 - **Soft-delete everywhere.** Nothing is destroyed immediately; deleted items sit in the Recycle Bin and auto-purge after 30 days.
 - **Backups.** Save operations create restore points with integrity checks; the Data Integrity scan in Settings audits every transaction against today's rules and reports (never repairs) anything unusual.
 

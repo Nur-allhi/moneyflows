@@ -217,6 +217,7 @@
 }
 
 .miniAvatar {
+  background: var(--member-gradient);
   width: 24px; height: 24px;
   border-radius: 50%;
   display: flex;
@@ -280,6 +281,7 @@
 .acctRow:hover { background: var(--color-surface-hover); }
 
 .acctTypeIcon {
+  color: var(--icon-accent);
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -411,6 +413,7 @@
 }
 
 .loanBarFill {
+  width: var(--progress-width);
   height: 100%;
   border-radius: 4px;
   background: var(--color-teal);
@@ -901,4 +904,14 @@
 .loadMoreBtn:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+/* Loading skeletons — local overrides of the shared glassmorphism sizes. */
+.skeletonWizardShort {
+  height: 64px;
+  border-radius: var(--radius-md);
+}
+
+.skeletonCardTall {
+  height: 300px;
 }

@@ -1,5 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { CSSProperties } from 'react';
+import type { NavigateFunction } from 'react-router-dom';
 import { Coins, ClipboardList, CreditCard } from 'lucide-react';
+import type { Account } from '../../../core/domain/Account';
+import type { Member } from '../../../core/domain/Member';
+import type { Transaction } from '../../../core/domain/Transaction';
+import type { LoanStack } from '../../../loans/domain/types';
 import { useModalStore } from '../../stores/useModalStore';
 import { useReplay } from '../../hooks/useReplay';
 import { formatAmount, formatAmountParts } from '../../utils/format';
@@ -9,10 +14,48 @@ import { ACCOUNT_TYPE_ACCENT } from '../../constants/labels';
 import styles from '../Dashboard.module.css';
 import { TYPE_ICON_MAP } from './icons';
 
-export function WhereMoneyIsPanel({ filteredAccountsByMember, memberById, internalMembers, expandedMembers, closingMembers, toggleMember, memberTotalBalance, searchQuery, locale, currency }: any) {
-  const MEMBER_GRADIENTS = ['linear-gradient(135deg, #6c5ce7, #a29bfe)', 'linear-gradient(135deg, #00b894, #55efc4)', 'linear-gradient(135deg, #fd79a8, #e84393)', 'linear-gradient(135deg, #0984e3, #74b9ff)', 'linear-gradient(135deg, #fdcb6e, #f39c12)', 'linear-gradient(135deg, #e17055, #d63031)'];
+interface WhereMoneyIsProps {
+  filteredAccountsByMember: Map<string, Account[]>;
+  memberById: Record<string, Member | undefined>;
+  internalMembers: Member[];
+  expandedMembers: Set<string>;
+  closingMembers: Set<string>;
+  toggleMember: (mid: string) => void;
+  memberTotalBalance: Map<string, number>;
+  searchQuery: string;
+  locale: string;
+  currency: string;
+}
+
+interface RecentTxsProps {
+  filteredRecentTxs: Transaction[];
+  remaining: number;
+  onLoadMore: () => void;
+  searchQuery: string;
+  locale: string;
+  currency: string;
+}
+
+interface ActiveLoansProps {
+  filteredActiveLoanStacks: LoanStack[];
+  searchQuery: string;
+  locale: string;
+  currency: string;
+  navigate: NavigateFunction;
+}
+
+const MEMBER_GRADIENTS = [
+  'linear-gradient(135deg, #6c5ce7, #a29bfe)',
+  'linear-gradient(135deg, #00b894, #55efc4)',
+  'linear-gradient(135deg, #fd79a8, #e84393)',
+  'linear-gradient(135deg, #0984e3, #74b9ff)',
+  'linear-gradient(135deg, #fdcb6e, #f39c12)',
+  'linear-gradient(135deg, #e17055, #d63031)',
+] as const;
+
+export function WhereMoneyIsPanel({ filteredAccountsByMember, memberById, internalMembers, expandedMembers, closingMembers, toggleMember, memberTotalBalance, searchQuery, locale, currency }: WhereMoneyIsProps) {
   if (filteredAccountsByMember.size === 0) return <div className="empty-state"><div className="empty-state-icon"><Coins size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">{searchQuery ? `No accounts match "${searchQuery}"` : 'No accounts yet'}</p></div>;
-  return <>{[...filteredAccountsByMember.entries()].map(([mid, accts]: any) => {
+  return <>{[...filteredAccountsByMember.entries()].map(([mid, accts]) => {
     const member = memberById[mid] ?? memberById.__unassigned__;
     const memberIdx = member ? internalMembers.indexOf(member) : -1;
     const grad = memberIdx >= 0 ? MEMBER_GRADIENTS[memberIdx % MEMBER_GRADIENTS.length] : MEMBER_GRADIENTS[0];
@@ -20,50 +63,60 @@ export function WhereMoneyIsPanel({ filteredAccountsByMember, memberById, intern
     const mName = member ? member.name : 'Unassigned';
     const expanded = expandedMembers.has(mid);
     const totalBalance = memberTotalBalance.get(mid) ?? 0;
+    const total = formatAmountParts(totalBalance, locale, currency);
     return (
       <div key={mid} className={styles.memberGroup}>
         <div className={styles.memberHead} onClick={() => toggleMember(mid)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleMember(mid)}>
-          <div className={styles.miniAvatar} style={{ background: grad }}>{initial}</div>
+          <div className={styles.miniAvatar} style={{ '--member-gradient': grad } as CSSProperties}>{initial}</div>
           <span className={styles.mname}><Highlight text={mName} query={searchQuery} /></span>
-          <span className={styles.memberTotal}>{formatAmountParts(totalBalance, locale, currency).amount}<span className={styles.currencyLabel}>{formatAmountParts(totalBalance, locale, currency).currency}</span></span>
+          <span className={styles.memberTotal}>{total.amount}<span className={styles.currencyLabel}>{total.currency}</span></span>
           <span className={`${styles.memberChevron} ${expanded ? styles.chevronOpen : ''}`}><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 4.5l3 3 3-3" /></svg></span>
         </div>
-        {expanded && <div className={`${styles.memberAccounts} ${closingMembers.has(mid) ? styles.closingAccounts : ''}`}>{accts.map((acct: any) => (
-          <div key={acct.id} className={styles.acctRow} onClick={(e) => { e.stopPropagation(); window.location.hash = `#/member/${mid}?account=${acct.id}`; }}>
-            <span className={styles.acctTypeIcon} style={{ color: (ACCOUNT_TYPE_ACCENT as any)[acct.type] }}>{(TYPE_ICON_MAP as any)[acct.type]}</span>
-            <span className={styles.acctName}><Highlight text={acct.name} query={searchQuery} /></span>
-            <span className={styles.acctBalance}>{formatAmountParts(acct.balance, locale, currency).amount}<span className={styles.currencyLabel}>{formatAmountParts(acct.balance, locale, currency).currency}</span></span>
-          </div>
-        ))}</div>}
+        {expanded && <div className={`${styles.memberAccounts} ${closingMembers.has(mid) ? styles.closingAccounts : ''}`}>{accts.map((acct) => {
+          const balance = formatAmountParts(acct.balance, locale, currency);
+          return (
+            <div key={acct.id} className={styles.acctRow} onClick={(e) => { e.stopPropagation(); window.location.hash = `#/member/${mid}?account=${acct.id}`; }}>
+              <span className={styles.acctTypeIcon} style={{ '--icon-accent': ACCOUNT_TYPE_ACCENT[acct.type] } as CSSProperties}>{TYPE_ICON_MAP[acct.type]}</span>
+              <span className={styles.acctName}><Highlight text={acct.name} query={searchQuery} /></span>
+              <span className={styles.acctBalance}>{balance.amount}<span className={styles.currencyLabel}>{balance.currency}</span></span>
+            </div>
+          );
+        })}</div>}
       </div>
     );
   })}</>;
 }
-export function RecentTxsPanel({ filteredRecentTxs, remaining, onLoadMore, searchQuery, locale, currency }: any) {
+
+export function RecentTxsPanel({ filteredRecentTxs, remaining, onLoadMore, searchQuery, locale, currency }: RecentTxsProps) {
   const [loadMoreKey, replayLoadMore] = useReplay();
   if (filteredRecentTxs.length === 0) return <div className="empty-state"><div className="empty-state-icon"><ClipboardList size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">{searchQuery ? `No matches for "${searchQuery}"` : 'No transactions yet'}</p></div>;
-  return <>{filteredRecentTxs.map((tx: any) => {
+  return <>{filteredRecentTxs.map((tx) => {
     const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
+    const incoming = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
     return (
       <div key={tx.id} className={styles.txRow} onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}>
         <span className={styles.txType} data-type={tx.type}><span className={styles.txDay}>{new Date(tx.date).getDate()}</span><span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span></span>
         <span className={styles.txDate}>{shortDate(tx.date, locale)}</span>
         <span className={styles.txDesc}><Highlight text={tx.description} query={searchQuery} /></span>
-        <span className={styles.txAmount}><span className={`${styles.txArrow} ${tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? styles.txArrowIn : styles.txArrowOut}`}>{tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay' ? <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M2 6l4-4 4 4" /></svg> : <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M2 6l4 4 4-4" /></svg>}</span>{fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small></span>
+        <span className={styles.txAmount}><span className={`${styles.txArrow} ${incoming ? styles.txArrowIn : styles.txArrowOut}`}>{incoming ? <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M2 6l4-4 4 4" /></svg> : <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M2 6l4 4 4-4" /></svg>}</span>{fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small></span>
       </div>
     );
   })}
   {remaining > 0 && <button type="button" className={`${styles.loadMoreBtn} ${loadMoreKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayLoadMore(); onLoadMore(); }}><span className="anim-target" key={loadMoreKey}>Load more ({remaining} remaining)</span></button>}
   </>;
 }
-export function ActiveLoansPanel({ filteredActiveLoanStacks, searchQuery, locale, currency, navigate }: any) {
+
+export function ActiveLoansPanel({ filteredActiveLoanStacks, searchQuery, locale, currency, navigate }: ActiveLoansProps) {
   if (filteredActiveLoanStacks.length === 0) return <div className="empty-state"><div className="empty-state-icon"><CreditCard size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">{searchQuery ? `No loans match "${searchQuery}"` : 'No active loans'}</p></div>;
-  return <>{filteredActiveLoanStacks.map((stack: any) => {
-    const total = stack.totalOutstanding + stack.totalRecovered; const pct = total > 0 ? (stack.totalRecovered / total) * 100 : 0; const isSettled = stack.isSettled ?? stack.loans.every((l: any) => l.status !== 'active');
+  return <>{filteredActiveLoanStacks.map((stack) => {
+    const total = stack.totalOutstanding + stack.totalRecovered;
+    const pct = total > 0 ? (stack.totalRecovered / total) * 100 : 0;
+    const isSettled = stack.isSettled ?? stack.loans.every((l) => l.status !== 'active');
+    const outstanding = formatAmountParts(stack.totalOutstanding, locale, currency);
     return (
       <div key={stack.debtorId} className={styles.loanRow} onClick={() => navigate(`/loans/${stack.debtorId}`)}>
-        <div className={styles.loanTop}><span className={styles.loanDebtor}><span className={styles.loanDebtorName}><Highlight text={stack.debtorName} query={searchQuery} /></span><span className={styles.loanBadges}>{isSettled && <span className={`${styles.badge} ${styles.badgeSettled}`}>Settled</span>}{!isSettled && stack.settledCount > 0 && <span className={`${styles.badge} ${styles.badgePartial}`}>Partial</span>}</span></span><span className={styles.loanAmount}>{Intl.NumberFormat(locale).format(stack.totalOutstanding)}<span className={styles.loanCurrency}>{currency}</span></span></div>
-        <div className={styles.loanBarWrap}><div className={styles.loanBarFill} style={{ width: `${Math.min(pct, 100)}%` }} /></div>
+        <div className={styles.loanTop}><span className={styles.loanDebtor}><span className={styles.loanDebtorName}><Highlight text={stack.debtorName} query={searchQuery} /></span><span className={styles.loanBadges}>{isSettled && <span className={`${styles.badge} ${styles.badgeSettled}`}>Settled</span>}{!isSettled && stack.settledCount > 0 && <span className={`${styles.badge} ${styles.badgePartial}`}>Partial</span>}</span></span><span className={styles.loanAmount}>{outstanding.amount}<span className={styles.loanCurrency}>{outstanding.currency}</span></span></div>
+        <div className={styles.loanBarWrap}><div className={styles.loanBarFill} style={{ '--progress-width': `${Math.min(pct, 100)}%` } as CSSProperties} /></div>
         <div className={styles.loanMeta}><span>{pct >= 100 ? 'Fully recovered' : `${Math.round(pct)}% recovered`}</span><span>{formatAmount(stack.totalOutstanding, locale, currency)} remaining</span></div>
       </div>
     );

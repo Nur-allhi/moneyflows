@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings } from 'lucide-react';
@@ -20,7 +19,7 @@ export function Dashboard() {
   const { fetchAccounts } = useAccountStore();
   const settings = useSettingsStore((s) => s.settings);
   const d = useDashboardData();
-  const { locale, currency, totalAssetsIncludeLoans, loading, error, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, assetsTrend, cashTrend, banksTrend, loansTrend, thisMonthIncome, thisMonthExpenses, thisMonthNet, filteredAccountsByMember, memberById, internalMembers, visibleRecentTxs, recentRemaining, showMoreRecent, activeLoanStacks } = d as any;
+  const { locale, currency, totalAssetsIncludeLoans, loading, error, totalAssets, cashInHand, totalInBanks, activeLoansOutstanding, assetsTrend, cashTrend, banksTrend, loansTrend, thisMonthIncome, thisMonthExpenses, thisMonthNet, filteredAccountsByMember, memberById, internalMembers, visibleRecentTxs, recentRemaining, showMoreRecent, activeLoanStacks, rawQuery } = d;
   const animTotalAssets = useAnimatedValue(totalAssets);
   const animCashInHand = useAnimatedValue(cashInHand);
   const animTotalInBanks = useAnimatedValue(totalInBanks);
@@ -46,10 +45,9 @@ export function Dashboard() {
     } else setExpandedMembers((prev) => { const n = new Set(prev); n.add(mid); return n; });
   }, [expandedMembers]);
   const memberTotalBalance = new Map<string, number>();
-  for (const [mid, accts] of (filteredAccountsByMember as Map<string, any>)) memberTotalBalance.set(mid, (accts as any[]).reduce((s, a) => s + a.balance, 0));
-  const filteredActiveLoanStacks = (activeLoanStacks as any[]).filter(() => true);
-  const searchQuery = (d as any).rawQuery ?? '';
-  if (loading) return <div className={styles.dashboard}><div className="skeleton skeleton-wizard" style={{ height: 64, borderRadius: 12 }} /><div className={styles.metrics}>{[1, 2, 3].map((i) => <div key={i} className="skeleton skeleton-metric" />)}</div><div className="skeleton skeleton-row" style={{ height: 56, borderRadius: 12 }} /><div className={styles.content}><div className="skeleton skeleton-card" style={{ height: 300 }} /><div className="skeleton skeleton-card" style={{ height: 300 }} /></div></div>;
+  for (const [mid, accts] of filteredAccountsByMember) memberTotalBalance.set(mid, accts.reduce((s, a) => s + a.balance, 0));
+  const searchQuery = rawQuery ?? '';
+  if (loading) return <div className={styles.dashboard}><div className={`skeleton skeleton-wizard ${styles.skeletonWizardShort}`} /><div className={styles.metrics}>{[1, 2, 3].map((i) => <div key={i} className="skeleton skeleton-metric" />)}</div><div className="skeleton skeleton-row" /><div className={styles.content}><div className={`skeleton skeleton-card ${styles.skeletonCardTall}`} /><div className={`skeleton skeleton-card ${styles.skeletonCardTall}`} /></div></div>;
   if (error) return <div className={styles.dashboard}><div className={`${styles.panel} ${styles.monthSummary}`}><div className="error-state"><div className="error-state-icon"><AlertIcon /></div><p className="error-state-text">Could not load dashboard data</p><button className={`retry-btn ${retryKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayRetry(); fetchAccounts(); }}><span className="anim-target" key={retryKey}>Retry</span></button></div></div></div>;
   return (
     <div className={styles.dashboard}>
@@ -62,7 +60,7 @@ export function Dashboard() {
       <div className={styles.content} data-cols={visibleCount || 1}>
         {showWhere && <div className={styles.panel}><div className={styles.panelHeader}><h2>Where Your Money Is</h2></div><WhereMoneyIsPanel filteredAccountsByMember={filteredAccountsByMember} memberById={memberById} internalMembers={internalMembers} expandedMembers={expandedMembers} closingMembers={closingMembers} toggleMember={toggleMember} memberTotalBalance={memberTotalBalance} searchQuery={searchQuery} locale={locale} currency={currency} /></div>}
         {showRecent && <div className={styles.panel}><div className={styles.panelHeader}><h2>Recent Transactions</h2></div><div className={styles.txList}><RecentTxsPanel filteredRecentTxs={visibleRecentTxs} remaining={recentRemaining} onLoadMore={showMoreRecent} searchQuery={searchQuery} locale={locale} currency={currency} /></div></div>}
-        {showLoans && <div className={styles.panel}><div className={styles.panelHeader}><h2>Active Loans</h2></div><div className={styles.loanList}><ActiveLoansPanel filteredActiveLoanStacks={filteredActiveLoanStacks} searchQuery={searchQuery} locale={locale} currency={currency} navigate={navigate} /></div></div>}
+        {showLoans && <div className={styles.panel}><div className={styles.panelHeader}><h2>Active Loans</h2></div><div className={styles.loanList}><ActiveLoansPanel filteredActiveLoanStacks={activeLoanStacks} searchQuery={searchQuery} locale={locale} currency={currency} navigate={navigate} /></div></div>}
         {visibleCount === 0 && <div className={styles.panel}><div className="empty-state"><div className="empty-state-icon"><Settings size={40} strokeWidth={1.8} aria-hidden="true" /></div><p className="empty-state-text">All sections hidden — enable them in Settings → Dashboard.</p></div></div>}
       </div>
       <FAB />
