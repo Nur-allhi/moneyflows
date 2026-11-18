@@ -15,8 +15,13 @@ const MONTH_NAMES = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)$/i;
 
 async function openCalendar(page: Page) {
   await page.goto('/');
-  await page.getByRole('button', { name: /New Transaction/i }).first().click();
-  await page.waitForSelector('input[placeholder="YYYY-MM-DD"]:visible', { timeout: 8000 });
+  // The header's "New transaction" (lower-case t) and the dashboard action
+  // "New Transaction" both match a case-insensitive query — target the action
+  // exactly, and wait for it to be visible so boot never races the click.
+  const newTx = page.getByRole('button', { name: 'New Transaction', exact: true });
+  await expect(newTx).toBeVisible({ timeout: 15000 });
+  await newTx.click();
+  await expect(page.locator('input[placeholder="YYYY-MM-DD"]:visible').first()).toBeVisible({ timeout: 8000 });
   await page
     .locator('div:has(> input[placeholder="YYYY-MM-DD"]:visible) > button')
     .first()

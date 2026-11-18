@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { App } from './App';
 import { SplashScreen } from './presentation/components/SplashScreen';
 import { WhatsNewModal } from './presentation/components/WhatsNewModal';
+import { DatabaseErrorScreen } from './presentation/components/DatabaseErrorScreen';
 import { whatsNewFor } from './presentation/constants/whatsNew';
 import { useSettingsStore } from './presentation/stores/useSettingsStore';
 import { initDatabase, getDatabase } from './infrastructure/database/getDatabase';
@@ -136,118 +137,69 @@ function Root() {
 
   if (dbError) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#111', color: '#ccc', fontFamily: 'system-ui, sans-serif', padding: 24, textAlign: 'center', gap: 12 }}>
-        <div style={{ fontSize: 40 }} aria-hidden="true"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></svg></div>
-        <h1 style={{ fontSize: 18, fontWeight: 600, color: '#fff', margin: 0 }}>Database Error</h1>
-        <p style={{ fontSize: 14, lineHeight: 1.5, maxWidth: 400 }}>{dbError}</p>
-        <p style={{ fontSize: 13, color: '#888', lineHeight: 1.5, maxWidth: 420 }}>
-          You can try restoring your latest auto-backup first. If that loads
-          empty or old data, pick an older backup below — the newest entry is
-          not always the best one.
-        </p>
-        <button
-          disabled={actionBusy !== null}
-          onClick={async () => {
-            replayRestore();
-            setActionBusy('restore');
+      <DatabaseErrorScreen
+        message={dbError}
+        snapshots={snapList}
+        slotBusy={slotBusy}
+        slotError={slotError}
+        actionBusy={actionBusy}
+        wipeFailed={wipeFailed}
+        restoreKey={restoreKey}
+        freshKey={freshKey}
+        onRestore={async () => {
+          replayRestore();
+          setActionBusy('restore');
+          try {
+            const ok = await withStorageTimeout(getDatabase().restoreNewestSnapshot());
+            if (ok) window.location.reload();
+            else setDbError('No valid auto-backup was found to restore.');
+          } catch (e) {
+            setDbError(e instanceof Error ? e.message : 'Restore failed');
+          } finally {
+            setActionBusy(null);
+          }
+        }}
+        onRestoreSlot={async (i) => {
+          setSlotBusy(i);
+          setSlotError(null);
+          try {
+            await withStorageTimeout(getDatabase().restoreSnapshotExact(i));
+            window.location.reload();
+          } catch (e) {
+            setSlotError(e instanceof Error ? e.message : `Backup ${i + 1} failed`);
+            setSlotBusy(null);
+          }
+        }}
+        onFresh={() => {
+          replayFresh();
+          setWipeFailed(null);
+          setActionBusy('fresh');
+          void (async () => {
+            // Engine-free wipe (BUG-12): works even when boot died before the
+            // engine/storage initialized, where resetStorage() silently no-ops.
+            // Reload re-inits everything; a signed-in device re-pulls Drive.
             try {
-              const ok = await withStorageTimeout(getDatabase().restoreNewestSnapshot());
-              if (ok) window.location.reload();
-              else setDbError('No valid auto-backup was found to restore.');
-            } catch (e) {
-              setDbError(e instanceof Error ? e.message : 'Restore failed');
-            } finally {
-              setActionBusy(null);
-            }
-          }}
-          className={restoreKey > 0 ? 'anim-pop' : ''}
-          style={{ marginTop: 8, padding: '10px 24px', border: 'none', borderRadius: 8, background: '#22c55e', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-        >
-          <span className="anim-target" key={restoreKey}>{actionBusy === 'restore' ? 'Restoring…' : 'Restore Latest Backup'}</span>
-        </button>
-        {snapList !== null && snapList.length > 0 && (
-          <>
-            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.5, maxWidth: 420, margin: '8px 0 0' }}>
-              Or pick a specific backup:
-            </p>            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 420, width: '100%', maxHeight: 220, overflowY: 'auto' }}>
-              {snapList.map((s, i) => (
-                <button
-                  key={i}
-                  disabled={slotBusy !== null || actionBusy !== null}
-                  onClick={async () => {
-                    setSlotBusy(i);
-                    setSlotError(null);
-                    try {
-                      await withStorageTimeout(getDatabase().restoreSnapshotExact(i));
-                      window.location.reload();
-                    } catch (e) {
-                      setSlotError(e instanceof Error ? e.message : `Backup ${i + 1} failed`);
-                      setSlotBusy(null);
-                    }
-                  }}
-                  style={{ padding: '10px 16px', border: '1px solid #444', borderRadius: 8, background: '#1c1c1c', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}
-                >
-                  {slotBusy === i ? 'Restoring…' : `${i === 0 ? 'Latest auto-backup' : `Auto-backup ${i + 1}`} — ${new Date(s.time).toLocaleString()}`}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-        {snapList !== null && snapList.length === 0 && (
-          <p style={{ fontSize: 13, color: '#888', lineHeight: 1.5, maxWidth: 420 }}>
-            No older backups could be listed.
-          </p>
-        )}
-        {slotError && (
-          <p style={{ fontSize: 13, color: '#ff6b6b', lineHeight: 1.5, maxWidth: 420 }}>{slotError}</p>
-        )}
-        <p style={{ fontSize: 13, color: '#888', lineHeight: 1.5, maxWidth: 420 }}>
-          &ldquo;Start Fresh&rdquo; resets the app to empty. Only use this when
-          your data is safely backed up elsewhere.
-        </p>
-        <button
-          disabled={actionBusy !== null}
-          onClick={() => {
-            replayFresh();
-            setWipeFailed(null);
-            setActionBusy('fresh');
-            void (async () => {
-              // Engine-free wipe (BUG-12): works even when boot died before the
-              // engine/storage initialized, where resetStorage() silently no-ops.
-              // Reload re-inits everything; a signed-in device re-pulls Drive.
-              try {
-                const report = await wipePersistedStorage({
-                  mainKey: STORAGE_KEY,
-                  snapshotPrefix: SNAPSHOT_PREFIX,
-                  maxSnapshots: MAX_SNAPSHOTS,
-                });
-                const failed = (Object.keys(report) as (keyof typeof report)[]).filter((k) => !report[k]);
-                if (failed.length > 0) {
-                  setWipeFailed(failed);
-                  setActionBusy(null);
-                  return;
-                }
-              } catch (e) {
-                setDbError(e instanceof Error ? e.message : 'Wipe failed');
+              const report = await wipePersistedStorage({
+                mainKey: STORAGE_KEY,
+                snapshotPrefix: SNAPSHOT_PREFIX,
+                maxSnapshots: MAX_SNAPSHOTS,
+              });
+              const failed = (Object.keys(report) as (keyof typeof report)[]).filter((k) => !report[k]);
+              if (failed.length > 0) {
+                setWipeFailed(failed);
                 setActionBusy(null);
                 return;
               }
-              useSettingsStore.getState().updateSettings({ setupComplete: false });
-              window.location.reload();
-            })();
-          }}
-          className={freshKey > 0 ? 'anim-pop' : ''}
-          style={{ padding: '10px 24px', border: 'none', borderRadius: 8, background: '#6c5ce7', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
-        >
-          <span className="anim-target" key={freshKey}>{actionBusy === 'fresh' ? 'Wiping…' : 'Start Fresh'}</span>
-        </button>
-        {wipeFailed && (
-          <p style={{ fontSize: 13, color: '#ffb020', lineHeight: 1.5, maxWidth: 420 }}>
-            Automatic wipe timed out on: {wipeFailed.join(', ')}. Clear it by hand —
-            F12 → Application → Storage → Clear site data → reload the page.
-          </p>
-        )}
-      </div>
+            } catch (e) {
+              setDbError(e instanceof Error ? e.message : 'Wipe failed');
+              setActionBusy(null);
+              return;
+            }
+            useSettingsStore.getState().updateSettings({ setupComplete: false });
+            window.location.reload();
+          })();
+        }}
+      />
     );
   }
 
