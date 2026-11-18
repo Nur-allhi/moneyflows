@@ -3193,7 +3193,7 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - senior-frontend, ui-ux-pro-max, code-reviewer (bug protocol)
 
 ### Status
-- On `dev`, committed as `fix(docs,dashboard): sync docs with shipped app and remove dashboard any/inline-style leftovers (BUG-59/60/61)`. **Not pushed, not merged** — awaiting user instruction (§3.12).
+- On `dev`, commit `562c7cc` (`fix(docs,dashboard): sync docs with shipped app and remove dashboard any/inline-style leftovers (BUG-59/60/61)`). **Not pushed, not merged** — awaiting user instruction (§3.12).
 - Gates: `typecheck` 0, `lint` 0 warnings, `build` green (3420 modules), unit **248/248**, **Playwright 35/35 from a cold server (2.5m)**. Final suite fully green after the BUG-61 helper fix.
 - No open bugs in `docs/BUGS.md`. Next up: remaining items from the improvement report — behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks — or the pending release decision (the batch has no version bump).
 
