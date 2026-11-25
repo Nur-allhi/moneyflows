@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Placeholder
+### Added
+- **The header bell now warns about backup problems (T-176)** — a dot appears on the bell when a backup folder has not been chosen, its permission was lost, no restore points exist, the last save failed, folder or record checks need attention, or this browser cannot back up to a folder. Clicking the bell opens a list of exactly what is wrong, with a button that takes you straight to Backup & Storage. The dot refreshes on its own and updates immediately after you change a backup setting. Cloud sync keeps its separate status icon.
+
+### Fixed
+- **Backup alerts button is inset correctly (BUG-63)** — the "Open Backup settings" button no longer hugs the modal's right and bottom edges; it uses the same spacing as the app's other modal footers.
 
 ## [2.5.0] - 2026-11-25
 

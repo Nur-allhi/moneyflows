@@ -10,6 +10,11 @@ export interface BackupFile {
   lastModified: number;
 }
 
+/** T-176: tell the header bell to re-read backup health right after a change. */
+function announceBackupStatus(): void {
+  window.dispatchEvent(new Event('moneyflows:backup-status'));
+}
+
 /**
  * Shared backup/restore state for SettingsPage + SettingsModal.
  * Unifies the identical snapshot/folder/restore logic previously
@@ -81,6 +86,7 @@ export function useBackupState() {
       setFolderName(handle.name);
       setFsPermission(true);
       setBackupFiles(await folderSync.listFiles());
+      announceBackupStatus();
     } catch { /* user cancelled */ }
   }, []);
 
@@ -88,12 +94,14 @@ export function useBackupState() {
     const ok = await folderSync.requestPermission();
     setFsPermission(ok);
     if (ok) setBackupFiles(await folderSync.listFiles());
+    announceBackupStatus();
   }, []);
 
   const handleStopBackup = useCallback(async () => {
     await folderSync.clearHandle();
     setFolderName(null);
     setFsPermission(null);
+    announceBackupStatus();
   }, []);
 
   const handleRestoreFile = useCallback(async (name: string) => {

@@ -207,6 +207,7 @@
 }
 
 .notifBtn {
+  position: relative;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -223,6 +224,22 @@
 .notifBtn:hover {
   background: var(--color-surface-hover);
   box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+/* Backup health pip (T-176): same 8px dot language as the sync indicator. */
+.notifDot {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-secondary);
+  border: 2px solid var(--color-bg);
+}
+
+.notifDotWarn {
+  background: var(--color-warning);
 }
 
 /* Cloud sync indicator (T-157): same 36px circle language as the bell. */
