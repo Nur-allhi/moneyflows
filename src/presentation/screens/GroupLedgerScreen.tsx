@@ -13,6 +13,8 @@ import { Highlight } from '../utils/highlight';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { matchesTx } from '../utils/search';
 import { withRunningBalances } from '../utils/runningBalance';
+import { memberLedgerDelta } from '../utils/memberLedger';
+import { groupLegs } from '../utils/groupLedgerLegs';
 import { matchesLedgerTab, type LedgerTab } from '../constants/ledgerTabs';
 import styles from './GroupLedgerScreen.module.css';
 
@@ -124,66 +126,31 @@ export function GroupLedgerScreen() {
   const accountSet = useMemo(() => new Set(accountIds), [accountIds]);
   const accountMap = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
 
-  const mobileFilteredTxs = useMemo(() => {
-    let txs = [...displayedTxs];
-    // BUG-42: the same tab rule the desktop table uses — one definition, not one per layout.
-    if (typeFilter !== 'all') txs = txs.filter((tx) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
-    return txs.sort((a, b) => (sortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
-  }, [displayedTxs, typeFilter, sortOrder]);
-
-  const isMobileGroupCredit = useCallback((tx: Transaction) => {
-    return accountSet.has(tx.destAccount ?? '') && !accountSet.has(tx.sourceAccount ?? '');
-  }, [accountSet]);
-
-  const isGroupDebit = useCallback((tx: Transaction) => {
-    return accountSet.has(tx.sourceAccount ?? '');
-  }, [accountSet]);
-
-  const isGroupCredit = useCallback((tx: Transaction) => {
-    return accountSet.has(tx.destAccount ?? '');
-  }, [accountSet]);
-
   const totalBalance = useMemo(
     () => accounts.filter((a) => accountSet.has(a.id)).reduce((s, a) => s + a.balance, 0),
     [accounts, accountSet],
   );
 
-  const resolveAccountDisplay = useCallback((tx: Transaction): string => {
-    switch (tx.type) {
-      case 'income': {
-        const dst = tx.destAccount ? accountMap.get(tx.destAccount)?.name : null;
-        return dst ?? '(deleted account)';
-      }
-      case 'expense': {
-        const src = tx.sourceAccount ? accountMap.get(tx.sourceAccount)?.name : null;
-        return src ?? '(deleted account)';
-      }
-      case 'transfer': {
-        const src = tx.sourceAccount ? (accountMap.get(tx.sourceAccount)?.name ?? '?') : '?';
-        const dst = tx.destAccount ? (accountMap.get(tx.destAccount)?.name ?? '?') : '?';
-        return `${src} \u2192 ${dst}`;
-      }
-      case 'lend':
-      case 'loan_issue':
-        return tx.sourceAccount ? (accountMap.get(tx.sourceAccount)?.name ?? '?') : '?';
-      case 'repay':
-      case 'loan_repayment':
-      case 'loan_received':
-      case 'loan_paidback':
-        return tx.destAccount ? (accountMap.get(tx.destAccount)?.name ?? '?') : '?';
-      default:
-        return '';
-    }
-  }, [accountMap]);
+  // T-175: one place turns a transaction into the displayed row(s). A movement
+  // between two group accounts becomes a debit leg and a credit leg; both keep
+  // the transaction id, so either row opens the same detail.
+  const legsOf = useCallback(
+    (tx: Transaction) => groupLegs(tx, accountSet, (id) => accountMap.get(id)?.name),
+    [accountSet, accountMap],
+  );
+
+  const mobileLegs = useMemo(() => {
+    // BUG-42: the same tab rule the desktop table uses — one definition, not one per layout.
+    let txs = [...displayedTxs];
+    if (typeFilter !== 'all') txs = txs.filter((tx) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
+    txs.sort((a, b) => (sortOrder === 'desc' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date)));
+    return txs.flatMap((tx) => legsOf(tx).map((leg) => ({ tx, leg })));
+  }, [displayedTxs, typeFilter, sortOrder, legsOf]);
 
   const ledgerRows = useMemo((): LedgerRow[] => {
-    // Only movements into or out of the group change its balance; an internal
-    // transfer washes out. The same walk feeds the PDF (BUG-28).
-    const balanceRows = withRunningBalances(displayedTxs, (tx) => {
-      if (isGroupCredit(tx) && !isGroupDebit(tx)) return tx.amount;
-      if (isGroupDebit(tx) && !isGroupCredit(tx)) return -tx.amount;
-      return 0;
-    }, totalBalance);
+    // The balance walk stays at transaction level: a movement between two group
+    // accounts nets to zero, so both of its displayed legs share one balance.
+    const balanceRows = withRunningBalances(displayedTxs, (tx) => memberLedgerDelta(tx, accountSet), totalBalance);
 
     const isLoanType = (t: string) => ['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback'].includes(t);
 
@@ -195,27 +162,28 @@ export function GroupLedgerScreen() {
       ? balanceRows
       : balanceRows.filter(({ item: tx }) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
 
-    const allRows = shownRows.map(({ item: tx, balance }) => {
-      const credit = isGroupCredit(tx) && !isGroupDebit(tx);
-      const debit = isGroupDebit(tx) && !isGroupCredit(tx);
-      const internal = isGroupDebit(tx) && isGroupCredit(tx);
+    // Reverse the transactions, not the flat row list, so a split pair still
+    // reads debit-then-credit in either sort order.
+    const orderedRows = sortOrder === 'desc' ? [...shownRows].reverse() : shownRows;
 
-      return {
+    return orderedRows.flatMap(({ item: tx, balance }) => {
+      const amountText = formatAmountParts(tx.amount, locale, currency).amount;
+      const type = isLoanType(tx.type) ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer';
+      return legsOf(tx).map((leg) => ({
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: tx.description,
-        account: internal ? `(internal) ${resolveAccountDisplay(tx)}` : resolveAccountDisplay(tx),
-        debit: credit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
-        credit: debit ? '\u2014' : formatAmountParts(tx.amount, locale, currency).amount,
+        account: leg.accountLabel,
+        // Empty cells must be empty strings: LedgerTable renders its own dash
+        // for a falsy cell, and would append the currency label to a dash text.
+        debit: leg.direction === 'credit' ? '' : amountText,
+        credit: leg.direction === 'debit' ? '' : amountText,
         balance: formatAmountParts(balance, locale, currency).amount,
         currencyLabel: currency,
-        type: isLoanType(tx.type) ? 'loan' as const : tx.type as 'income' | 'expense' | 'transfer',
-      };
+        type,
+      }));
     });
-
-    const result = sortOrder === 'desc' ? allRows.reverse() : allRows;
-    return result;
-  }, [displayedTxs, typeFilter, totalBalance, isGroupCredit, isGroupDebit, locale, currency, resolveAccountDisplay, sortOrder]);
+  }, [displayedTxs, typeFilter, totalBalance, accountSet, legsOf, locale, currency, sortOrder]);
 
   const handleRowClick = useCallback((row: LedgerRow) => {
     const tx = txs.find((t) => t.id === row.id);
@@ -228,11 +196,7 @@ export function GroupLedgerScreen() {
 
     // BUG-28: the statement covers the whole ledger matching the search, not
     // the page slice rendered on screen.
-    const exportRows = withRunningBalances(searchFilteredAll, (tx) => {
-      if (isGroupCredit(tx) && !isGroupDebit(tx)) return tx.amount;
-      if (isGroupDebit(tx) && !isGroupCredit(tx)) return -tx.amount;
-      return 0;
-    }, totalBalance);
+    const exportRows = withRunningBalances(searchFilteredAll, (tx) => memberLedgerDelta(tx, accountSet), totalBalance);
 
     if (exportRows.length === 0) return;
 
@@ -252,24 +216,27 @@ export function GroupLedgerScreen() {
     if (dateRange) doc.text(`Period: ${dateRange}`, 14, 28);
     doc.text(`Accounts: ${accountIds.length}`, 14, 36);
 
-    const pdfRows: { date: string; type: string; desc: string; debit: string; credit: string; balance: string }[] = [];
+    const pdfRows: { date: string; type: string; desc: string; account: string; debit: string; credit: string; balance: string }[] = [];
 
     let totalDebit = 0;
     let totalCredit = 0;
 
     for (const { item: tx, balance } of exportRows) {
-      const credit = isGroupCredit(tx) && !isGroupDebit(tx);
-      const debit = isGroupDebit(tx) && !isGroupCredit(tx);
-      if (credit) totalCredit += tx.amount;
-      else if (debit) totalDebit += tx.amount;
-      pdfRows.push({
-        date: shortDate(tx.date, locale),
-        type: tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        desc: tx.description,
-        debit: credit ? '' : formatAmount(tx.amount, locale, currency),
-        credit: debit ? '' : formatAmount(tx.amount, locale, currency),
-        balance: formatAmount(balance, locale, currency),
-      });
+      const type = tx.type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const amountText = formatAmount(tx.amount, locale, currency);
+      for (const leg of legsOf(tx)) {
+        if (leg.direction === 'credit') totalCredit += tx.amount;
+        else if (leg.direction === 'debit') totalDebit += tx.amount;
+        pdfRows.push({
+          date: shortDate(tx.date, locale),
+          type,
+          desc: tx.description,
+          account: leg.accountLabel,
+          debit: leg.direction === 'credit' ? '' : amountText,
+          credit: leg.direction === 'debit' ? '' : amountText,
+          balance: formatAmount(balance, locale, currency),
+        });
+      }
     }
 
     const rightX = pageW - 14;
@@ -298,30 +265,27 @@ export function GroupLedgerScreen() {
     doc.text(tcVal, rightX, 44, { align: 'right' });
 
     autoTable(doc, {
-      head: [['Date', 'Type', 'Description', 'Debit', 'Credit', 'Balance']],
-      body: pdfRows.map((r) => [r.date, r.type, r.desc, r.debit, r.credit, r.balance]),
+      head: [['Date', 'Type', 'Description', 'Account', 'Debit', 'Credit', 'Balance']],
+      body: pdfRows.map((r) => [r.date, r.type, r.desc, r.account, r.debit, r.credit, r.balance]),
       startY: 52,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [99, 102, 241] },
       columnStyles: {
-        0: { cellWidth: 28 },
-        1: { cellWidth: 22 },
+        0: { cellWidth: 24 },
+        1: { cellWidth: 18 },
         2: { cellWidth: 'auto', halign: 'left' },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 30 },
+        3: { cellWidth: 38 },
+        4: { cellWidth: 24 },
+        5: { cellWidth: 24 },
+        6: { cellWidth: 26 },
       },
     });
 
     doc.text('MoneyFlows \u2014 System generated report', pageW / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
     doc.save(`${groupName.replace(/\s+/g, '_')}_ledger.pdf`);
-  }, [groupName, searchFilteredAll, accountIds.length, totalBalance, locale, currency, isGroupCredit, isGroupDebit]);
+  }, [groupName, searchFilteredAll, accountIds.length, totalBalance, locale, currency, accountSet, legsOf]);
 
   if (loading) return <div className={styles.loading}>Loading...</div>;
-
-  const typeRows = typeFilter === 'all'
-    ? displayedTxs
-    : displayedTxs.filter((tx) => matchesLedgerTab(tx.type, typeFilter as LedgerTab));
 
   return (
     <div className={styles.container}>
@@ -334,7 +298,7 @@ export function GroupLedgerScreen() {
       {!isDesktop ? (
         <MobileLedger
           title={groupName || 'Ledger'}
-          count={mobileFilteredTxs.length}
+          count={mobileLegs.length}
           filterOptions={TX_FILTER_OPTIONS}
           activeFilter={typeFilter}
           onFilterChange={setTypeFilter}
@@ -343,20 +307,23 @@ export function GroupLedgerScreen() {
           onDownloadPdf={handleDownloadPdf}
           loadingMore={loadingMore}
           sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
-          empty={mobileFilteredTxs.length === 0 ? <div className={styles.empty}>No entries found</div> : undefined}
+          empty={mobileLegs.length === 0 ? <div className={styles.empty}>No entries found</div> : undefined}
           sortOrder={sortOrder}
           onSortChange={setSortOrder}
         >
-          {mobileFilteredTxs.map((tx) => {
-            const isCredit = isMobileGroupCredit(tx);
+          {mobileLegs.map(({ tx, leg }, index) => {
+            const isCredit = leg.direction === 'credit';
             const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
             return (
-              <div key={tx.id} className={styles.txRow} onClick={() => handleRowClick({ id: tx.id } as LedgerRow)}>
+              <div key={`${tx.id}-${leg.direction}-${index}`} className={styles.txRow} onClick={() => handleRowClick({ id: tx.id } as LedgerRow)}>
                 <span className={styles.txType} data-type={tx.type}>
                   <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
                   <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
                 </span>
-                <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
+                <span className={styles.txBody}>
+                  <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
+                  <span className={styles.txAccount}>{leg.accountLabel}</span>
+                </span>
                 <span className={styles.txAmount}>
                   <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>
                     {isCredit ? (
@@ -433,13 +400,14 @@ export function GroupLedgerScreen() {
           <LedgerTable
             rows={ledgerRows}
             showBalance
+            showAccount
             desktop
             onRowClick={handleRowClick}
             sentinel={<div ref={sentinelRef} style={{ height: 1 }} />}
             searchQuery={ledgerQuery}
           />
 
-          {typeRows.length === 0 && <div className={styles.empty}>No entries found</div>}
+          {ledgerRows.length === 0 && <div className={styles.empty}>No entries found</div>}
         </>
       )}
     </div>

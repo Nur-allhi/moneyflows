@@ -26,6 +26,9 @@ interface LedgerTableProps {
   onRowClick?: (row: LedgerRow, index: number) => void;
   desktop?: boolean;
   showBalance?: boolean;
+  /** T-175: adds an Account column beside Balance. The group ledger opts in;
+   *  every other caller keeps the exact column set it has today. */
+  showAccount?: boolean;
   /**
    * BUG-58: adds a Member column between Description and Account. Opt-in, so
    * every existing caller keeps its exact column set. Desktop only — the
@@ -45,7 +48,7 @@ const typeClassMap: Record<string, string | undefined> = {
   transfer: styles.transfer,
 };
 
-export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, showMember = false, fillHeight = false, sentinel, searchQuery = '', onLinkBadgeClick }: LedgerTableProps) {
+export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, showAccount = false, showMember = false, fillHeight = false, sentinel, searchQuery = '', onLinkBadgeClick }: LedgerTableProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [bodyHeight, setBodyHeight] = useState(desktop ? 360 : 340);
@@ -54,7 +57,8 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
   const capturedHeightRef = useRef(0);
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showMemberCol = showMember && desktop;
-  const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${showBalance ? '' : styles.noBalance} ${showMemberCol ? styles.showMember : ''} ${fillHeight ? styles.fillHeight : ''} ${className}`;
+  const showAccountCol = showAccount || !showBalance;
+  const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${showBalance ? '' : styles.noBalance} ${showAccountCol ? styles.showAccount : ''} ${showMemberCol ? styles.showMember : ''} ${fillHeight ? styles.fillHeight : ''} ${className}`;
   const itemHeight = desktop ? DESKTOP_ROW_HEIGHT : ROW_HEIGHT;
   const containerHeight = fillHeight ? bodyHeight : (desktop ? 360 : 340);
 
@@ -109,7 +113,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
         <span className={styles.centerLabel}>Type</span>
         <span>Description</span>
         {showMemberCol && <span className={styles.centerLabel}>Member</span>}
-        {!showBalance && <span className={styles.centerLabel}>Account</span>}
+        {showAccountCol && <span className={styles.centerLabel}>Account</span>}
         <span className={styles.centerLabel}>Debit</span>
         <span className={styles.centerLabel}>Credit</span>
         {showBalance && <span className={styles.centerLabel}>Balance</span>}
@@ -160,7 +164,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                       )}
                     </span>
                     {showMemberCol && <span className={styles.member}>{row.member ? <Highlight text={row.member} query={searchQuery} /> : '\u2014'}</span>}
-                    {!showBalance && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
+                    {showAccountCol && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                     <span className={styles.debit}>{row.debit ? <>{row.debit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                     <span className={styles.credit}>{row.credit ? <>{row.credit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                     {showBalance && <span className={styles.balance}>{row.balance ? <>{row.balance}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>}
@@ -199,7 +203,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                   )}
                 </span>
                 {showMemberCol && <span className={styles.member}>{row.member ? <Highlight text={row.member} query={searchQuery} /> : '\u2014'}</span>}
-                {!showBalance && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
+                {showAccountCol && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                 <span className={styles.debit}>{row.debit ? <>{row.debit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                 <span className={styles.credit}>{row.credit ? <>{row.credit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                 {showBalance && <span className={styles.balance}>{row.balance ? <>{row.balance}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>}

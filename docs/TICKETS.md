@@ -527,6 +527,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 3. `feat:` commit → MINOR bump 2.0.1 → 2.1.0 per VERSIONING.md §2→§3 (package.json + whatsNew.ts + CHANGELOG + AGENTS) in the release commit.
 **Acceptance:** /tags cards can be ordered alphabetically both ways; default stays most-used; no visual drift (tokens only, pill pattern reused); gates green.
 
+### T-175 - Group ledger shows each transaction's account and both sides of an internal movement
+**Skill:** `senior-frontend`, `ui-ux-pro-max`, `code-reviewer`
+**Effort:** M
+**File(s):** `src/presentation/utils/groupLedgerLegs.ts` (new) + `__tests__/groupLedgerLegs.test.ts`, `src/presentation/screens/GroupLedgerScreen.tsx` + `.module.css`, `src/presentation/components/LedgerTable.tsx` + `.module.css`, `e2e/helpers/seed-tiny.ts`, `e2e/flows/07-groups.spec.ts`
+**Content:**
+1. Every displayed transaction carries the full `source → destination` account route; desktop gets an opt-in `showAccount` column beside Balance and mobile gets a muted second line. Other `LedgerTable` callers keep their exact column set.
+2. A transaction with two account effects (`balanceEffects`) whose source AND destination are both in the group is shown twice — a debit leg out of one account and a credit leg into the other. Both legs keep the transaction id and share its unchanged group running balance; the walk stays at transaction level so pagination/search/totals are untouched.
+3. The same leg expansion and Account column go into the PDF statement. Unit tests cover internal/external transfers, all loan types, income/expense and deleted accounts; e2e seeds a group with DBBL + Cash and asserts the two rows on desktop and mobile.
+4. `feat:` → MINOR bump at release (v2.4.4 → v2.5.0) per VERSIONING.md §2→§3.
+**Acceptance:** opening a group shows which account every entry belongs to; the seeded internal "ATM Cash" transfer appears as one debit and one credit row with `DBBL → Cash` on each, the group total unchanged, and either row opens the same transaction detail; full gates green.
+
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 

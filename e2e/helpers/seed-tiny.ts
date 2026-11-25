@@ -70,6 +70,15 @@ async function buildTiny(schema: string, now: string): Promise<Uint8Array> {
   const cp = id('acc');
   db.run(`INSERT INTO accounts (id,member_id,name,type,balance,created_at,updated_at) VALUES ($1,NULL,'Rafiq','counterparty',0,$2,$2)`, { $1: cp, $2: now });
 
+  // T-175: DBBL and Cash are both in this group, so the seeded "ATM Cash"
+  // transfer between them is internal to it — the case the ledger now shows
+  // as two rows (one out of DBBL, one into Cash).
+  const group = id('grp');
+  db.run(`INSERT INTO account_groups (id,name,sort_order,metadata) VALUES ($1,$2,$3,$4)`, { $1: group, $2: 'Family Accounts', $3: 0, $4: '{}' });
+  for (const acct of [aBank, aCash]) {
+    db.run(`INSERT INTO account_group_mappings (id,account_group_id,account_id) VALUES ($1,$2,$3)`, { $1: id('map'), $2: group, $3: acct });
+  }
+
   const tx = (type: string, desc: string, amt: number, src: string | null, dst: string | null, date: string) =>
     db.run(`INSERT INTO transactions (id,type,description,amount,source_account,dest_account,member_id,date,created_at,updated_at,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,'{}')`,
       { $1: id('tx'), $2: type, $3: desc, $4: amt, $5: src, $6: dst, $7: m1, $8: date, $9: now });
