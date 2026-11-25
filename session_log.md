@@ -3227,3 +3227,15 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Gates green: `typecheck` 0, `lint --max-warnings 0` 0, unit **255/255**, `build` green, **Playwright 37/37** (35 existing + 2 new).
 - Next: commit on the feature branch, then the user's requested `feature → dev → master` sequence. `master` merge needs explicit user confirmation at merge time (§3.8/§3.12); release bump v2.4.4 → v2.5.0 is a single atomic 4-file commit when releasing.
 
+## Session 2026-11-25 22:35
+
+### Changes
+- **BUG-62 logged first** (open → in-progress → fixed) from the user's screenshots: long account routes were cut off on desktop (`Standard Bank → Bagda...`) and the PDF's narrow Account column collided with the Debit amounts. Two choices were surfaced (§3.10) and the user chose **keep one line + full-name tooltip** on screen and **move the route under Description, drop the PDF Account column**.
+- **Fix:** `LedgerTable` account cell and `GroupLedgerScreen` mobile account line now carry `title={fullRoute}` (desktop hover / phone press); the ellipsis and compact layout stay. `pdfDescription()` (new pure helper in `groupLedgerLegs.ts`, 2 unit tests) puts the route on a second line under the description. PDF is back to 6 columns, the freed width goes to Description, and `overflow: 'linebreak'` / `valign: 'middle'` keep the money columns clean. E2E now asserts the `title` on both layouts. `CHANGELOG [Unreleased] Fixed` and `docs/BUGS.md` updated.
+- Skills: senior-frontend, ui-ux-pro-max, code-reviewer.
+
+### Status
+- On `feature/group-ledger-account-detail` with a second `fix:` commit for BUG-62. Not pushed, not merged.
+- Gates green after the fix: `typecheck` 0, `lint --max-warnings 0` 0, unit **257/257**, `build` green, **Playwright 37/37**. `detect_changes(scope: all)` low risk, no affected processes.
+- PDF verified for real: downloaded from the seeded group and text-extracted with `pypdf` — six columns, route shown as `DBBL -> Cash` on the second description line, amounts no longer overlapped. The `→` glyph had to become `->` because jsPDF's WinAnsi font corrupted it.
+

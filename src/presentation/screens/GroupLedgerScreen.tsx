@@ -14,7 +14,7 @@ import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { matchesTx } from '../utils/search';
 import { withRunningBalances } from '../utils/runningBalance';
 import { memberLedgerDelta } from '../utils/memberLedger';
-import { groupLegs } from '../utils/groupLedgerLegs';
+import { groupLegs, pdfDescription } from '../utils/groupLedgerLegs';
 import { matchesLedgerTab, type LedgerTab } from '../constants/ledgerTabs';
 import styles from './GroupLedgerScreen.module.css';
 
@@ -216,7 +216,9 @@ export function GroupLedgerScreen() {
     if (dateRange) doc.text(`Period: ${dateRange}`, 14, 28);
     doc.text(`Accounts: ${accountIds.length}`, 14, 36);
 
-    const pdfRows: { date: string; type: string; desc: string; account: string; debit: string; credit: string; balance: string }[] = [];
+    // BUG-62: no Account column in the report — the route rides under the
+    // description, where a long name can wrap without touching the money cells.
+    const pdfRows: { date: string; type: string; desc: string; debit: string; credit: string; balance: string }[] = [];
 
     let totalDebit = 0;
     let totalCredit = 0;
@@ -230,8 +232,7 @@ export function GroupLedgerScreen() {
         pdfRows.push({
           date: shortDate(tx.date, locale),
           type,
-          desc: tx.description,
-          account: leg.accountLabel,
+          desc: pdfDescription(tx.description, leg.accountLabel),
           debit: leg.direction === 'credit' ? '' : amountText,
           credit: leg.direction === 'debit' ? '' : amountText,
           balance: formatAmount(balance, locale, currency),
@@ -265,19 +266,18 @@ export function GroupLedgerScreen() {
     doc.text(tcVal, rightX, 44, { align: 'right' });
 
     autoTable(doc, {
-      head: [['Date', 'Type', 'Description', 'Account', 'Debit', 'Credit', 'Balance']],
-      body: pdfRows.map((r) => [r.date, r.type, r.desc, r.account, r.debit, r.credit, r.balance]),
+      head: [['Date', 'Type', 'Description', 'Debit', 'Credit', 'Balance']],
+      body: pdfRows.map((r) => [r.date, r.type, r.desc, r.debit, r.credit, r.balance]),
       startY: 52,
-      styles: { fontSize: 8 },
+      styles: { fontSize: 8, overflow: 'linebreak', valign: 'middle' },
       headStyles: { fillColor: [99, 102, 241] },
       columnStyles: {
         0: { cellWidth: 24 },
         1: { cellWidth: 18 },
         2: { cellWidth: 'auto', halign: 'left' },
-        3: { cellWidth: 38 },
+        3: { cellWidth: 24 },
         4: { cellWidth: 24 },
-        5: { cellWidth: 24 },
-        6: { cellWidth: 26 },
+        5: { cellWidth: 26 },
       },
     });
 
@@ -322,7 +322,7 @@ export function GroupLedgerScreen() {
                 </span>
                 <span className={styles.txBody}>
                   <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
-                  <span className={styles.txAccount}>{leg.accountLabel}</span>
+                  <span className={styles.txAccount} title={leg.accountLabel}>{leg.accountLabel}</span>
                 </span>
                 <span className={styles.txAmount}>
                   <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>

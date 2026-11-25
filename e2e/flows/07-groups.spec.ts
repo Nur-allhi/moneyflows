@@ -24,6 +24,8 @@ test.describe('07 groups', () => {
     );
     // Date | Type | Description | Account | Debit | Credit | Balance
     for (const row of cells) expect(row[3]).toContain('DBBL → Cash');
+    // BUG-62: the visible cell may ellipsise, but the full route is on hover.
+    await expect(atmRows.first().locator('span[class*="account"]')).toHaveAttribute('title', 'DBBL → Cash');
     // Balance must stay on the same line as Date — a 7th cell in a 6-track grid
     // silently wraps to a second line.
     const alignment = await atmRows.first().evaluate((el) => {
@@ -54,6 +56,7 @@ test.describe('07 groups', () => {
       const cards = page.locator('[class*="txRow"]').filter({ hasText: 'ATM Cash' });
       await expect(cards).toHaveCount(2);
       await expect(page.getByText('DBBL → Cash')).toHaveCount(2);
+      await expect(cards.first().locator('span[class*="txAccount"]')).toHaveAttribute('title', 'DBBL → Cash');
       await expect(cards.locator('[class*="txArrowIn"]')).toHaveCount(1);
       await expect(cards.locator('[class*="txArrowOut"]')).toHaveCount(1);
     });

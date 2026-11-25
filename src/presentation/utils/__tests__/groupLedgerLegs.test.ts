@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupLegs } from '../groupLedgerLegs';
+import { groupLegs, pdfDescription } from '../groupLedgerLegs';
 
 const GROUP = new Set(['DBBL', 'Cash']);
 const names: Record<string, string | undefined> = {
@@ -69,5 +69,16 @@ describe('groupLegs', () => {
 
     expect(legs).toHaveLength(1);
     expect(legs[0]?.accountLabel).toBe('DBBL \u2192 Cash');
+  });
+});
+
+describe('pdfDescription (BUG-62)', () => {
+  it('puts the account route on a second line under the description', () => {
+    expect(pdfDescription('ATM Cash', 'Standard Bank \u2192 Bagda Bazar'))
+      .toBe('ATM Cash\nStandard Bank -> Bagda Bazar');
+  });
+
+  it('leaves the description alone when there is no account to name', () => {
+    expect(pdfDescription('Opening Balance', '')).toBe('Opening Balance');
   });
 });

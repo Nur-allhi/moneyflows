@@ -50,3 +50,14 @@ export function groupLegs<T extends LegSource>(
   const direction: GroupLegDirection = inDst && !inSrc ? 'credit' : inSrc && !inDst ? 'debit' : 'both';
   return [{ tx, direction, accountId: inDst ? dst : src, accountLabel: route }];
 }
+
+/**
+ * BUG-62: the PDF has no Account column — the route sits on a second line
+ * under the description, where a long name has room to wrap without pushing
+ * into the money columns.
+ */
+export function pdfDescription(description: string, accountLabel: string): string {
+  // jsPDF's built-in Helvetica uses WinAnsi and cannot encode the arrow glyph,
+  // which comes out as garbage characters in the exported file.
+  return accountLabel ? `${description}\n${accountLabel.replace('\u2192', '->')}` : description;
+}

@@ -164,7 +164,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                       )}
                     </span>
                     {showMemberCol && <span className={styles.member}>{row.member ? <Highlight text={row.member} query={searchQuery} /> : '\u2014'}</span>}
-                    {showAccountCol && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
+                    {showAccountCol && <span className={styles.account} title={row.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                     <span className={styles.debit}>{row.debit ? <>{row.debit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                     <span className={styles.credit}>{row.credit ? <>{row.credit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                     {showBalance && <span className={styles.balance}>{row.balance ? <>{row.balance}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>}
@@ -203,7 +203,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                   )}
                 </span>
                 {showMemberCol && <span className={styles.member}>{row.member ? <Highlight text={row.member} query={searchQuery} /> : '\u2014'}</span>}
-                {showAccountCol && <span className={styles.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
+                {showAccountCol && <span className={styles.account} title={row.account}>{row.account ? <Highlight text={row.account} query={searchQuery} /> : '\u2014'}</span>}
                 <span className={styles.debit}>{row.debit ? <>{row.debit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                 <span className={styles.credit}>{row.credit ? <>{row.credit}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>
                 {showBalance && <span className={styles.balance}>{row.balance ? <>{row.balance}{row.currencyLabel && <small className={styles.currencyLabel}>{row.currencyLabel}</small>}</> : '\u2014'}</span>}
