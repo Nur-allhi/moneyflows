@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.5.0',
+    items: [
+      'Group ledgers now tell you which account every entry belongs to, and show both sides when money moves between two accounts in the same group.',
+      'Long account names show in full when you hover or press them, and the PDF statement puts the account under the description where it is easy to read.',
+    ],
+  },
+  {
     version: '2.4.4',
     items: [
       'The Database Error screen now follows your light or dark theme and shows backup times in your chosen language.',

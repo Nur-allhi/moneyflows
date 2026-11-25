@@ -135,7 +135,9 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Latest (2026-11-18):** project-analysis improvement batch — BUG-59 (README + SECURITY v4 sync docs), BUG-60 (Dashboard `any`/inline-style leftovers; new `DatabaseErrorScreen.tsx`) and BUG-61 (flaky calendar e2e helper) fixed on `dev` (post-rebase `2712382` + two docs commits), **PATCH-bumped to v2.4.4** and released to `master`. All gates green: typecheck 0, lint 0 warnings, build, 248 unit, 35/35 Playwright. No open bugs. Next up: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
+**Latest (2026-11-25):** T-175 — group ledgers now show the account route for every entry and split a movement between two group accounts into a debit row and a credit row (per-account detail, group total unchanged); BUG-62 (long names truncated on screen, PDF account column colliding with amounts) fixed. **MINOR-bumped to v2.5.0** and released to `master`. Gates: typecheck 0, lint 0 warnings, build, 257 unit, 37/37 Playwright. No open bugs. Next up: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
+
+**Previous (2026-11-18):** project-analysis improvement batch — BUG-59 (README + SECURITY v4 sync docs), BUG-60 (Dashboard `any`/inline-style leftovers; new `DatabaseErrorScreen.tsx`) and BUG-61 (flaky calendar e2e helper) fixed on `dev` (post-rebase `2712382` + two docs commits), **PATCH-bumped to v2.4.4** and released to `master`. All gates green: typecheck 0, lint 0 warnings, build, 248 unit, 35/35 Playwright. No open bugs. Next up: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
 
 **All 42 original tickets done.** Now in Phase 6 — Dynamic Configuration & Hardening.
 
@@ -244,7 +246,7 @@ Sidebar: **Other Ledgers**. Decision: Member OR Other person, separate tables `o
 
 **T-174 (2026-11-01): tag-overview sorting** — card grid on `/tags` gets a **Most used / Name A–Z / Z–A** pill group (default unchanged); alphabetical sorts use `localeCompare` with a count-desc tie-break, and the pills reuse the detail ledger's `sortPill` styles, shown when more than one tag exists. `feat:` → **MINOR bump to 2.1.0** on `beta_v2.0` per `VERSIONING.md` §2→§3 (T-174 ticket in TICKETS.md; feature commit `8322c74`, release commit `dbf4c47`, session log `a28d252`).
 
-**Branch map (2026-11-11):** `master` = releases only, `0b3448f` = merge of `dev`, **v2.4.3** (Tags ledger matched to the other registers — BUG-58; typecheck/lint/build + **248 unit + 35/35 e2e from a cold server**; **tag `v2.4.3` pushed**). `dev` = `5c2b206` (docs commit) + the 2026-11-11 setup commits — **active development branch**; `master` is releases only and is never merged into without explicit user approval (§3.8 / §3.12). `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
+**Branch map (2026-11-25):** `master` = releases only, **v2.5.0** (group ledger account detail — T-175 + BUG-62; typecheck/lint/build + **257 unit + 37/37 e2e**; tag `v2.5.0` pushed). `dev` = the same release commit — **active development branch**; `master` is releases only and is never merged into without explicit user approval (§3.8 / §3.12). `feature/group-ledger-account-detail` merged into `dev` (squashed). `beta_v2.0` = `a28d252` (v2.1.0, behind dev). `fix/calculation-audit` kept at `5a4904c`. Open question: retro-tag releases v2.0.0/v2.0.1/v2.1.0 on master?
 
 **Dev-box setup (2026-11-11) — read before running anything:**
 - **The dev server runs on port 3000** — the repo's own default (`vite.config.ts`), so no env override is needed for normal work. OpenChamber was moved to **3010** to free 3000 (its unit is `~/.config/systemd/user/openchamber.service`, backup at `.bak`). The dev port stays env-overridable via `PORT`.

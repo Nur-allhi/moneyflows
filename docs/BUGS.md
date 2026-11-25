@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-62: Group ledger — account route truncated on desktop and overflows in the PDF
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-11-25 (during: user review of the T-175 group ledger, with screenshots of the desktop table and the exported PDF)
+- **Location:** `src/presentation/components/LedgerTable.module.css` (`.account` nowrap/ellipsis + the new `140px 84px 1fr 150px 120px 120px 120px` grid), `src/presentation/screens/GroupLedgerScreen.tsx` (`handleDownloadPdf` Account cell / `columnStyles[3]`), `src/presentation/screens/GroupLedgerScreen.module.css` (`.txAccount` nowrap/ellipsis)
+- **Description:** After T-175 added the Account column, long account routes are not fully readable. Desktop shows `Standard Bank → Bagda...` / `Standard Bank → Easter...` with the tail replaced by an ellipsis. In the exported PDF the Account cell text collides with the Debit column (`Standard Bank → B` followed by a stray `C` before `79,500 BDT`) and long names such as `Standard Bank → B... Trading Corporation` wrap awkwardly. Expected: the whole route is visible on every surface without overlapping the money columns.
+- **Root Cause:** `LedgerTable`'s shared `.account` cell is `white-space: nowrap; overflow: hidden; text-overflow: ellipsis` and the T-175 grid gives it only 150px; the mobile `.txAccount` repeats the same ellipsis rule. The PDF gives Account a fixed 38mm cell with no explicit break at the `→`, so a long route runs into the neighbouring Debit cell instead of wrapping cleanly.
+- **Fix Approach:** **user's call (§3.10):** on screen, keep the compact one-line Account cell and its ellipsis, but expose the whole route through a native `title` tooltip on desktop and phone. In the PDF, drop the Account column entirely and place the route on a second line under Description, giving that column back the width the Account column used to take. The route is written with `->` there: jsPDF's built-in Helvetica (WinAnsi) cannot encode the `→` glyph and exported it as garbage characters.
+- **Resolved:** 2026-11-25 — fixed on `feature/group-ledger-account-detail` (separate `fix:` commit after the T-175 feature commit). Verified by exporting the seeded group PDF and extracting its text: six columns, `DBBL -> Cash` under the description, no overlap; desktop/phone assertions cover the full-route tooltip.
+
+---
+
 ## BUG-58: Tags ledger — 1100px cap + a hand-rolled table that does not match the other registers
 
 - **Status:** fixed

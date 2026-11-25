@@ -3204,3 +3204,50 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - **UI spot-check done on user's behalf (same day):** a throwaway Playwright spec (since deleted) captured the dashboard in dark/light, an expanded member's account list (avatar gradient + account-type accent CSS props), and the forced-boot-failure Database Error screen in light, dark and gold-accent variants. Screenshots inspected: tokens, contrast and button text readable in every variant, no console/page errors. No defects found — no code change needed.
 - No open bugs in `docs/BUGS.md`. Next up: remaining items from the improvement report — behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks — or the pending release decision (the batch has no version bump).
 
+## Session 2026-11-25 22:16
+
+### Changes
+- **Process:** session-start ritual read (last log entry + AGENTS.md §5); repo was clean at `fd620f1` / v2.4.4 with everything merged. User asked for a group-ledger change; four decisions were surfaced and answered (§3.10): dedicated Account column + mobile line; internal split legs keep the same unchanged balance; split **any** transaction whose two accounts are both in the group (not just `transfer`); PDF gets full parity. User then asked for the plan in plain English with a real example before approving. All work is on the new branch `feature/group-ledger-account-detail` (created off `dev` at the user's request) — **not merged anywhere**.
+- **T-175 implemented** (ticket added to `docs/TICKETS.md`, CHANGELOG `[Unreleased] Added` entry, no version bump yet — MINOR v2.5.0 at release):
+  - New pure `src/presentation/utils/groupLedgerLegs.ts` + 7 unit tests. It uses the domain `balanceEffects()` as the single definition of two-sided movements (`transfer` + all six loan types) and emits two legs when both accounts are in the group. For every entry it returns the full `source → destination` route, including an outside account and a `(deleted account)` fallback.
+  - `GroupLedgerScreen.tsx`: removed the old per-type `resolveAccountDisplay` and the three group-direction callbacks; `memberLedgerDelta()` now drives the shared balance walk, and `legsOf()` expands to rows only at render/PDF time. Search, sort, pagination and totals remain transaction-level. Descending order reverses transactions rather than the flat row list, so a pair still reads debit-then-credit. Empty money cells are `''` so `LedgerTable` draws its own dash (a dash string used to pick up a stray `BDT` label).
+  - `LedgerTable.tsx` + CSS: opt-in `showAccount` prop, `showAccountCol = showAccount || !showBalance`, and a 7-track desktop grid for the group only. The other five callers keep their exact column set.
+  - Mobile: description + account route share a new `.txBody` column; per-leg in/out arrow; badge counts displayed legs.
+  - PDF: Account column + the same two-row split; totals count each leg's debit/credit.
+  - `e2e/helpers/seed-tiny.ts`: seeded group "Family Accounts" mapping DBBL + Cash, so the existing "ATM Cash" transfer is internal to it. `e2e/flows/07-groups.spec.ts`: 2 new guards (desktop two rows with `DBBL → Cash` and one debit/one credit; mobile two labelled cards with one in/one out arrow).
+- **Visual spot-check (throwaway spec, deleted after):** desktop 1440 and phone 390 group ledgers captured and inspected — no horizontal overflow, account route readable in both, and the desktop's 7th column stays on one line. The first capture exposed a real defect: the CSS grid selector used a `.showBalance` class that does not exist, so Balance wrapped under Date. Replaced it with `.desktop.showAccount:not(.noBalance)` and added a permanent e2e assertion that the Balance cell shares the Date cell's y position. Earlier in the same pass, empty money cells rendered as `—BDT` in the new rows; they are now empty strings so `LedgerTable` supplies its own dash.
+- **GitNexus:** impact before editing warned CRITICAL for shared `LedgerTable` (5 direct callers, 67 symbols/49 flows downstream) — surfaced to the user and mitigated by an additive, default-off prop; real callers cross-checked by text search. Index refreshed with `node .gitnexus/run.cjs analyze --index-only` (4,311 nodes / 300 flows; FTS extension unavailable).
+- **Environment fix (not committed):** Playwright's `chromium_headless_shell-1181` was missing — only 1255 was installed — so the suite could not start. `npx playwright install chromium` fetched build 1181.
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, code-reviewer
+
+### Status
+- On `feature/group-ledger-account-detail`, one commit (`feat(groups): show account route and both sides of internal movements (T-175)`; 11 files, +309/−112) — see `git log -1` for the hash. `detect_changes(scope: all)`: 9 changed files, risk LOW, no affected processes. Not pushed, not merged to `dev` or `master`.
+- Gates green: `typecheck` 0, `lint --max-warnings 0` 0, unit **255/255**, `build` green, **Playwright 37/37** (35 existing + 2 new).
+- Next: commit on the feature branch, then the user's requested `feature → dev → master` sequence. `master` merge needs explicit user confirmation at merge time (§3.8/§3.12); release bump v2.4.4 → v2.5.0 is a single atomic 4-file commit when releasing.
+
+## Session 2026-11-25 22:35
+
+### Changes
+- **BUG-62 logged first** (open → in-progress → fixed) from the user's screenshots: long account routes were cut off on desktop (`Standard Bank → Bagda...`) and the PDF's narrow Account column collided with the Debit amounts. Two choices were surfaced (§3.10) and the user chose **keep one line + full-name tooltip** on screen and **move the route under Description, drop the PDF Account column**.
+- **Fix:** `LedgerTable` account cell and `GroupLedgerScreen` mobile account line now carry `title={fullRoute}` (desktop hover / phone press); the ellipsis and compact layout stay. `pdfDescription()` (new pure helper in `groupLedgerLegs.ts`, 2 unit tests) puts the route on a second line under the description. PDF is back to 6 columns, the freed width goes to Description, and `overflow: 'linebreak'` / `valign: 'middle'` keep the money columns clean. E2E now asserts the `title` on both layouts. `CHANGELOG [Unreleased] Fixed` and `docs/BUGS.md` updated.
+- Skills: senior-frontend, ui-ux-pro-max, code-reviewer.
+
+### Status
+- On `feature/group-ledger-account-detail` with a second `fix:` commit for BUG-62. Not pushed, not merged.
+- Gates green after the fix: `typecheck` 0, `lint --max-warnings 0` 0, unit **257/257**, `build` green, **Playwright 37/37**. `detect_changes(scope: all)` low risk, no affected processes.
+- PDF verified for real: downloaded from the seeded group and text-extracted with `pypdf` — six columns, route shown as `DBBL -> Cash` on the second description line, amounts no longer overlapped. The `→` glyph had to become `->` because jsPDF's WinAnsi font corrupted it.
+
+## Session 2026-11-25 22:52 — release v2.5.0
+
+### Changes
+- **User explicitly approved** the whole sequence: feature → `dev`, `dev` → `master`, version bump, push (§3.8/§3.12 satisfied at this time).
+- `feature/group-ledger-account-detail` squashed into `dev` as one `feat(groups)` commit (REPO_RULES §3.4), closing T-175 and BUG-62.
+- **MINOR bump 2.4.4 → 2.5.0** (VERSIONING §2 → §3, `feat:` wins): atomic commit touching `package.json:4`, `README.md` badge, `CHANGELOG.md` (`[Unreleased]` → `[2.5.0] - 2026-11-25`, fresh placeholder on top), `whatsNew.ts` (newest-first, plain English), `AGENTS.md` §5 latest + branch map.
+- No session-log version bump (VERSIONING §3.4).
+
+### Status
+- Full gates re-run on the final release tree: `typecheck` 0, `lint --max-warnings 0` 0, unit **257/257**, `build` green, **Playwright 37/37**.
+- `master` release merge + annotated `v2.5.0` tag + push to follow in this session.
+
