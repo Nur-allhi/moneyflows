@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.6.0',
+    items: [
+      'The bell at the top of the app now warns you when a backup needs attention — no folder chosen, permission lost, or no restore points yet.',
+      'Open the bell to see what is wrong and jump straight to Backup settings to fix it. Cloud sync keeps its own separate icon.',
+      'Fixed a layout issue where the button in that notification card sat too close to the edge.',
+    ],
+  },
+  {
     version: '2.5.0',
     items: [
       'Group ledgers now tell you which account every entry belongs to, and show both sides when money moves between two accounts in the same group.',

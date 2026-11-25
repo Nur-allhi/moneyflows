@@ -1,5 +1,41 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-26 00:05
+
+### Changes
+- **BUG-63 logged then fixed** (user reported from a screenshot of T-176's panel; §3.11 followed — logged before touching code): the desktop "Open Backup settings" button was flush with the modal's right/bottom edge. Root cause: passing a custom `footer` to `Modal` replaces `Modal.module.css`'s padded `.footer`, and the panel's own `.footer` had no padding. Added token-based padding (`var(--space-2) var(--space-6) var(--space-5)`) to `BackupAlertsPanel.module.css`.
+- Docs updated in the same change: `docs/BUGS.md` BUG-63 → fixed with Resolved line, `CHANGELOG.md` `[Unreleased]` Fixed entry.
+
+### Skill(s) Used
+- senior-frontend, code-reviewer (Playwright screenshot verification)
+
+### Status
+- Visual re-check at 1280×720 confirmed the button is inset like the standard modal footer. Gates re-run green (typecheck, lint, unit, full Playwright, build) — see commit on `feature/backup-health-notifications`.
+- **Next up:** user's merge to `dev`, then MINOR bump + release to `master`.
+
+---
+
+## Session 2026-11-25 23:58
+
+### Changes
+- **T-176 implemented on new branch `feature/backup-health-notifications`** (created from `dev` at v2.5.0, clean tree): the header bell is now a real backup-health notifier instead of a decorative ring.
+  - New `src/presentation/hooks/useBackupAlerts.ts`: one read-only `deriveBackupAlerts()` map (unit-tested) over browser support, folder chosen, folder permission, folder files, restore points, last save failure and integrity scan; cloud sync excluded (own glyph). Cheap poll at `BACKUP_ALERT_POLL_MS` (60s, new constant in `config.ts`) plus route change, tab focus and `moneyflows:backup-status` event; every read isolated so one failure hides nothing.
+  - New `src/presentation/components/BackupAlertsPanel.tsx` + `.module.css`: responsive Modal/BottomSheet (§9) listing each issue in plain language with a deep link to `/settings?tab=backup`; honest "no problems" state; token-only CSS, reuses `anim-pop`/`anim-target`.
+  - `Header.tsx` + `.module.css`: bell gets a warn/info dot + summary `title`/`aria-label` and `data-testid`s; panel rendered **outside `<header>`** — a visual check caught the fixed overlay being clipped by the header's containing block when nested inside it.
+  - `settings/sections/useBackupState.ts`: announce `moneyflows:backup-status` from pick/reauthorize/stop-folder handlers so the badge clears immediately.
+  - Docs: `CHANGELOG.md` `[Unreleased]` Added, new T-176 in `docs/TICKETS.md`.
+  - Tests: new `src/presentation/hooks/__tests__/useBackupAlerts.test.ts` (10 cases) and `e2e/backup-alerts.spec.ts` (2 cases — badge + panel + deep link; folder chosen via a real OPFS handle makes the badge clear without reload).
+
+### Skill(s) Used
+- senior-frontend, code-reviewer (visual verification via Playwright screenshots)
+
+### Status
+- **All gates green: typecheck 0, lint `--max-warnings 0` 0 warnings, build, 267 unit tests (was 257), Playwright 39/39 (was 37)**; visual check at 1280×720 confirmed centered modal and correctly placed bell dot.
+- GitNexus note: `impact` CLI (index without FTS) returned a spurious CRITICAL/73-caller result for `useBackupState` by fuzzy-matching unrelated DB symbols; text search confirms the only real caller is `BackupCard.tsx`. Graph change analysis run before commit; no merge to `dev`/`master` — awaiting user approval (§3.12).
+- **Next up:** user merge to `dev`, then MINOR bump + release to `master` (separate decisions).
+
+---
+
 ## Session 2026-11-05 10:46
 
 ### Changes

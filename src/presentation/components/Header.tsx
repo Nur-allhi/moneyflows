@@ -12,6 +12,8 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { useEffectiveTheme } from '../hooks/useTheme';
 import { GlobalSearchResults } from './GlobalSearch';
 import { BellIcon } from './StatusIcons';
+import { BackupAlertsPanel } from './BackupAlertsPanel';
+import { useBackupAlerts } from '../hooks/useBackupAlerts';
 import { useGlobalSearch, type GlobalSearchItem } from './useGlobalSearch';
 import styles from './Header.module.css';
 
@@ -120,6 +122,8 @@ export function Header({
   const [gearKey, replayGear] = useReplay();
   const [themeKey, replayTheme] = useReplay();
   const [bellKey, replayBell] = useReplay();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const backupAlerts = useBackupAlerts();
   const [clearKey, replayClear] = useReplay();
   const [syncKey, replaySync] = useReplay();
   const syncState = useCloudIndicator();
@@ -232,6 +236,7 @@ export function Header({
   };
 
   return (
+    <>
     <header className={`${styles.header} ${className}`}>
       <div className={styles.left}>
         {isMobile ? (
@@ -405,8 +410,15 @@ export function Header({
             </button>
           )}
         </div>
-        <button className={`${styles.notifBtn} ${bellKey > 0 ? styles.bellRing : ''}`} onClick={replayBell} aria-label="Notifications">
+        <button
+          className={`${styles.notifBtn} ${bellKey > 0 ? styles.bellRing : ''}`}
+          onClick={() => { replayBell(); setNotifOpen(true); }}
+          aria-label={backupAlerts.summary || 'Notifications'}
+          title={backupAlerts.summary || 'Notifications'}
+          data-testid="notification-bell"
+        >
           <BellIcon />
+          {backupAlerts.alerts.length > 0 && <span className={`${styles.notifDot} ${backupAlerts.alerts.some((a) => a.tone === 'warn') ? styles.notifDotWarn : ''}`} data-testid="notification-badge" />}
         </button>
         {syncState && (
           <button
@@ -420,5 +432,8 @@ export function Header({
         )}
       </div>
     </header>
+    {/* Outside <header>: a containing block there clips the fixed-position overlay. */}
+    <BackupAlertsPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} alerts={backupAlerts.alerts} />
+    </>
   );
 }

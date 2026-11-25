@@ -538,6 +538,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 4. `feat:` → MINOR bump at release (v2.4.4 → v2.5.0) per VERSIONING.md §2→§3.
 **Acceptance:** opening a group shows which account every entry belongs to; the seeded internal "ATM Cash" transfer appears as one debit and one credit row with `DBBL → Cash` on each, the group total unchanged, and either row opens the same transaction detail; full gates green.
 
+### T-176 - Header bell shows backup and restore-point problems
+**Skill:** `senior-frontend`
+**Effort:** M
+**File(s):** `src/presentation/hooks/useBackupAlerts.ts` (new) + `__tests__/useBackupAlerts.test.ts`, `src/presentation/components/BackupAlertsPanel.tsx` + `.module.css` (new), `Header.tsx` + `.module.css`, `settings/sections/useBackupState.ts`, `src/presentation/constants/config.ts`, `e2e/backup-alerts.spec.ts` (new)
+**Content:**
+1. One read-only hook derives the bell state from the signals the Backup & Storage card already shows: browser support, folder chosen, folder permission, folder files, restore points, last save failure, integrity scan. Cloud sync is excluded — it has its own header glyph. Each read is isolated so one failure hides nothing.
+2. The bell gets a warn/info dot with an honest summary in `title`/`aria-label`; clicking it opens a Modal (BottomSheet under 768px) listing each issue with plain-language detail and an "Open Backup settings" deep link to `?tab=backup`.
+3. The Settings backup handlers announce `moneyflows:backup-status` so the bell updates immediately after choosing, re-authorizing or stopping a folder; a 60s poll plus route change/tab focus cover everything else.
+4. `feat:` → MINOR bump at release per VERSIONING.md §2→§3.
+**Acceptance:** with no folder and no restore points the bell shows a dot and the panel names both problems; picking a folder clears the folder warnings without a reload; a healthy setup shows no dot; full gates green (typecheck, lint 0 warnings, build, unit, Playwright, `detect_changes`).
+
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 

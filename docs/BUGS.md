@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-63: Backup alerts modal — action button stuck to the modal's right edge
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-26 (during: user review of the T-176 header bell notification panel, with screenshot)
+- **Location:** `src/presentation/components/BackupAlertsPanel.module.css` (`.footer`)
+- **Description:** In the desktop "Backup alerts" modal, the "Open Backup settings" button sits flush against the right border (and too close to the bottom) instead of being inset like the other modal buttons. Expected: the same breathing room as the app's standard Modal footer.
+- **Root Cause:** the panel passes its own `footer` element to `Modal`, which replaces `Modal.module.css`'s `.footer` (`padding: 0 24px 20px`) with the panel's own `.footer` that only set `display: flex` and `justify-content: flex-end` — no padding at all.
+- **Fix Approach:** user asked to fix immediately — give the panel's `.footer` the same token-based padding as the standard Modal footer (`var(--space-6)` sides, `var(--space-5)` bottom) plus a small top gap. No behaviour change.
+- **Resolved:** 2026-11-26 — fixed on `feature/backup-health-notifications` in a follow-up `fix:` commit after T-176. Verified by Playwright screenshot of the desktop modal: button inset on the right and bottom like the standard Modal footer.
+
+---
+
 ## BUG-62: Group ledger — account route truncated on desktop and overflows in the PDF
 
 - **Status:** fixed

@@ -1,0 +1,116 @@
+.intro {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--color-wash) 4%, transparent);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.alert:hover {
+  background: color-mix(in oklch, var(--color-wash) 10%, transparent);
+  box-shadow: var(--shadow-glow);
+}
+
+.alert:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.alert:active {
+  transform: scale(0.99);
+}
+
+.dot {
+  flex: 0 0 auto;
+  width: var(--space-2);
+  height: var(--space-2);
+  margin-top: var(--space-1);
+  border-radius: var(--radius-pill);
+}
+
+.warn {
+  background: var(--color-warning);
+}
+
+.info {
+  background: var(--color-text-secondary);
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.detail {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: 1.4;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  /* Match Modal.module.css's own footer inset — a custom footer prop replaces it. */
+  padding: var(--space-2) var(--space-6) var(--space-5);
+}
+
+.action {
+  padding: var(--space-3) var(--space-5);
+  border: none;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-deep));
+  color: var(--color-text-on-primary);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: box-shadow var(--transition-fast), opacity var(--transition-fast);
+}
+
+.action:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.action:active {
+  opacity: 0.8;
+}
+
+@media (max-width: 767px) {
+  .action {
+    width: 100%;
+    margin-top: var(--space-4);
+  }
+}

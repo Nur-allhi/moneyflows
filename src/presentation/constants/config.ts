@@ -20,6 +20,8 @@ export const SNAPSHOT_COOLDOWN_MS = 300_000;
 export const SNAPSHOT_PREFIX = 'moneyflows_snap_';
 export const FOLDER_SYNC_COOLDOWN_MS = 120_000;
 export const CLOUD_SYNC_COOLDOWN_MS = 30_000;
+/** Header bell: cheap read-only backup/restore health check cadence. */
+export const BACKUP_ALERT_POLL_MS = 60_000;
 /** Cloud boot-pull budget — network must never trip the splash watchdog. */
 export const CLOUD_BOOT_TIMEOUT_MS = 8_000;
 /** Skip the boot cloud check when a sync just completed (T-161, reload-after-sync). */
