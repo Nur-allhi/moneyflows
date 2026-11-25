@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Placeholder
+### Added
+- **Group ledger now shows where every transaction happened (T-175)** — each entry carries its account route (`DBBL → Cash`), on desktop in a new Account column beside Balance and on phones as a line under the description. When a movement goes between two accounts that are both in the group, it appears twice: once as money leaving one account and once as money arriving in the other. Both lines share the same running group balance (the group's total does not change) and both open the same transaction details.
+
+### Fixed
+- **Long account routes are readable everywhere (BUG-62)** — the desktop Account cell and the phone's account line still stay on one line, but now carry the full route in a hover/press tooltip instead of losing the tail to `...`. The PDF no longer has a cramped Account column that collided with the Debit amounts: the route sits on a second line under the Description, with the extra width going back to that column.
 
 ## [2.4.4] - 2026-11-18
 

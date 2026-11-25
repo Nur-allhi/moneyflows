@@ -45,6 +45,15 @@
   grid-template-columns: 140px 84px 1fr 130px 130px 130px;
 }
 
+/* T-175: group ledger keeps its Balance column and adds Account beside it.
+   Opt-in so the five other callers keep their exact 6-track grid. `:not(.noBalance)`
+   matters: there is no `.showBalance` class on the container, so a plain
+   `.desktop.showBalance.showAccount` selector would never match. */
+.desktop.showAccount:not(.noBalance) .header,
+.desktop.showAccount:not(.noBalance) .row {
+  grid-template-columns: 140px 84px 1fr 150px 120px 120px 120px;
+}
+
 /* BUG-58: opt-in Member column (desktop only). Inserted between Description
    and Account; the money tracks keep their exact 130px so the tag register
    still reads like the other three. */
