@@ -1,5 +1,22 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-26 00:20
+
+### Changes
+- **v2.6.0 released.** T-176 + BUG-63 merged from `feature/backup-health-notifications` into `dev` as a squash commit `566025e` (user approval §3.12 given in-conversation). Atomic MINOR bump (`chore(release): v2.6.0 + changelog/whatsNew`, `c8dd282`) touched all four touchpoints: `package.json` 2.5.0 → 2.6.0, `whatsNew.ts` newest entry, `CHANGELOG.md` `[Unreleased]` → `[2.6.0] - 2026-11-26` + fresh placeholder, `AGENTS.md` §5 Latest/branch map.
+- `dev → master` merged with `--no-ff` as `3c9f3eb` ("Merge dev: backup health bell + v2.6.0"), annotated tag `v2.6.0` created on master. Pushed `master`, `dev` and the tag to `origin`; `dev` fast-forwarded to the same commit.
+- No code changed in this step — docs/branch operations only.
+
+### Skill(s) Used
+- gitnexus (merge/tag protocol §5), code-reviewer (gate checklist)
+
+### Status
+- **Gates re-run on the release result: typecheck 0, lint `--max-warnings 0` 0 warnings, build, 267 unit, 39/39 Playwright.** Version bump automation checklist satisfied: Settings footer / What's New read the new version from `package.json`; e2e setup seeds `lastSeenVersion` from `package.json` so no modal blocks tests.
+- `master` = `dev` = `3c9f3eb`, **v2.6.0**, tag pushed. `feature/backup-health-notifications` merged (squashed), kept locally.
+- **Next up:** behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks. No open bugs.
+
+---
+
 ## Session 2026-11-26 00:05
 
 ### Changes
