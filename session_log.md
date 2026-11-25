@@ -3239,3 +3239,15 @@ typecheck / full `eslint src --max-warnings 0` / vitest 31 / build pass on every
 - Gates green after the fix: `typecheck` 0, `lint --max-warnings 0` 0, unit **257/257**, `build` green, **Playwright 37/37**. `detect_changes(scope: all)` low risk, no affected processes.
 - PDF verified for real: downloaded from the seeded group and text-extracted with `pypdf` — six columns, route shown as `DBBL -> Cash` on the second description line, amounts no longer overlapped. The `→` glyph had to become `->` because jsPDF's WinAnsi font corrupted it.
 
+## Session 2026-11-25 22:52 — release v2.5.0
+
+### Changes
+- **User explicitly approved** the whole sequence: feature → `dev`, `dev` → `master`, version bump, push (§3.8/§3.12 satisfied at this time).
+- `feature/group-ledger-account-detail` squashed into `dev` as one `feat(groups)` commit (REPO_RULES §3.4), closing T-175 and BUG-62.
+- **MINOR bump 2.4.4 → 2.5.0** (VERSIONING §2 → §3, `feat:` wins): atomic commit touching `package.json:4`, `README.md` badge, `CHANGELOG.md` (`[Unreleased]` → `[2.5.0] - 2026-11-25`, fresh placeholder on top), `whatsNew.ts` (newest-first, plain English), `AGENTS.md` §5 latest + branch map.
+- No session-log version bump (VERSIONING §3.4).
+
+### Status
+- Full gates re-run on the final release tree: `typecheck` 0, `lint --max-warnings 0` 0, unit **257/257**, `build` green, **Playwright 37/37**.
+- `master` release merge + annotated `v2.5.0` tag + push to follow in this session.
+

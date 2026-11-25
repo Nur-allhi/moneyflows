@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [2.5.0] - 2026-11-25
+
 ### Added
 - **Group ledger now shows where every transaction happened (T-175)** — each entry carries its account route (`DBBL → Cash`), on desktop in a new Account column beside Balance and on phones as a line under the description. When a movement goes between two accounts that are both in the group, it appears twice: once as money leaving one account and once as money arriving in the other. Both lines share the same running group balance (the group's total does not change) and both open the same transaction details.
 
