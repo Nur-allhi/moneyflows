@@ -15,8 +15,8 @@
 
 ### Status
 - **All gates green:** typecheck 0, lint `--max-warnings 0` 0 warnings, build, **273 unit** (was 267), **41/41 Playwright** (was 39). GitNexus `detect_changes --scope all`: 10 files / 5 symbols, risk low, no partial/truncated. `impact useMemberData --upstream` returned a spurious CRITICAL from FTS-unavailable fuzzy matching (unrelated DB symbols); text search confirms `MemberProfile.tsx` is the only real caller.
-- `feature/ledger-open-transaction-focus` holds one atomic `feat:` change; `dev` and `master` remain at `3c9f3eb` / v2.6.0.
-- **Next up:** user approves merge to `dev`; then a MINOR bump to v2.7.0 (four files per `VERSIONING.md` §2→§3) and a separate release approval to `master`. Other candidates unchanged: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks. No open bugs.
+- **Released as v2.7.0** after explicit user approval: feature squashed into `dev` (`faa5610`), atomic four-file MINOR bump (`766de28`: package.json, whatsNew, CHANGELOG, AGENTS §5), full gates re-run on the release result (typecheck/lint/build + 273 unit + 41/41 e2e), then `dev → master` merged `--no-ff` as `3c97759` and annotated tag `v2.7.0` created. Pushed `master`, `dev`, the tag, and `feature/ledger-open-transaction-focus` to origin.
+- **Next up:** other candidates unchanged — behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks. No open bugs.
 
 ---
 
