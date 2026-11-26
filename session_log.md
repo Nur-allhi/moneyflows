@@ -11,7 +11,8 @@
 
 ### Status
 - Full gate suite on the release result: typecheck 0, lint `--max-warnings 0` 0 warnings, build, 278 unit, 44/44 Playwright; `detect_changes` clean. Settings footer / What's New read the new version from `package.json`; e2e setup seeds `lastSeenVersion` from it.
-- **Next up:** merge `dev → master` with `--no-ff`, annotated tag `v2.8.0`, push `master`, `dev` and the tag (all with explicit user approval in this session).
+- **Released:** merged `dev → master` with `--no-ff` as `b0e67fc` ("Merge dev: tag visibility in details and ledgers + v2.8.0"), annotated tag `v2.8.0` created on master, `master`, `dev` and the tag pushed to `origin`; `dev` fast-forwarded to the same merge commit. Full gates were re-run on the release result before merging (typecheck 0, lint 0 warnings, build, 278 unit, 44/44 Playwright); `detect_changes --scope compare --base-ref master`: 26 files / 8 symbols, risk low.
+- **Next up:** behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks. No open bugs.
 
 ---
 
