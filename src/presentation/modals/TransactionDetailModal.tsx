@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Transaction } from '../../core/domain/Transaction';
-import { Modal, BottomSheet } from '../components';
+import { Modal, BottomSheet, TagChips } from '../components';
 import { useTransactionStore } from '../stores/useTransactionStore';
 import { useMemberStore } from '../stores/useMemberStore';
 import { useAccountStore } from '../stores/useAccountStore';
@@ -10,6 +10,7 @@ import { useModalStore } from '../stores/useModalStore';
 import { useReplay } from '../hooks/useReplay';
 import { getDatabase } from '../../infrastructure/database/getDatabase';
 import { formatAmount } from '../utils/format';
+import { transactionTags } from '../../core/domain/tags';
 import { displayTxType } from '../constants/labels';
 import styles from './TransactionDetailModal.module.css';
 
@@ -76,6 +77,7 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
 
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
   const memberLookup = new Map(members.map((m) => [m.id, m]));
+  const tags = transactionTags(transaction);
 
   const handleEdit = () => {
     onClose();
@@ -225,6 +227,7 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
             <span className={styles.value}>{`#${ledgerLink.ledgerName} (${ledgerLink.side === 'debit' ? 'Debit' : 'Credit'} ${formatAmount(ledgerLink.amount, locale, currency)})`}</span>
           </div>
         )}
+        {tags.length > 0 && <div className={styles.field}><span className={styles.fieldKey}>Tags</span><span className={styles.value}><TagChips tags={tags} onNavigate={onClose} /></span></div>}
       </div>
     </div>
   );

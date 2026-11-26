@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-64: Tag chips sit flush against the Description text
+
+- **Status:** fixed
+- **Severity:** low
+- **Found:** 2026-11-26 (during: user review of T-178 with a screenshot of a ledger row)
+- **Location:** `src/presentation/components/TagChips.module.css` (`.group`)
+- **Description:** In the Description column, a tag pill such as `#NNIS-03` is printed immediately after the description words (`National savings interest#NNIS-03`) with no breathing room. Expected: a visible gap between the description text and the first chip, matching the app's token-based spacing.
+- **Root Cause:** the chip group only set an internal `gap` between chips; it had no leading margin, so it butted against the preceding text node in the Description cell.
+- **Fix Approach:** user asked to fix immediately — add a token-based `margin-left` to the chip group, with a computed-style e2e assertion so it cannot silently disappear.
+- **Resolved:** 2026-11-26 — fixed on `feature/transaction-tag-chips` in a follow-up `fix:` commit after T-178. The chip group now has `margin-left: var(--space-2)`; a computed-style e2e assertion and a 1280/390 screenshot in both themes confirm the gap.
+
+---
+
 ## BUG-63: Backup alerts modal — action button stuck to the modal's right edge
 
 - **Status:** fixed

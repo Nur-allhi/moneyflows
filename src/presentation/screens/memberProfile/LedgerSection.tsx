@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LedgerTable, LedgerSearch } from '../../components';
+import { LedgerTable, LedgerSearch, TagChips } from '../../components';
 import type { LedgerRow } from '../../components';
 import { ClipboardList, Tag as TagIcon } from 'lucide-react';
 import { useModalStore } from '../../stores/useModalStore';
@@ -10,6 +10,7 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { formatAmountParts } from '../../utils/format';
 import { MONTHS } from '../../constants/dates';
 import { Highlight } from '../../utils/highlight';
+import { transactionTags } from '../../../core/domain/tags';
 import { Transaction } from '../../../core/domain/Transaction';
 import type { Account } from '../../../core/domain/Account';
 import { HandCoins, BanknoteArrowUp, BanknoteArrowDown, Coins, Filter } from 'lucide-react';
@@ -283,7 +284,7 @@ export function LedgerSection(props: Props) {
           return (
             <div key={tx.id} className={`${styles.txRow} ${tx.id === focusedRowId ? 'anim-focus-row' : ''}`} data-tx-id={tx.id} onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}>
               <span className={styles.txType} data-type={tx.type}><span className={styles.txDay}>{new Date(tx.date).getDate()}</span><span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth() ?? 0] ?? ''}</span></span>
-              <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
+              <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /><TagChips tags={transactionTags(tx)} /></span>
               <span className={styles.txAmount}><span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>{isCredit ? <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 10V2M2 6l4-4 4 4" /></svg> : <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 2v8M2 6l4 4 4-4" /></svg>}</span>{fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small></span>
             </div>
           );

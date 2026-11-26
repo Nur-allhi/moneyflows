@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Placeholder
+### Added
+- **Tags are visible where you use them (T-178)** — a tagged transaction now shows its tags in Transaction Details (desktop modal and phone sheet) and as small pills in the Description column of every ledger, including Other Ledgers, loan ledgers, tag ledgers and member reports on both desktop and phone. Tap a pill to jump to that tag across all members.
+
+### Fixed
+- **Tag pills no longer stick to the description text (BUG-64)** — the Description cell now leaves a small, token-based gap before the first tag pill.
 
 ## [2.7.0] - 2026-11-26
 

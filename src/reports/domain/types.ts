@@ -30,6 +30,8 @@ export interface MemberReportRow {
   runningBalance: number;
   /** Name of the other account, '' for external income/expense. */
   counterpartyAccount: string;
+  /** T-178: user-defined tags, used by the on-screen Description cell only. */
+  tags?: string[];
 }
 
 export interface AccountSection {

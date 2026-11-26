@@ -13,6 +13,7 @@ import { sumIncomeExpense } from '../../../core/domain/transactionCategory';
 import { withRunningBalances } from '../../utils/runningBalance';
 import { ledgerAmountCells, memberLedgerDelta } from '../../utils/memberLedger';
 import { displayLimitForTransaction } from '../../utils/ledgerFocus';
+import { transactionTags } from '../../../core/domain/tags';
 import type { LedgerRow } from '../../components';
 import type { Transaction } from '../../../core/domain/Transaction';
 
@@ -134,6 +135,7 @@ export function useMemberData() {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: tx.description,
+        tags: transactionTags(tx),
         // Locale-formatted through the same helper as every other money cell —
         // this used to be String(balance), printed raw (BUG-33).
         balance: formatAmountParts(balance, locale, currency).amount,
