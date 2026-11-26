@@ -40,6 +40,8 @@ interface LedgerTableProps {
   searchQuery?: string;
   /** T-121: click on a row's ↔ badge (cross-navigation to the linked transaction). */
   onLinkBadgeClick?: (row: LedgerRow) => void;
+  /** T-177: opt-in highlight for the row "Open in Ledger" navigated to. */
+  focusedRowId?: string | null;
 }
 
 const typeClassMap: Record<string, string | undefined> = {
@@ -48,7 +50,7 @@ const typeClassMap: Record<string, string | undefined> = {
   transfer: styles.transfer,
 };
 
-export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, showAccount = false, showMember = false, fillHeight = false, sentinel, searchQuery = '', onLinkBadgeClick }: LedgerTableProps) {
+export function LedgerTable({ rows, className = '', onRowClick, desktop = false, showBalance = true, showAccount = false, showMember = false, fillHeight = false, sentinel, searchQuery = '', onLinkBadgeClick, focusedRowId }: LedgerTableProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [bodyHeight, setBodyHeight] = useState(desktop ? 360 : 340);
@@ -61,6 +63,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
   const containerClass = `${styles.container} ${desktop ? styles.desktop : ''} ${showBalance ? '' : styles.noBalance} ${showAccountCol ? styles.showAccount : ''} ${showMemberCol ? styles.showMember : ''} ${fillHeight ? styles.fillHeight : ''} ${className}`;
   const itemHeight = desktop ? DESKTOP_ROW_HEIGHT : ROW_HEIGHT;
   const containerHeight = fillHeight ? bodyHeight : (desktop ? 360 : 340);
+  const focusClass = (id?: string) => (focusedRowId && id === focusedRowId ? ' anim-focus-row' : '');
 
   useLayoutEffect(() => {
     if (!fillHeight) return;
@@ -140,7 +143,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                 return (
                   <div
                     key={`${row.date}-${row.description}-${actualIndex}`}
-                    className={`${styles.row} ${styles.virtualRow}`} style={{ '--row-top': `${offsetY + i * itemHeight}px`, '--row-height': `${itemHeight}px` } as React.CSSProperties}
+                    className={`${styles.row} ${styles.virtualRow}${focusClass(row.id)}`} data-tx-id={row.id} style={{ '--row-top': `${offsetY + i * itemHeight}px`, '--row-height': `${itemHeight}px` } as React.CSSProperties}
                     onClick={() => onRowClick?.(row, actualIndex)}
                     role={onRowClick ? 'button' : undefined}
                     tabIndex={onRowClick ? 0 : undefined}
@@ -179,7 +182,8 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
             {rows.map((row, i) => (
               <div
                 key={`${row.date}-${row.description}-${i}`}
-                className={styles.row}
+                className={`${styles.row}${focusClass(row.id)}`}
+                data-tx-id={row.id}
                 onClick={() => onRowClick?.(row, i)}
                 role={onRowClick ? 'button' : undefined}
                 tabIndex={onRowClick ? 0 : undefined}

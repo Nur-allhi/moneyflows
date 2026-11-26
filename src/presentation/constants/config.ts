@@ -12,6 +12,9 @@ export const ROW_HEIGHT = 54;
 export const DESKTOP_ROW_HEIGHT = 56;
 export const OVERSCAN = 3;
 
+/** T-177: how long the "Open in Ledger" destination row stays highlighted. */
+export const FOCUS_HIGHLIGHT_MS = 2_500;
+
 export const STORAGE_KEY = 'moneyflows_db';
 export const EXPORT_FILENAME_PREFIX = 'moneyflows_';
 

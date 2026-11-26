@@ -1,5 +1,25 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-26 10:15
+
+### Changes
+- **T-177 implemented on new branch `feature/ledger-open-transaction-focus`** (created from `dev` at v2.6.0, clean tree; **no merge to dev/master yet** — both need explicit approval per §3.8/§3.12). "Open in Ledger" now appends `?tx=<id>` to the member-account ledger URL from the shared handler in `TransactionDetailModal.tsx` (desktop footer + mobile sheet).
+- `useMemberData.ts`: when `?tx=` is present, resets search/type/tag filters and sort to defaults, raises `displayLimit` via the new pure `src/presentation/utils/ledgerFocus.ts` helper until the target is the bottom newest-first row, and exposes `clearFocusTx()` to consume the param with `replace`. A ref makes the reveal happen once per hand-off.
+- New `src/presentation/hooks/useLedgerFocus.ts`: waits (rAF) for the row to render, scrolls the real page scroller `#app-main` to it, re-centers after `LedgerTable`'s height animation settles (`ANIMATION_DURATION`), consumes the URL param, and flashes the row for `FOCUS_HIGHLIGHT_MS` (2.5s). Desktop needed a direct page scroll — `scrollIntoView` latched onto the auto-expanding table body and left the page at the top; the first instant scroll was also clamped to the old height, hence the second re-center.
+- `LedgerTable.tsx`: opt-in `focusedRowId` prop adds `data-tx-id` + the global `anim-focus-row` class on both plain and virtualized rows; all other 7 callers unchanged. `LedgerSection.tsx` passes it on desktop and marks mobile `.txRow` the same way. `click-anims.css` holds the token-only ring + 0.35s flash with a reduced-motion override (keeps `LedgerTable.module.css` under 300 LOC).
+- Tests: `src/presentation/utils/__tests__/ledgerFocus.test.ts` (6 cases); `e2e/ledger-focus.spec.ts` (2 cases — desktop + phone) seeds 6 extra old DBBL rows via an opt-in arg on `seedTinyB64(6)` (default 0 keeps every other spec byte-identical), opens an out-of-page transaction via global search, and asserts URL → expanded bottom row → highlight → viewport scroll → fade → repeat click re-triggers. Visual check at 1280 dark/light and 390 phone: violet ring + tinted row visible at the bottom of the ledger, no overflow.
+- Docs: new T-177 in `docs/TICKETS.md`, `CHANGELOG.md` `[Unreleased] Added`.
+
+### Skill(s) Used
+- senior-frontend, code-reviewer (Playwright screenshot verification in both themes and at phone width)
+
+### Status
+- **All gates green:** typecheck 0, lint `--max-warnings 0` 0 warnings, build, **273 unit** (was 267), **41/41 Playwright** (was 39). GitNexus `detect_changes --scope all`: 10 files / 5 symbols, risk low, no partial/truncated. `impact useMemberData --upstream` returned a spurious CRITICAL from FTS-unavailable fuzzy matching (unrelated DB symbols); text search confirms `MemberProfile.tsx` is the only real caller.
+- `feature/ledger-open-transaction-focus` holds one atomic `feat:` change; `dev` and `master` remain at `3c9f3eb` / v2.6.0.
+- **Next up:** user approves merge to `dev`; then a MINOR bump to v2.7.0 (four files per `VERSIONING.md` §2→§3) and a separate release approval to `master`. Other candidates unchanged: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks. No open bugs.
+
+---
+
 ## Session 2026-11-26 00:20
 
 ### Changes

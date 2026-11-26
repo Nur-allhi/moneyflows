@@ -135,6 +135,8 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
+**Current (2026-11-26): T-177 — "Open in Ledger" now navigates to that account's ledger, expands the page until an older transaction is the bottom row, scrolls to it and flashes it for ~2.5s (desktop + phone).** Implemented on `feature/ledger-open-transaction-focus` (from `dev` at v2.6.0), **not merged**. Gates: typecheck 0, lint 0 warnings, build, 273 unit, 41/41 Playwright, GitNexus detect-changes low. Next: user approves merge to `dev`; then MINOR bump to v2.7.0 + separate release approval to `master`.
+
 **Previous (2026-11-25):** T-175 — group ledgers now show the account route for every entry and split a movement between two group accounts into a debit row and a credit row (per-account detail, group total unchanged); BUG-62 (long names truncated on screen, PDF account column colliding with amounts) fixed. **MINOR-bumped to v2.5.0** and released to `master`. Gates: typecheck 0, lint 0 warnings, build, 257 unit, 37/37 Playwright. No open bugs. Next up: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
 
 **Latest (2026-11-26):** T-176 — header bell now shows a dot + notification panel for backup/restore-point problems (no folder, permission lost, empty folder, no restore points, failed save, integrity issues, browser unsupported); cloud sync keeps its own glyph. **MINOR-bumped to v2.6.0** and released to `master`. Gates: typecheck 0, lint 0 warnings, build, **267 unit, 39/39 Playwright**. BUG-63 (notification button hugged the modal edge) fixed and shipped in the same batch. No open bugs. Next up: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
