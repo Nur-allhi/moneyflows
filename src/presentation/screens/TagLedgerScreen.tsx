@@ -9,9 +9,10 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { Highlight } from '../utils/highlight';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { matchesTx } from '../utils/search';
+import { transactionTags } from '../../core/domain/tags';
 import { shortDate } from '../constants/dates';
 import { useReplay } from '../hooks/useReplay';
-import { LedgerSearch, LedgerTable } from '../components';
+import { LedgerSearch, LedgerTable, TagChips } from '../components';
 import type { LedgerRow } from '../components';
 import styles from './TagLedgerScreen.module.css';
 
@@ -331,6 +332,7 @@ export function TagLedgerScreen() {
       id: tx.id,
       date: shortDate(tx.date, locale),
       description: tx.description,
+      tags: transactionTags(tx),
       member: memberName(tx.memberId),
       account: accountLabel(credit ? (tx.destAccount ?? tx.sourceAccount) : (tx.sourceAccount ?? tx.destAccount)),
       debit: credit ? undefined : amount,
@@ -407,7 +409,7 @@ export function TagLedgerScreen() {
                     <td>{shortDate(tx.date, locale)}</td>
                     <td><Highlight text={memberName(tx.memberId)} query={ledgerQuery} /></td>
                     <td><Highlight text={credit ? accountLabel(tx.destAccount ?? tx.sourceAccount) : accountLabel(tx.sourceAccount ?? tx.destAccount)} query={ledgerQuery} /></td>
-                    <td><Highlight text={tx.description} query={ledgerQuery} /></td>
+                    <td><Highlight text={tx.description} query={ledgerQuery} /><TagChips tags={transactionTags(tx)} /></td>
                     <td className={`${styles.amt} ${credit ? styles.in : styles.out}`}>
                       {credit ? '+' : '−'}{formatAmount(tx.amount, locale, currency)}
                     </td>

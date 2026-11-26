@@ -1,6 +1,7 @@
 import { useRef, useState, useCallback, useMemo, useLayoutEffect } from 'react';
 import { ROW_HEIGHT, DESKTOP_ROW_HEIGHT, OVERSCAN, ANIMATION_DURATION } from '../constants/config';
 import { Highlight } from '../utils/highlight';
+import { TagChips } from './TagChips';
 import styles from './LedgerTable.module.css';
 
 export interface LedgerRow {
@@ -18,6 +19,8 @@ export interface LedgerRow {
   member?: string;
   /** T-121: row mirrors a real transaction — shows the ↔ badge. */
   linked?: boolean;
+  /** T-178: user-defined tags shown as pills inside the Description cell. */
+  tags?: string[];
 }
 
 interface LedgerTableProps {
@@ -154,6 +157,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                     </span>
                     <span className={styles.desc}>
                       <Highlight text={row.description} query={searchQuery} />
+                      <TagChips tags={row.tags ?? []} />
                       {row.linked && (
                         <span
                           className={styles.linkBadge}
@@ -194,6 +198,7 @@ export function LedgerTable({ rows, className = '', onRowClick, desktop = false,
                 </span>
                 <span className={styles.desc}>
                   <Highlight text={row.description} query={searchQuery} />
+                  <TagChips tags={row.tags ?? []} />
                   {row.linked && (
                     <span
                       className={styles.linkBadge}

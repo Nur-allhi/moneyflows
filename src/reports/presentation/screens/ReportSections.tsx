@@ -14,6 +14,7 @@ function toLedgerRows(rows: MemberReportRow[], locale: string, currency: string)
       id: r.id,
       date: shortDate(r.date, locale),
       description: r.counterpartyAccount ? `${r.description} (${r.counterpartyAccount})` : r.description,
+      tags: r.tags,
       debit: r.debit > 0 ? formatAmountParts(r.debit, locale, currency).amount : '—',
       credit: r.credit > 0 ? formatAmountParts(r.credit, locale, currency).amount : '—',
       balance: formatAmountParts(r.runningBalance, locale, currency).amount,

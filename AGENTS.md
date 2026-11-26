@@ -135,7 +135,9 @@ See `session_log.md` for complete session history.
 
 ## 5. Current Ticket / Next Up
 
-**Latest (2026-11-26): T-177 — "Open in Ledger" now navigates to that account's ledger, expands the page until an older transaction is the bottom row, scrolls to it and briefly highlights the row; works on desktop and phone.** **MINOR-bumped to v2.7.0** and released to `master`. Gates: typecheck 0, lint 0 warnings, build, 273 unit, 41/41 Playwright. No open bugs. Next up: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
+**Latest (2026-11-26): T-178 — user-defined tags now appear in Transaction Details and in the Description column of every register (member, group, tag, loan, Other Ledgers, reports) on desktop and phone, as clickable pills linking to `/tags/:tag`; BUG-64 (pills stuck to the description text) fixed.** **MINOR-bumped to v2.8.0** and released to `master`. Gates: typecheck 0, lint 0 warnings, build, 278 unit, 44/44 Playwright. No open bugs. Next up: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
+
+**Previous (2026-11-26):** T-177 — "Open in Ledger" now navigates to that account's ledger, expands the page until an older transaction is the bottom row, scrolls to it and briefly highlights the row; works on desktop and phone. **MINOR-bumped to v2.7.0** and released to `master`. Gates: typecheck 0, lint 0 warnings, build, 273 unit, 41/41 Playwright. No open bugs.
 
 **Previous (2026-11-25):** T-175 — group ledgers now show the account route for every entry and split a movement between two group accounts into a debit row and a credit row (per-account detail, group total unchanged); BUG-62 (long names truncated on screen, PDF account column colliding with amounts) fixed. **MINOR-bumped to v2.5.0** and released to `master`. Gates: typecheck 0, lint 0 warnings, build, 257 unit, 37/37 Playwright. No open bugs. Next up: behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
 

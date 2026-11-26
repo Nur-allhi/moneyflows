@@ -1,0 +1,50 @@
+/* T-178: small tag pills inside the Description cell and the detail field.
+   Interaction tokens only — theme and accent stay with the app vocabulary. */
+.group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  /* BUG-64: keep the pills off the description text they follow. */
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklch, var(--color-wash) 6%, transparent);
+  color: var(--color-text-secondary);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.chip:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.chip:active {
+  background: color-mix(in oklch, var(--color-wash) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip {
+    transition: none;
+  }
+}

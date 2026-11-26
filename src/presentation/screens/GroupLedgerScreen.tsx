@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LedgerTable, LedgerSearch, MobileLedger } from '../components';
+import { LedgerTable, LedgerSearch, MobileLedger, TagChips } from '../components';
 import type { LedgerRow } from '../components';
 import { useModalStore } from '../stores/useModalStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -12,6 +12,7 @@ import { shortDate, MONTHS } from '../constants/dates';
 import { Highlight } from '../utils/highlight';
 import { useDebouncedValue } from '../utils/useDebouncedValue';
 import { matchesTx } from '../utils/search';
+import { transactionTags } from '../../core/domain/tags';
 import { withRunningBalances } from '../utils/runningBalance';
 import { memberLedgerDelta } from '../utils/memberLedger';
 import { groupLegs, pdfDescription } from '../utils/groupLedgerLegs';
@@ -173,6 +174,7 @@ export function GroupLedgerScreen() {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: tx.description,
+        tags: transactionTags(tx),
         account: leg.accountLabel,
         // Empty cells must be empty strings: LedgerTable renders its own dash
         // for a falsy cell, and would append the currency label to a dash text.
@@ -321,7 +323,7 @@ export function GroupLedgerScreen() {
                   <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
                 </span>
                 <span className={styles.txBody}>
-                  <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
+                  <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /><TagChips tags={transactionTags(tx)} /></span>
                   <span className={styles.txAccount} title={leg.accountLabel}>{leg.accountLabel}</span>
                 </span>
                 <span className={styles.txAmount}>

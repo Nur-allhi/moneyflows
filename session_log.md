@@ -1,5 +1,57 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-26 11:40
+
+### Changes
+- User approved the full release sequence. Squash-merged `feature/transaction-tag-chips` into `dev` as `359b10c` (`feat:` — T-178 + BUG-64, 23 files).
+- Atomic **MINOR bump v2.7.0 → v2.8.0** on `dev` per `VERSIONING.md` §2→§3: `package.json`, `whatsNew.ts` newest entry, `CHANGELOG.md` `[Unreleased]` → `[2.8.0]`, `AGENTS.md` §5 Latest/Previous. No version string written into `session_log.md`.
+
+### Skill(s) Used
+- gitnexus (merge/version protocol), code-reviewer (gate checklist)
+
+### Status
+- Full gate suite on the release result: typecheck 0, lint `--max-warnings 0` 0 warnings, build, 278 unit, 44/44 Playwright; `detect_changes` clean. Settings footer / What's New read the new version from `package.json`; e2e setup seeds `lastSeenVersion` from it.
+- **Next up:** merge `dev → master` with `--no-ff`, annotated tag `v2.8.0`, push `master`, `dev` and the tag (all with explicit user approval in this session).
+
+---
+
+## Session 2026-11-26 11:26
+
+### Changes
+- **BUG-64 logged then fixed** (user screenshot: `National savings interest#NNIS-03` — pills flush against the description): `src/presentation/components/TagChips.module.css` `.group` now has `margin-left: var(--space-2)`. The modal's Tags field gets the same harmless leading gap; chips still wrap inside the fixed-height desktop rows.
+- Added a computed-style assertion in `e2e/transaction-tags.spec.ts` (first chip group margin ≥ 4px), so the spacing cannot regress silently.
+- Docs updated in the same change: `docs/BUGS.md` BUG-64 → fixed with Resolved line, `CHANGELOG.md` `[Unreleased] Fixed`, session log.
+
+### Skill(s) Used
+- code-reviewer, ui-ux-pro-max
+
+### Status
+- Full gates re-run after the fix: typecheck 0, lint `--max-warnings 0` 0 warnings, build, 278 unit, 44/44 Playwright; visual re-check at 1280 and 390 in dark/light shows a clear gap between description text and the first chip, no overflow.
+- `feature/transaction-tag-chips` now holds T-178 (`4e3248c`) plus this follow-up `fix:` commit. **Next up:** user approval to merge to `dev`, MINOR bump to v2.8.0, then separate release approval to `master`.
+
+---
+
+## Session 2026-11-26 10:58
+
+### Changes
+- Pulled latest `master`/`dev` (both `2bbc5af`, already current with origin) and created `feature/transaction-tag-chips` off `dev` (tree clean; no merge to dev/master).
+- **T-178 in progress:** user-defined tags now read defensively via new `src/core/domain/tags.ts` + unit tests. New shared `TagChips.tsx`/`.module.css` renders token-only clickable pills (`/tags/:tag`, stopPropagation, detail modal closes on navigate).
+- Opt-in `tags` on `LedgerRow`; chips rendered in the Description cell of all six `LedgerTable` callers (member/group/tag/loan/other-ledger/reports), plus the phone member rows, phone tag table, phone group/loan/other-ledger rows. `TransactionDetailModal` gains a labeled Tags field shared by desktop modal and phone sheet.
+- `MemberReportRow` gains optional `tags` populated in `MemberReportService` and `memberReportSections`; PDF/CSV unchanged.
+- Docs: T-178 in `TICKETS.md`, `CHANGELOG.md` `[Unreleased] Added`. E2E: `e2e/transaction-tags.spec.ts` + opt-in `withTags` on `seedTinyB64` (default seeds byte-identical).
+- GitNexus `impact` run before editing: `LedgerTable` CRITICAL/67 is the known FTS-unavailable fuzzy-match false positive (only six real callers by text search); `MemberReportRow` MEDIUM/9; `TransactionDetailModal` LOW.
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, code-reviewer
+
+### Status
+- **T-178 implemented and gated on `feature/transaction-tag-chips`:** typecheck 0, lint `--max-warnings 0` 0 warnings, build, **278 unit** (was 273; +5 tag-helper tests), **44/44 Playwright** (was 41; +3 tag specs). GitNexus `detect_changes --scope all`: 17 files / 7 symbols, risk low, no partial/truncated.
+- Caught and fixed a real defect during e2e: the detail modal passed `transaction.metadata` into `transactionTags()` (which expects the record with a `metadata` property), so the Tags field never rendered; now passes `transaction` itself.
+- Visual check at 1280 and 390 in dark and light: chips sit inside the Description cell and in the detail field, no horizontal overflow; phone BottomSheet shows the Tags row. Temporary diagnostic/visual specs removed.
+- **Next up:** user approval to merge to `dev`, then MINOR bump to v2.8.0 and separate release approval to `master`. No merge performed.
+
+---
+
 ## Session 2026-11-26 10:15
 
 ### Changes

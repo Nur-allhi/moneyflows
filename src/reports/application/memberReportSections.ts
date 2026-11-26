@@ -1,4 +1,5 @@
 import type { Transaction } from '../../core/domain/Transaction';
+import { transactionTags } from '../../core/domain/tags';
 import type { OtherLedger, OtherLedgerEntry } from '../../otherLedgers/domain/types';
 import {
   isLoanTransaction,
@@ -80,6 +81,7 @@ export function buildLoanSections(
         credit: out ? 0 : tx.amount,
         runningBalance: running,
         counterpartyAccount: memberAccountName(tx, counterpartyId),
+        tags: transactionTags(tx),
       });
     }
     sections.push({
@@ -127,6 +129,7 @@ export function buildOtherLedgerSections(
         credit: e.credit,
         runningBalance: balanceMap.get(e.id) ?? 0,
         counterpartyAccount: '',
+        tags: transactionTags(e),
       });
     }
     const last = entries[entries.length - 1];

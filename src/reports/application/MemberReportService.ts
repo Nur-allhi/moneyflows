@@ -1,5 +1,6 @@
 import type { IDatabaseService } from '../../core/ports/IDatabaseService';
 import type { Transaction } from '../../core/domain/Transaction';
+import { transactionTags } from '../../core/domain/tags';
 import type { OtherLedgerEntry } from '../../otherLedgers/domain/types';
 import type {
   AccountSection,
@@ -143,6 +144,7 @@ export class MemberReportService {
           credit,
           runningBalance: running,
           counterpartyAccount,
+          tags: transactionTags(tx),
         });
         if (!shownFirst || tx.date < shownFirst) shownFirst = tx.date;
         if (!shownLast || tx.date > shownLast) shownLast = tx.date;

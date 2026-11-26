@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LedgerTable, LedgerSearch, MobileLedger, Modal, BottomSheet } from '../../../presentation/components';
+import { LedgerTable, LedgerSearch, MobileLedger, Modal, BottomSheet, TagChips } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import { useOtherLedgerStore } from '../stores/useOtherLedgerStore';
 import { useMemberStore } from '../../../presentation/stores/useMemberStore';
@@ -9,6 +9,7 @@ import { useSettingsStore } from '../../../presentation/stores/useSettingsStore'
 import { formatAmount, formatAmountParts } from '../../../presentation/utils/format';
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
 import { Highlight } from '../../../presentation/utils/highlight';
+import { transactionTags } from '../../../core/domain/tags';
 import { useDebouncedValue } from '../../../presentation/utils/useDebouncedValue';
 import { AddEntryModal } from '../components/AddEntryModal';
 import { RenameLedgerModal } from '../components/RenameLedgerModal';
@@ -98,6 +99,7 @@ export function OtherLedgerDetail() {
         id: e.id,
         date: shortDate(e.date, locale),
         description: e.description,
+        tags: transactionTags(e),
         account: '',
         debit: isDebit ? formatAmountParts(e.debit, locale, currency).amount : '—',
         credit: !isDebit ? formatAmountParts(e.credit, locale, currency).amount : '—',
@@ -237,7 +239,7 @@ export function OtherLedgerDetail() {
                   <span className={styles.txDay}>{new Date(e.date).getDate()}</span>
                   <span className={styles.txMonth}>{MONTHS[new Date(e.date).getMonth()]}</span>
                 </span>
-                <span className={styles.txDesc}><Highlight text={e.description} query={ledgerQuery} /></span>
+                <span className={styles.txDesc}><Highlight text={e.description} query={ledgerQuery} /><TagChips tags={transactionTags(e)} /></span>
                 {e.linkedTransactionId && (
                   <span
                     className={styles.linkBadge}

@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.8.0',
+    items: [
+      'Tagged transactions now show their tags in the transaction details and right in the Description column of every ledger, on your phone too.',
+      'Tap a tag to see every transaction with that tag across all members.',
+      'Tag pills now leave a small gap after the description instead of sticking to the words.',
+    ],
+  },
+  {
     version: '2.7.0',
     items: [
       'The "Open in Ledger" button now jumps to the exact transaction you were looking at.',

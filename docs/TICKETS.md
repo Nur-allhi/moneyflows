@@ -560,6 +560,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 4. `feat:` → MINOR bump at release per `VERSIONING.md` §2→§3.
 **Acceptance:** clicking "Open in Ledger" on an old transaction lands on that account's ledger with the row rendered at the bottom, scrolled into view and highlighted; the highlight fades and a repeat click re-triggers it; full gates green.
 
+### T-178 - Show tags in transaction details and Description columns
+**Skill:** `senior-frontend`, `ui-ux-pro-max`, `code-reviewer`
+**Effort:** M
+**File(s):** `src/core/domain/tags.ts` (new) + `__tests__/tags.test.ts`, `src/presentation/components/TagChips.tsx` + `.module.css` (new), `LedgerTable.tsx`, `TransactionDetailModal.tsx`, `useMemberData.ts`, `LedgerSection.tsx`, `GroupLedgerScreen.tsx`, `LoanDetailView.tsx`, `TagLedgerScreen.tsx`, `OtherLedgerDetail.tsx`, `reports/domain/types.ts`, `reports/application/MemberReportService.ts`, `reports/application/memberReportSections.ts`, `ReportSections.tsx`, `e2e/helpers/seed-tiny.ts`, `e2e/transaction-tags.spec.ts` (new)
+**Content:**
+1. Read `metadata.tags` defensively through one shared pure helper in `core/domain` (tag records can carry none, one, or many). Shared `TagChips` component renders token-only pills with hover/focus/active states; a click stops propagation so the row's own detail handler never fires, and the detail modal closes before navigating.
+2. Opt-in `tags` on `LedgerRow`; render chips inside the Description cell of every `LedgerTable` caller and in each phone-specific row/table. Desktop and phone detail chrome share one content block, so both show a labeled Tags field.
+3. Extend `MemberReportRow` with optional tags from transaction/entry metadata so report Description cells match; PDF and CSV output unchanged.
+4. `feat:` → MINOR bump at release per `VERSIONING.md` §2→§3.
+**Acceptance:** tagged transactions show every tag in details and in the Description column on all registers and phones; tapping a chip opens `/tags/:tag` without opening transaction details; untagged records show nothing; no overflow at 390px or 1280px; full gates green.
+
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 

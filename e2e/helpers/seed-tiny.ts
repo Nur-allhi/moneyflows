@@ -10,18 +10,20 @@ function id(label = 'x') {
   return `${label}_${randomUUID().slice(0, 8)}`;
 }
 
-const cache = new Map<number, string>();
+const cache = new Map<string, string>();
 
 /**
  * Deterministic tiny DB for e2e: 2 members, 4 accounts, ~12 txs.
  * Keywords: Travel / Groceries / Salary are searchable.
  * `extraDbbTransactions` appends that many older DBBL expenses so a focus test
- * can exercise a ledger longer than its 10-row display limit. Default 0 keeps
- * every other spec's seed byte-identical.
+ * can exercise a ledger longer than its 10-row display limit. `withTags` adds
+ * metadata.tags to two of the rows for the tag-display spec. Both flags default
+ * off, keeping every other spec's seed byte-identical.
  * Returns base64 that can be injected via localStorage `moneyflows_db`.
  */
-export async function seedTinyB64(extraDbbTransactions = 0): Promise<string> {
-  const cached = cache.get(extraDbbTransactions);
+export async function seedTinyB64(extraDbbTransactions = 0, withTags = false): Promise<string> {
+  const cacheKey = `${extraDbbTransactions}:${withTags}`;
+  const cached = cache.get(cacheKey);
   if (cached) return cached;
 
   // Use the runtime SCHEMA from SQLiteDatabaseService (includes lend/repay + lender_account_id loans).
@@ -50,13 +52,13 @@ export async function seedTinyB64(extraDbbTransactions = 0): Promise<string> {
   ].join('\n');
 
   const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  const tinyDb = await buildTiny(SCHEMA, now, extraDbbTransactions);
+  const tinyDb = await buildTiny(SCHEMA, now, extraDbbTransactions, withTags);
   const b64 = Buffer.from(tinyDb).toString('base64');
-  cache.set(extraDbbTransactions, b64);
+  cache.set(cacheKey, b64);
   return b64;
 }
 
-async function buildTiny(schema: string, now: string, extraDbbTransactions = 0): Promise<Uint8Array> {
+async function buildTiny(schema: string, now: string, extraDbbTransactions = 0, withTags = false): Promise<Uint8Array> {
   const initSqlJs = (await import('sql.js')).default as unknown as (opts: unknown) => Promise<{ Database: new () => { run: (s: string, p?: unknown) => void; export: () => Uint8Array; close: () => void } }>;
   const SQL = await initSqlJs({});
   const db = new SQL.Database();
@@ -83,12 +85,13 @@ async function buildTiny(schema: string, now: string, extraDbbTransactions = 0):
     db.run(`INSERT INTO account_group_mappings (id,account_group_id,account_id) VALUES ($1,$2,$3)`, { $1: id('map'), $2: group, $3: acct });
   }
 
-  const tx = (type: string, desc: string, amt: number, src: string | null, dst: string | null, date: string) =>
-    db.run(`INSERT INTO transactions (id,type,description,amount,source_account,dest_account,member_id,date,created_at,updated_at,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,'{}')`,
-      { $1: id('tx'), $2: type, $3: desc, $4: amt, $5: src, $6: dst, $7: m1, $8: date, $9: now });
+  const tagsMeta = (...tags: string[]) => withTags ? JSON.stringify({ tags }) : '{}';
+  const tx = (type: string, desc: string, amt: number, src: string | null, dst: string | null, date: string, metadata = '{}') =>
+    db.run(`INSERT INTO transactions (id,type,description,amount,source_account,dest_account,member_id,date,created_at,updated_at,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$9,$10)`,
+      { $1: id('tx'), $2: type, $3: desc, $4: amt, $5: src, $6: dst, $7: m1, $8: date, $9: now, $10: metadata });
 
-  tx('income', 'Salary January', 50000, null, aBank, '2026-01-05');
-  tx('expense', 'Groceries - Weekly', 2500, aCash, null, '2026-01-08');
+  tx('income', 'Salary January', 50000, null, aBank, '2026-01-05', tagsMeta('salary'));
+  tx('expense', 'Groceries - Weekly', 2500, aCash, null, '2026-01-08', tagsMeta('groceries', 'weekly'));
   tx('expense', 'Travel to Cox Bazar', 12000, aBank, null, '2026-01-10');
   tx('transfer', 'ATM Cash', 10000, aBank, aCash, '2026-01-11');
   tx('expense', 'Groceries - Eid', 8000, aCash, null, '2026-01-12');

@@ -4,6 +4,7 @@ export { AccountCard } from './AccountCard';
 export { SegmentedTabs } from './SegmentedTabs';
 export { LedgerTable } from './LedgerTable';
 export type { LedgerRow } from './LedgerTable';
+export { TagChips } from './TagChips';
 export { FormField, FormInput, FormTextarea, FormSelect, AmountInput } from './FormField';
 export { BottomSheet } from './BottomSheet';
 export { Modal } from './Modal';

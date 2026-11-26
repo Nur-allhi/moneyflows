@@ -11,13 +11,14 @@ import { formatAmount, formatAmountParts } from '../../../presentation/utils/for
 import { shortDate, MONTHS } from '../../../presentation/constants/dates';
 import { computeRunningBalances, sortLoanTransactions, LOAN_CREDIT_TYPES, LOAN_DEBIT_TYPES } from '../../application/computeRunningBalances';
 import { getStackDisplayName } from '../../domain/loanDisplay';
-import { ProgressBar, LedgerTable, LedgerSearch, MobileLedger } from '../../../presentation/components';
+import { ProgressBar, LedgerTable, LedgerSearch, MobileLedger, TagChips } from '../../../presentation/components';
 import type { LedgerRow } from '../../../presentation/components';
 import { useReplay } from '../../../presentation/hooks/useReplay';
 import { Filter, BanknoteArrowUp, BanknoteArrowDown } from 'lucide-react';
 import { Highlight } from '../../../presentation/utils/highlight';
 import { useDebouncedValue } from '../../../presentation/utils/useDebouncedValue';
 import { matchesTx } from '../../../presentation/utils/search';
+import { transactionTags } from '../../../core/domain/tags';
 import styles from './LoanDetailView.module.css';
 
 interface LoanDetailViewProps {
@@ -195,6 +196,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
         id: tx.id,
         date: shortDate(tx.date, locale),
         description: bracket ? `${tx.description} [${bracket}]` : tx.description,
+        tags: transactionTags(tx),
         credit: cr(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
         debit: dr(tx) ? formatAmountParts(tx.amount, locale, currency).amount : '\u2014',
         balance: formatAmountParts(bal, locale, currency).amount,
@@ -481,7 +483,7 @@ export function LoanDetailView({ stack }: LoanDetailViewProps) {
                   <span className={styles.txDay}>{new Date(tx.date).getDate()}</span>
                   <span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth()]}</span>
                 </span>
-                <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
+                <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /><TagChips tags={transactionTags(tx)} /></span>
                 <span className={styles.txAmount}>
                   <span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>
                     {isCredit ? (
