@@ -1,5 +1,20 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-26 11:40
+
+### Changes
+- User approved the full release sequence. Squash-merged `feature/transaction-tag-chips` into `dev` as `359b10c` (`feat:` — T-178 + BUG-64, 23 files).
+- Atomic **MINOR bump v2.7.0 → v2.8.0** on `dev` per `VERSIONING.md` §2→§3: `package.json`, `whatsNew.ts` newest entry, `CHANGELOG.md` `[Unreleased]` → `[2.8.0]`, `AGENTS.md` §5 Latest/Previous. No version string written into `session_log.md`.
+
+### Skill(s) Used
+- gitnexus (merge/version protocol), code-reviewer (gate checklist)
+
+### Status
+- Full gate suite on the release result: typecheck 0, lint `--max-warnings 0` 0 warnings, build, 278 unit, 44/44 Playwright; `detect_changes` clean. Settings footer / What's New read the new version from `package.json`; e2e setup seeds `lastSeenVersion` from it.
+- **Next up:** merge `dev → master` with `--no-ff`, annotated tag `v2.8.0`, push `master`, `dev` and the tag (all with explicit user approval in this session).
+
+---
+
 ## Session 2026-11-26 11:26
 
 ### Changes
