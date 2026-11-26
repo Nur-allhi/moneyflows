@@ -19,7 +19,7 @@ export function MemberProfile() {
   const {
     memberId, member, memberAccounts, selectedAccountId, setSelectedAccountId, accountsOpen, setAccountsOpen, displayLimit,
     isDesktop, ledgerFilter, setLedgerFilter, ledgerQuery, setLedgerQuery, tagFilter, setTagFilter, ledgerTagOptions,
-    sortOrder, setSortOrder,
+    sortOrder, setSortOrder, focusTxId, clearFocusTx,
     totalBalance, totalIncome, totalExpenses, filteredTxs, searchFilteredAll, filteredLedger, selectedAcct, handleReachEnd,
     sortedTxs, locale, currency,
   } = data;
@@ -67,6 +67,7 @@ export function MemberProfile() {
         sortOrder={sortOrder} setSortOrder={setSortOrder}
         showBalance={showBalance} displayLimit={displayLimit} onReachEnd={handleReachEnd} onRowClick={onRowClick as never} onOpeningBalance={onOpeningBalance}
         txCount={txCount} selectedAcct={selectedAcct} transactions={transactions} downloadPdf={downloadPdf}
+        focusTxId={focusTxId} onFocusConsumed={clearFocusTx}
       />
     </div>
   );

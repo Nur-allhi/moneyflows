@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useMemberStore } from '../../stores/useMemberStore';
 import { useAccountStore } from '../../stores/useAccountStore';
@@ -12,16 +12,21 @@ import { shortDate } from '../../constants/dates';
 import { sumIncomeExpense } from '../../../core/domain/transactionCategory';
 import { withRunningBalances } from '../../utils/runningBalance';
 import { ledgerAmountCells, memberLedgerDelta } from '../../utils/memberLedger';
+import { displayLimitForTransaction } from '../../utils/ledgerFocus';
 import type { LedgerRow } from '../../components';
 import type { Transaction } from '../../../core/domain/Transaction';
 
 export function useMemberData() {
   const { id: memberId } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [ledgerFilter, setLedgerFilter] = useState('all');
   const [ledgerQuery, setLedgerQuery] = useState('');
   const [tagFilter, setTagFilter] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  // T-177: `?tx=` is the hand-off from "Open in Ledger". The ref makes the
+  // reveal happen once, even while accounts and transactions finish loading.
+  const focusTxId = searchParams.get('tx');
+  const revealedTxRef = useRef<string | null>(null);
   const knownTags = useTagStore((s) => s.tags);
   const { members, fetchMembers } = useMemberStore();
   const { accounts, fetchAccounts } = useAccountStore();
@@ -64,6 +69,21 @@ export function useMemberData() {
   const totalIncome = memberTotals.income;
   const totalExpenses = memberTotals.expense;
   const sortedTxs = useMemo(() => [...accountTxs].sort((a, b) => a.date.localeCompare(b.date)), [accountTxs]);
+
+  useEffect(() => {
+    if (!focusTxId || revealedTxRef.current === focusTxId) return;
+    const ids = sortedTxs.map((t) => t.id);
+    if (!ids.includes(focusTxId)) return; // wait for data and the account selection
+    revealedTxRef.current = focusTxId;
+    // Reset anything that could hide the row, then render far enough that it
+    // is the bottom (newest-first) row the focus hook can scroll to.
+    setLedgerQuery('');
+    setTagFilter('');
+    setLedgerFilter('all');
+    setSortOrder('desc');
+    setDisplayLimit((prev) => displayLimitForTransaction(ids, focusTxId, prev));
+  }, [focusTxId, sortedTxs]);
+
   const debouncedLedgerQuery = useDebouncedValue(ledgerQuery, 200);
   const accountMapForSearch = useMemo(() => new Map(accounts.map((a) => [a.id, { name: a.name }])), [accounts]);
 
@@ -136,11 +156,19 @@ export function useMemberData() {
 
   const selectedAcct = useMemo(() => memberAccounts.find((a) => a.id === selectedAccountId), [memberAccounts, selectedAccountId]);
   const handleReachEnd = useCallback(() => setDisplayLimit((p) => Math.min(p + 20, searchFilteredAll.length)), [searchFilteredAll.length]);
+  /** T-177: consume the focus hand-off so a second click on the same tx re-triggers. */
+  const clearFocusTx = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('tx');
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   return {
     memberId, member, memberAccounts, selectedAccountId, setSelectedAccountId, accountsOpen, setAccountsOpen, displayLimit, setDisplayLimit, isDesktop,
     ledgerFilter, setLedgerFilter, ledgerQuery, setLedgerQuery, tagFilter, setTagFilter, knownTags, ledgerTagOptions,
-    sortOrder, setSortOrder,
+    sortOrder, setSortOrder, focusTxId, clearFocusTx,
     totalBalance, totalIncome, totalExpenses, memberTxs, accountTxs, sortedTxs, filteredTxs, searchFilteredAll, ledgerRows, filteredLedger, selectedAcct, handleReachEnd,
     members, accounts, transactions, locale, currency, debouncedLedgerQuery,
   };
