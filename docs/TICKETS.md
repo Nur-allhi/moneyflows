@@ -549,6 +549,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 4. `feat:` → MINOR bump at release per VERSIONING.md §2→§3.
 **Acceptance:** with no folder and no restore points the bell shows a dot and the panel names both problems; picking a folder clears the folder warnings without a reload; a healthy setup shows no dot; full gates green (typecheck, lint 0 warnings, build, unit, Playwright, `detect_changes`).
 
+### T-177 - "Open in Ledger" reveals and highlights the exact transaction
+**Skill:** `senior-frontend`, `code-reviewer`
+**Effort:** M
+**File(s):** `src/presentation/modals/TransactionDetailModal.tsx`, `src/presentation/screens/memberProfile/useMemberData.ts`, `src/presentation/screens/MemberProfile.tsx`, `src/presentation/screens/memberProfile/LedgerSection.tsx`, `src/presentation/components/LedgerTable.tsx`, `src/presentation/hooks/useLedgerFocus.ts` (new), `src/presentation/utils/ledgerFocus.ts` (new) + `__tests__/ledgerFocus.test.ts`, `src/presentation/constants/config.ts`, `src/presentation/styles/click-anims.css`, `e2e/ledger-focus.spec.ts` (new)
+**Content:**
+1. Append `?tx=<id>` to the member-ledger URL opened from the transaction detail modal (desktop footer + mobile sheet share one handler).
+2. On arrival, reset the ledger's search/type/tag filters and sort to defaults, expand `displayLimit` until the target is the bottom row, then scroll it into view and flash it for ~2.5s (token-only CSS, reduced-motion guard). Consume the URL param so a second click re-triggers.
+3. Add an opt-in `focusedRowId` to `LedgerTable` and the matching mobile row marker; all other callers stay unchanged. Unit-test the reveal-index math; e2e covers an older transaction on desktop and mobile.
+4. `feat:` → MINOR bump at release per `VERSIONING.md` §2→§3.
+**Acceptance:** clicking "Open in Ledger" on an old transaction lands on that account's ledger with the row rendered at the bottom, scrolled into view and highlighted; the highlight fades and a repeat click re-triggers it; full gates green.
+
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 

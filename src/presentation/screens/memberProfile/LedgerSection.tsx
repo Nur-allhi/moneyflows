@@ -5,6 +5,7 @@ import type { LedgerRow } from '../../components';
 import { ClipboardList, Tag as TagIcon } from 'lucide-react';
 import { useModalStore } from '../../stores/useModalStore';
 import { useReplay } from '../../hooks/useReplay';
+import { useLedgerFocus } from '../../hooks/useLedgerFocus';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { formatAmountParts } from '../../utils/format';
 import { MONTHS } from '../../constants/dates';
@@ -48,10 +49,14 @@ interface Props {
   selectedAcct?: Account;
   transactions: Transaction[];
   downloadPdf: () => void;
+  /** T-177: transaction handed over by "Open in Ledger" (from `?tx=`). */
+  focusTxId: string | null;
+  onFocusConsumed: () => void;
 }
 
 export function LedgerSection(props: Props) {
-  const { isDesktop, memberAccounts, selectedAccountId, setSelectedAccountId, filteredLedger, filteredTxs, searchFilteredAll, ledgerFilter, setLedgerFilter, ledgerQuery, setLedgerQuery, tagFilter, setTagFilter, ledgerTagOptions, sortOrder, setSortOrder, showBalance, displayLimit, onReachEnd, onRowClick, onOpeningBalance, txCount, selectedAcct, transactions, downloadPdf } = props;
+  const { isDesktop, memberAccounts, selectedAccountId, setSelectedAccountId, filteredLedger, filteredTxs, searchFilteredAll, ledgerFilter, setLedgerFilter, ledgerQuery, setLedgerQuery, tagFilter, setTagFilter, ledgerTagOptions, sortOrder, setSortOrder, showBalance, displayLimit, onReachEnd, onRowClick, onOpeningBalance, txCount, selectedAcct, transactions, downloadPdf, focusTxId, onFocusConsumed } = props;
+  const focusedRowId = useLedgerFocus(focusTxId, onFocusConsumed);
   const { locale, currency } = useSettingsStore((s) => s.settings);
   const navigate = useNavigate();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -213,7 +218,7 @@ export function LedgerSection(props: Props) {
               </div>
             </div>
           </div>
-          <LedgerTable rows={filteredLedger} className={styles.ledgerTableInner} desktop showBalance={showBalance} onRowClick={onRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} searchQuery={ledgerQuery} />
+          <LedgerTable rows={filteredLedger} className={styles.ledgerTableInner} desktop showBalance={showBalance} onRowClick={onRowClick} sentinel={<div ref={sentinelRef} style={{ height: 1 }} />} searchQuery={ledgerQuery} focusedRowId={focusedRowId} />
           {displayLimit < searchFilteredAll.length && <button type="button" className={`${styles.loadMoreBtn} ${loadMoreKey > 0 ? 'anim-pop' : ''}`} onClick={() => { replayLoadMore(); onReachEnd(); }}><span className="anim-target" key={loadMoreKey}>Load more ({searchFilteredAll.length - displayLimit} remaining)</span></button>}
         </div>
       </div>
@@ -276,7 +281,7 @@ export function LedgerSection(props: Props) {
           const isCredit = tx.type === 'income' || tx.type === 'loan_repayment' || tx.type === 'repay';
           const { amount: fmtAmt, currency: fmtCur } = formatAmountParts(tx.amount, locale, currency);
           return (
-            <div key={tx.id} className={styles.txRow} onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}>
+            <div key={tx.id} className={`${styles.txRow} ${tx.id === focusedRowId ? 'anim-focus-row' : ''}`} data-tx-id={tx.id} onClick={() => useModalStore.getState().open('transaction-detail', { transaction: tx })}>
               <span className={styles.txType} data-type={tx.type}><span className={styles.txDay}>{new Date(tx.date).getDate()}</span><span className={styles.txMonth}>{MONTHS[new Date(tx.date).getMonth() ?? 0] ?? ''}</span></span>
               <span className={styles.txDesc}><Highlight text={tx.description} query={ledgerQuery} /></span>
               <span className={styles.txAmount}><span className={`${styles.txArrow} ${isCredit ? styles.txArrowIn : styles.txArrowOut}`}>{isCredit ? <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 10V2M2 6l4-4 4 4" /></svg> : <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 2v8M2 6l4 4 4-4" /></svg>}</span>{fmtAmt}<small className={styles.txCurrency}>{fmtCur}</small></span>

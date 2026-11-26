@@ -10,15 +10,19 @@ function id(label = 'x') {
   return `${label}_${randomUUID().slice(0, 8)}`;
 }
 
-let cachedB64: string | null = null;
+const cache = new Map<number, string>();
 
 /**
  * Deterministic tiny DB for e2e: 2 members, 4 accounts, ~12 txs.
  * Keywords: Travel / Groceries / Salary are searchable.
+ * `extraDbbTransactions` appends that many older DBBL expenses so a focus test
+ * can exercise a ledger longer than its 10-row display limit. Default 0 keeps
+ * every other spec's seed byte-identical.
  * Returns base64 that can be injected via localStorage `moneyflows_db`.
  */
-export async function seedTinyB64(): Promise<string> {
-  if (cachedB64) return cachedB64;
+export async function seedTinyB64(extraDbbTransactions = 0): Promise<string> {
+  const cached = cache.get(extraDbbTransactions);
+  if (cached) return cached;
 
   // Use the runtime SCHEMA from SQLiteDatabaseService (includes lend/repay + lender_account_id loans).
   const SCHEMA = [
@@ -46,13 +50,13 @@ export async function seedTinyB64(): Promise<string> {
   ].join('\n');
 
   const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  const tinyDb = await buildTiny(SCHEMA, now);
+  const tinyDb = await buildTiny(SCHEMA, now, extraDbbTransactions);
   const b64 = Buffer.from(tinyDb).toString('base64');
-  cachedB64 = b64;
+  cache.set(extraDbbTransactions, b64);
   return b64;
 }
 
-async function buildTiny(schema: string, now: string): Promise<Uint8Array> {
+async function buildTiny(schema: string, now: string, extraDbbTransactions = 0): Promise<Uint8Array> {
   const initSqlJs = (await import('sql.js')).default as unknown as (opts: unknown) => Promise<{ Database: new () => { run: (s: string, p?: unknown) => void; export: () => Uint8Array; close: () => void } }>;
   const SQL = await initSqlJs({});
   const db = new SQL.Database();
@@ -95,6 +99,11 @@ async function buildTiny(schema: string, now: string): Promise<Uint8Array> {
   tx('repay', 'Rafiq Repay Travel', 5000, cp, aBank, '2026-02-15');
   tx('expense', 'Travel Groceries mix', 1000, aCash, null, '2026-02-16');
   tx('income', 'Freelance Travel', 7000, null, aBank, '2026-02-17');
+
+  // T-177: optional older rows make the DBBL ledger longer than its first page.
+  for (let i = 0; i < extraDbbTransactions; i++) {
+    tx('expense', `Old DBBL Expense ${i + 1}`, 100 + i, aBank, null, `2025-12-${String(28 - i).padStart(2, '0')}`);
+  }
 
   // Recalc balances
   db.run('UPDATE accounts SET balance=0');

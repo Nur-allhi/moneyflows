@@ -96,7 +96,7 @@ export function TransactionDetailModal({ txId, transaction: txProp, onClose }: T
       : null;
     if (!ledgerAcct || !ledgerAcct.memberId) return;
     onClose();
-    navigate(`/member/${ledgerAcct.memberId}?account=${ledgerAcct.id}`);
+    navigate(`/member/${ledgerAcct.memberId}?account=${ledgerAcct.id}&tx=${encodeURIComponent(transaction.id)}`);
   };
 
   const detailContent = (

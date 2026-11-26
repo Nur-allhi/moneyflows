@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Placeholder
 
+## [2.7.0] - 2026-11-26
+
+### Added
+- **"Open in Ledger" now takes you to the exact transaction (T-177)** — the button on transaction details opens that account's ledger, expands the list when the transaction is older than the first page, scrolls down to it and flashes the row briefly. Works on desktop and phone, and repeat taps re-trigger the highlight.
+
 ## [2.6.0] - 2026-11-26
 
 ### Added

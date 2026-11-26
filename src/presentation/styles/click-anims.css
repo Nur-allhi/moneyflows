@@ -68,6 +68,20 @@
   animation: clickSwap 0.35s ease;
 }
 
+/* T-177: "Open in Ledger" destination — shared by desktop LedgerTable rows
+   and the mobile ledger list. The ring stays for FOCUS_HIGHLIGHT_MS while the
+   flash itself follows the house 0.35s motion duration. */
+.anim-focus-row {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  animation: ledgerFocus 0.35s ease-out;
+}
+
+@keyframes ledgerFocus {
+  0% { background: color-mix(in oklch, var(--color-primary) 26%, transparent); }
+  100% { background: color-mix(in oklch, var(--color-primary) 12%, transparent); }
+}
+
 /* Kind map: text/CTA -> anim-pop · settings/refresh/sync icons -> anim-spin
    plus/close/clear icons -> anim-twist · bell-like -> anim-ring
    back/forward nav -> anim-nudge · search toggles -> anim-pop
@@ -79,7 +93,8 @@
   .anim-twist svg, .anim-twist .anim-target,
   .anim-ring svg, .anim-ring .anim-target,
   .anim-nudge svg, .anim-nudge .anim-target,
-  .anim-swap .anim-target {
+  .anim-swap .anim-target,
+  .anim-focus-row {
     animation: none;
   }
 }
