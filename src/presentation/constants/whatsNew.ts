@@ -7,6 +7,13 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.7.0',
+    items: [
+      'The "Open in Ledger" button now jumps to the exact transaction you were looking at.',
+      'If that transaction is older, the ledger opens further down, scrolls to it and briefly highlights the row so it is easy to spot. Works on phones too.',
+    ],
+  },
+  {
     version: '2.6.0',
     items: [
       'The bell at the top of the app now warns you when a backup needs attention — no folder chosen, permission lost, or no restore points yet.',
