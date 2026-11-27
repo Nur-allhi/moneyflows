@@ -1,5 +1,19 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-27 09:38
+
+### Changes
+- User approved the merge (§3.12). Squash-merged `feature/tag-ledger-pdf-export` into `dev` as **`b54d8d8`** (`feat: tag ledger PDF export + account-owner member column (T-179, BUG-65)` — both the T-179 `a9b09d4` and BUG-65 `2d374e6` commits, 12 files), then pushed `dev` to `origin` (`f3716e5..b54d8d8`).
+- Updated `AGENTS.md` §5: T-179 + BUG-65 are the new Latest on `dev` (not yet released to `master`), T-178 becomes Previous. No version bump performed — that belongs to the separate release approval.
+
+### Skill(s) Used
+- gitnexus (merge protocol)
+
+### Status
+- Gates were run on the feature result before merging and are unchanged by the squash: typecheck 0, lint `--max-warnings 0` 0 warnings, build, 288 unit, 48/48 Playwright. `master` untouched at v2.8.0. **Next up:** explicit user approval for the v2.9.0 MINOR bump + `dev → master` release merge; no merge to `master` has been requested or performed.
+
+---
+
 ## Session 2026-11-26 12:32
 
 ### Changes
