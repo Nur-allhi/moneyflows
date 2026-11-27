@@ -26,6 +26,19 @@ Living queue of known issues. Maintained per the BUG TRACKING PROTOCOL (AGENTS.m
 
 ---
 
+## BUG-65: Tag ledger shows the wrong member for a transaction
+
+- **Status:** fixed
+- **Severity:** medium
+- **Found:** 2026-11-26 (during: user review after T-179 added the tag-ledger PDF export)
+- **Location:** `src/presentation/screens/TagLedgerScreen.tsx` (`memberName` lookup and `LedgerRow.member`), the phone-specific tag table, and `src/presentation/screens/tagLedger/tagPdfExport.ts` (PDF Member column, if the same lookup is at fault)
+- **Description:** In the tag ledger (`/tags/:tag`), a transaction made on Namira's Brac Bank account shows a different member in the Member column. Expected: Member = **Namira** and Account = **Brac Bank** for that row — the member who owns the account the money moved through.
+- **Root Cause:** the tag ledger resolves the column with `members.find(m => m.id === tx.memberId)`, but `tx.memberId` is the **recording (primary) member**, not the account owner: `src/presentation/modals/transactionForm/useSubmit.ts:61` stamps every new transaction with `settings.primaryMemberId` (falling back to the first member), regardless of which member owns the selected account. The register already picks the displayed account from `sourceAccount`/`destAccount` by transaction type, but never uses that account to resolve the member, so the two columns disagree.
+- **Fix Approach:** **A (user's call §3.10):** display-only. Resolve each tag-ledger row's Member from the owner (`accounts[].memberId`) of the same account used for its Account column, through one shared pure resolver used by both the screen and the PDF export; fall back to the recorded member where an account has no owner. No data migration, no other ledger touched. Rejected: stamping `tx.memberId` with the account owner at write time + data migration (wide blast radius), showing both parties (changes the column's meaning).
+- **Resolved:** 2026-11-26 — fixed on `feature/tag-ledger-pdf-export` in a follow-up `fix:` commit. A shared `createTagLedgerRowResolver` resolves Member from the owner of the account shown in each row and is used by both the screen and the PDF export; 5 resolver unit tests and a Playwright case asserting `Namira` / `Brac Bank` on screen and in the PDF were added. Full gates green.
+
+---
+
 ## BUG-64: Tag chips sit flush against the Description text
 
 - **Status:** fixed

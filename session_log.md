@@ -1,5 +1,36 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-26 12:32
+
+### Changes
+- **BUG-65 logged first (open → in-progress → fixed), then fixed on `feature/tag-ledger-pdf-export`** in a follow-up `fix:` commit. User reported that the tag ledger's Member column shows a different named member: a tagged transaction on Namira's Brac Bank showed the recording (primary) member instead. Root cause: `useSubmit.ts:61` stamps every new tx with `settings.primaryMemberId`, and `TagLedgerScreen` resolved Member via `tx.memberId` rather than the account owner.
+- **A (user's call §3.10): display-only fix.** New pure `src/presentation/utils/tagLedgerRow.ts` exports `createTagLedgerRowResolver(accounts, members, isCredit)`: picks the display account (dest for credits, source otherwise), resolves Member from that account's `memberId`, falls back to `tx.memberId` when the account has no owner, and builds the ASCII account route for the PDF. `TagLedgerScreen` uses it for both desktop rows and the phone table; `tagPdfExport` takes the same resolver so the PDF can't disagree. The hook is created before the `!tag` early return (rules-of-hooks). No data migration; other ledgers untouched.
+- Docs: `docs/BUGS.md` BUG-65 root cause / Fix Approach / Resolved, `CHANGELOG.md` `[Unreleased] Fixed`. Tests: 5 new resolver unit cases in `src/presentation/utils/__tests__/tagLedgerRow.test.ts`; an opt-in fourth `seedTinyB64` flag adds a Namira/Brac Bank tagged expense recorded under the primary member, and `e2e/tag-export.spec.ts` asserts the row shows Namira + Brac Bank (not Admin) and the PDF contains both.
+
+### Skill(s) Used
+- code-reviewer, senior-frontend
+
+### Status
+- **Full gates green:** typecheck 0, lint `--max-warnings 0` 0 warnings, build, **288 unit** (was 283; +5), **48/48 Playwright** (was 47; +1). GitNexus `impact TagLedgerScreen --upstream` LOW/exact, 0 impacted. `detect_changes` run before commit. **Next up:** still awaiting user approval to squash-merge the branch into `dev` (T-179 + BUG-65 together); MINOR bump to v2.9.0 and release to `master` are separate later approvals. No merge performed.
+
+---
+
+## Session 2026-11-26 12:08
+
+### Changes
+- **T-179 implemented on new branch `feature/tag-ledger-pdf-export`** (off `dev` at v2.8.0; clean tree; **no merge to dev/master** — both need explicit approval per §3.8/§3.12). The tag ledger `/tags/:tag` now has a Download PDF action in its header: desktop shows an icon + label button on the right of the title; phones get a 44x44 icon-only target on the same title row (sub-line moved below the name at ≤640px). Token-only CSS, all four interactive states, `useReplay` pop, no inline styles.
+- New pure `src/presentation/screens/tagLedger/tagPdfExport.ts` builds rows and totals; PDF has Date | Type | Description (account route on a second line, ASCII arrows) | Member | Debit | Credit, no running balance (a tag spans accounts), plus tag/count/period header and Total In/Out. Exports `filteredSorted` — every tagged transaction narrowed by the search box in the chosen sort order, matching the Group Ledger rule. Row builder unit-tested (5 cases).
+- `e2e/tag-export.spec.ts` (3 cases): desktop download, search-narrowed download (asserts the excluded row is absent from the PDF bytes), phone 44px target + download + no overflow. `seedTinyB64` gains an opt-in third flag adding a second groceries-tagged row; all existing callers stay byte-identical. Docs: T-179 in `TICKETS.md`, `CHANGELOG.md` `[Unreleased] Added`.
+- GitNexus `impact TagLedgerScreen --upstream` (disambiguated by uid): LOW/exact, 0 impacted; `detect_changes --scope all`: 5 files / 2 symbols, risk low, no partial/truncated.
+
+### Skill(s) Used
+- senior-frontend, ui-ux-pro-max, code-reviewer
+
+### Status
+- **T-179 gated on `feature/tag-ledger-pdf-export`:** typecheck 0, lint `--max-warnings 0` 0 warnings, build, **283 unit** (was 278; +5), **47/47 Playwright** (was 44; +3). Visual check at 1280 and 390 in dark/light: button aligned right on desktop, icon-only on phone title row, no overflow; temporary visual spec removed. `feat:` → MINOR bump to v2.9.0 at release per `VERSIONING.md` §2→§3. **Next up:** user approval to squash-merge to `dev`, then a separate release approval to `master` (with the atomic four-file bump). No merge performed.
+
+---
+
 ## Session 2026-11-26 11:40
 
 ### Changes

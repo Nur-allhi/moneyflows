@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Placeholder
+### Added
+- **Tag ledgers can now be exported (T-179)** — a Download PDF button on `/tags/:tag` saves the tag's register as a PDF on desktop and phone. The file follows the current search and sort order and shows each transaction's date, type, description, account route, member, debit and credit, plus the tag's totals and period.
+
+### Fixed
+- **Tag ledger shows the account owner in the Member column (BUG-65)** — a transaction on another member's account (e.g. Namira's Brac Bank) no longer shows the member who recorded it. Member is resolved from the same account shown in that row, on screen and in the exported PDF.
 
 ## [2.8.0] - 2026-11-26
 
