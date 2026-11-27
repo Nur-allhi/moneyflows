@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Placeholder
+
+## [2.9.0] - 2026-11-27
+
 ### Added
 - **Tag ledgers can now be exported (T-179)** — a Download PDF button on `/tags/:tag` saves the tag's register as a PDF on desktop and phone. The file follows the current search and sort order and shows each transaction's date, type, description, account route, member, debit and credit, plus the tag's totals and period.
 
