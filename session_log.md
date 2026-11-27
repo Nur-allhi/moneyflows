@@ -1,5 +1,20 @@
 # MoneyFlows — Session Log
 
+## Session 2026-11-27 09:55
+
+### Changes
+- User approved the v2.9.0 release. Atomic **MINOR bump v2.8.0 → v2.9.0** on `dev` as `5569f82` (four touchpoints: `package.json`, `whatsNew.ts` newest entry with three plain-English bullets, `CHANGELOG.md` `[Unreleased]` → `[2.9.0] - 2026-11-27` + fresh placeholder, `AGENTS.md` §5 Latest/Previous). No version string written into `session_log.md`.
+- Re-ran all gates on the release result: typecheck 0, lint `--max-warnings 0` 0 warnings, build, 288 unit, 48/48 Playwright; `detect_changes --scope compare --base-ref master`: 15 files / 4 symbols, risk low, no partial/truncated.
+- **Released:** merged `dev → master` with `--no-ff` as `6e36d6e` ("Merge dev: tag ledger PDF export + account-owner member column + v2.9.0"), annotated tag `v2.9.0` created on master, pushed `master` + tag, then fast-forwarded `dev` to the merge commit and pushed it. `master` and `dev` are both at `6e36d6e`.
+
+### Skill(s) Used
+- gitnexus (release/version protocol), code-reviewer (gate checklist)
+
+### Status
+- **v2.9.0 is live on `master`.** T-179 (tag ledger PDF export) + BUG-65 (account-owner Member column) shipped together. No open bugs. **Next up:** behavioral e2e flows, dependency/bundle hygiene, S-5 search benchmark, accessibility checks.
+
+---
+
 ## Session 2026-11-27 09:38
 
 ### Changes
