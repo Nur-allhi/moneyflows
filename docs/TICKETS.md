@@ -571,6 +571,17 @@ Branch `google_signin_backup`. Sequential tickets, one commit each. All UI passe
 4. `feat:` → MINOR bump at release per `VERSIONING.md` §2→§3.
 **Acceptance:** tagged transactions show every tag in details and in the Description column on all registers and phones; tapping a chip opens `/tags/:tag` without opening transaction details; untagged records show nothing; no overflow at 390px or 1280px; full gates green.
 
+### T-179 - Tag ledger PDF export
+**Skill:** `senior-frontend`, `ui-ux-pro-max`, `code-reviewer`
+**Effort:** S
+**File(s):** `src/presentation/screens/TagLedgerScreen.tsx` + `.module.css`, `src/presentation/screens/tagLedger/tagPdfExport.ts` (new) + `__tests__/tagPdfExport.test.ts`, `e2e/tag-export.spec.ts` (new), `e2e/helpers/seed-tiny.ts` (opt-in second tagged row)
+**Content:**
+1. Add a "Download PDF" action to `/tags/:tag` in the header row, matching the Group / Other Ledger / Member export vocabulary (SVG icon, token-only CSS, hover/focus/active/disabled states). On phones it becomes an icon-only 44x44 target; no inline styles.
+2. Export the rows the reader sees: every transaction carrying the tag, narrowed by the search box and in the chosen sort order (same rule as the Group Ledger export). Columns: Date, Type, Description (account route on a second line, ASCII arrows), Member, Debit, Credit — no running balance, because a tag spans accounts. Header shows the tag, count, period and Total In / Total Out.
+3. Keep the row-building logic in a pure helper with unit tests; cover the download on desktop, phone and after a search narrowing in Playwright.
+4. `feat:` → MINOR bump at release per `VERSIONING.md` §2→§3.
+**Acceptance:** the tag ledger offers a working Download PDF button on desktop and phone, the file is a valid PDF named after the tag, its rows match the on-screen search/sort and its debit/credit columns agree with the register; no horizontal overflow at 390px or 1280px; full gates green.
+
 ## Following Phase
 Candidates after cleanup: Other Ledgers V2 (dual-post, already spec'd), Supabase sync groundwork, budgets/goals expansion, CSV export.
 

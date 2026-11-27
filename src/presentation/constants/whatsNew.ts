@@ -7,6 +7,14 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '2.9.0',
+    items: [
+      'You can now download a PDF of any tag ledger. It follows the search and sort order you are looking at, and works on your phone too.',
+      'The PDF shows each transaction’s date, type, description, account, member, debit and credit, plus the tag’s totals and date range.',
+      'Fixed the Member column in tag ledgers: it now shows the person who owns the account used in that transaction.',
+    ],
+  },
+  {
     version: '2.8.0',
     items: [
       'Tagged transactions now show their tags in the transaction details and right in the Description column of every ledger, on your phone too.',

@@ -15,6 +15,8 @@ import { useReplay } from '../hooks/useReplay';
 import { LedgerSearch, LedgerTable, TagChips } from '../components';
 import type { LedgerRow } from '../components';
 import styles from './TagLedgerScreen.module.css';
+import { downloadTagPdf } from './tagLedger/tagPdfExport';
+import { createTagLedgerRowResolver } from '../utils/tagLedgerRow';
 
 const CREDIT_TYPES = new Set(['income', 'loan_repayment', 'repay', 'loan_received']);
 const LOAN_TYPES = new Set(['lend', 'repay', 'loan_issue', 'loan_repayment', 'loan_received', 'loan_paidback']);
@@ -73,6 +75,7 @@ export function TagLedgerScreen() {
   const [backKey, replayBack] = useReplay();
   const [delEmptyKey, replayDelEmpty] = useReplay();
   const [tagSort, setTagSort] = useState<'most' | 'az' | 'za'>('most');
+  const [pdfKey, replayPdf] = useReplay();
 
   /** Rewrites the tag inside every matching transaction's metadata. */
   const applyToTxs = async (tag: string, transform: (tags: string[]) => string[]) => {
@@ -176,6 +179,14 @@ export function TagLedgerScreen() {
       memberMq.removeEventListener('change', onMember);
     };
   }, []);
+
+  // BUG-65: the member shown is the owner of the account shown in that row,
+  // not the primary member who happened to record the transaction. The PDF
+  // export uses this same resolver, so screen and file always agree.
+  const resolveRow = useMemo(
+    () => createTagLedgerRowResolver(accounts, members, (tx) => CREDIT_TYPES.has(tx.type)),
+    [accounts, members],
+  );
 
   // No running balance here on purpose: a tag spans accounts, so a cumulative
   // balance over the filtered subset would be a number that exists nowhere.
@@ -315,12 +326,17 @@ export function TagLedgerScreen() {
     );
   }
 
-  const memberName = (id?: string) =>
-    id ? members.find((m) => m.id === id)?.name ?? '(deleted member)' : '';
-  const accountLabel = (id?: string) => {
-    if (!id) return '';
-    const acct = accounts.find((a) => a.id === id);
-    return acct ? `${acct.name}` : '(deleted account)';
+  /** Exports the rows the reader sees: search narrowed, sort ordered. */
+  const handleDownloadPdf = () => {
+    if (filteredSorted.length === 0) return;
+    void downloadTagPdf({
+      tag,
+      txs: filteredSorted,
+      resolve: resolveRow,
+      isCredit: (tx) => CREDIT_TYPES.has(tx.type),
+      locale,
+      currency,
+    });
   };
 
   // BUG-58: same row shape the other registers feed LedgerTable. `debit`/`credit`
@@ -333,8 +349,8 @@ export function TagLedgerScreen() {
       date: shortDate(tx.date, locale),
       description: tx.description,
       tags: transactionTags(tx),
-      member: memberName(tx.memberId),
-      account: accountLabel(credit ? (tx.destAccount ?? tx.sourceAccount) : (tx.sourceAccount ?? tx.destAccount)),
+      member: resolveRow.memberName(tx),
+      account: resolveRow.accountLabel(tx),
       debit: credit ? undefined : amount,
       credit: credit ? amount : undefined,
       currencyLabel: currency,
@@ -345,10 +361,26 @@ export function TagLedgerScreen() {
   return (
     <div className={styles.page}>
       <button className={`${styles.backBtn} ${backKey > 0 ? 'anim-nudge' : ''}`} onClick={() => { replayBack(); navigate('/tags'); }}><span className="anim-target" key={backKey}>← All tags</span></button>
-      <h2 className={styles.heading}>
-        #{tag}
-        <span className={styles.sub}> {tagged.length} transaction{tagged.length === 1 ? '' : 's'} · across all members</span>
-      </h2>
+      <div className={styles.detailHeader}>
+        <h2 className={styles.heading}>
+          #{tag}
+          <span className={styles.sub}> {tagged.length} transaction{tagged.length === 1 ? '' : 's'} · across all members</span>
+        </h2>
+        <button
+          className={`${styles.pdfBtn} ${pdfKey > 0 ? 'anim-pop' : ''}`}
+          onClick={() => { replayPdf(); handleDownloadPdf(); }}
+          title="Download PDF"
+          aria-label="Download PDF"
+          disabled={filteredSorted.length === 0}
+        >
+          <span className="anim-target" key={pdfKey}>
+            <span className={styles.pdfBtnIcon}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+            </span>
+            <span className={styles.pdfBtnLabel}>Download PDF</span>
+          </span>
+        </button>
+      </div>
       <div className={styles.totals}>
         <span>In +{formatAmount(totalIn, locale, currency)}</span>
         <span>Out −{formatAmount(totalOut, locale, currency)}</span>
@@ -407,8 +439,8 @@ export function TagLedgerScreen() {
                 return (
                   <tr key={tx.id}>
                     <td>{shortDate(tx.date, locale)}</td>
-                    <td><Highlight text={memberName(tx.memberId)} query={ledgerQuery} /></td>
-                    <td><Highlight text={credit ? accountLabel(tx.destAccount ?? tx.sourceAccount) : accountLabel(tx.sourceAccount ?? tx.destAccount)} query={ledgerQuery} /></td>
+                    <td><Highlight text={resolveRow.memberName(tx)} query={ledgerQuery} /></td>
+                    <td><Highlight text={resolveRow.accountLabel(tx)} query={ledgerQuery} /></td>
                     <td><Highlight text={tx.description} query={ledgerQuery} /><TagChips tags={transactionTags(tx)} /></td>
                     <td className={`${styles.amt} ${credit ? styles.in : styles.out}`}>
                       {credit ? '+' : '−'}{formatAmount(tx.amount, locale, currency)}

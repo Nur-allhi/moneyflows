@@ -17,12 +17,15 @@ const cache = new Map<string, string>();
  * Keywords: Travel / Groceries / Salary are searchable.
  * `extraDbbTransactions` appends that many older DBBL expenses so a focus test
  * can exercise a ledger longer than its 10-row display limit. `withTags` adds
- * metadata.tags to two of the rows for the tag-display spec. Both flags default
- * off, keeping every other spec's seed byte-identical.
+ * metadata.tags to two of the rows for the tag-display spec. `extraGroceriesTag`
+ * tags one more row so a tag ledger can be narrowed by search in the export
+ * spec. `nonPrimaryOwner` adds a tagged expense on another member's account,
+ * recorded under the primary member (BUG-65). All flags default off, keeping
+ * every other spec's seed byte-identical.
  * Returns base64 that can be injected via localStorage `moneyflows_db`.
  */
-export async function seedTinyB64(extraDbbTransactions = 0, withTags = false): Promise<string> {
-  const cacheKey = `${extraDbbTransactions}:${withTags}`;
+export async function seedTinyB64(extraDbbTransactions = 0, withTags = false, extraGroceriesTag = false, nonPrimaryOwner = false): Promise<string> {
+  const cacheKey = `${extraDbbTransactions}:${withTags}:${extraGroceriesTag}:${nonPrimaryOwner}`;
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
@@ -52,13 +55,13 @@ export async function seedTinyB64(extraDbbTransactions = 0, withTags = false): P
   ].join('\n');
 
   const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  const tinyDb = await buildTiny(SCHEMA, now, extraDbbTransactions, withTags);
+  const tinyDb = await buildTiny(SCHEMA, now, extraDbbTransactions, withTags, extraGroceriesTag, nonPrimaryOwner);
   const b64 = Buffer.from(tinyDb).toString('base64');
   cache.set(cacheKey, b64);
   return b64;
 }
 
-async function buildTiny(schema: string, now: string, extraDbbTransactions = 0, withTags = false): Promise<Uint8Array> {
+async function buildTiny(schema: string, now: string, extraDbbTransactions = 0, withTags = false, extraGroceriesTag = false, nonPrimaryOwner = false): Promise<Uint8Array> {
   const initSqlJs = (await import('sql.js')).default as unknown as (opts: unknown) => Promise<{ Database: new () => { run: (s: string, p?: unknown) => void; export: () => Uint8Array; close: () => void } }>;
   const SQL = await initSqlJs({});
   const db = new SQL.Database();
@@ -94,7 +97,7 @@ async function buildTiny(schema: string, now: string, extraDbbTransactions = 0, 
   tx('expense', 'Groceries - Weekly', 2500, aCash, null, '2026-01-08', tagsMeta('groceries', 'weekly'));
   tx('expense', 'Travel to Cox Bazar', 12000, aBank, null, '2026-01-10');
   tx('transfer', 'ATM Cash', 10000, aBank, aCash, '2026-01-11');
-  tx('expense', 'Groceries - Eid', 8000, aCash, null, '2026-01-12');
+  tx('expense', 'Groceries - Eid', 8000, aCash, null, '2026-01-12', withTags && extraGroceriesTag ? tagsMeta('groceries') : '{}');
   tx('income', 'Salary February', 50000, null, aBank, '2026-02-05');
   tx('expense', 'Travel to Dhaka', 3000, aCash, null, '2026-02-08');
   tx('expense', 'Medical Groceries', 1500, aCash, null, '2026-02-09');
@@ -102,6 +105,16 @@ async function buildTiny(schema: string, now: string, extraDbbTransactions = 0, 
   tx('repay', 'Rafiq Repay Travel', 5000, cp, aBank, '2026-02-15');
   tx('expense', 'Travel Groceries mix', 1000, aCash, null, '2026-02-16');
   tx('income', 'Freelance Travel', 7000, null, aBank, '2026-02-17');
+
+  // BUG-65: a tagged expense on another member's account, but recorded under
+  // the primary member — the tag ledger must show the account's owner.
+  if (nonPrimaryOwner) {
+    const namira = id('mem');
+    db.run(`INSERT INTO members (id,name,short_name,is_external,created_at,updated_at) VALUES ($1,'Namira','Nam',0,$2,$2)`, { $1: namira, $2: now });
+    const brac = id('acc');
+    db.run(`INSERT INTO accounts (id,member_id,name,type,balance,created_at,updated_at) VALUES ($1,$2,'Brac Bank','bank',30000,$3,$3)`, { $1: brac, $2: namira, $3: now });
+    tx('expense', 'Groceries at Brac', 1200, brac, null, '2026-03-01', tagsMeta('groceries'));
+  }
 
   // T-177: optional older rows make the DBBL ledger longer than its first page.
   for (let i = 0; i < extraDbbTransactions; i++) {
